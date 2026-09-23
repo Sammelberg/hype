@@ -4,6 +4,7 @@ coverage
 pnpm-lock.yaml
 next-env.d.ts
 .claude/helpers
+.claude/skills-library
 graft
 playwright-report
 test-results

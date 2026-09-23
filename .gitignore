@@ -18,3 +18,6 @@ next-env.d.ts
 
 # Payload uploads (local disk storage) — user content, never committed. Persist via a volume in production.
 /media/
+
+# Local skill library — symlinks into ~/Schreibtisch/claude, machine-specific (see skill-router).
+/.claude/skills-library/

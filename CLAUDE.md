@@ -40,25 +40,27 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 Pick skills by task; load them before starting the work, not after.
 
-| Task                                      | Skills                                                                                      |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                |
-| Several design options to choose from     | `variate`                                                                                   |
-| UI components                             | `shadcn` (use an existing component first), then `/break` on anything rendering CMS content |
-| Typography / colour / tokens              | `better-typography`, `better-colors`                                                        |
-| Component motion, hovers, dialogs, cmdk   | `motion` (`motion/react`) + `emil-design-eng`; `apple-design` for springs/gestures          |
-| Scroll-driven motion, pinning, parallax   | GSAP ScrollTrigger + Lenis (`gsap-scrolltrigger`, `gsap-react`)                             |
-| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                        |
-| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                 |
-| Accessibility                             | `fixing-accessibility` — run on every new interactive UI                                    |
-| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit`, `ai-seo`                                          |
-| Site copy                                 | `product-marketing` (context file first), then `copywriting`                                |
-| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                        |
-| New feature with logic                    | `tdd`                                                                                       |
-| Bug or regression                         | `diagnosing-bugs`                                                                           |
-| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                       |
-| Finding code, callers, impact of a change | Graft MCP tools (`graft_find_code`, `graft_trace_calls`) before grep                        |
-| Verifying a UI flow actually works        | Reticle MCP (once `reticle init` has run and the dev server is up)                          |
+| Task                                      | Skills                                                                                                                            |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                                      |
+| Several design options to choose from     | `variate`                                                                                                                         |
+| UI components                             | `shadcn` (use an existing component first), then `/break` on anything rendering CMS content                                       |
+| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                                              |
+| Component motion, hovers, dialogs, cmdk   | `animate` (builds it with `motion/react`) + `emil-design-eng`; `apple-design` for springs/gestures                                |
+| Scroll-driven motion, pinning, parallax   | GSAP ScrollTrigger + Lenis (`gsap-scrolltrigger`, `gsap-react`)                                                                   |
+| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                                              |
+| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                                       |
+| Accessibility                             | `fixing-accessibility` — run on every new interactive UI                                                                          |
+| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions; not `seo-audit`/`ai-seo`)                                |
+| Site copy (German)                        | `product-marketing-de` (context file first), then `copywriting-de`; `vermenschlichen` on every German text                        |
+| Project pages / case studies              | `case-study` for the narrative, then `copywriting-de`                                                                             |
+| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                                                              |
+| New feature with logic                    | `tdd`                                                                                                                             |
+| Bug or regression                         | `diagnosing-bugs`                                                                                                                 |
+| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                                             |
+| Finding code, callers, impact of a change | Graft MCP tools (`graft_find_code`, `graft_trace_calls`) before grep                                                              |
+| Verifying a UI flow actually works        | Reticle MCP (once `reticle init` has run and the dev server is up)                                                                |
+| Nothing above fits / a specific effect    | `skill-router` — searches the ~460-skill library in `.claude/skills-library/` (local only; project rules win over library skills) |
 
 Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when explicitly requested. `web-design-engineer` is for standalone HTML prototypes, not this app.
 
