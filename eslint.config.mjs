@@ -11,7 +11,7 @@ export default defineConfig([
     extends: [betterTailwind.configs.correctness],
     settings: {
       "better-tailwindcss": {
-        entryPoint: "app/(frontend)/globals.css",
+        entryPoint: "src/app/(frontend)/globals.css",
         callees: ["cn", "cva"],
       },
     },
@@ -26,8 +26,8 @@ export default defineConfig([
     "graft/**",
     "playwright-report/**",
     "test-results/**",
-    "payload-types.ts",
-    "migrations/**",
-    "app/(payload)/**",
+    "src/payload-types.ts",
+    "src/migrations/**",
+    "src/app/(payload)/**",
   ]),
 ]);

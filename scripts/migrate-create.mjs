@@ -6,4 +6,4 @@ const run = (cmd, args) => execFileSync(cmd, args, { stdio: "inherit" });
 
 run("pnpm", ["exec", "payload", "migrate:create", ...process.argv.slice(2)]);
 run("node", ["scripts/fix-migration-imports.mjs"]);
-run("pnpm", ["exec", "prettier", "--write", "migrations"]);
+run("pnpm", ["exec", "prettier", "--write", "src/migrations"]);

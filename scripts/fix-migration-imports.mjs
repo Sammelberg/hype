@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = new URL("../migrations/", import.meta.url).pathname;
+const dir = new URL("../src/migrations/", import.meta.url).pathname;
 
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".ts") && f !== "index.ts")) {
   const path = join(dir, file);

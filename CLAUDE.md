@@ -10,29 +10,33 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 ## Code map
 
-- `app/(frontend)/` — public site: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche` (dynamic, noindex), `/kontakt`, German `error.tsx` + `app/global-error.tsx`, placeholder `icon.tsx`/`apple-icon.tsx`, `opengraph-image.tsx` (next/og, local). `app/sitemap.ts`, `app/robots.ts`.
-- `app/(payload)/` — admin (`/admin`) and API (`/api`); generated, including `admin/importMap.js` → `pnpm generate:importmap` after adding admin components.
-- `lib/queries.ts` — all frontend data access (React `cache`, draft-mode aware). `lib/seo.tsx` — `buildMetadata`, `JsonLd`, `mediaUrl`. `lib/payload.ts` — `getPayloadClient()` (Local API).
-- `env.ts` — validated env; import `env`, never `process.env`. New variables go into `env.ts` and `.env.example`.
-- `components/ui/` — shadcn (add via `pnpm dlx shadcn@latest add <name>`, then adapt). `components/site/` — app components. `cn` comes from the `cn` package (`lib/utils.ts`).
-- `app/reticle-dev.tsx` — dev-only Reticle bridge in the frontend layout.
+Application code lives in `src/` (`@/*` → `src/*`); the root holds configuration, `e2e/` and `scripts/`. Place new code by what it is:
+
+- `src/app/(frontend)/` — routes only: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche`, `/kontakt`, German `error.tsx`, placeholder icons, `opengraph-image.tsx`, `next/preview`.
+- `src/app/(frontend)/<route>/_components/`, `_lib/` — code used by that one route (`kontakt/_components/contact-form.tsx`, `kontakt/_lib/validation.ts`). Promote it to `src/components/` or `src/lib/` once a second route needs it.
+- `src/app/(payload)/` — Payload admin and API, generated; `pnpm generate:importmap` after adding admin components. `src/app/` also holds `global-error.tsx`, `sitemap.ts`, `robots.ts`.
+- `src/cms/` — Payload schema: `collections/`, `globals/`, `hooks/` (Payload hooks such as revalidation), `plugins.ts`.
+- `src/data/` — server-only data layer: `payload.ts` (`getPayloadClient`), `queries.ts` (all frontend reads; React `cache`, draft-aware), `redirect-or-not-found.ts`.
+- `src/components/` — `ui/` shadcn (`pnpm dlx shadcn@latest add <name>`, then adapt), `site/` shared site components, `dev/` dev-only tools (Reticle bridge).
+- `src/lib/` — pure helpers with colocated `*.test.ts`: `seo.tsx`, `redirects.ts`, `initials.ts`, `utils.ts` (`cn` from the `cn` package).
+- `src/payload.config.ts`, `src/payload-types.ts` (generated), `src/migrations/`, `src/env.ts` (validated env — import `env`, never `process.env`; new variables go into `env.ts` and `.env.example`).
 
 ## CMS (Payload)
 
-- `payload.config.ts`, `collections/` (Users, Media, Projects, Pages), `globals/SiteSettings.ts` (site name, owner, tagline, SEO description, contact email, profile links). Admin UI is German. These files use **relative imports** — the Payload CLI does not resolve `@/`.
-- **Revalidation:** pages are static; publishing rebuilds them instantly via `hooks/revalidate.ts`. A collection that feeds fixed paths gets `revalidatePathsOf(...)`.
+- Collections: Users, Media, Projects, Pages; global `SiteSettings` (site name, owner, tagline, SEO description, contact email, profile links). Admin UI is German. `src/payload.config.ts`, `src/cms/**` and everything they import (`src/lib/redirects.ts`, `src/env.ts`) use **relative imports** — the Payload CLI does not resolve `@/`.
+- **Revalidation:** pages are static; publishing rebuilds them instantly via `src/cms/hooks/revalidate.ts`. A collection that feeds fixed paths gets `revalidatePathsOf(...)`.
 - **Draft preview:** live preview → `/next/preview?path=…` (needs a Payload session, enables draft mode) → `RefreshOnSave`; `/next/exit-preview` ends it.
 - **Plugins:** seo, nested-docs, storage-s3 (auto-on when S3 env is set; self-hosted/EU endpoint only), plus three wired into the site:
-  - **redirects** — 301/302, `from` is normalized (`lib/redirects.ts`). CMS routes call `redirectOrNotFound(path)` instead of `notFound()`.
+  - **redirects** — 301/302, `from` is normalized (`src/lib/redirects.ts`). CMS routes call `redirectOrNotFound(path)` instead of `notFound()`.
   - **search** — index carries `summary` and `url`; `/suche` queries it.
-  - **form-builder** — the form titled „Kontakt“ renders at `/kontakt`. The server action validates with `lib/contact.ts` (German messages, honeypot, minimum fill time) and writes via the Local API; public REST creation of submissions is closed. Email settings and US-only blocks are removed.
+  - **form-builder** — the form titled „Kontakt“ renders at `/kontakt`. The server action (`kontakt/actions.ts`) validates with `kontakt/_lib/validation.ts` (German messages, honeypot, minimum fill time) and writes via the Local API; public REST creation of submissions is closed. Email settings and US-only blocks are removed.
 - **Uploads** live on local disk in `/media` (gitignored; a persistent volume in production).
-- **Schema changes:** dev pushes automatically. Before merging: `pnpm migrate:create <name>`, then `pnpm generate:types`, commit `migrations/` and `payload-types.ts`. CI runs `pnpm migrate`.
+- **Schema changes:** dev pushes automatically. Before merging: `pnpm migrate:create <name>`, then `pnpm generate:types`, commit `src/migrations/` and `src/payload-types.ts`. CI runs `pnpm migrate`.
 - **Dev content:** `pnpm seed` (`scripts/seed-data.ts`) — fictional projects, placeholder legal pages, a nested page, the „Kontakt“ form, redirect `/projekte/museum`. Idempotent, local databases only, creates no users (first admin signs up at `/admin`). Every new route gets seeded content and an entry in `SEED_PATHS`, which feeds the e2e tests.
 
 ## Styling
 
-- `app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
+- `src/app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
 - **Dark mode follows the OS** (`prefers-color-scheme`); `dark:` variants and dark tokens are media-query based — there is no `.dark` class or toggle.
 - **Fibonacci layout system** (overrides any skill that prescribes a 4/8 grid):
   - page shell `page-container` (max 1536px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
@@ -62,7 +66,7 @@ Load the skill before starting the work.
 | Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen` |
 | Project pages / case studies              | `case-study`, then `copywriting-de`                                                                             |
 | Payload collections / data model          | `domain-modeling`, `codebase-design`                                                                            |
-| New feature with logic                    | `tdd` (pure logic in `lib/` with `*.test.ts`, like `lib/contact.ts`)                                            |
+| New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                              |
 | Bug or regression                         | `diagnosing-bugs`                                                                                               |
 | Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                           |
 | Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                |

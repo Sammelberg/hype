@@ -5,7 +5,7 @@
 import { getPayload, type Payload } from "payload";
 import sharp from "sharp";
 
-import config from "../payload.config";
+import config from "../src/payload.config";
 import {
   lexical,
   SEED_REDIRECT,

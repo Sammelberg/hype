@@ -56,7 +56,7 @@ test.describe("contact form", () => {
     await page.getByLabel("Name").fill("Erika Test");
     await page.getByLabel("E-Mail").fill("erika@example.com");
     await page.getByLabel("Nachricht").fill("Automatischer Test aus e2e/features.spec.ts.");
-    // Stay above the minimum fill time of the spam filter (lib/contact.ts).
+    // Stay above the minimum fill time of the spam filter (src/app/(frontend)/kontakt/_lib/validation.ts).
     await page.waitForTimeout(3100);
     await page.getByRole("button", { name: "Nachricht senden" }).click();
     await expect(page.getByRole("status")).toContainText("Vielen Dank für Ihre Nachricht");
