@@ -29,7 +29,8 @@
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "migrate": "payload migrate",
-    "migrate:create": "node scripts/migrate-create.mjs"
+    "migrate:create": "node scripts/migrate-create.mjs",
+    "seed": "payload run scripts/seed.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [

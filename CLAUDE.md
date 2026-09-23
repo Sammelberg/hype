@@ -23,6 +23,7 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 ## Commands
 
 - `pnpm db:up` / `pnpm db:down` — local Postgres (docker-compose, port 5433). Then `pnpm dev`.
+- `pnpm seed` — fictional German dev content (`scripts/seed-data.ts`: 5 projects, placeholder Impressum/Datenschutz, a nested page, site settings; images generated locally). Idempotent; refuses non-local databases. Creates no users — sign up the first admin at `/admin`. e2e tests cover every seeded route (`SEED_PATHS`), so run it before `pnpm test:e2e`; CI runs it after `migrate`.
 - Schema changes: dev auto-pushes; before merging create a migration with `pnpm migrate:create <name>` (auto-fixes type imports), commit `migrations/`. `pnpm migrate` applies them (CI runs it before build).
 - `pnpm dev` · `pnpm build`
 - `pnpm check` = typecheck + lint + test + build — must pass before a task is called done.
