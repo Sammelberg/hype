@@ -321,6 +321,7 @@ export interface Redirect {
         } | null);
     url?: string | null;
   };
+  type: '301' | '302';
   updatedAt: string;
   createdAt: string;
 }
@@ -343,6 +344,8 @@ export interface Search {
         relationTo: 'pages';
         value: number | Page;
       };
+  summary?: string | null;
+  url?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -364,15 +367,6 @@ export interface Form {
             id?: string | null;
             blockName?: string | null;
             blockType: 'checkbox';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'country';
           }
         | {
             name: string;
@@ -435,15 +429,6 @@ export interface Form {
             name: string;
             label?: string | null;
             width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'state';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
             defaultValue?: string | null;
             required?: boolean | null;
             id?: string | null;
@@ -482,32 +467,6 @@ export interface Form {
   redirect?: {
     url: string;
   };
-  emails?:
-    | {
-        emailTo?: string | null;
-        cc?: string | null;
-        bcc?: string | null;
-        replyTo?: string | null;
-        emailFrom?: string | null;
-        subject: string;
-        message?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -771,6 +730,7 @@ export interface RedirectsSelect<T extends boolean = true> {
         reference?: T;
         url?: T;
       };
+  type?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -782,6 +742,8 @@ export interface SearchSelect<T extends boolean = true> {
   title?: T;
   priority?: T;
   doc?: T;
+  summary?: T;
+  url?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -802,16 +764,6 @@ export interface FormsSelect<T extends boolean = true> {
               width?: T;
               required?: T;
               defaultValue?: T;
-              id?: T;
-              blockName?: T;
-            };
-        country?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
               id?: T;
               blockName?: T;
             };
@@ -862,16 +814,6 @@ export interface FormsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
-        state?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
         text?:
           | T
           | {
@@ -902,18 +844,6 @@ export interface FormsSelect<T extends boolean = true> {
     | T
     | {
         url?: T;
-      };
-  emails?:
-    | T
-    | {
-        emailTo?: T;
-        cc?: T;
-        bcc?: T;
-        replyTo?: T;
-        emailFrom?: T;
-        subject?: T;
-        message?: T;
-        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

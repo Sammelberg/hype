@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { pagePath } from "@/collections/Pages";
 import { RichText } from "@/components/site/rich-text";
 import { getPayloadClient } from "@/lib/payload";
 import { getPageByPath } from "@/lib/queries";
+import { redirectOrNotFound } from "@/lib/redirect-or-not-found";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string[] }> };
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CmsPage({ params }: Props) {
   const { slug } = await params;
   const page = await getPageByPath(slug);
-  if (!page) notFound();
+  if (!page) return redirectOrNotFound(`/${slug.join("/")}`);
 
   return (
     <main className="page-container max-w-3xl pt-section">

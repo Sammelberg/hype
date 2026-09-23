@@ -175,7 +175,29 @@ export const seedPages: SeedPage[] = [
   },
 ];
 
+// Rendered at /kontakt (looked up by title). Anrede: Sie.
+export const seedContactForm = {
+  title: "Kontakt",
+  submitButtonLabel: "Nachricht senden",
+  confirmationType: "message" as const,
+  confirmation: [
+    {
+      kind: "p" as const,
+      text: "Vielen Dank für Ihre Nachricht. Ich melde mich in der Regel innerhalb von zwei Werktagen.",
+    },
+  ],
+  fields: [
+    { blockType: "text", name: "name", label: "Name", required: true, width: 50 },
+    { blockType: "email", name: "email", label: "E-Mail", required: true, width: 50 },
+    { blockType: "textarea", name: "nachricht", label: "Nachricht", required: true },
+  ],
+};
+
+// An old project URL, to exercise the redirects plugin end to end.
+export const SEED_REDIRECT = { from: "/projekte/museum", toProject: "stadtmuseum-freiburg" };
+
 export const SEED_PATHS = [
+  "/kontakt",
   ...seedProjects.map((p) => `/projekte/${p.slug}`),
   "/impressum",
   "/datenschutz",

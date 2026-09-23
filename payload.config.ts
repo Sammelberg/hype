@@ -18,9 +18,14 @@ import { Pages, pagePath } from "./collections/Pages";
 import { Projects, projectPath } from "./collections/Projects";
 import { Users } from "./collections/Users";
 import { env } from "./env";
+import { revalidatePathsOf } from "./hooks/revalidate";
+import { normalizePath } from "./lib/redirects";
 import { SiteSettings } from "./globals/SiteSettings";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const redirectRevalidation = revalidatePathsOf((doc) => [doc.from ? String(doc.from) : null]);
+const formRevalidation = revalidatePathsOf(() => ["/kontakt"]);
 
 const s3Enabled = Boolean(env.S3_BUCKET && env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY);
 
@@ -65,9 +70,71 @@ export default buildConfig({
       collections: ["pages"],
       generateURL: (docs) => docs.reduce((url, doc) => `${url}/${doc.slug}`, ""),
     }),
-    redirectsPlugin({ collections: ["pages", "projects"] }),
-    searchPlugin({ collections: ["projects", "pages"] }),
-    formBuilderPlugin({ fields: { payment: false } }),
+    // Resolved in the frontend before a 404 (lib/queries.ts → findRedirect).
+    redirectsPlugin({
+      collections: ["pages", "projects"],
+      redirectTypes: ["301", "302"],
+      redirectTypeFieldOverride: {
+        label: "Art",
+        defaultValue: "301",
+        options: [
+          { label: "301 – dauerhaft (Adresse hat sich geändert)", value: "301" },
+          { label: "302 – vorübergehend", value: "302" },
+        ],
+      },
+      overrides: {
+        labels: { singular: "Weiterleitung", plural: "Weiterleitungen" },
+        hooks: {
+          beforeChange: [
+            ({ data }) => (data.from ? { ...data, from: normalizePath(String(data.from)) } : data),
+          ],
+          afterChange: [redirectRevalidation.afterChange],
+          afterDelete: [redirectRevalidation.afterDelete],
+        },
+      },
+    }),
+    // Feeds /suche. Only published documents are indexed.
+    searchPlugin({
+      collections: ["projects", "pages"],
+      searchOverrides: {
+        labels: { singular: "Suchindex-Eintrag", plural: "Suchindex" },
+        fields: ({ defaultFields }) => [
+          ...defaultFields,
+          { name: "summary", label: "Kurztext", type: "textarea", admin: { readOnly: true } },
+          { name: "url", label: "Pfad", type: "text", admin: { readOnly: true } },
+        ],
+      },
+      beforeSync: ({ collectionSlug, originalDoc, searchDoc }) => ({
+        ...searchDoc,
+        summary: originalDoc.summary ?? originalDoc.meta?.description ?? "",
+        url: collectionSlug === "projects" ? projectPath(originalDoc.slug) : pagePath(originalDoc),
+      }),
+    }),
+    // Contact form at /kontakt. No email adapter (data sovereignty): submissions are read in the
+    // admin, so the plugin's email settings are removed. Public REST creation is closed — the
+    // site's server action validates, checks the honeypot and writes via the Local API.
+    formBuilderPlugin({
+      fields: { payment: false, country: false, state: false },
+      formOverrides: {
+        labels: { singular: "Formular", plural: "Formulare" },
+        fields: ({ defaultFields }) =>
+          defaultFields.filter((field) => !("name" in field && field.name === "emails")),
+        hooks: {
+          afterChange: [formRevalidation.afterChange],
+          afterDelete: [formRevalidation.afterDelete],
+        },
+      },
+      formSubmissionOverrides: {
+        labels: { singular: "Formulareingang", plural: "Formulareingänge" },
+        access: {
+          create: ({ req }) => Boolean(req.user),
+          read: ({ req }) => Boolean(req.user),
+          update: () => false,
+          delete: ({ req }) => Boolean(req.user),
+        },
+        admin: { defaultColumns: ["form", "createdAt"] },
+      },
+    }),
     s3Storage({
       enabled: s3Enabled,
       collections: { media: true },

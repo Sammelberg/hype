@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 
 import { projectPath } from "@/collections/Projects";
 import { RichText } from "@/components/site/rich-text";
 import { getProjectBySlug, getPublishedProjects } from "@/lib/queries";
+import { redirectOrNotFound } from "@/lib/redirect-or-not-found";
 import { absoluteUrl, buildMetadata, JsonLd, mediaUrl } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
-  if (!project) notFound();
+  if (!project) return redirectOrNotFound(`/projekte/${slug}`);
 
   const cover = mediaUrl(project.cover, "hero");
   const coverAlt = typeof project.cover === "object" ? project.cover.alt : "";

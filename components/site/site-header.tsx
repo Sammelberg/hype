@@ -13,6 +13,16 @@ export function SiteHeader({ siteName }: { siteName: string }) {
               Projekte
             </Link>
           </li>
+          <li>
+            <Link href="/kontakt" className="hover:text-foreground">
+              Kontakt
+            </Link>
+          </li>
+          <li>
+            <Link href="/suche" className="hover:text-foreground">
+              Suche
+            </Link>
+          </li>
         </ul>
       </nav>
     </header>

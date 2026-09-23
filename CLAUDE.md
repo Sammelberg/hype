@@ -2,6 +2,8 @@
 
 Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
 
+- **Anrede: Sie** in all visitor-facing text.
+- **Dark mode follows the OS** (`prefers-color-scheme`, no toggle); `dark:` variants and the dark tokens in `globals.css` are media-query based (there is no `.dark` class).
 - **Language: German only.** All visible UI text, alt texts, metadata and URLs are German (`/projekte/…`, `/impressum`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is unused).
 - **Hosting: own server at IONOS** (Germany), self-managed. No Vercel-specific features.
 - Impressum and Datenschutzerklärung are legally required: they are Payload pages with slugs `impressum` and `datenschutz` (linked in the footer). Never invent legal text — the owner writes it.
@@ -10,10 +12,10 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 - `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
 - `app/(payload)/` — Payload admin (`/admin`) and API (`/api`). Files there and `app/(payload)/admin/importMap.js` are generated — don't hand-edit; run `pnpm generate:importmap` after adding custom admin components.
-- Routes: `/` (home, projects list), `/projekte/[slug]` (project), `/[...slug]` (Payload pages, nested paths via nested-docs breadcrumbs), `not-found.tsx`, `app/sitemap.ts`, `app/robots.ts`, `opengraph-image.tsx` (rendered locally via next/og). All are static; publishing in Payload revalidates them instantly (`hooks/revalidate.ts`). Data access goes through `lib/queries.ts` (React `cache`, draft-mode aware); SEO helpers in `lib/seo.tsx` (`buildMetadata`, `JsonLd`, `mediaUrl`).
+- Routes: `/` (home, projects list), `/projekte/[slug]` (project), `/[...slug]` (Payload pages, nested paths via nested-docs breadcrumbs), `/suche` (search, dynamic, noindex), `/kontakt` (contact form), `not-found.tsx`, `error.tsx` + `app/global-error.tsx` (German), `icon.tsx`/`apple-icon.tsx` (placeholder monogram), `app/sitemap.ts`, `app/robots.ts`, `opengraph-image.tsx` (rendered locally via next/og). All are static; publishing in Payload revalidates them instantly (`hooks/revalidate.ts`). Data access goes through `lib/queries.ts` (React `cache`, draft-mode aware); SEO helpers in `lib/seo.tsx` (`buildMetadata`, `JsonLd`, `mediaUrl`).
 - Draft preview: Payload live preview → `/next/preview?path=…` (requires a Payload session, enables Next draft mode) → `RefreshOnSave` re-renders on save; `/next/exit-preview` ends it.
 - `globals/SiteSettings.ts` — site name, owner, tagline, SEO description, public contact email, profile links.
-- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Admin UI is German (`i18n`). Collection/global files use relative imports (the Payload CLI does not resolve `@/`). Uploads are stored on local disk in `/media` (gitignored) — must be a persistent volume in production. Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
+- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Admin UI is German (`i18n`). Collection/global files use relative imports (the Payload CLI does not resolve `@/`). Uploads are stored on local disk in `/media` (gitignored) — must be a persistent volume in production. Plugins: seo, nested-docs, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint), and three wired into the frontend: **redirects** (301/302; `from` is normalized; CMS routes call `redirectOrNotFound()` instead of `notFound()`), **search** (index carries `summary` + `url`; `/suche` queries it), **form-builder** (form titled „Kontakt“ renders at `/kontakt`; server action validates via `lib/contact.ts` with honeypot + minimum fill time; public REST creation of submissions is closed; the plugin's email settings and US-only blocks are removed). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
 - `lib/payload.ts` — `getPayloadClient()` for server components (Local API, no HTTP).
 - `env.ts` — validated env (`@t3-oss/env-nextjs`); import `env` instead of reading `process.env`. New variables go into `env.ts` and `.env.example`.
 - `app/reticle-dev.tsx` — dev-only Reticle bridge, mounted in the frontend layout.
@@ -23,7 +25,7 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 ## Commands
 
 - `pnpm db:up` / `pnpm db:down` — local Postgres (docker-compose, port 5433). Then `pnpm dev`.
-- `pnpm seed` — fictional German dev content (`scripts/seed-data.ts`: 5 projects, placeholder Impressum/Datenschutz, a nested page, site settings; images generated locally). Idempotent; refuses non-local databases. Creates no users — sign up the first admin at `/admin`. e2e tests cover every seeded route (`SEED_PATHS`), so run it before `pnpm test:e2e`; CI runs it after `migrate`.
+- `pnpm seed` — fictional German dev content (`scripts/seed-data.ts`: 5 projects, placeholder Impressum/Datenschutz, a nested page, the „Kontakt“ form, a sample redirect `/projekte/museum`, site settings; images generated locally). Idempotent; refuses non-local databases. Creates no users — sign up the first admin at `/admin`. e2e tests cover every seeded route (`SEED_PATHS`), so run it before `pnpm test:e2e`; CI runs it after `migrate`.
 - Schema changes: dev auto-pushes; before merging create a migration with `pnpm migrate:create <name>` (auto-fixes type imports), commit `migrations/`. `pnpm migrate` applies them (CI runs it before build).
 - `pnpm dev` · `pnpm build`
 - `pnpm check` = typecheck + lint + test + build — must pass before a task is called done.

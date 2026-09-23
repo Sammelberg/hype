@@ -17,7 +17,7 @@ function collectExternalRequests(page: Page, baseURL: string) {
 }
 
 // Seeded routes cover project pages, legal pages and nested pages (`pnpm seed`).
-for (const path of ["/", "/admin", "/seite-die-es-nicht-gibt", ...SEED_PATHS]) {
+for (const path of ["/", "/admin", "/seite-die-es-nicht-gibt", "/suche?q=museum", ...SEED_PATHS]) {
   test(`${path} makes no third-party requests`, async ({ page, baseURL }) => {
     const external = collectExternalRequests(page, baseURL!);
     await page.goto(path, { waitUntil: "networkidle" });

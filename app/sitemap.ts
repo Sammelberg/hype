@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   return [
     { url: absoluteUrl("/"), changeFrequency: "weekly", priority: 1 },
+    { url: absoluteUrl("/kontakt"), priority: 0.6 },
     ...projects.docs.map((p) => ({
       url: absoluteUrl(projectPath(p.slug) ?? "/"),
       lastModified: p.updatedAt,

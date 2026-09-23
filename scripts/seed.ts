@@ -6,7 +6,15 @@ import { getPayload, type Payload } from "payload";
 import sharp from "sharp";
 
 import config from "../payload.config";
-import { lexical, seedPages, seedProjects, seedSettings, type SeedProject } from "./seed-data";
+import {
+  lexical,
+  SEED_REDIRECT,
+  seedContactForm,
+  seedPages,
+  seedProjects,
+  seedSettings,
+  type SeedProject,
+} from "./seed-data";
 
 const context = { disableRevalidate: true };
 
@@ -130,8 +138,43 @@ async function main() {
     ids.set(page.slug, doc.id);
   }
 
+  const form = await payload.find({
+    collection: "forms",
+    where: { title: { equals: seedContactForm.title } },
+    limit: 1,
+  });
+  const { confirmation, ...formData } = seedContactForm;
+  const formBody = { ...formData, confirmationMessage: lexical(confirmation) } as never;
+  if (form.docs[0]) {
+    await payload.update({ collection: "forms", id: form.docs[0].id, data: formBody, context });
+  } else {
+    await payload.create({ collection: "forms", data: formBody, context });
+  }
+
+  const target = await payload.find({
+    collection: "projects",
+    where: { slug: { equals: SEED_REDIRECT.toProject } },
+    limit: 1,
+  });
+  const redirect = await payload.find({
+    collection: "redirects",
+    where: { from: { equals: SEED_REDIRECT.from } },
+    limit: 1,
+  });
+  if (target.docs[0] && !redirect.docs[0]) {
+    await payload.create({
+      collection: "redirects",
+      data: {
+        from: SEED_REDIRECT.from,
+        type: "301",
+        to: { type: "reference", reference: { relationTo: "projects", value: target.docs[0].id } },
+      },
+      context,
+    });
+  }
+
   payload.logger.info(
-    `Seed fertig: ${seedProjects.length} Projekte, ${seedPages.length} Seiten, Website-Einstellungen.`,
+    `Seed fertig: ${seedProjects.length} Projekte, ${seedPages.length} Seiten, Kontaktformular, Weiterleitung, Website-Einstellungen.`,
   );
 }
 

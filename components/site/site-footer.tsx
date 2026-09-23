@@ -18,10 +18,15 @@ export function SiteFooter({
           © {new Date().getFullYear()} {ownerName}
         </p>
         <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <li>
+            <Link href="/kontakt" className="hover:text-foreground">
+              Kontakt
+            </Link>
+          </li>
           {contactEmail ? (
             <li>
               <a href={`mailto:${contactEmail}`} className="hover:text-foreground">
-                Kontakt
+                E-Mail
               </a>
             </li>
           ) : null}

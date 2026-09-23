@@ -47,3 +47,20 @@ export const revalidateEverything: GlobalAfterChangeHook = ({ doc, req }) => {
   if (!req.context.disableRevalidate) revalidatePath("/", "layout");
   return doc;
 };
+
+// For collections whose documents map to fixed paths (redirect sources, the contact form page).
+export const revalidatePathsOf = (
+  pathsFor: (doc: Record<string, unknown>) => (string | null | undefined)[],
+): { afterChange: CollectionAfterChangeHook; afterDelete: CollectionAfterDeleteHook } => ({
+  afterChange: ({ doc, previousDoc, req }) => {
+    if (req.context.disableRevalidate) return doc;
+    for (const d of [doc, previousDoc]) {
+      for (const path of d ? pathsFor(d) : []) if (path) revalidatePath(path);
+    }
+    return doc;
+  },
+  afterDelete: ({ doc }) => {
+    for (const path of pathsFor(doc)) if (path) revalidatePath(path);
+    return doc;
+  },
+});
