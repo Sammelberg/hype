@@ -1,0 +1,62 @@
+# port — portfolio + CMS
+
+Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
+
+## Layout
+
+- `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
+- `app/(payload)/` — Payload admin and API (planned).
+- `components/ui/` — shadcn components (add via CLI, then adapt). `components/` — app components. `lib/` — utilities (`cn` comes from the `cn` package via `lib/utils.ts`).
+- Import alias: `@/*` → project root.
+
+## Commands
+
+- `pnpm dev` · `pnpm build`
+- `pnpm check` = typecheck + lint + test + build — must pass before a task is called done.
+- `pnpm test` (Vitest, jsdom, `*.test.ts(x)`), `pnpm lint` (zero warnings), `pnpm typecheck`, `pnpm format`.
+- `pnpm test:e2e` (Playwright, `e2e/`, starts `pnpm dev` itself; axe via `@axe-core/playwright`).
+- `pnpm knip` — unused files/deps/exports. Not in `check`/CI yet (every dep is unused until app code exists); add it back once pages exist.
+- `pnpm analyze` — bundle analyzer build.
+- shadcn: `pnpm dlx shadcn@latest add <component>`.
+- Commits: Conventional Commits, enforced by the commit-msg hook (commitlint); pre-commit runs lint-staged.
+- Formatting is automatic: Prettier (with Tailwind class sorting for `cn`/`cva`) runs on every file Claude edits via `.claude/hooks/format-on-edit.mjs`. ESLint also checks Tailwind class correctness (conflicts, unknown/deprecated classes).
+- CI: `.github/workflows/ci.yml` runs format:check, typecheck, lint, test, build. Dependabot updates weekly (grouped).
+
+## Which skill to use
+
+Pick skills by task; load them before starting the work, not after.
+
+| Task                                      | Skills                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                |
+| Several design options to choose from     | `variate`                                                                                   |
+| UI components                             | `shadcn` (use an existing component first), then `/break` on anything rendering CMS content |
+| Typography / colour / tokens              | `better-typography`, `better-colors`                                                        |
+| Component motion, hovers, dialogs, cmdk   | `motion` (`motion/react`) + `emil-design-eng`; `apple-design` for springs/gestures          |
+| Scroll-driven motion, pinning, parallax   | GSAP ScrollTrigger + Lenis (`gsap-scrolltrigger`, `gsap-react`)                             |
+| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                        |
+| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                 |
+| Accessibility                             | `fixing-accessibility` — run on every new interactive UI                                    |
+| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit`, `ai-seo`                                          |
+| Site copy                                 | `product-marketing` (context file first), then `copywriting`                                |
+| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                        |
+| New feature with logic                    | `tdd`                                                                                       |
+| Bug or regression                         | `diagnosing-bugs`                                                                           |
+| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                       |
+| Finding code, callers, impact of a change | Graft MCP tools (`graft_find_code`, `graft_trace_calls`) before grep                        |
+| Verifying a UI flow actually works        | Reticle MCP (once `reticle init` has run and the dev server is up)                          |
+
+Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when explicitly requested. `web-design-engineer` is for standalone HTML prototypes, not this app.
+
+## Conflict rules
+
+- Two animation systems, two jobs: `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences. Never both on the same element. Always respect `prefers-reduced-motion`.
+- `baseline-ui` is the default constraint set. Deviations (gradients, glow, custom easing, extra animation) need an explicit request or a chosen art direction.
+- Use the project's existing tokens, components and fonts before adding new ones; no new dependency without asking.
+- Keep changes scoped to the request (`karpathy-guidelines`).
+
+## Definition of done
+
+1. `pnpm check` passes.
+2. New interactive UI passed `fixing-accessibility`.
+3. Once the dev server exists: the changed flow is verified with Reticle.

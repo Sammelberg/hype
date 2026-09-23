@@ -1,0 +1,11 @@
+.next
+node_modules
+coverage
+pnpm-lock.yaml
+next-env.d.ts
+.claude/helpers
+graft
+playwright-report
+test-results
+.claude/settings*.json
+.mcp.json
