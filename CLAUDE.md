@@ -1,97 +1,112 @@
 # port — portfolio + CMS
 
-Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
+Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm. Hosted on our own server at IONOS (Germany) — no Vercel-specific features.
 
-- **Anrede: Sie** in all visitor-facing text.
-- **Dark mode follows the OS** (`prefers-color-scheme`, no toggle); `dark:` variants and the dark tokens in `globals.css` are media-query based (there is no `.dark` class).
-- **Language: German only.** All visible UI text, alt texts, metadata and URLs are German (`/projekte/…`, `/impressum`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is unused).
-- **Hosting: own server at IONOS** (Germany), self-managed. No Vercel-specific features.
-- Impressum and Datenschutzerklärung are legally required: they are Payload pages with slugs `impressum` and `datenschutz` (linked in the footer). Never invent legal text — the owner writes it.
+## Product rules
 
-## Layout
+- **German only, Anrede „Sie“.** All visible text, alt texts, metadata and URLs are German (`/projekte/…`, `/kontakt`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is installed but unused).
+- **Legal pages:** Impressum and Datenschutzerklärung are Payload pages (slugs `impressum`, `datenschutz`, linked in the footer). The owner writes legal text; seeded versions are marked „Platzhalter“.
+- **Data sovereignty** is a hard rule — see its section before adding any service, origin, font or asset.
 
-- `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
-- `app/(payload)/` — Payload admin (`/admin`) and API (`/api`). Files there and `app/(payload)/admin/importMap.js` are generated — don't hand-edit; run `pnpm generate:importmap` after adding custom admin components.
-- Routes: `/` (home, projects list), `/projekte/[slug]` (project), `/[...slug]` (Payload pages, nested paths via nested-docs breadcrumbs), `/suche` (search, dynamic, noindex), `/kontakt` (contact form), `not-found.tsx`, `error.tsx` + `app/global-error.tsx` (German), `icon.tsx`/`apple-icon.tsx` (placeholder monogram), `app/sitemap.ts`, `app/robots.ts`, `opengraph-image.tsx` (rendered locally via next/og). All are static; publishing in Payload revalidates them instantly (`hooks/revalidate.ts`). Data access goes through `lib/queries.ts` (React `cache`, draft-mode aware); SEO helpers in `lib/seo.tsx` (`buildMetadata`, `JsonLd`, `mediaUrl`).
-- Draft preview: Payload live preview → `/next/preview?path=…` (requires a Payload session, enables Next draft mode) → `RefreshOnSave` re-renders on save; `/next/exit-preview` ends it.
-- `globals/SiteSettings.ts` — site name, owner, tagline, SEO description, public contact email, profile links.
-- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Admin UI is German (`i18n`). Collection/global files use relative imports (the Payload CLI does not resolve `@/`). Uploads are stored on local disk in `/media` (gitignored) — must be a persistent volume in production. Plugins: seo, nested-docs, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint), and three wired into the frontend: **redirects** (301/302; `from` is normalized; CMS routes call `redirectOrNotFound()` instead of `notFound()`), **search** (index carries `summary` + `url`; `/suche` queries it), **form-builder** (form titled „Kontakt“ renders at `/kontakt`; server action validates via `lib/contact.ts` with honeypot + minimum fill time; public REST creation of submissions is closed; the plugin's email settings and US-only blocks are removed). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
-- `lib/payload.ts` — `getPayloadClient()` for server components (Local API, no HTTP).
-- `env.ts` — validated env (`@t3-oss/env-nextjs`); import `env` instead of reading `process.env`. New variables go into `env.ts` and `.env.example`.
-- `app/reticle-dev.tsx` — dev-only Reticle bridge, mounted in the frontend layout.
-- `components/ui/` — shadcn components (add via CLI, then adapt). `components/` — app components. `lib/` — utilities (`cn` comes from the `cn` package via `lib/utils.ts`).
-- Import alias: `@/*` → project root.
+## Code map
 
-## Commands
+- `app/(frontend)/` — public site: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche` (dynamic, noindex), `/kontakt`, German `error.tsx` + `app/global-error.tsx`, placeholder `icon.tsx`/`apple-icon.tsx`, `opengraph-image.tsx` (next/og, local). `app/sitemap.ts`, `app/robots.ts`.
+- `app/(payload)/` — admin (`/admin`) and API (`/api`); generated, including `admin/importMap.js` → `pnpm generate:importmap` after adding admin components.
+- `lib/queries.ts` — all frontend data access (React `cache`, draft-mode aware). `lib/seo.tsx` — `buildMetadata`, `JsonLd`, `mediaUrl`. `lib/payload.ts` — `getPayloadClient()` (Local API).
+- `env.ts` — validated env; import `env`, never `process.env`. New variables go into `env.ts` and `.env.example`.
+- `components/ui/` — shadcn (add via `pnpm dlx shadcn@latest add <name>`, then adapt). `components/site/` — app components. `cn` comes from the `cn` package (`lib/utils.ts`).
+- `app/reticle-dev.tsx` — dev-only Reticle bridge in the frontend layout.
 
-- `pnpm db:up` / `pnpm db:down` — local Postgres (docker-compose, port 5433). Then `pnpm dev`.
-- `pnpm seed` — fictional German dev content (`scripts/seed-data.ts`: 5 projects, placeholder Impressum/Datenschutz, a nested page, the „Kontakt“ form, a sample redirect `/projekte/museum`, site settings; images generated locally). Idempotent; refuses non-local databases. Creates no users — sign up the first admin at `/admin`. e2e tests cover every seeded route (`SEED_PATHS`), so run it before `pnpm test:e2e`; CI runs it after `migrate`.
-- Schema changes: dev auto-pushes; before merging create a migration with `pnpm migrate:create <name>` (auto-fixes type imports), commit `migrations/`. `pnpm migrate` applies them (CI runs it before build).
-- `pnpm dev` · `pnpm build`
-- `pnpm check` = typecheck + lint + test + build — must pass before a task is called done.
-- `pnpm test` (Vitest, jsdom, `*.test.ts(x)`), `pnpm lint` (zero warnings), `pnpm typecheck`, `pnpm format`.
-- `pnpm test:e2e` (Playwright, `e2e/`, reuses a running dev server or starts one; `e2e/smoke.spec.ts` checks console errors + axe WCAG 2 AA).
-- `pnpm knip` — unused files/deps/exports. Not in `check`/CI yet (every dep is unused until app code exists); add it back once pages exist.
-- `pnpm analyze` — bundle analyzer build.
-- shadcn: `pnpm dlx shadcn@latest add <component>`.
-- Commits: Conventional Commits, enforced by the commit-msg hook (commitlint); pre-commit runs lint-staged.
-- Formatting is automatic: Prettier (with Tailwind class sorting for `cn`/`cva`) runs on every file Claude edits via `.claude/hooks/format-on-edit.mjs`. ESLint also checks Tailwind class correctness (conflicts, unknown/deprecated classes).
-- CI: `.github/workflows/ci.yml` — Postgres service, format:check, typecheck, lint, test, migrate, build, Playwright e2e. Dependabot updates weekly (grouped).
-- Security headers + CSP live in `next.config.ts`. CSP is **enforcing and same-origin only** — see "Data sovereignty" before touching it.
+## CMS (Payload)
+
+- `payload.config.ts`, `collections/` (Users, Media, Projects, Pages), `globals/SiteSettings.ts` (site name, owner, tagline, SEO description, contact email, profile links). Admin UI is German. These files use **relative imports** — the Payload CLI does not resolve `@/`.
+- **Revalidation:** pages are static; publishing rebuilds them instantly via `hooks/revalidate.ts`. A collection that feeds fixed paths gets `revalidatePathsOf(...)`.
+- **Draft preview:** live preview → `/next/preview?path=…` (needs a Payload session, enables draft mode) → `RefreshOnSave`; `/next/exit-preview` ends it.
+- **Plugins:** seo, nested-docs, storage-s3 (auto-on when S3 env is set; self-hosted/EU endpoint only), plus three wired into the site:
+  - **redirects** — 301/302, `from` is normalized (`lib/redirects.ts`). CMS routes call `redirectOrNotFound(path)` instead of `notFound()`.
+  - **search** — index carries `summary` and `url`; `/suche` queries it.
+  - **form-builder** — the form titled „Kontakt“ renders at `/kontakt`. The server action validates with `lib/contact.ts` (German messages, honeypot, minimum fill time) and writes via the Local API; public REST creation of submissions is closed. Email settings and US-only blocks are removed.
+- **Uploads** live on local disk in `/media` (gitignored; a persistent volume in production).
+- **Schema changes:** dev pushes automatically. Before merging: `pnpm migrate:create <name>`, then `pnpm generate:types`, commit `migrations/` and `payload-types.ts`. CI runs `pnpm migrate`.
+- **Dev content:** `pnpm seed` (`scripts/seed-data.ts`) — fictional projects, placeholder legal pages, a nested page, the „Kontakt“ form, redirect `/projekte/museum`. Idempotent, local databases only, creates no users (first admin signs up at `/admin`). Every new route gets seeded content and an entry in `SEED_PATHS`, which feeds the e2e tests.
+
+## Styling
+
+- `app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
+- **Dark mode follows the OS** (`prefers-color-scheme`); `dark:` variants and dark tokens are media-query based — there is no `.dark` class or toggle.
+- **Fibonacci layout system** (overrides any skill that prescribes a 4/8 grid):
+  - page shell `page-container` (max 1536px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
+  - golden ratio: `aspect-golden` for covers and cards, `grid-cols-golden` (61.8/38.2) for text + sidebar;
+  - Tailwind's default scale stays for component internals; long text keeps a reading width (`max-w-3xl`, `max-w-prose`);
+  - `--container-sm…2xl` stay untouched — shadcn's `max-w-*` depend on them.
+- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`.
+- `baseline-ui` is the default constraint set. Gradients, glow, custom easing or extra animation need an explicit request or a chosen art direction.
+- Reuse existing tokens, components and fonts; a new dependency needs approval.
 
 ## Which skill to use
 
-Pick skills by task; load them before starting the work, not after.
+Load the skill before starting the work.
 
-| Task                                      | Skills                                                                                                                            |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                                      |
-| Several design options to choose from     | `variate`                                                                                                                         |
-| UI components                             | `shadcn` (use an existing component first), then `/break` on anything rendering CMS content                                       |
-| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                                              |
-| Component motion, hovers, dialogs, cmdk   | `animate` (builds it with `motion/react`) + `emil-design-eng`; `apple-design` for springs/gestures                                |
-| Scroll-driven motion, pinning, parallax   | GSAP ScrollTrigger + Lenis (`gsap-scrolltrigger`, `gsap-react`)                                                                   |
-| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                                              |
-| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                                       |
-| Accessibility                             | `fixing-accessibility` — run on every new interactive UI                                                                          |
-| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions; not `seo-audit`/`ai-seo`)                                |
-| Site copy (German)                        | `product-marketing-de` (context file first), then `copywriting-de`; `vermenschlichen` on every German text                        |
-| Project pages / case studies              | `case-study` for the narrative, then `copywriting-de`                                                                             |
-| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                                                              |
-| New feature with logic                    | `tdd`                                                                                                                             |
-| Bug or regression                         | `diagnosing-bugs`                                                                                                                 |
-| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                                             |
-| Finding code, callers, impact of a change | Graft MCP tools (`graft_find_code`, `graft_trace_calls`) before grep                                                              |
-| Verifying a UI flow actually works        | Reticle MCP (once `reticle init` has run and the dev server is up)                                                                |
-| Nothing above fits / a specific effect    | `skill-router` — searches the ~460-skill library in `.claude/skills-library/` (local only; project rules win over library skills) |
+| Task                                      | Skills                                                                                                          |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                    |
+| Several design options to choose from     | `variate`                                                                                                       |
+| UI components                             | `shadcn` (existing component first), then `/break` on anything rendering CMS content                            |
+| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                            |
+| Component motion, hovers, dialogs, cmdk   | `animate` + `emil-design-eng`; `apple-design` for springs/gestures                                              |
+| Scroll-driven motion, pinning, parallax   | `gsap-scrolltrigger`, `gsap-react` (+ Lenis)                                                                    |
+| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                            |
+| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                     |
+| Accessibility                             | `fixing-accessibility` — every new interactive UI                                                               |
+| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)              |
+| Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen` |
+| Project pages / case studies              | `case-study`, then `copywriting-de`                                                                             |
+| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                                            |
+| New feature with logic                    | `tdd` (pure logic in `lib/` with `*.test.ts`, like `lib/contact.ts`)                                            |
+| Bug or regression                         | `diagnosing-bugs`                                                                                               |
+| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                           |
+| Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                |
+| Editing CLAUDE.md or a skill              | `writing-for-agents` (via `skill-router`)                                                                       |
+| Nothing above fits / a specific effect    | `skill-router` — the ~460-skill library in `.claude/skills-library/` (local only; project rules win)            |
 
-Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when explicitly requested. `web-design-engineer` is for standalone HTML prototypes, not this app.
-
-## Conflict rules
-
-- Two animation systems, two jobs: `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences. Never both on the same element. Always respect `prefers-reduced-motion`.
-- `baseline-ui` is the default constraint set. Deviations (gradients, glow, custom easing, extra animation) need an explicit request or a chosen art direction.
-- Layout spacing is Fibonacci (`app/(frontend)/globals.css`), not a 4/8 grid — this overrides any skill that prescribes 4/8. Page shell: `page-container` (max 1536px, fluid `px-gutter` 21→55px); between sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px). Golden ratio: `aspect-golden` (1.618:1) for covers/cards, `grid-cols-golden` (61.8/38.2) for text + sidebar splits. Tailwind's default scale stays for component internals. Never redefine `--container-sm…2xl` (shadcn's `max-w-*` depend on them); long text keeps a reading width (`max-w-3xl`).
-- Use the project's existing tokens, components and fonts before adding new ones; no new dependency without asking.
-- Keep changes scoped to the request (`karpathy-guidelines`).
+`minimalist-ui` and `industrial-brutalist-ui` only on explicit request. `web-design-engineer` is for standalone HTML prototypes.
 
 ## Data sovereignty (hard rule)
 
-No user, visitor or content data may leave our own infrastructure.
+No user, visitor or content data leaves our own infrastructure.
 
-- **Browser:** CSP is enforcing and same-origin only (`next.config.ts`). Never add a third-party origin (CDN, fonts, analytics, captcha, embeds, avatars) without explicit approval; prefer self-hosting. `e2e/data-sovereignty.spec.ts` fails on any request to another host — keep it green, extend its page list when adding routes.
-- **Server:** no SaaS calls with user/content data. Telemetry is off: Payload `telemetry: false`, `NEXT_TELEMETRY_DISABLED=1`, Gravatar disabled (`avatar: "default"`). New services must be self-hosted or EU-hosted under our control, and need approval first.
-- **Fonts/assets:** only from local packages or `public/` (Geist is bundled). Never `next/font/google` or remote images without approval.
-- **Known gap:** Payload's code/JSON field editor (Monaco) loads from `cdn.jsdelivr.net` by default — CSP blocks it. Before adding a `code`/`json` field, self-host Monaco (`loader.config({ monaco })` in an admin provider).
-- Removed on purpose (US SaaS): Vercel Analytics/Speed Insights/OTel, Sentry, Upstash, Resend/email, Cloudflare Turnstile, AI SDK. Do not re-add them. If a capability is needed, propose a self-hosted option first (analytics → Umami/Plausible, errors → GlitchTip, rate limiting → own Valkey, captcha → honeypot/ALTCHA, files → MinIO).
-- **No email:** Payload has no email adapter (messages go to the server log). Password resets are done by an admin in `/admin` or via the Payload Local API; form submissions are read in the admin. Login brute-force protection is Payload's built-in lock (5 attempts → 10 min).
+- **Browser:** the CSP in `next.config.ts` is enforcing and same-origin only. Every third-party origin (CDN, fonts, analytics, captcha, embeds, avatars) needs explicit approval; self-host instead. `e2e/data-sovereignty.spec.ts` fails on any request to another host.
+- **Server:** no SaaS calls with user or content data. Telemetry is off (Payload `telemetry: false`, `NEXT_TELEMETRY_DISABLED=1`, Gravatar via `avatar: "default"`). New services are self-hosted or EU-hosted under our control, after approval.
+- **Fonts/assets:** local packages or `public/` only (Geist is bundled) — no `next/font/google`, no remote images.
+- **Removed on purpose (US SaaS):** Vercel Analytics/Speed Insights/OTel, Sentry, Upstash, Resend, Cloudflare Turnstile, AI SDK. For a needed capability propose the self-hosted route: analytics → Umami/Plausible, errors → GlitchTip, rate limiting → own Valkey, captcha → honeypot (in place) / ALTCHA, files → MinIO.
+- **No email adapter:** Payload logs messages to the server console. Password resets happen in `/admin` or via the Local API; form submissions are read in the admin. Login lockout: Payload's built-in 5 attempts → 10 min.
+- **Known gap:** Payload's code/JSON field editor (Monaco) loads from `cdn.jsdelivr.net`. Before adding a `code`/`json` field, self-host Monaco (`loader.config({ monaco })` in an admin provider).
+
+## Commands and checks
+
+- Local: `pnpm db:up` (Postgres on 5433), `pnpm seed`, `pnpm dev`. Scripts are in `package.json`.
+- `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
+- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-mode a11y). Needs `pnpm seed`.
+- `pnpm knip` — run by hand; it lists planned-but-unused dependencies (motion, gsap, three, …) that stay on purpose.
+- Commits: Conventional Commits (commitlint hook); pre-commit runs lint-staged. Prettier with Tailwind class sorting runs on every edited file via `.claude/hooks/format-on-edit.mjs`.
+- CI (`.github/workflows/ci.yml`): format:check, typecheck, lint, test, migrate, seed, build, Playwright (production build). Dependabot weekly.
+
+## Gotchas
+
+- **Next 16:** `error.tsx`/`global-error.tsx` receive `retry` (not `reset`); `next/image` uses `preload` (not `priority`); `middleware` is now `proxy.ts`; `<html data-scroll-behavior="smooth">` keeps route changes from animating the scroll. Check `node_modules/next/dist/docs/` before using an API from memory.
+- **Typed routes:** hrefs and redirect targets from the CMS need `as never`.
+- **React Compiler lint:** `Date.now()` and other impure calls are rejected during render — compute them at module scope or in an effect.
+- **Local database runs in Payload dev-push mode:** `pnpm migrate` on it waits for an interactive prompt. Test a migration on a scratch database: `createdb` inside the container, `DATABASE_URL=… pnpm migrate && pnpm seed`, then drop it (seed files land in `/media` — remove the extras).
+- **e2e in dev:** Reticle overlays can swallow clicks; `e2e/features.spec.ts` hides them in `beforeEach` — reuse that for new interaction tests.
+- **Stopping the dev server:** `pkill -f "[n]ext dev"` — an unbracketed pattern also matches the invoking shell.
+- **Skill names:** user-level skills in `~/.claude/skills` shadow project skills of the same name; project variants get a suffix (`-de`).
 
 ## Definition of done
 
 1. `pnpm check` passes.
 2. New interactive UI passed `fixing-accessibility`.
-3. Once the dev server exists: the changed flow is verified with Reticle.
-4. `pnpm test:e2e` passes, including the data-sovereignty test.
+3. The changed flow is verified in the running app (Reticle; a Playwright script for viewport-dependent checks).
+4. `pnpm test:e2e` passes, including data sovereignty; new routes are in `SEED_PATHS`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
