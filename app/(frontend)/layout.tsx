@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { draftMode } from "next/headers";
@@ -12,6 +12,14 @@ import { env } from "@/env";
 import { getSiteSettings } from "@/lib/queries";
 
 import "./globals.css";
+
+// Browser UI colour matches --background in light and dark mode (globals.css).
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
