@@ -9,3 +9,6 @@ playwright-report
 test-results
 .claude/settings*.json
 .mcp.json
+payload-types.ts
+app/(payload)/admin/importMap.js
+.reticle

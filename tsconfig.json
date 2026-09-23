@@ -10,7 +10,7 @@
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": false,
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -19,8 +19,15 @@
     "verbatimModuleSyntax": true,
     "incremental": true,
     "types": ["vitest/globals", "@testing-library/jest-dom"],
-    "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"],
+      "@payload-config": ["./payload.config.ts"]
+    }
   },
   "include": [
     "next-env.d.ts",

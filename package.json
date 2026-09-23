@@ -22,7 +22,14 @@
     "prepare": "husky",
     "test:e2e": "playwright test",
     "knip": "knip",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "payload": "payload",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create && node scripts/fix-migration-imports.mjs && prettier --write migrations"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
@@ -113,6 +120,8 @@
     "@faker-js/faker": "^10.6.0",
     "@next/bundle-analyzer": "^16.3.6",
     "@playwright/test": "^1.63.0",
+    "@reticlehq/next": "3.1.0",
+    "@reticlehq/react": "3.1.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/dom": "^10.4.2",

@@ -5,22 +5,29 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 ## Layout
 
 - `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
-- `app/(payload)/` — Payload admin and API (planned).
+- `app/(payload)/` — Payload admin (`/admin`) and API (`/api`). Files there and `app/(payload)/admin/importMap.js` are generated — don't hand-edit; run `pnpm generate:importmap` after adding custom admin components.
+- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set), Resend email (auto-on when key is set). `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
+- `lib/payload.ts` — `getPayloadClient()` for server components (Local API, no HTTP).
+- `env.ts` — validated env (`@t3-oss/env-nextjs`); import `env` instead of reading `process.env`. New variables go into `env.ts` and `.env.example`.
+- `app/reticle-dev.tsx` — dev-only Reticle bridge, mounted in the frontend layout.
 - `components/ui/` — shadcn components (add via CLI, then adapt). `components/` — app components. `lib/` — utilities (`cn` comes from the `cn` package via `lib/utils.ts`).
 - Import alias: `@/*` → project root.
 
 ## Commands
 
+- `pnpm db:up` / `pnpm db:down` — local Postgres (docker-compose, port 5433). Then `pnpm dev`.
+- Schema changes: dev auto-pushes; before merging create a migration with `pnpm migrate:create <name>` (auto-fixes type imports), commit `migrations/`. `pnpm migrate` applies them (CI runs it before build).
 - `pnpm dev` · `pnpm build`
 - `pnpm check` = typecheck + lint + test + build — must pass before a task is called done.
 - `pnpm test` (Vitest, jsdom, `*.test.ts(x)`), `pnpm lint` (zero warnings), `pnpm typecheck`, `pnpm format`.
-- `pnpm test:e2e` (Playwright, `e2e/`, starts `pnpm dev` itself; axe via `@axe-core/playwright`).
+- `pnpm test:e2e` (Playwright, `e2e/`, reuses a running dev server or starts one; `e2e/smoke.spec.ts` checks console errors + axe WCAG 2 AA).
 - `pnpm knip` — unused files/deps/exports. Not in `check`/CI yet (every dep is unused until app code exists); add it back once pages exist.
 - `pnpm analyze` — bundle analyzer build.
 - shadcn: `pnpm dlx shadcn@latest add <component>`.
 - Commits: Conventional Commits, enforced by the commit-msg hook (commitlint); pre-commit runs lint-staged.
 - Formatting is automatic: Prettier (with Tailwind class sorting for `cn`/`cva`) runs on every file Claude edits via `.claude/hooks/format-on-edit.mjs`. ESLint also checks Tailwind class correctness (conflicts, unknown/deprecated classes).
-- CI: `.github/workflows/ci.yml` runs format:check, typecheck, lint, test, build. Dependabot updates weekly (grouped).
+- CI: `.github/workflows/ci.yml` — Postgres service, format:check, typecheck, lint, test, migrate, build, Playwright e2e. Dependabot updates weekly (grouped).
+- Security headers + CSP live in `next.config.ts`. CSP is **Report-Only**: when adding a third-party script/iframe/API origin, add it to the CSP list; switch to enforcing once no violations appear.
 
 ## Which skill to use
 
@@ -60,3 +67,13 @@ Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when expli
 1. `pnpm check` passes.
 2. New interactive UI passed `fixing-accessibility`.
 3. Once the dev server exists: the changed flow is verified with Reticle.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
