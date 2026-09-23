@@ -4,7 +4,9 @@ import { expect, test } from "@playwright/test";
 test("home renders without console errors or a11y violations", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(msg.text());
+    // Ignore the dev-only Reticle bridge when its local daemon is not running.
+    if (msg.type() === "error" && !/localhost:\d+\/reticle/.test(msg.text()))
+      errors.push(msg.text());
   });
 
   await page.goto("/");
