@@ -7,8 +7,6 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
     PAYLOAD_SECRET: z.string().min(32),
-    RESEND_API_KEY: optional,
-    EMAIL_FROM: z.email().optional(),
     S3_BUCKET: optional,
     S3_REGION: optional,
     S3_ENDPOINT: z.url().optional(),

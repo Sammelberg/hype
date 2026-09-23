@@ -6,7 +6,7 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 - `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
 - `app/(payload)/` — Payload admin (`/admin`) and API (`/api`). Files there and `app/(payload)/admin/importMap.js` are generated — don't hand-edit; run `pnpm generate:importmap` after adding custom admin components.
-- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set), Resend email (auto-on when key is set). `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
+- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
 - `lib/payload.ts` — `getPayloadClient()` for server components (Local API, no HTTP).
 - `env.ts` — validated env (`@t3-oss/env-nextjs`); import `env` instead of reading `process.env`. New variables go into `env.ts` and `.env.example`.
 - `app/reticle-dev.tsx` — dev-only Reticle bridge, mounted in the frontend layout.
@@ -27,7 +27,7 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 - Commits: Conventional Commits, enforced by the commit-msg hook (commitlint); pre-commit runs lint-staged.
 - Formatting is automatic: Prettier (with Tailwind class sorting for `cn`/`cva`) runs on every file Claude edits via `.claude/hooks/format-on-edit.mjs`. ESLint also checks Tailwind class correctness (conflicts, unknown/deprecated classes).
 - CI: `.github/workflows/ci.yml` — Postgres service, format:check, typecheck, lint, test, migrate, build, Playwright e2e. Dependabot updates weekly (grouped).
-- Security headers + CSP live in `next.config.ts`. CSP is **Report-Only**: when adding a third-party script/iframe/API origin, add it to the CSP list; switch to enforcing once no violations appear.
+- Security headers + CSP live in `next.config.ts`. CSP is **enforcing and same-origin only** — see "Data sovereignty" before touching it.
 
 ## Which skill to use
 
@@ -70,7 +70,8 @@ No user, visitor or content data may leave our own infrastructure.
 - **Server:** no SaaS calls with user/content data. Telemetry is off: Payload `telemetry: false`, `NEXT_TELEMETRY_DISABLED=1`, Gravatar disabled (`avatar: "default"`). New services must be self-hosted or EU-hosted under our control, and need approval first.
 - **Fonts/assets:** only from local packages or `public/` (Geist is bundled). Never `next/font/google` or remote images without approval.
 - **Known gap:** Payload's code/JSON field editor (Monaco) loads from `cdn.jsdelivr.net` by default — CSP blocks it. Before adding a `code`/`json` field, self-host Monaco (`loader.config({ monaco })` in an admin provider).
-- Installed but intentionally NOT wired (US SaaS): `@vercel/analytics`, `@vercel/speed-insights`, `@vercel/otel`, `@sentry/nextjs`, `@upstash/*`, `resend`/`@payloadcms/email-resend`, `@marsidev/react-turnstile`, `ai`/`@ai-sdk/*`. Do not wire them.
+- Removed on purpose (US SaaS): Vercel Analytics/Speed Insights/OTel, Sentry, Upstash, Resend/email, Cloudflare Turnstile, AI SDK. Do not re-add them. If a capability is needed, propose a self-hosted option first (analytics → Umami/Plausible, errors → GlitchTip, rate limiting → own Valkey, captcha → honeypot/ALTCHA, files → MinIO).
+- **No email:** Payload has no email adapter (messages go to the server log). Password resets are done by an admin in `/admin` or via the Payload Local API; form submissions are read in the admin. Login brute-force protection is Payload's built-in lock (5 attempts → 10 min).
 
 ## Definition of done
 

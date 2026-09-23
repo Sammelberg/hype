@@ -2,7 +2,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { postgresAdapter } from "@payloadcms/db-postgres";
-import { resendAdapter } from "@payloadcms/email-resend";
 import { formBuilderPlugin } from "@payloadcms/plugin-form-builder";
 import { nestedDocsPlugin } from "@payloadcms/plugin-nested-docs";
 import { redirectsPlugin } from "@payloadcms/plugin-redirects";
@@ -47,15 +46,6 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, "payload-types.ts") },
   db: postgresAdapter({ pool: { connectionString: env.DATABASE_URL } }),
   sharp,
-  ...(env.RESEND_API_KEY && env.EMAIL_FROM
-    ? {
-        email: resendAdapter({
-          apiKey: env.RESEND_API_KEY,
-          defaultFromAddress: env.EMAIL_FROM,
-          defaultFromName: "Portfolio",
-        }),
-      }
-    : {}),
   plugins: [
     seoPlugin({
       collections: ["projects", "pages"],
