@@ -2,11 +2,18 @@
 
 Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
 
+- **Language: German only.** All visible UI text, alt texts, metadata and URLs are German (`/projekte/…`, `/impressum`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is unused).
+- **Hosting: own server at IONOS** (Germany), self-managed. No Vercel-specific features.
+- Impressum and Datenschutzerklärung are legally required: they are Payload pages with slugs `impressum` and `datenschutz` (linked in the footer). Never invent legal text — the owner writes it.
+
 ## Layout
 
 - `app/(frontend)/` — public site. `globals.css` here holds Tailwind + shadcn theme tokens; import it only from the frontend layout so styles never leak into the Payload admin.
 - `app/(payload)/` — Payload admin (`/admin`) and API (`/api`). Files there and `app/(payload)/admin/importMap.js` are generated — don't hand-edit; run `pnpm generate:importmap` after adding custom admin components.
-- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
+- Routes: `/` (home, projects list), `/projekte/[slug]` (project), `/[...slug]` (Payload pages, nested paths via nested-docs breadcrumbs), `not-found.tsx`, `app/sitemap.ts`, `app/robots.ts`, `opengraph-image.tsx` (rendered locally via next/og). All are static; publishing in Payload revalidates them instantly (`hooks/revalidate.ts`). Data access goes through `lib/queries.ts` (React `cache`, draft-mode aware); SEO helpers in `lib/seo.tsx` (`buildMetadata`, `JsonLd`, `mediaUrl`).
+- Draft preview: Payload live preview → `/next/preview?path=…` (requires a Payload session, enables Next draft mode) → `RefreshOnSave` re-renders on save; `/next/exit-preview` ends it.
+- `globals/SiteSettings.ts` — site name, owner, tagline, SEO description, public contact email, profile links.
+- `payload.config.ts` + `collections/` (Users, Media, Projects, Pages). Admin UI is German (`i18n`). Collection/global files use relative imports (the Payload CLI does not resolve `@/`). Uploads are stored on local disk in `/media` (gitignored) — must be a persistent volume in production. Plugins: seo, nested-docs, redirects, search, form-builder, storage-s3 (auto-on when S3 env is set; use a self-hosted/EU endpoint). No email adapter. `payload-types.ts` is generated: `pnpm generate:types` after any schema change.
 - `lib/payload.ts` — `getPayloadClient()` for server components (Local API, no HTTP).
 - `env.ts` — validated env (`@t3-oss/env-nextjs`); import `env` instead of reading `process.env`. New variables go into `env.ts` and `.env.example`.
 - `app/reticle-dev.tsx` — dev-only Reticle bridge, mounted in the frontend layout.

@@ -14,7 +14,7 @@ function collectExternalRequests(page: Page, baseURL: string) {
   return external;
 }
 
-for (const path of ["/", "/admin"]) {
+for (const path of ["/", "/admin", "/seite-die-es-nicht-gibt"]) {
   test(`${path} makes no third-party requests`, async ({ page, baseURL }) => {
     const external = collectExternalRequests(page, baseURL!);
     await page.goto(path, { waitUntil: "networkidle" });

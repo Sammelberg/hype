@@ -99,8 +99,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -162,6 +166,9 @@ export interface User {
  */
 export interface Media {
   id: number;
+  /**
+   * Beschreibt das Bild für Screenreader und Suchmaschinen.
+   */
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -208,6 +215,9 @@ export interface Media {
 export interface Project {
   id: number;
   title: string;
+  /**
+   * Kleinbuchstaben und Bindestriche, z. B. mein-projekt
+   */
   slug: string;
   summary: string;
   cover: number | Media;
@@ -246,6 +256,8 @@ export interface Project {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Pflichtseiten: „impressum“ und „datenschutz“ (URL-Kürzel).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
@@ -961,6 +973,48 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName: string;
+  ownerName: string;
+  tagline?: string | null;
+  description?: string | null;
+  contactEmail?: string | null;
+  socialLinks?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  ownerName?: T;
+  tagline?: T;
+  description?: T;
+  contactEmail?: T;
+  socialLinks?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

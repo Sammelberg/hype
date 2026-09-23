@@ -29,7 +29,7 @@
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "migrate": "payload migrate",
-    "migrate:create": "payload migrate:create && node scripts/fix-migration-imports.mjs && prettier --write migrations"
+    "migrate:create": "node scripts/migrate-create.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
