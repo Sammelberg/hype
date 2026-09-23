@@ -25,8 +25,11 @@ const s3Enabled = Boolean(env.S3_BUCKET && env.S3_ACCESS_KEY_ID && env.S3_SECRET
 
 export default buildConfig({
   serverURL: env.NEXT_PUBLIC_SERVER_URL,
+  // Data sovereignty: no usage telemetry to payloadcms.com, no Gravatar lookups (leaks email hashes).
+  telemetry: false,
   admin: {
     user: Users.slug,
+    avatar: "default",
     importMap: { baseDir: dirname },
     livePreview: {
       url: ({ data, collectionConfig }) =>

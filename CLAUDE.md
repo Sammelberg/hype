@@ -62,11 +62,22 @@ Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when expli
 - Use the project's existing tokens, components and fonts before adding new ones; no new dependency without asking.
 - Keep changes scoped to the request (`karpathy-guidelines`).
 
+## Data sovereignty (hard rule)
+
+No user, visitor or content data may leave our own infrastructure.
+
+- **Browser:** CSP is enforcing and same-origin only (`next.config.ts`). Never add a third-party origin (CDN, fonts, analytics, captcha, embeds, avatars) without explicit approval; prefer self-hosting. `e2e/data-sovereignty.spec.ts` fails on any request to another host — keep it green, extend its page list when adding routes.
+- **Server:** no SaaS calls with user/content data. Telemetry is off: Payload `telemetry: false`, `NEXT_TELEMETRY_DISABLED=1`, Gravatar disabled (`avatar: "default"`). New services must be self-hosted or EU-hosted under our control, and need approval first.
+- **Fonts/assets:** only from local packages or `public/` (Geist is bundled). Never `next/font/google` or remote images without approval.
+- **Known gap:** Payload's code/JSON field editor (Monaco) loads from `cdn.jsdelivr.net` by default — CSP blocks it. Before adding a `code`/`json` field, self-host Monaco (`loader.config({ monaco })` in an admin provider).
+- Installed but intentionally NOT wired (US SaaS): `@vercel/analytics`, `@vercel/speed-insights`, `@vercel/otel`, `@sentry/nextjs`, `@upstash/*`, `resend`/`@payloadcms/email-resend`, `@marsidev/react-turnstile`, `ai`/`@ai-sdk/*`. Do not wire them.
+
 ## Definition of done
 
 1. `pnpm check` passes.
 2. New interactive UI passed `fixing-accessibility`.
 3. Once the dev server exists: the changed flow is verified with Reticle.
+4. `pnpm test:e2e` passes, including the data-sovereignty test.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

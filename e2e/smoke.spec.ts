@@ -10,8 +10,16 @@ test("home renders without console errors or a11y violations", async ({ page }) 
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(violations).toEqual([]);
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa"])
+    // Reticle's dev-only overlay is not part of the site (absent in production builds).
+    .exclude('[class*="reticle-"]')
+    .analyze();
+  expect(
+    violations.map(
+      (v) => `${v.id}: ${v.nodes.map((n) => `${n.target.join(" ")} ${n.html}`).join(" | ")}`,
+    ),
+  ).toEqual([]);
   expect(errors).toEqual([]);
 });
 

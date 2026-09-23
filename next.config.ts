@@ -10,27 +10,27 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// Report-Only until verified against real pages (admin, live preview, analytics, Turnstile, S3 media).
-// Switch the header key to "Content-Security-Policy" once the browser console shows no violations,
-// and add "upgrade-insecure-requests" then (browsers ignore it in report-only mode).
+// Data sovereignty: the browser may only talk to this origin. Every third-party origin must be an
+// explicit, reviewed addition here (and should be self-hosted or EU-hosted where possible).
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https:",
+  "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://vitals.vercel-insights.com${isDev ? " ws: http://localhost:*" : ""}`,
-  "frame-src 'self' https://challenges.cloudflare.com",
+  `connect-src 'self'${isDev ? " ws://localhost:* http://localhost:* ws://127.0.0.1:* http://127.0.0.1:*" : ""}`,
+  "frame-src 'self'",
   "worker-src 'self' blob:",
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [
-  { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy },
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
