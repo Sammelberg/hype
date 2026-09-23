@@ -67,7 +67,7 @@ export default async function ProjectPage({ params }: Props) {
           alt={coverAlt}
           width={1920}
           height={1187}
-          priority
+          preload
           sizes="(min-width: 1536px) 1426px, 100vw"
           className="mt-fib-xl aspect-golden w-full rounded-lg object-cover"
         />

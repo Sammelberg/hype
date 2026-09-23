@@ -44,7 +44,7 @@ export default async function HomePage() {
           </p>
         ) : (
           <ul className="mt-fib-md grid gap-x-grid gap-y-fib-xl sm:grid-cols-2">
-            {projects.map((project) => {
+            {projects.map((project, index) => {
               const cover = mediaUrl(project.cover, "card");
               const alt = typeof project.cover === "object" ? project.cover.alt : "";
               return (
@@ -57,6 +57,8 @@ export default async function HomePage() {
                         width={960}
                         height={593}
                         sizes="(min-width: 1536px) 696px, (min-width: 640px) 50vw, 100vw"
+                        // First row is above the fold (LCP): load it right away.
+                        loading={index < 2 ? "eager" : "lazy"}
                         className="aspect-golden w-full rounded-lg object-cover"
                       />
                     ) : null}
