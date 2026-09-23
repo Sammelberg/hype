@@ -68,6 +68,7 @@ Style skills `minimalist-ui` and `industrial-brutalist-ui` apply only when expli
 
 - Two animation systems, two jobs: `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences. Never both on the same element. Always respect `prefers-reduced-motion`.
 - `baseline-ui` is the default constraint set. Deviations (gradients, glow, custom easing, extra animation) need an explicit request or a chosen art direction.
+- Layout spacing is Fibonacci (`app/(frontend)/globals.css`), not a 4/8 grid — this overrides any skill that prescribes 4/8. Page shell: `page-container` (max 1536px, fluid `px-gutter` 21→55px); between sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px). Golden ratio: `aspect-golden` (1.618:1) for covers/cards, `grid-cols-golden` (61.8/38.2) for text + sidebar splits. Tailwind's default scale stays for component internals. Never redefine `--container-sm…2xl` (shadcn's `max-w-*` depend on them); long text keeps a reading width (`max-w-3xl`).
 - Use the project's existing tokens, components and fonts before adding new ones; no new dependency without asking.
 - Keep changes scoped to the request (`karpathy-guidelines`).
 

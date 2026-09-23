@@ -27,7 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function FrontendLayout({ children }: { children: ReactNode }) {
   const [settings, draft] = await Promise.all([getSiteSettings(), draftMode()]);
   return (
-    <html lang="de" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html
+      lang="de"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      // Route changes jump instantly; globals.css smooth scrolling is for in-page anchors only.
+      data-scroll-behavior="smooth"
+    >
       <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
         <a
           href="#inhalt"

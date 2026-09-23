@@ -9,7 +9,7 @@ export default async function HomePage() {
   const [settings, projects] = await Promise.all([getSiteSettings(), getPublishedProjects()]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 pt-16 pb-12">
+    <main className="page-container pt-section">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -30,7 +30,11 @@ export default async function HomePage() {
         </p>
       ) : null}
 
-      <section id="projekte" aria-labelledby="projekte-titel" className="mt-20 scroll-mt-24">
+      <section
+        id="projekte"
+        aria-labelledby="projekte-titel"
+        className="mt-section scroll-mt-fib-lg"
+      >
         <h2 id="projekte-titel" className="text-sm font-medium text-muted-foreground">
           Ausgewählte Projekte
         </h2>
@@ -39,7 +43,7 @@ export default async function HomePage() {
             Noch keine Projekte veröffentlicht.
           </p>
         ) : (
-          <ul className="mt-6 grid gap-10 sm:grid-cols-2">
+          <ul className="mt-fib-md grid gap-x-grid gap-y-fib-xl sm:grid-cols-2">
             {projects.map((project) => {
               const cover = mediaUrl(project.cover, "card");
               const alt = typeof project.cover === "object" ? project.cover.alt : "";
@@ -51,9 +55,9 @@ export default async function HomePage() {
                         src={cover}
                         alt={alt}
                         width={960}
-                        height={600}
-                        sizes="(min-width: 640px) 50vw, 100vw"
-                        className="aspect-[8/5] w-full rounded-lg object-cover"
+                        height={593}
+                        sizes="(min-width: 1536px) 696px, (min-width: 640px) 50vw, 100vw"
+                        className="aspect-golden w-full rounded-lg object-cover"
                       />
                     ) : null}
                     <div className="mt-4 flex items-baseline justify-between gap-4">

@@ -40,7 +40,7 @@ export default async function CmsPage({ params }: Props) {
   if (!page) notFound();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pt-12 pb-12">
+    <main className="page-container max-w-3xl pt-section">
       <h1 className="text-4xl font-semibold tracking-tight text-balance">{page.title}</h1>
       <RichText data={page.content} className="mt-10" />
     </main>

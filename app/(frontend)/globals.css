@@ -49,6 +49,53 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Layout system — Fibonacci spacing.
+ * Steps 5·8·13·21·34·55·89·144·233 px; neighbours differ by ≈ φ (1.618), so every step is
+ * visibly distinct. Values are rem so they follow the user's font-size setting.
+ * Use these for layout rhythm; Tailwind's default 0.25rem scale stays for component internals.
+ *
+ * Fluid tokens interpolate linearly between a 375px and a 1536px viewport (Fibonacci at both ends):
+ *   gutter   21 → 55 px   page side padding       px-gutter
+ *   section  55 → 144 px  space between sections  py-section, mt-section
+ *   grid     13 → 34 px   gaps in content grids   gap-grid
+ */
+@theme {
+  --breakpoint-xs: 23.4375rem; /* 375px — small phones */
+  --breakpoint-3xl: 120rem; /* 1920px — full HD */
+
+  --container-page: 96rem; /* 1536px — max-w-page, page-container */
+
+  --aspect-golden: 1.618 / 1; /* aspect-golden — golden rectangle for covers and cards */
+
+  --spacing-fib-2xs: 0.3125rem; /* 5px */
+  --spacing-fib-xs: 0.5rem; /* 8px */
+  --spacing-fib-sm: 0.8125rem; /* 13px */
+  --spacing-fib-md: 1.3125rem; /* 21px */
+  --spacing-fib-lg: 2.125rem; /* 34px */
+  --spacing-fib-xl: 3.4375rem; /* 55px */
+  --spacing-fib-2xl: 5.5625rem; /* 89px */
+  --spacing-fib-3xl: 9rem; /* 144px */
+  --spacing-fib-4xl: 14.5625rem; /* 233px */
+
+  --spacing-gutter: clamp(1.3125rem, 0.6261rem + 2.9285vw, 3.4375rem);
+  --spacing-section: clamp(3.4375rem, 1.6408rem + 7.6658vw, 9rem);
+  --spacing-grid: clamp(0.8125rem, 0.3886rem + 1.8088vw, 2.125rem);
+}
+
+/* Centered page column with fluid side padding. Plain utilities (px-0, max-w-3xl) override it. */
+@utility page-container {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+/* Golden split: 61.8% / 38.2%. minmax(0, …) lets long words and media shrink instead of overflowing. */
+@utility grid-cols-golden {
+  grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr);
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -127,5 +174,15 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Smooth anchor jumps only for users who allow motion; native smoothing fights Lenis, so off while it runs. */
+  @media (prefers-reduced-motion: no-preference) {
+    html:not(.lenis) {
+      scroll-behavior: smooth;
+    }
+  }
+  /* clip, not hidden: hidden turns body into a scroll container and breaks sticky and ScrollTrigger pins. */
+  body {
+    overflow-x: clip;
   }
 }
