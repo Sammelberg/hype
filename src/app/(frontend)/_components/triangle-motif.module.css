@@ -1,14 +1,15 @@
 /*
- * Triangle motif in gem tones (the owner's pick, „Edelsteine“ no. 10, stones deepened): a diamond
- * peak, deep emerald on the left, deep sapphire on the right, deep turquoise connectors.
- * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden; mountain-scene.tsx draws them (or shows them for reduced motion).
+ * Triangle motif in dark, noble gem tones (the owner's pick, „Edle Steine“ no. 1): a diamond peak,
+ * bottle emerald on the left, royal sapphire on the right, petrol connectors.
+ * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden;
+ * mountain-scene.tsx draws them (or shows them for reduced motion).
  */
 .motif {
   --tri-centre: oklch(0.978 0.006 230); /* diamond #f4f8fb */
   --tri-centre-dot: oklch(0.978 0.006 230);
-  --tri-left: oklch(0.58 0.12 164); /* deep emerald #109067 */
-  --tri-right: oklch(0.52 0.13 260); /* deep sapphire #3967b3 */
-  --tri-connector: oklch(0.64 0.1 198); /* deep turquoise #279ea2 */
+  --tri-left: oklch(0.5 0.1 165); /* bottle emerald #117555 */
+  --tri-right: oklch(0.46 0.13 262); /* royal sapphire #2d54a0 */
+  --tri-connector: oklch(0.52 0.08 205); /* petrol #1e767f */
 }
 
 .motif svg {
