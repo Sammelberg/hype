@@ -13,10 +13,10 @@ import { getSiteSettings } from "@/data/queries";
 
 import "./globals.css";
 
-// Browser UI colour matches --background (globals.css); change both with the project's design.
+// Browser UI colour matches --background (globals.css): the site is dark-only.
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
-  colorScheme: "light",
+  themeColor: "#070e0b",
+  colorScheme: "dark",
 };
 
 export async function generateMetadata(): Promise<Metadata> {

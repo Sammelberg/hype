@@ -1,14 +1,12 @@
 import { ImageResponse } from "next/og";
 
-import { initials } from "@/lib/initials";
-import { getSiteSettings } from "@/data/queries";
+import { BRAND_HEX, FirMark } from "@/components/site/fir-mark";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 // iOS adds its own rounded mask, so the square stays unrounded.
-export default async function AppleIcon() {
-  const settings = await getSiteSettings();
+export default function AppleIcon() {
   return new ImageResponse(
     <div
       style={{
@@ -17,14 +15,12 @@ export default async function AppleIcon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#171717",
-        color: "#fafafa",
-        fontSize: 80,
-        fontWeight: 600,
-        letterSpacing: -2,
+        background: BRAND_HEX.background,
       }}
     >
-      {initials(settings.ownerName || settings.siteName || "")}
+      <div style={{ width: 112, height: 112, display: "flex" }}>
+        <FirMark color={BRAND_HEX.accent} />
+      </div>
     </div>,
     size,
   );

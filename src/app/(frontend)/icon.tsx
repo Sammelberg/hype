@@ -1,15 +1,12 @@
 import { ImageResponse } from "next/og";
 
-import { initials } from "@/lib/initials";
-import { getSiteSettings } from "@/data/queries";
+import { BRAND_HEX, FirMark } from "@/components/site/fir-mark";
 
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
-// Placeholder monogram from the owner's initials, rendered locally. Replace with a designed icon
-// (app/(frontend)/icon.svg) once the visual identity exists.
-export default async function Icon() {
-  const settings = await getSiteSettings();
+// The fir mark in resin amber on the night background, rendered locally.
+export default function Icon() {
   return new ImageResponse(
     <div
       style={{
@@ -19,14 +16,10 @@ export default async function Icon() {
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 6,
-        background: "#171717",
-        color: "#fafafa",
-        fontSize: 16,
-        fontWeight: 600,
-        letterSpacing: -0.5,
+        background: BRAND_HEX.background,
       }}
     >
-      {initials(settings.ownerName || settings.siteName || "")}
+      <FirMark color={BRAND_HEX.accent} />
     </div>,
     size,
   );

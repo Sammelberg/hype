@@ -1,25 +1,22 @@
 /*
  * Mountains and firs („Berge und Tannen“ block, supplied by the owner): its own composition,
- * sizes, motion and night palette (palette 1 of the block). .hero is the night sky behind the
- * whole first screen; the scene closes it off at the bottom.
+ * sizes and motion, coloured in the site palette — ridges in fir greens fading into the night,
+ * the front ridge drawn in resin amber (the accent). The scene closes off the first screen.
  * The scene is as tall as its tallest fir (112% of the forest), so content above never meets it;
  * the ridges are wider than small screens and are clipped sideways only.
  */
 .hero {
-  --sky: #0a1230;
-  --far: #1c2f5c;
-  --far-stroke: rgb(140 175 255 / 0.35);
-  --mid: #111f42;
-  --mid-stroke: rgb(110 155 255 / 0.4);
-  --main: #050a1a;
-  --main-stroke: #6e9bff;
-  --glow: rgb(110 155 255 / 0.45);
-  --accent-line: #cfe0ff;
-  --tree-back: #22386a;
-  --tree-mid: #0b1530;
-  --tree-fore: #000;
-
-  background: var(--sky);
+  --far: oklch(0.235 0.022 165);
+  --far-stroke: oklch(0.76 0.022 165 / 0.18);
+  --mid: oklch(0.195 0.02 165);
+  --mid-stroke: oklch(0.76 0.022 165 / 0.24);
+  --main: oklch(0.13 0.014 165);
+  --main-stroke: var(--primary);
+  --glow: oklch(0.8 0.135 72 / 0.45);
+  --accent-line: var(--foreground);
+  --tree-back: oklch(0.29 0.03 165);
+  --tree-mid: oklch(0.17 0.02 165);
+  --tree-fore: oklch(0.1 0.012 165);
 }
 
 .scene {

@@ -1,25 +1,27 @@
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
+
+import { FirMark } from "./fir-mark";
 import { MENU_LINKS } from "./menu-links";
 
-// Sticky bar with the site name and the main navigation. Deliberately plain: each project designs
-// its own header (and a menu, if it needs one). Its height is the `header` spacing token, which
-// scroll-margin in globals.css offsets against.
+// Sticky bar: fir mark and wordmark, the main navigation. Its height is the `header` spacing
+// token, which scroll-margin in globals.css offsets against.
 export function SiteHeader({ siteName }: { siteName: string }) {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background">
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="page-container flex h-header items-center justify-between gap-5">
-        {/* Wordmark placeholder: add the project's logo here (public/, next/image with preload). */}
-        <Link href="/" className="truncate font-semibold">
-          {siteName}
+        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
+          <FirMark className="size-6 text-primary" />
+          <span className="truncate">{siteName}</span>
         </Link>
         <nav aria-label="Hauptnavigation">
-          <ul className="flex gap-5 text-sm">
+          <ul className="flex items-center gap-6 text-sm">
             {MENU_LINKS.map((link) => (
-              <li key={link.href}>
+              <li key={link.href} className={cn(link.wide && "hidden sm:block")}>
                 <Link
                   href={link.href as never}
-                  className="text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
                 >
                   {link.label}
                 </Link>

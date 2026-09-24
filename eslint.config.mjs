@@ -15,10 +15,6 @@ export default defineConfig([
         callees: ["cn", "cva"],
       },
     },
-    rules: {
-      // `dark` is shadcn's theme scope (globals.css), a plain class rather than a utility.
-      "better-tailwindcss/no-unknown-classes": ["error", { ignore: ["^dark$"] }],
-    },
   },
   globalIgnores([
     ".next/**",

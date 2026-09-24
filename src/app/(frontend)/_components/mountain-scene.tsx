@@ -76,7 +76,6 @@ const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore 
 
 /**
  * First screen of the home page under a night sky, closed off by mountain ridges with swaying firs.
- * The section is a `.dark` scope, so shadcn components inside use the dark token set.
  */
 export function MountainHero({
   labelledBy,
@@ -115,7 +114,7 @@ export function MountainHero({
       aria-labelledby={labelledBy}
       className={cn(
         styles.hero,
-        "dark flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
+        "flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
       )}
     >
       {children}

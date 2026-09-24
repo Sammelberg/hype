@@ -6,10 +6,11 @@ type Text = { type: "text"; text: string };
 type Block = { kind: "p" | "h2"; text: string };
 
 export const seedSettings = {
-  siteName: "Neues Projekt",
-  ownerName: "Beispiel GmbH",
-  tagline: "Ein Satz, der sagt, was Sie anbieten und für wen.",
-  description: "Kurzbeschreibung der Website für Suchmaschinen, höchstens 160 Zeichen.",
+  siteName: "Schwarzwald Systems",
+  ownerName: "Schwarzwald Systems",
+  tagline: "Individuelle Software für den Mittelstand.",
+  description:
+    "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps und Schnittstellen.",
   contactEmail: "hallo@example.com",
   socialLinks: [] as { label: string; url: string }[],
 };
