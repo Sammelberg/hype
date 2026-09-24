@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { AREA_PER_STAR, createStars, MAX_STARS, starAlpha } from "./starfield";
+import {
+  AREA_PER_STAR,
+  createMeteor,
+  createStars,
+  MAX_STARS,
+  meteorAt,
+  random,
+  starAlpha,
+} from "./starfield";
 
 describe("createStars", () => {
   it("scales the count with the sky's area and caps it", () => {
@@ -47,5 +55,47 @@ describe("starAlpha", () => {
 
   it("holds the resting brightness for reduced motion", () => {
     expect(starAlpha(star, 3.2, true)).toBe(star.alpha);
+  });
+});
+
+describe("shooting stars", () => {
+  const meteors = Array.from({ length: 200 }, (_, i) => createMeteor(random(i + 1), 1440, 800, 10));
+
+  it("all fall from one radiant: down and to the right, 25–38° below the horizon", () => {
+    for (const m of meteors) {
+      expect(m.dx).toBeGreaterThan(0);
+      expect(m.dy).toBeGreaterThan(0);
+      const below = (Math.atan2(m.dy, m.dx) * 180) / Math.PI;
+      expect(below).toBeGreaterThanOrEqual(25 - 1e-9);
+      expect(below).toBeLessThanOrEqual(38 + 1e-9);
+    }
+  });
+
+  it("start in the upper sky, right of the headline", () => {
+    for (const m of meteors) {
+      expect(m.y).toBeLessThanOrEqual(800 * 0.4);
+      expect(m.x).toBeGreaterThanOrEqual(1440 * 0.4);
+    }
+  });
+
+  it("fade in fast, grow their tail, fade out and burn out after their life", () => {
+    const m = meteors[0]!;
+    expect(meteorAt(m, m.born - 0.01)).toBeNull();
+    const early = meteorAt(m, m.born + m.life * 0.05)!;
+    const mid = meteorAt(m, m.born + m.life * 0.3)!;
+    const late = meteorAt(m, m.born + m.life * 0.95)!;
+    expect(early.alpha).toBeLessThan(mid.alpha);
+    expect(late.alpha).toBeLessThan(mid.alpha);
+    expect(Math.hypot(mid.x - mid.tailX, mid.y - mid.tailY)).toBeCloseTo(m.length, 5);
+    expect(Math.hypot(early.x - early.tailX, early.y - early.tailY)).toBeLessThan(m.length);
+    expect(meteorAt(m, m.born + m.life + 0.01)).toBeNull();
+  });
+
+  it("move along their direction", () => {
+    const m = meteors[1]!;
+    const a = meteorAt(m, m.born + 0.1)!;
+    const b = meteorAt(m, m.born + 0.2)!;
+    expect(b.x).toBeGreaterThan(a.x);
+    expect(b.y).toBeGreaterThan(a.y);
   });
 });

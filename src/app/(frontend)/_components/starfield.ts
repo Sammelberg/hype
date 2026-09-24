@@ -1,6 +1,7 @@
-// Starfield for the home hero: a 2D canvas, drawn by the caller's ticker (mountain-scene.tsx).
-// Each star twinkles on its own rhythm; sizes and brightness follow a restrained night sky —
-// mostly faint specks, a few brighter stars with a soft halo, denser high up than near the ridges.
+// Starfall for the home hero: a 2D canvas, drawn by the caller's ticker (mountain-scene.tsx).
+// A quiet field of twinkling stars — mostly faint specks, a few with a soft halo, denser high up —
+// and over it a meteor shower: shooting stars from one radiant, streaking down-right with a bright
+// head and a long fading tail, up to four at a time, clear of the headline on the left.
 
 export type Star = {
   x: number;
@@ -26,7 +27,7 @@ export const AREA_PER_STAR = 9000;
 export const MAX_STARS = 320;
 
 // Small seeded PRNG (mulberry32): the same sky for the same size, no flicker between renders.
-function random(seed: number) {
+export function random(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -60,6 +61,70 @@ export function createStars(width: number, height: number, seed = 7): Star[] {
   return stars.sort((a, b) => a.tint - b.tint);
 }
 
+export type Meteor = {
+  /** Start of the streak, CSS px. */
+  x: number;
+  y: number;
+  /** Unit direction of travel. */
+  dx: number;
+  dy: number;
+  /** px per second. */
+  speed: number;
+  /** Full tail length, px. */
+  length: number;
+  /** Birth time and lifetime, seconds. */
+  born: number;
+  life: number;
+  bright: boolean;
+};
+
+/** At most this many shooting stars at once; a new one every MIN_GAP–MAX_GAP seconds. */
+export const MAX_METEORS = 4;
+export const MIN_GAP = 0.35;
+export const MAX_GAP = 1.2;
+
+/** A shooting star born at `now`: from the upper sky right of the headline, heading down-right
+ * 25–38° below the horizon, so the shower reads as coming from one radiant and leaves the text
+ * alone. */
+export function createMeteor(
+  rand: () => number,
+  width: number,
+  height: number,
+  now: number,
+): Meteor {
+  const angle = ((25 + rand() * 13) * Math.PI) / 180; // pointing right and down
+  const bright = rand() < 0.2;
+  return {
+    x: width * (0.4 + rand() * 0.55),
+    y: height * rand() * 0.4,
+    dx: Math.cos(angle),
+    dy: Math.sin(angle),
+    speed: 700 + rand() * 450,
+    length: bright ? 280 + rand() * 140 : 160 + rand() * 160,
+    born: now,
+    life: 0.6 + rand() * 0.5,
+    bright,
+  };
+}
+
+/** Where a meteor is at time t: its head, tail end and brightness — or null once it has burnt
+ * out. The tail grows in, the whole streak fades in fast and out slowly. */
+export function meteorAt(m: Meteor, t: number) {
+  const age = t - m.born;
+  if (age < 0 || age > m.life) return null;
+  const p = age / m.life;
+  const head = { x: m.x + m.dx * m.speed * age, y: m.y + m.dy * m.speed * age };
+  const tail = Math.min(1, p / 0.3) * m.length;
+  const alpha = p < 0.15 ? p / 0.15 : Math.cos(((p - 0.15) / 0.85) * (Math.PI / 2));
+  return {
+    x: head.x,
+    y: head.y,
+    tailX: head.x - m.dx * tail,
+    tailY: head.y - m.dy * tail,
+    alpha: Math.max(0, Math.min(1, alpha)),
+  };
+}
+
 /** Brightness of a star at time t (seconds); `still` for reduced motion. */
 export function starAlpha(star: Star, t: number, still = false) {
   if (still) return star.alpha;
@@ -73,6 +138,9 @@ export function starAlpha(star: Star, t: number, still = false) {
 export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {}) {
   const ctx = canvas.getContext("2d");
   let stars: Star[] = [];
+  let meteors: Meteor[] = [];
+  let nextMeteor = -1;
+  const rand = random(Date.now() % 100_000);
   let last = { t: 0, fade: 0 };
 
   // Soft halo, rendered once and stamped with drawImage.
@@ -111,7 +179,46 @@ export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {})
       ctx.arc(star.x * dpr, star.y * dpr, star.r * dpr, 0, Math.PI * 2);
       ctx.fill();
     }
+    if (!still) drawMeteors(t, fade, dpr);
     ctx.globalAlpha = 1;
+  }
+
+  function drawMeteors(t: number, fade: number, dpr: number) {
+    if (!ctx) return;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (nextMeteor < 0 || t - nextMeteor > MAX_GAP * 4) nextMeteor = t + MIN_GAP; // start or resume
+    if (t >= nextMeteor && meteors.length < MAX_METEORS) {
+      meteors.push(createMeteor(rand, width, height, t));
+      nextMeteor = t + MIN_GAP + rand() * (MAX_GAP - MIN_GAP);
+    }
+    meteors = meteors.filter((m) => {
+      const at = meteorAt(m, t);
+      if (!at) return false;
+      const a = at.alpha * fade;
+      const gradient = ctx.createLinearGradient(
+        at.x * dpr,
+        at.y * dpr,
+        at.tailX * dpr,
+        at.tailY * dpr,
+      );
+      gradient.addColorStop(0, `rgba(${TINTS[0]}, ${a})`);
+      gradient.addColorStop(0.2, `rgba(${TINTS[1]}, ${a * 0.7})`);
+      gradient.addColorStop(1, `rgba(${TINTS[1]}, 0)`);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = (m.bright ? 2.2 : 1.5) * dpr;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(at.x * dpr, at.y * dpr);
+      ctx.lineTo(at.tailX * dpr, at.tailY * dpr);
+      ctx.stroke();
+      // Glowing head; brighter meteors carry a larger one.
+      const size = (m.bright ? 22 : 12) * dpr;
+      ctx.globalAlpha = a;
+      ctx.drawImage(halo, at.x * dpr - size / 2, at.y * dpr - size / 2, size, size);
+      return true;
+    });
   }
 
   function resize() {
