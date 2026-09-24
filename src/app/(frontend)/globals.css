@@ -9,8 +9,10 @@
  * accent is sapphire in two roles — `primary` (deep, filled buttons with white text) and
  * `primary-soft` (ice blue: accent text, icons, the drawn ridge). Measured WCAG contrast:
  *   foreground on background 18.1 · on card 17.3 · muted-foreground on background 9.0 · on secondary 7.9
- *   primary-soft on background 9.3 · on card 8.9 · primary-foreground on primary 5.6
- *   primary (fill) on background 3.5 (UI component ≥ 3) · destructive on background 6.4
+ *   primary-soft on background 10.4 · on card 9.9 · primary-foreground on primary 5.9
+ *   primary (fill) on background 3.3 (UI component ≥ 3) · destructive on background 6.4
+ * Both accents are kept soft (moonlight, not neon); the only warm tone is the fireflies' gold,
+ * echoed once by the triangle motif's peak.
  */
 @custom-variant dark (&:where(*));
 
@@ -91,9 +93,9 @@
   --card-foreground: oklch(0.965 0.008 250);
   --popover: oklch(0.17 0.033 262);
   --popover-foreground: oklch(0.965 0.008 250);
-  --primary: oklch(0.52 0.19 262);
+  --primary: oklch(0.5 0.145 260);
   --primary-foreground: oklch(0.99 0.004 250);
-  --primary-soft: oklch(0.76 0.11 255);
+  --primary-soft: oklch(0.79 0.085 252);
   --secondary: oklch(0.215 0.038 262);
   --secondary-foreground: oklch(0.965 0.008 250);
   --muted: oklch(0.215 0.038 262);
@@ -103,20 +105,20 @@
   --destructive: oklch(0.68 0.19 25);
   --border: oklch(0.285 0.04 262);
   --input: oklch(0.33 0.04 262);
-  --ring: oklch(0.76 0.11 255);
-  --chart-1: oklch(0.76 0.11 255);
-  --chart-2: oklch(0.52 0.19 262);
+  --ring: oklch(0.79 0.085 252);
+  --chart-1: oklch(0.79 0.085 252);
+  --chart-2: oklch(0.5 0.145 260);
   --chart-3: oklch(0.64 0.15 258);
   --chart-4: oklch(0.42 0.12 262);
   --chart-5: oklch(0.34 0.08 262);
   --sidebar: oklch(0.17 0.033 262);
   --sidebar-foreground: oklch(0.965 0.008 250);
-  --sidebar-primary: oklch(0.52 0.19 262);
+  --sidebar-primary: oklch(0.5 0.145 260);
   --sidebar-primary-foreground: oklch(0.99 0.004 250);
   --sidebar-accent: oklch(0.215 0.038 262);
   --sidebar-accent-foreground: oklch(0.965 0.008 250);
   --sidebar-border: oklch(0.285 0.04 262);
-  --sidebar-ring: oklch(0.76 0.11 255);
+  --sidebar-ring: oklch(0.79 0.085 252);
 }
 
 @layer base {

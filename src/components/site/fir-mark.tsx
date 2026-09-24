@@ -18,5 +18,5 @@ export const BRAND_HEX = {
   card: "#070f1e",
   foreground: "#f0f4f9",
   muted: "#a2afc1",
-  accent: "#81b4f6",
+  accent: "#93bff0",
 } as const;

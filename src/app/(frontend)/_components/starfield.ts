@@ -25,7 +25,7 @@ export type Star = {
 };
 
 /** Starlight, ice blue, pale sapphire — the site palette as RGB channels. */
-export const TINTS = ["240, 244, 249", "129, 180, 246", "150, 172, 236"] as const;
+export const TINTS = ["240, 244, 249", "147, 191, 240", "150, 172, 236"] as const;
 
 /** One star per this many CSS px² of sky, up to MAX_STARS. */
 export const AREA_PER_STAR = 9000;
