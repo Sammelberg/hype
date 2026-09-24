@@ -1,0 +1,188 @@
+/*
+ * Mountains and firs („Berge und Tannen“), adapted to the brand palette: neutral ridges on the page
+ * background, the front ridge line in the accent. Sizes are fluid between a 375px and a 1920px
+ * viewport and capped by the viewport height, so landscape phones keep room for the headline.
+ */
+.scene {
+  --forest-h: min(clamp(13.125rem, 10.1rem + 12.94vw, 28.75rem), 45svh);
+  /* Never narrower than the viewport, so the ridges always reach both edges. */
+  --ridges-w: max(100vw, min(clamp(62rem, 50rem + 50vw, 123rem), 220svh));
+
+  --far: oklch(0.21 0 0);
+  --far-stroke: oklch(1 0 0 / 0.14);
+  --mid: oklch(0.175 0 0);
+  --mid-stroke: oklch(1 0 0 / 0.18);
+  --main: oklch(0.11 0 0);
+  --main-stroke: var(--brand-accent);
+  --highlight: var(--foreground);
+  --tree-back: oklch(0.23 0 0);
+  --tree-mid: oklch(0.12 0 0);
+  --tree-fore: oklch(0 0 0);
+
+  position: relative;
+  height: var(--forest-h);
+  /* Ridges run wider than the viewport; lifted tree tops may rise above the box. */
+  overflow-x: clip;
+  pointer-events: none;
+}
+
+/* ── Ridges ── */
+.ridges {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: var(--ridges-w);
+  aspect-ratio: 1500 / 310;
+  translate: -50% 0;
+}
+
+.ridges svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.farBody {
+  fill: var(--far);
+}
+
+.midBody {
+  fill: var(--mid);
+}
+
+.mainBody {
+  fill: var(--main);
+  /* A quiet outline keeps the ribbon's curved back readable; the accent is the skyline only. */
+  stroke: var(--mid-stroke);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.farLine,
+.midLine,
+.mainLine,
+.highlight {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.farLine {
+  stroke: var(--far-stroke);
+  stroke-width: 1.25;
+}
+
+.midLine {
+  stroke: var(--mid-stroke);
+  stroke-width: 1.25;
+}
+
+/* The one emphasis moment: the front skyline draws itself, then its highlight follows. It waits
+   for data-seen (mountain-scene.tsx), so a scene below the fold draws when it scrolls in. */
+.mainLine {
+  stroke: var(--main-stroke);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.1s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) 0.2s forwards paused;
+}
+
+.highlight {
+  stroke: var(--highlight);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.5;
+  animation: draw 0.5s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) 1s forwards paused;
+}
+
+.scene[data-seen] :is(.mainLine, .highlight) {
+  animation-play-state: running;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── Firs ── */
+.forest {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 104vw;
+  height: 100%;
+  translate: -50% 0;
+}
+
+/* The wrapper places the tree; its svg sways, so the two transforms never fight. */
+.tree {
+  position: absolute;
+  aspect-ratio: 200 / 560;
+  translate: -50% 0;
+}
+
+.tree svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: sway var(--sway-duration, 6s) ease-in-out var(--sway-delay, 0s) infinite;
+}
+
+.back {
+  z-index: 0;
+  color: var(--tree-back);
+}
+
+.midTree {
+  z-index: 1;
+  color: var(--tree-mid);
+}
+
+.fore {
+  z-index: 2;
+  color: var(--tree-fore);
+}
+
+/* The two inner trees of each group crowd a phone screen; they join from 480px up. */
+.wide {
+  display: none;
+}
+
+@media (min-width: 30rem) {
+  .wide {
+    display: block;
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(calc(var(--sway, 1.5deg) * -1));
+  }
+  50% {
+    transform: rotate(var(--sway, 1.5deg));
+  }
+}
+
+/* Off-screen or hidden: the loop stops (set by mountain-scene.tsx). */
+.scene[data-paused] .tree svg {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mainLine,
+  .highlight {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .tree svg {
+    animation: none;
+  }
+}
