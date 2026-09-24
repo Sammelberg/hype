@@ -1,6 +1,6 @@
 // Night sky behind the home hero („Mond, Nebel“ of the owner's moon block): one WebGL fragment
 // shader paints the sky colour, the moon (disc, core, glow), its aureole, a wide glow high up,
-// a slow veil of mist and a fine grain against banding. Stars come from starfield.ts, not from
+// a living veil of mist (new on every load, drifting, breathing) and a fine grain against banding. Stars come from starfield.ts, not from
 // here. The caller's ticker calls render(); the shader itself runs at most 30 fps and within a
 // pixel budget. Returns null without WebGL (the CSS moon in mountain-scene.tsx stands in).
 
@@ -11,6 +11,7 @@ precision highp float;
 uniform vec2 uR, uC;
 uniform float uT, uMoonR;
 uniform vec3 uSky;
+uniform vec2 uSeed;
 // Hash without sine (Dave Hoskins): sin() on large arguments loses precision on many GPUs and
 // shows up as blocky, grid-aligned patches in the mist.
 float h21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
@@ -26,16 +27,22 @@ void main(){
   vec2 c=uC+vec2(sin(t*.07)*uMoonR*.13+sin(t*.019)*uMoonR*.22, sin(t*.045+1.3)*uMoonR*.09+sin(t*.013+.6)*uMoonR*.16);
   float r=max(uMoonR*.62,1.), d=length(px-c), q=d/r;
   vec3 sky=uSky;
+  // One slow breath (~12 s) shared by the mist and the moon's aureole, so the sky moves as one.
+  float breath=.5+.5*sin(t*.52);
   // Aureole around the moon, in the site's sapphire.
   vec2 ae=(px-c)/vec2(uR.x*.23,uR.y*.23); float aur=exp(-dot(ae,ae)*1.6);
-  sky+=vec3(.14,.24,.52)*aur*.2;
+  sky+=vec3(.14,.24,.52)*aur*(.18+.04*breath);
   // Wide glow high in the sky.
   vec2 be=(px-vec2(uR.x*.5,uR.y*.85))/vec2(uR.x*.55,uR.y*.28);
   sky+=vec3(.08,.15,.34)*exp(-dot(be,be)*1.4)*.16;
-  // Veil of mist, drifting slowly through the middle of the sky; soft-edged.
-  if(uv.y>.3){float veil=fbm(vec2(uv.x*asp*2.2+t*.006,ct*4.4-t*.002));
-    veil=smoothstep(.48,.9,veil)*smoothstep(.66,.22,ct)*smoothstep(-.02,.2,ct);
-    sky+=vec3(.045,.075,.16)*veil;}
+  // Veil of mist: a different sky on every load (uSeed), drifting and slowly reshaping itself
+  // (domain warp), thickening and thinning with the breath; soft-edged.
+  if(uv.y>.3){
+    vec2 p=vec2(uv.x*asp*2.2,ct*4.4)+uSeed+vec2(t*.012,-t*.004);
+    vec2 warp=vec2(fbm(p*.7+vec2(t*.021,0.)),fbm(p*.7+vec2(5.2,t*.017)));
+    float veil=fbm(p+(warp-.5)*1.3);
+    veil=smoothstep(.5-.05*breath,.9,veil)*smoothstep(.66,.22,ct)*smoothstep(-.02,.2,ct);
+    sky+=vec3(.045,.075,.16)*veil*(.85+.3*breath);}
   // Moonlight: a soft halo close around the disc.
   sky+=vec3(.55,.66,.9)*(exp(-max(q-1.,0.)*1.35)*.34+exp(-max(q-1.,0.)*.28)*.05);
   // The moon: cool white disc, darker toward the limb, faint maria, an anti-aliased edge.
@@ -97,6 +104,8 @@ export function bindNightSky(
   const uT = u("uT");
   const uMoonR = u("uMoonR");
   gl.uniform3f(u("uSky"), ...sky);
+  // A fresh mist pattern on every page load.
+  gl.uniform2f(u("uSeed"), Math.random() * 97, Math.random() * 61);
 
   let scale = 1;
   let height = 0;

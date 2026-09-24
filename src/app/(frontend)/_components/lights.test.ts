@@ -38,13 +38,21 @@ describe("lights", () => {
     expect(lightAt(light, light.life + 0.01)).toBeNull();
   });
 
+  it("are calm: slow to rise and to sway, long-lived", () => {
+    for (const l of lights) {
+      expect(l.life).toBeGreaterThanOrEqual(9);
+      expect(l.rise / l.life).toBeLessThan(35); // px per second, on average
+      expect(l.swaySpeed).toBeLessThanOrEqual(0.8);
+    }
+  });
+
   it("each one differs: speed, rise, sway and size vary", () => {
     const spread = (pick: (l: (typeof lights)[number]) => number) => {
       const v = lights.map(pick);
       return Math.max(...v) - Math.min(...v);
     };
     expect(spread((l) => l.life)).toBeGreaterThan(4);
-    expect(spread((l) => l.rise)).toBeGreaterThan(150);
+    expect(spread((l) => l.rise)).toBeGreaterThan(120);
     expect(spread((l) => l.sway)).toBeGreaterThan(15);
     expect(spread((l) => l.r)).toBeGreaterThan(1);
   });

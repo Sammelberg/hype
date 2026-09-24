@@ -38,30 +38,32 @@ export function createLight(rand: () => number, width: number, height: number, n
   return {
     x: rand() * width,
     y: height * (0.65 + rand() * 0.3),
-    rise: 120 + rand() * 220,
-    sway: 8 + rand() * 24,
-    swaySpeed: 0.6 + rand() * 1.2,
+    rise: 100 + rand() * 180,
+    sway: 6 + rand() * 18,
+    swaySpeed: 0.3 + rand() * 0.5,
     phase: rand() * Math.PI * 2,
     r: 1 + rand() ** 2 * 1.6,
     tint: tintRoll < 0.6 ? 0 : tintRoll < 0.88 ? 1 : 2,
     born: now,
-    life: 5 + rand() * 6,
+    life: 9 + rand() * 7,
   };
 }
 
-/** A light's position and brightness at time t — null once it has faded. It eases upward, sways,
- * fades in over the first 15% of its life, flickers softly and fades out over the last 35%. */
+/** A light's position and brightness at time t — null once it has faded. It drifts upward and
+ * slows as it rises, sways gently, eases in over the first quarter of its life, glows with a slow
+ * soft pulse and eases out over the last 40% — nothing sudden. */
 export function lightAt(light: Light, t: number) {
   const age = t - light.born;
   if (age < 0 || age > light.life) return null;
   const p = age / light.life;
-  const lift = 1 - (1 - p) ** 1.6; // quick start, slowing as it rises
-  const envelope = p < 0.15 ? p / 0.15 : p > 0.65 ? (1 - p) / 0.35 : 1;
-  const flicker = 0.8 + 0.2 * Math.sin(t * 3.1 + light.phase * 2);
+  const lift = 1 - (1 - p) ** 1.4; // slows as it rises
+  const smooth = (x: number) => x * x * (3 - 2 * x);
+  const envelope = p < 0.25 ? smooth(p / 0.25) : p > 0.6 ? smooth((1 - p) / 0.4) : 1;
+  const pulse = 0.85 + 0.15 * Math.sin(t * 1.3 + light.phase * 2);
   return {
     x: light.x + Math.sin(t * light.swaySpeed + light.phase) * light.sway,
     y: light.y - light.rise * lift,
-    alpha: Math.max(0, Math.min(1, envelope * flicker)),
+    alpha: Math.max(0, Math.min(1, envelope * pulse)),
   };
 }
 
