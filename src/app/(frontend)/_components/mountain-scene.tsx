@@ -83,7 +83,7 @@ const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore 
 
 /** Brightness the ridge outline and its highlight settle to after the draw (e2e/hero.spec.ts checks it). */
 const RIDGE_REST = 0.45;
-const ACCENT_REST = 0.85;
+const ACCENT_REST = 0.5;
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
@@ -199,8 +199,9 @@ export function MountainHero({
             { drawSVG: "100%", strokeOpacity: 1, duration: 1, ease: "power4.out" },
             2.5,
           )
-          // Once everything is drawn, the ridge settles: its outline dims to a quiet sketch, while the
-          // golden highlight arc stays bright and becomes the scene's one warm line.
+          // Once everything is drawn, the ridge settles: its outline and the golden highlight arc
+          // dim to a quiet sketch (the arc stays a touch brighter), so the bright lines belong to
+          // the drawing and not to the resting scene.
           .to("[data-line]", { strokeOpacity: RIDGE_REST, duration: 1.8, ease: "sine.inOut" }, 3.2)
           .to("[data-accent]", { opacity: ACCENT_REST, duration: 1.8, ease: "sine.inOut" }, 3.2);
       });
