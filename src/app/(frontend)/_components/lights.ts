@@ -1,6 +1,6 @@
 // Lights over the forest („Lichter“ of the owner's moon block), kept as small and quiet as the
-// block's own fireflies: 3–6px points, white at the heart fading to ice blue with a faint glow,
-// drifting only a little, with the block's firefly rhythm — glow up, dim to a third, brighten
+// block's own fireflies: 3–6px points with a warm white heart and a soft warm glow (the block's
+// were blue; warm keeps them apart from the cold stars), drifting only a little, with the block's firefly rhythm — glow up, dim to a third, brighten
 // again, go out. What changes: each light is born at a random place with its own path and is
 // replaced by a new one, so the scene never loops. Drawn on a 2D canvas by the caller's ticker
 // (mountain-scene.tsx).
@@ -23,8 +23,12 @@ export type Light = {
   life: number;
 };
 
-/** Ice blue, starlight, sapphire — the site palette as RGB channels (the glow colour). */
-export const LIGHT_TINTS = ["110, 155, 255", "180, 205, 250", "80, 120, 235"] as const;
+/** Warm, muted glows — champagne, warm ivory, pale gold — so the lights read as fireflies and never
+ * as the cold white-and-ice stars. Kept soft and desaturated: warm light, not orange. */
+export const LIGHT_TINTS = ["255, 222, 168", "255, 238, 212", "242, 204, 142"] as const;
+
+/** Heart of every light: a warm white. */
+const HEART = "255, 249, 238";
 
 /** One light per this many CSS px of width, 6 to MAX_LIGHTS (the block shows 16). */
 export const WIDTH_PER_LIGHT = 150;
@@ -114,24 +118,25 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
   let height = 0;
   let last = { t: 0, fade: 0 };
 
-  // The block's look, one sprite per tint: white at the heart, the tint at 45%, clear at 75%,
-  // inside a faint glow of the tint (its 8px box-shadow).
+  // The block's shape, one sprite per tint: warm white at the heart, the tint at 45%, clear at 75%,
+  // inside a soft glow of the tint (its 8px box-shadow).
   const sprites = LIGHT_TINTS.map((tint) => {
     const sprite = document.createElement("canvas");
     sprite.width = sprite.height = 64;
     const c = sprite.getContext("2d");
     if (c) {
       const glow = c.createRadialGradient(32, 32, 0, 32, 32, 32);
-      glow.addColorStop(0, `rgba(${tint}, 0.35)`);
+      glow.addColorStop(0, `rgba(${tint}, 0.42)`);
+      glow.addColorStop(0.45, `rgba(${tint}, 0.14)`);
       glow.addColorStop(1, `rgba(${tint}, 0)`);
       c.fillStyle = glow;
       c.fillRect(0, 0, 64, 64);
-      const dot = c.createRadialGradient(32, 32, 0, 32, 32, 16);
-      dot.addColorStop(0, "rgba(255, 255, 255, 1)");
+      const dot = c.createRadialGradient(32, 32, 0, 32, 32, 10);
+      dot.addColorStop(0, `rgba(${HEART}, 1)`);
       dot.addColorStop(0.45, `rgba(${tint}, 1)`);
       dot.addColorStop(0.75, `rgba(${tint}, 0)`);
       c.fillStyle = dot;
-      c.fillRect(16, 16, 32, 32);
+      c.fillRect(22, 22, 20, 20);
     }
     return sprite;
   });
@@ -157,8 +162,9 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
     for (const light of lights) {
       const at = still ? { x: light.x, y: light.y, scale: 1, alpha: 0.8 } : lightAt(light, t);
       if (!at || at.alpha <= 0) continue;
-      // The dot spans half of the sprite: draw the sprite at twice the light's size.
-      const size = light.size * at.scale * 2 * dpr;
+      // The dot spans a third of the sprite; the rest is its glow, about 8px around a 5px light,
+      // like the block's box-shadow.
+      const size = light.size * at.scale * 3.2 * dpr;
       ctx.globalAlpha = at.alpha * fade;
       ctx.drawImage(sprites[light.tint]!, at.x * dpr - size / 2, at.y * dpr - size / 2, size, size);
     }
