@@ -9,6 +9,8 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 import styles from "./mountain-scene.module.css";
+import { bindLights } from "./lights";
+import { bindNightSky } from "./night-sky";
 import { bindStarfield } from "./starfield";
 
 // Tiers of the fir, bottom to top (viewBox 0 0 200 560).
@@ -202,24 +204,65 @@ export function MountainHero({
         markDrawn();
       });
 
-      // Starry sky over the whole first screen: fades in with the ridge draw, twinkles on GSAP's
-      // ticker while the hero is on screen (the ticker also idles in hidden tabs); reduced motion
-      // shows it still.
-      const canvas = hero.current?.querySelector<HTMLCanvasElement>("[data-stars]");
-      if (!canvas) return;
+      // The night around the scene, back to front: WebGL sky with moon and mist (night-sky.ts),
+      // twinkling stars and the random starfall (starfield.ts), and in front of the forest the
+      // lights rising from it (lights.ts). All fade in with the ridge draw and run on GSAP's
+      // ticker only while the hero is on screen (the ticker idles in hidden tabs too); reduced
+      // motion draws everything once, still.
+      const root = hero.current;
+      const starCanvas = root?.querySelector<HTMLCanvasElement>("[data-stars]");
+      const lightCanvas = root?.querySelector<HTMLCanvasElement>("[data-lights]");
+      const skyCanvas = root?.querySelector<HTMLCanvasElement>("[data-sky]");
+      if (!root || !starCanvas || !lightCanvas || !skyCanvas) return;
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const sky = bindStarfield(canvas, { still: reduced });
-      const fade = { value: reduced ? 1 : 0 };
-      const tick = () => sky.render(gsap.ticker.time, fade.value);
+
+      // The moon sits in the free sky above the triangle motif from lg up, small in the top
+      // right corner on narrower screens.
+      const moon = () => {
+        const box = root.getBoundingClientRect();
+        const motif = root.querySelector("[data-motif]")?.getBoundingClientRect();
+        const wide = window.innerWidth >= 1024;
+        return {
+          x: wide && motif ? motif.left + motif.width / 2 - box.left : box.width * 0.82,
+          y: wide ? Math.max(96, box.height * 0.15) : 72,
+          r: window.innerWidth >= 1920 ? 46 : wide ? 38 : 24,
+        };
+      };
+      const night = bindNightSky(skyCanvas, { sky: [4 / 255, 8 / 255, 19 / 255], moon });
+      if (!night) {
+        const m = moon();
+        const fallback = root.querySelector<HTMLElement>("[data-moon-fallback]");
+        gsap.set(fallback, {
+          display: "block",
+          left: m.x,
+          top: m.y,
+          width: m.r * 2,
+          height: m.r * 2,
+        });
+      }
+      const stars = bindStarfield(starCanvas, { still: reduced });
+      const lights = bindLights(lightCanvas, { still: reduced });
+      const fade = { stars: reduced ? 1 : 0, lights: reduced ? 1 : 0 };
+      const tick = () => {
+        const t = gsap.ticker.time;
+        night?.render(reduced ? 14 : t, reduced);
+        stars.render(t, fade.stars);
+        lights.render(t, fade.lights);
+      };
+
       if (reduced) {
+        gsap.set([skyCanvas, lightCanvas], { opacity: 1 });
         tick();
       } else {
-        gsap.to(fade, { value: 1, duration: 1.8, delay: 0.5, ease: "power1.inOut" });
+        gsap.to(skyCanvas, { opacity: 1, duration: 1.8, delay: 0.2, ease: "power1.inOut" });
+        gsap.to(fade, { stars: 1, duration: 1.8, delay: 0.5, ease: "power1.inOut" });
+        gsap.to(fade, { lights: 1, duration: 2.5, delay: 1.2, ease: "power1.inOut" });
+        gsap.set(lightCanvas, { opacity: 1 });
         const toggle = ({ isActive }: ScrollTrigger) =>
           isActive ? gsap.ticker.add(tick) : gsap.ticker.remove(tick);
         toggle(
           ScrollTrigger.create({
-            trigger: hero.current,
+            trigger: root,
             start: "top bottom",
             end: "bottom top",
             onToggle: toggle,
@@ -228,7 +271,9 @@ export function MountainHero({
       }
       return () => {
         gsap.ticker.remove(tick);
-        sky.destroy();
+        night?.destroy();
+        stars.destroy();
+        lights.destroy();
       };
     },
     { scope: hero },
@@ -243,8 +288,10 @@ export function MountainHero({
         "relative isolate flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
       )}
     >
+      <canvas data-sky aria-hidden="true" className={styles.sky} />
+      <div data-moon-fallback aria-hidden="true" className={styles.moonFallback} />
       <canvas data-stars aria-hidden="true" className={styles.stars} />
-      {children}
+      <div className="relative z-10">{children}</div>
       <div data-scene aria-hidden="true" className={cn(styles.scene, "mt-auto")}>
         <div className={styles.ridges}>
           <svg className={styles.far} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
@@ -295,6 +342,7 @@ export function MountainHero({
           ))}
         </div>
       </div>
+      <canvas data-lights aria-hidden="true" className={styles.lights} />
     </section>
   );
 }

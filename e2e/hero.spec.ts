@@ -94,6 +94,27 @@ const starlight = (page: Page) =>
     return sum;
   });
 
+// Summed alpha of the rising lights — they move, so it changes between frames.
+const lightGlow = (page: Page) =>
+  page.locator("[data-lights]").evaluate((canvas: HTMLCanvasElement) => {
+    const { data } = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+    let sum = 0;
+    for (let i = 3; i < data.length; i += 4) sum += data[i]!;
+    return sum;
+  });
+
+test("the night sky shows the moon, and lights rise from the forest", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  // WebGL sky in place (the CSS fallback moon stays hidden) and faded in.
+  await expect(page.locator("[data-moon-fallback]")).toBeHidden();
+  await expect(page.locator("[data-sky]")).toHaveCSS("opacity", "1");
+  const first = await lightGlow(page);
+  expect(first).toBeGreaterThan(0);
+  await page.waitForTimeout(400);
+  expect(await lightGlow(page)).not.toBe(first);
+});
+
 test("the sky fills with stars that twinkle", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
@@ -112,6 +133,11 @@ test.describe("reduced motion", () => {
     const { opacity, complete } = await outline(page);
     expect({ opacity, complete }).toEqual({ opacity: 1, complete: true });
     expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
+    // Still lights, drawn once.
+    const glow = await lightGlow(page);
+    expect(glow).toBeGreaterThan(0);
+    await page.waitForTimeout(400);
+    expect(await lightGlow(page)).toBe(glow);
     // A still sky: stars are drawn and stay as they are.
     const first = await starlight(page);
     expect(first).toBeGreaterThan(0);

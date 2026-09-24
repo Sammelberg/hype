@@ -7,7 +7,7 @@ import styles from "./triangle-motif.module.css";
 // the ridge has started (data-tri-* hooks); until then the strokes are hidden.
 export function TriangleMotif({ className }: { className?: string }) {
   return (
-    <div aria-hidden="true" className={cn(styles.motif, className)}>
+    <div data-motif aria-hidden="true" className={cn(styles.motif, className)}>
       <svg viewBox="-110 26 300 173" preserveAspectRatio="xMidYMid meet">
         <g transform="translate(40 154) scale(1.15) translate(-40 -154)">
           <path
