@@ -63,7 +63,7 @@ pnpm dev       # http://localhost:<порт приложения>, первый 
 
 1. Заменить главную (`src/app/(frontend)/page.tsx`) на свои секции — скиллы `frontend-design`,
    `cms-section`.
-2. Логотип: `public/brand/`, шапка (`site-header.tsx`), иконки `icon.png`/`apple-icon.png` вместо
+2. Логотип: положить в `public/brand/` (папки `public/` в шаблоне нет — создать), шапка (`site-header.tsx`), иконки `icon.png`/`apple-icon.png` вместо
    сгенерированных `icon.tsx`/`apple-icon.tsx`, OG-картинка.
 3. Новая коллекция с собственными URL (блог, услуги, проекты): маршрут + одна строка в
    `src/cms/paths.ts` — редиректы, поиск, SEO, предпросмотр и sitemap подхватят её сами.

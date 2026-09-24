@@ -37,6 +37,7 @@ const { values: args } = parseArgs({
 // --- Colour: hex → OKLCH, WCAG contrast against the dark background -------------------------
 
 const BACKGROUND = "#0a0a0a"; // --background in globals.css
+const CARD = "#141414"; // --card in globals.css
 
 function hexToRgb(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -236,6 +237,15 @@ edit("src/app/(frontend)/globals.css", [
     () => `--brand-accent: ${fmt(accentSeen++ === 0 ? color : p3)};`,
   ],
   [/default logo cyan #[0-9a-f]{6}/i, `default ${accent.toLowerCase()}`],
+  // The contrast note quotes the accent's own ratios; keep them true for the new colour.
+  [/with the default cyan:/, `with the accent ${accent.toLowerCase()}:`],
+  [
+    /primary \d+(\.\d+)? \/ \d+(\.\d+)? · text on primary \d+(\.\d+)?/,
+    () => {
+      const r = (bg) => contrast(accent, bg).toFixed(1);
+      return `primary ${r(BACKGROUND)} / ${r(CARD)} · text on primary ${r(BACKGROUND)}`;
+    },
+  ],
 ]);
 
 edit("src/app/(frontend)/opengraph-image.tsx", [
@@ -256,6 +266,7 @@ edit("CLAUDE.md", [
   // The "this repo is a template" note; the project is no longer one.
   [/^This repo is a \*\*starter template\*\*.*\n\n/m, ""],
   [/^- \*\*Site \/ owner:\*\* .*$/m, `- **Site / owner:** ${siteName} — ${owner}`],
+  [/\(default cyan `#[0-9a-f]{6}`;/i, `(\`${accent.toLowerCase()}\`;`],
 ]);
 edit("README.md", [[/^# .*$/m, `# ${siteName}`]]);
 
