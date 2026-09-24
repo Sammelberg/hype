@@ -43,7 +43,7 @@ export default async function CmsPage({ params }: Props) {
   if (!page) return redirectOrNotFound(`/${slug.join("/")}`);
 
   return (
-    <main className="page-container max-w-3xl pt-section">
+    <main className="page-container max-w-3xl pt-16 sm:pt-24">
       <h1 className="text-4xl font-semibold tracking-tight text-balance">{page.title}</h1>
       <RichText data={page.content} className="mt-10" />
     </main>

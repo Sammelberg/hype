@@ -76,7 +76,7 @@ export function ContactForm({
       action={action}
       noValidate
       aria-busy={pending}
-      className="grid gap-fib-md sm:grid-cols-2"
+      className="grid gap-5 sm:grid-cols-2"
     >
       <p className="text-sm text-muted-foreground sm:col-span-2">
         Mit <span aria-hidden="true">*</span> markierte Felder sind Pflichtfelder.
@@ -104,10 +104,10 @@ export function ContactForm({
         return (
           <div
             key={field.name}
-            className={cn("grid content-start gap-fib-xs", !half && "sm:col-span-2")}
+            className={cn("grid content-start gap-2", !half && "sm:col-span-2")}
           >
             {field.blockType === "checkbox" ? (
-              <div className="flex items-center gap-fib-xs">
+              <div className="flex items-center gap-2">
                 <input
                   {...common}
                   type="checkbox"
@@ -196,7 +196,7 @@ export function ContactForm({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-fib-md sm:col-span-2">
+      <div className="flex flex-wrap items-center gap-5 sm:col-span-2">
         <Button type="submit" disabled={pending}>
           {pending ? "Wird gesendet …" : submitLabel}
         </Button>

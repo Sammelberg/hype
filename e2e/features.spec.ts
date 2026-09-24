@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { SEED_REDIRECT } from "../scripts/seed-data";
@@ -61,28 +60,4 @@ test.describe("contact form", () => {
     await page.getByRole("button", { name: "Nachricht senden" }).click();
     await expect(page.getByRole("status")).toContainText("Vielen Dank für Ihre Nachricht");
   });
-});
-
-test.describe("dark-only palette", () => {
-  // A light OS setting must not bring back a light theme.
-  test.use({ colorScheme: "light" });
-
-  for (const path of ["/", "/kontakt", SEED_REDIRECT.toPath]) {
-    test(`${path} stays dark and has no a11y violations`, async ({ page }) => {
-      await page.goto(path);
-      // Paint the computed colour to a canvas so any notation (oklch, lab, rgb) becomes sRGB bytes.
-      const [r, g, b] = await page.evaluate(() => {
-        const ctx = document.createElement("canvas").getContext("2d")!;
-        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
-        ctx.fillRect(0, 0, 1, 1);
-        return [...ctx.getImageData(0, 0, 1, 1).data];
-      });
-      expect(Math.max(r!, g!, b!)).toBeLessThan(20); // --background #0a0a0a
-      const { violations } = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa"])
-        .exclude('[class*="reticle-"]')
-        .analyze();
-      expect(violations.map((v) => v.id)).toEqual([]);
-    });
-  }
 });

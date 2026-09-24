@@ -1,20 +1,28 @@
 /*
- * Mountains and firs („Berge und Tannen“ block), kept to the block's own composition, sizes and
- * motion; only the colours follow the brand palette (neutral ridges, the front ridge in the accent).
+ * Mountains and firs („Berge und Tannen“ block, supplied by the owner): its own composition,
+ * sizes, motion and night palette (palette 1 of the block). .hero is the night sky behind the
+ * whole first screen; the scene closes it off at the bottom.
  * The scene is as tall as its tallest fir (112% of the forest), so content above never meets it;
  * the ridges are wider than small screens and are clipped sideways only.
  */
+.hero {
+  --sky: #0a1230;
+  --far: #1c2f5c;
+  --far-stroke: rgb(140 175 255 / 0.35);
+  --mid: #111f42;
+  --mid-stroke: rgb(110 155 255 / 0.4);
+  --main: #050a1a;
+  --main-stroke: #6e9bff;
+  --glow: rgb(110 155 255 / 0.45);
+  --accent-line: #cfe0ff;
+  --tree-back: #22386a;
+  --tree-mid: #0b1530;
+  --tree-fore: #000;
+
+  background: var(--sky);
+}
+
 .scene {
-  --far: oklch(0.21 0 0);
-  --far-stroke: oklch(1 0 0 / 0.14);
-  --mid: oklch(0.175 0 0);
-  --mid-stroke: oklch(1 0 0 / 0.18);
-  --main: oklch(0.11 0 0);
-  --main-stroke: var(--brand-accent);
-  --accent-line: var(--foreground);
-  --tree-back: oklch(0.23 0 0);
-  --tree-mid: oklch(0.12 0 0);
-  --tree-fore: oklch(0 0 0);
   --forest-h: 210px;
 
   position: relative;
@@ -89,7 +97,7 @@
     stroke-dashoffset: 2200;
     stroke-width: 8;
     stroke-opacity: 0;
-    filter: drop-shadow(0 0 16px color-mix(in oklch, var(--brand-accent) 45%, transparent));
+    filter: drop-shadow(0 0 16px var(--glow));
   }
   50% {
     stroke-width: 4;

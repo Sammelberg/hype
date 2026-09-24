@@ -7,8 +7,10 @@ export const alt = "Vorschaubild";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Brand accent as hex (next/og cannot read CSS variables). Set by `pnpm init:project`.
-const ACCENT = "#01ccff";
+// Neutral placeholder colours (next/og cannot read CSS variables): set them with the project's design.
+const BACKGROUND = "#ffffff";
+const FOREGROUND = "#171717";
+const MUTED = "#737373";
 
 // Rendered on our own server with next/og's bundled font — no external font or image service.
 export default async function OpengraphImage() {
@@ -23,8 +25,8 @@ export default async function OpengraphImage() {
         flexDirection: "column",
         justifyContent: "flex-end",
         padding: 80,
-        background: "#0a0a0a",
-        color: "#fafafa",
+        background: BACKGROUND,
+        color: FOREGROUND,
       }}
     >
       {/* Placeholder monogram, like icon.tsx. Swap for the project's logo once it exists. */}
@@ -37,7 +39,8 @@ export default async function OpengraphImage() {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 32,
-          background: "#171717",
+          background: FOREGROUND,
+          color: BACKGROUND,
           fontSize: 72,
           fontWeight: 600,
         }}
@@ -46,7 +49,7 @@ export default async function OpengraphImage() {
       </div>
       <div style={{ fontSize: 72, fontWeight: 600, letterSpacing: -2 }}>{name}</div>
       {settings.tagline ? (
-        <div style={{ marginTop: 20, fontSize: 32, color: ACCENT }}>{settings.tagline}</div>
+        <div style={{ marginTop: 20, fontSize: 32, color: MUTED }}>{settings.tagline}</div>
       ) : null}
     </div>,
     size,

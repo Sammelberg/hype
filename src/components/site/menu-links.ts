@@ -1,6 +1,5 @@
-// Main navigation, shared by the menu sheet and the no-JavaScript fallback in the header.
+// Main navigation in the header. The site name already links home.
 export const MENU_LINKS = [
-  { href: "/", label: "Startseite" },
   { href: "/kontakt", label: "Kontakt" },
   { href: "/suche", label: "Suche" },
 ] as const;

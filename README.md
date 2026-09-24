@@ -2,8 +2,11 @@
 
 Стартовый шаблон для сайтов и приложений: Next.js 16 · Payload CMS 3 (Postgres) · React 19 ·
 Tailwind v4 · shadcn/ui · TypeScript · pnpm. Немецкий интерфейс (Anrede „Sie“), суверенитет данных
-(CSP только same-origin, без US-SaaS), тёмная палитра с одним акцентом, фибоначчи-сетка, полный
-набор `.claude` (скиллы, хуки, `CLAUDE.md`).
+(CSP только same-origin, без US-SaaS), полный набор `.claude` (скиллы, хуки, `CLAUDE.md`).
+
+Дизайн в шаблоне нейтральный (стандартные токены shadcn, простая шапка): каждый проект получает
+свой новый дизайн с нуля. Единственный готовый визуальный блок — горы и ели на главной, его можно
+оставить, перекрасить или заменить.
 
 ## Что уже есть
 
@@ -37,19 +40,17 @@ pnpm init:project
 ```
 
 `pnpm init:project` спрашивает имя проекта, название сайта, владельца, e-mail, порты приложения и
-Postgres (предлагает первые свободные) и акцентный цвет, затем:
+Postgres (предлагает первые свободные), затем:
 
 - переписывает `package.json` (порт `pnpm dev`), `docker-compose.yml` (своё имя контейнера и
   порт — проекты не мешают друг другу), CI, Playwright, `.env.example`;
 - создаёт `.env` со случайным `PAYLOAD_SECRET`;
-- ставит акцент в `globals.css` (hex → OKLCH, график и P3 следуют за ним) и в OG-картинку,
-  проверяет контраст;
 - подставляет название и владельца в сид-данные, `CLAUDE.md` (раздел „Project“), `README.md`, Reticle;
 - подключает библиотеку скиллов (симлинки, если она есть на машине) и строит индекс graft;
 - по желанию начинает чистую git-историю с одним коммитом.
 
 Без вопросов: `pnpm init:project --yes --name kunde-x --site-name "Kunde X" --owner "Kunde X GmbH"
---email hallo@kunde-x.de --accent "#ff5a1f" --git fresh`.
+--email hallo@kunde-x.de --git fresh`.
 
 Дальше:
 
@@ -61,8 +62,8 @@ pnpm dev       # http://localhost:<порт приложения>, первый 
 
 ## После старта
 
-1. Заменить главную (`src/app/(frontend)/page.tsx`) на свои секции — скиллы `frontend-design`,
-   `cms-section`.
+1. Придумать дизайн проекта с нуля (скиллы `frontend-design`, `variate`): палитра и тема в
+   `globals.css`, шрифты, шапка, главная. Итог записать в `CLAUDE.md` → „Project“ → „Design direction“.
 2. Логотип: положить в `public/brand/` (папки `public/` в шаблоне нет — создать), шапка (`site-header.tsx`), иконки `icon.png`/`apple-icon.png` вместо
    сгенерированных `icon.tsx`/`apple-icon.tsx`, OG-картинка.
 3. Новая коллекция с собственными URL (блог, услуги, проекты): маршрут + одна строка в

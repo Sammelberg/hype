@@ -26,12 +26,12 @@ export default async function SearchPage({ searchParams }: Props) {
   const results = searched ? await searchSite(query) : [];
 
   return (
-    <main className="page-container max-w-3xl pt-section">
+    <main className="page-container max-w-3xl pt-16 sm:pt-24">
       <h1 className="text-4xl font-semibold tracking-tight text-balance">Suche</h1>
 
-      <Form action="/suche" role="search" className="mt-fib-lg">
+      <Form action="/suche" role="search" className="mt-8">
         <Label htmlFor="suche-begriff">Suchbegriff</Label>
-        <div className="mt-fib-xs flex gap-fib-sm">
+        <div className="mt-2 flex gap-3">
           <Input
             id="suche-begriff"
             name="q"
@@ -51,20 +51,20 @@ export default async function SearchPage({ searchParams }: Props) {
       </p>
 
       {query && !searched ? (
-        <p className="mt-fib-lg text-muted-foreground">
+        <p className="mt-8 text-muted-foreground">
           Bitte geben Sie mindestens {MIN_LENGTH} Zeichen ein.
         </p>
       ) : null}
 
       {searched ? (
-        <section aria-labelledby="suche-ergebnisse" className="mt-fib-xl">
+        <section aria-labelledby="suche-ergebnisse" className="mt-12">
           <h2 id="suche-ergebnisse" className="text-sm font-medium text-muted-foreground">
             {resultCount(results.length, query)}
           </h2>
           {results.length ? (
-            <ul className="mt-fib-md divide-y divide-border border-y border-border">
+            <ul className="mt-5 divide-y divide-border border-y border-border">
               {results.map((result) => (
-                <li key={result.id} className="py-fib-md">
+                <li key={result.id} className="py-5">
                   <p className="text-xs text-muted-foreground">Seite</p>
                   <Link
                     href={result.url as never}
@@ -81,7 +81,7 @@ export default async function SearchPage({ searchParams }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="mt-fib-md text-pretty text-muted-foreground">
+            <p className="mt-5 text-pretty text-muted-foreground">
               Versuchen Sie einen anderen Begriff oder gehen Sie zur{" "}
               <Link
                 href="/"

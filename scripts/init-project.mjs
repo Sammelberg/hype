@@ -1,11 +1,11 @@
 // `pnpm init:project` — turns a fresh copy of this template into a new project.
-// Asks for name, site name, owner, contact e-mail, app and database ports and accent colour, then
-// rewrites package.json, docker-compose.yml, CI, Playwright, .env(.example), the brand accent, seed
-// data, CLAUDE.md, README.md and the Reticle project id; links the skill library, builds the graft
+// Asks for name, site name, owner, contact e-mail and app and database ports, then rewrites
+// package.json, docker-compose.yml, CI, Playwright, .env(.example), seed data, CLAUDE.md, README.md
+// and the Reticle project id; links the skill library, builds the graft
 // index and optionally starts a fresh git history.
 //
 // Non-interactive: pnpm init:project --yes --name kunde-x --site-name "Kunde X" --owner "Kunde X GmbH" \
-//   --email hallo@kunde-x.de --app-port 3001 --db-port 5434 --accent "#ff5a1f" --git fresh
+//   --email hallo@kunde-x.de --app-port 3001 --db-port 5434 --git fresh
 // Plain Node, no dependencies: it runs right after `pnpm install`.
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -29,48 +29,9 @@ const { values: args } = parseArgs({
     email: { type: "string" },
     "app-port": { type: "string" },
     "db-port": { type: "string" },
-    accent: { type: "string" },
     git: { type: "string" }, // fresh | keep
   },
 });
-
-// --- Colour: hex → OKLCH, WCAG contrast against the dark background -------------------------
-
-const BACKGROUND = "#0a0a0a"; // --background in globals.css
-const CARD = "#141414"; // --card in globals.css
-
-function hexToRgb(hex) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return null;
-  const n = Number.parseInt(m[1], 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255);
-}
-
-const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-
-function oklch(hex) {
-  const [r, g, b] = hexToRgb(hex).map(toLinear);
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
-  const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
-  const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
-  const C = Math.hypot(A, B);
-  const H = C < 1e-4 ? 0 : ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360;
-  return { L, C, H };
-}
-
-const fmt = ({ L, C, H }) => `oklch(${L.toFixed(3)} ${C.toFixed(3)} ${H.toFixed(1)})`;
-
-function contrast(hexA, hexB) {
-  const lum = (hex) => {
-    const [r, g, b] = hexToRgb(hex).map(toLinear);
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const [hi, lo] = [lum(hexA), lum(hexB)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
 
 // --- Helpers ----------------------------------------------------------------------------------
 
@@ -159,10 +120,6 @@ const dbPort = await ask("Lokaler Postgres-Port", String(await firstFreePort(543
   flag: "db-port",
   validate: (v) => (/^\d{4,5}$/.test(v) ? null : "Eine Portnummer, z. B. 5434."),
 });
-const accent = await ask("Akzentfarbe (Hex)", "#01ccff", {
-  flag: "accent",
-  validate: (v) => (hexToRgb(v) ? null : "Hex-Farbe, z. B. #01ccff."),
-});
 const freshGit = existsSync(file(".git"))
   ? (await ask("Git-Historie neu beginnen? (ja/nein)", "ja", { flag: "git" })).match(
       /^(ja|j|y|yes|fresh)$/i,
@@ -228,33 +185,6 @@ if (existsSync(file(".env"))) {
   changed.push(".env (neu, mit zufälligem PAYLOAD_SECRET)");
 }
 
-const color = oklch(accent);
-const p3 = { ...color, C: Math.min(color.C * 1.1, 0.37) };
-let accentSeen = 0;
-edit("src/app/(frontend)/globals.css", [
-  [
-    /--brand-accent: oklch\([^)]*\);/g,
-    () => `--brand-accent: ${fmt(accentSeen++ === 0 ? color : p3)};`,
-  ],
-  [/default logo cyan #[0-9a-f]{6}/i, `default ${accent.toLowerCase()}`],
-  // The contrast note quotes the accent's own ratios; keep them true for the new colour.
-  [/with the default cyan:/, `with the accent ${accent.toLowerCase()}:`],
-  [
-    /primary \d+(\.\d+)? \/ \d+(\.\d+)? · text on primary \d+(\.\d+)?/,
-    () => {
-      const r = (bg) => contrast(accent, bg).toFixed(1);
-      return `primary ${r(BACKGROUND)} / ${r(CARD)} · text on primary ${r(BACKGROUND)}`;
-    },
-  ],
-]);
-
-edit("src/app/(frontend)/opengraph-image.tsx", [
-  [/const ACCENT = "#[0-9a-f]{6}";/i, `const ACCENT = "${accent.toLowerCase()}";`],
-]);
-edit("scripts/seed.ts", [
-  [/\["#0a0a0a", "#[0-9a-f]{6}"\]/i, `["#0a0a0a", "${accent.toLowerCase()}"]`],
-]);
-
 edit("scripts/seed-data.ts", [
   [/siteName: ".*?",/, `siteName: ${jsString(siteName)},`],
   [/ownerName: ".*?",/, `ownerName: ${jsString(owner)},`],
@@ -266,7 +196,6 @@ edit("CLAUDE.md", [
   // The "this repo is a template" note; the project is no longer one.
   [/^This repo is a \*\*starter template\*\*.*\n\n/m, ""],
   [/^- \*\*Site \/ owner:\*\* .*$/m, `- **Site / owner:** ${siteName} — ${owner}`],
-  [/\(default cyan `#[0-9a-f]{6}`;/i, `(\`${accent.toLowerCase()}\`;`],
 ]);
 edit("README.md", [[/^# .*$/m, `# ${siteName}`]]);
 
@@ -302,7 +231,6 @@ try {
 console.log("\nGeändert:");
 for (const path of changed) console.log(`  ${path}`);
 
-const ratio = contrast(accent, BACKGROUND);
 if (!graftBuilt) {
   console.log("\ngraft-Index nicht gebaut (graft fehlt?). Später: graft build");
 }
@@ -311,14 +239,6 @@ if (!libraryLinked) {
   console.log(
     "\nSkill-Bibliothek nicht verknüpft: .claude/skills/skill-router/scripts/link-library.sh\n" +
       "  (Quelle per SKILL_LIBRARY_SRC angeben).",
-  );
-}
-
-console.log(`\nKontrast Akzent / Hintergrund: ${ratio.toFixed(1)}:1`);
-if (ratio < 4.5) {
-  console.log(
-    "  Unter 4.5:1 — Links und Fokusringe sind schwer lesbar. Hellere Akzentfarbe wählen oder\n" +
-      "  --primary-foreground in globals.css auf eine helle Farbe setzen (Text auf Buttons).",
   );
 }
 

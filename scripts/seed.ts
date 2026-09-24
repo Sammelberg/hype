@@ -20,22 +20,13 @@ function assertSafeTarget() {
 }
 
 // Abstract golden-rectangle artwork, generated locally (no stock-photo service).
-async function artwork([a, b]: [string, string], variant: number) {
+// Neutral grey placeholder for the share image; the project replaces it with real artwork.
+async function artwork() {
   const w = 1920;
-  const h = 1187;
-  const fib = [89, 144, 233, 377, 610];
-  const circles = fib
-    .map((r, i) => {
-      const cx = ((i * 0.618 + variant * 0.382) % 1) * w;
-      const cy = ((i * 0.382 + variant * 0.618) % 1) * h;
-      return `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${r}" fill="${b}" fill-opacity="${0.08 + i * 0.04}"/>`;
-    })
-    .join("");
+  const h = 1080;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}" stop-opacity="0.55"/>
-    </linearGradient></defs>
-    <rect width="100%" height="100%" fill="${a}"/><rect width="100%" height="100%" fill="url(#g)"/>${circles}
+    <rect width="100%" height="100%" fill="#e5e5e5"/>
+    <path d="M0 0L${w} ${h}M${w} 0L0 ${h}" stroke="#d4d4d4" stroke-width="4"/>
   </svg>`;
   return sharp(Buffer.from(svg)).webp({ quality: 80 }).toBuffer();
 }
@@ -88,11 +79,8 @@ async function main() {
   await payload.updateGlobal({ slug: "site-settings", data: seedSettings, context });
 
   // Share image for the home page (SEO tab), so uploads and OG images are exercised.
-  const shareImage = await upsertMedia(
-    payload,
-    "seed-startseite.webp",
-    "Abstrakte Grafik in den Markenfarben",
-    () => artwork(["#0a0a0a", "#01ccff"], 0),
+  const shareImage = await upsertMedia(payload, "seed-startseite.webp", "Platzhalterbild", () =>
+    artwork(),
   );
 
   // Parents first, so children can reference them (nested-docs builds the breadcrumbs).

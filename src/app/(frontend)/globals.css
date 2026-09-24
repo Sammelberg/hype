@@ -3,8 +3,12 @@
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
 
-/* The site is dark-only (brand: black + one accent colour), so `dark:` variants always apply. */
-@custom-variant dark (&:where(*));
+/*
+ * Design-neutral base: shadcn's neutral tokens, light by default, a dark set under `.dark`.
+ * Palette, theme, typography, spacing rhythm and motion are chosen per project (CLAUDE.md,
+ * „Styling“) and replace these values — nothing here is a brand.
+ */
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-heading: var(--font-sans);
@@ -50,119 +54,96 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
- * Layout system — Fibonacci spacing.
- * Steps 5·8·13·21·34·55·89·144·233 px; neighbours differ by ≈ φ (1.618), so every step is
- * visibly distinct. Values are rem so they follow the user's font-size setting.
- * Use these for layout rhythm; Tailwind's default 0.25rem scale stays for component internals.
- *
- * Fluid tokens interpolate linearly between a 375px and a 1536px viewport (Fibonacci at both ends):
- *   gutter   21 → 55 px   page side padding       px-gutter
- *   section  55 → 144 px  space between sections  py-section, mt-section
- *   grid     13 → 34 px   gaps in content grids   gap-grid
- *   header   55 → 89 px   height of the sticky bar h-header, pt-header, top-header
- */
 @theme {
-  --breakpoint-xs: 23.4375rem; /* 375px — small phones */
-  --breakpoint-3xl: 120rem; /* 1920px — full HD */
-
-  --container-page: 120rem; /* 1920px — max-w-page, page-container */
-
-  --aspect-golden: 1.618 / 1; /* aspect-golden — golden rectangle for covers and cards */
-
-  --spacing-fib-2xs: 0.3125rem; /* 5px */
-  --spacing-fib-xs: 0.5rem; /* 8px */
-  --spacing-fib-sm: 0.8125rem; /* 13px */
-  --spacing-fib-md: 1.3125rem; /* 21px */
-  --spacing-fib-lg: 2.125rem; /* 34px */
-  --spacing-fib-xl: 3.4375rem; /* 55px */
-  --spacing-fib-2xl: 5.5625rem; /* 89px */
-  --spacing-fib-3xl: 9rem; /* 144px */
-  --spacing-fib-4xl: 14.5625rem; /* 233px */
-
-  --spacing-gutter: clamp(1.3125rem, 0.6261rem + 2.9285vw, 3.4375rem);
-  --spacing-section: clamp(3.4375rem, 1.6408rem + 7.6658vw, 9rem);
-  --spacing-grid: clamp(0.8125rem, 0.3886rem + 1.8088vw, 2.125rem);
-  --spacing-header: clamp(3.4375rem, 2.7514rem + 2.9285vw, 5.5625rem);
-
-  /* Motion — strong curves (Emil Kowalski's set). Durations: Tailwind's 150/200/300/500. */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* iOS-like sheet curve (Ionic) */
-
-  --animate-fade-in: fade-in 0.8s var(--ease-out) both;
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-  }
+  /* Height of the sticky site header (h-header); anchors and focus scrolling stop below it. */
+  --spacing-header: 4rem;
 }
 
-/* Centered page column with fluid side padding. Plain utilities (px-0, max-w-3xl) override it. */
+/* Centered page column. Plain utilities (px-0, max-w-3xl) override it. */
 @utility page-container {
   width: 100%;
-  max-width: var(--container-page);
+  max-width: 80rem;
   margin-inline: auto;
-  padding-inline: var(--spacing-gutter);
-}
+  padding-inline: 1rem;
 
-/* Golden split: 61.8% / 38.2%. minmax(0, …) lets long words and media shrink instead of overflowing. */
-@utility grid-cols-golden {
-  grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr);
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
 
-  /*
-   * Brand palette: black and its shades + one accent (--brand-accent, default logo cyan #01ccff).
-   * Neutrals are achromatic; the accent is the only hue and marks interactive/primary things only.
-   * --brand-accent is set by `pnpm init:project`; the P3 block below saturates it on wide-gamut
-   * screens. Re-check contrast after changing it (primary on background ≥ 4.5:1).
-   * Contrast (WCAG 2) against --background / --card, with the default cyan:
-   *   foreground 18.2 / 16.9 · muted-foreground 8.0 / 7.4 · primary 11.0 / 10.3 · text on primary 11.0
-   */
-  --brand-accent: oklch(0.8 0.145 220);
-  --background: oklch(0.145 0 0); /* #0a0a0a */
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.19 0 0);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.19 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: var(--brand-accent);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.25 0 0);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.25 0 0);
-  --muted-foreground: oklch(0.72 0 0);
-  --accent: oklch(0.25 0 0); /* shadcn hover surface, stays neutral */
-  --accent-foreground: oklch(0.97 0 0);
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: var(--brand-accent);
-  --chart-1: oklch(from var(--brand-accent) 0.9 0.07 h); /* chart ramp follows the accent hue */
-  --chart-2: var(--brand-accent);
-  --chart-3: oklch(from var(--brand-accent) 0.7 0.126 h);
-  --chart-4: oklch(from var(--brand-accent) 0.6 0.108 h);
-  --chart-5: oklch(from var(--brand-accent) 0.5 0.09 h);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.19 0 0);
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: var(--brand-accent);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.25 0 0);
-  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: var(--brand-accent);
-}
-
-/* Wide-gamut screens get a more saturated accent than sRGB can show. */
-@media (color-gamut: p3) {
-  :root {
-    --brand-accent: oklch(0.8 0.16 220);
-  }
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -178,33 +159,19 @@
   /*
    * The header is sticky: anchor jumps and focus scrolling in the content stop below it
    * (WCAG 2.4.11). scroll-margin on content, not scroll-padding on <html>: padding would also
-   * apply to the header's own buttons, and focusing them (e.g. the menu returning focus) would
-   * scroll the page up to "reveal" them.
+   * apply to the header's own links.
    */
   :where(main, footer) * {
-    scroll-margin-top: calc(var(--spacing-header) + var(--spacing-fib-md));
+    scroll-margin-top: calc(var(--spacing-header) + 1.25rem);
   }
-  /* Smooth anchor jumps only for users who allow motion; native smoothing fights Lenis, so off while it runs. */
+  /* Smooth anchor jumps only for users who allow motion; off while Lenis runs, if a project adds it. */
   @media (prefers-reduced-motion: no-preference) {
     html:not(.lenis) {
       scroll-behavior: smooth;
     }
   }
-  /* clip, not hidden: hidden turns body into a scroll container and breaks sticky and ScrollTrigger pins. */
+  /* clip, not hidden: hidden turns body into a scroll container and breaks sticky positioning. */
   body {
     overflow-x: clip;
   }
-  ::selection {
-    @apply bg-primary text-primary-foreground;
-  }
-}
-
-/*
- * lenis.css clips <html> while Lenis is stopped. The menu stops Lenis (its wheel handler ignores
- * Radix's scroll lock), but the clip would hide the scrollbar before Radix measures it for the
- * width compensation, so the page shifts by the scrollbar width. Radix already locks the page.
- * Unlayered and more specific, so it beats lenis.css (which is unlayered too).
- */
-html.lenis.lenis-stopped:not(.lenis-autoToggle) {
-  overflow: visible;
 }

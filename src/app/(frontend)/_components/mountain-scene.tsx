@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -74,8 +74,18 @@ const TREES: Tree[] = [
 
 const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore };
 
-/** Decorative mountain ridges with swaying firs; fills its positioned parent from the bottom. */
-export function MountainScene({ className }: { className?: string }) {
+/**
+ * First screen of the home page under a night sky, closed off by mountain ridges with swaying firs.
+ * The section is a `.dark` scope, so shadcn components inside use the dark token set.
+ */
+export function MountainHero({
+  labelledBy,
+  children,
+}: {
+  /** id of the heading that names the section. */
+  labelledBy: string;
+  children: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   // The ridge draws the first time the scene comes into view (below the fold on landscape phones);
@@ -101,48 +111,57 @@ export function MountainScene({ className }: { className?: string }) {
   }, []);
 
   return (
-    <div ref={ref} aria-hidden="true" className={cn(styles.scene, className)}>
-      <div className={styles.ridges}>
-        <svg className={styles.far} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
-          <path d="M 0 570 L 200 470 L 400 530 L 600 400 L 800 500 L 1000 380 L 1200 500 L 1400 450 L 1500 570 Z" />
-        </svg>
-        <svg className={styles.mid} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
-          <path d="M 100 590 L 350 470 L 500 550 L 700 420 L 900 540 L 1100 410 L 1300 540 L 1450 470 L 1500 590 Z" />
-        </svg>
-        <svg viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
-          <path
-            className={styles.draw}
-            d="M 50 550 L 350 470 L 600 550 L 800 360 L 900 480 L 1000 400 L 1200 550 L 1450 550 Q 1200 440 1100 480 Q 1000 520 900 480 Q 800 440 800 360 Q 700 480 600 550 Q 500 470 350 470 Q 200 520 50 550 Z"
-          />
-          <path className={styles.accent} d="M 600 550 Q 800 420 900 480" />
-        </svg>
-      </div>
+    <section
+      aria-labelledby={labelledBy}
+      className={cn(
+        styles.hero,
+        "dark flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
+      )}
+    >
+      {children}
+      <div ref={ref} aria-hidden="true" className={cn(styles.scene, "mt-auto")}>
+        <div className={styles.ridges}>
+          <svg className={styles.far} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
+            <path d="M 0 570 L 200 470 L 400 530 L 600 400 L 800 500 L 1000 380 L 1200 500 L 1400 450 L 1500 570 Z" />
+          </svg>
+          <svg className={styles.mid} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
+            <path d="M 100 590 L 350 470 L 500 550 L 700 420 L 900 540 L 1100 410 L 1300 540 L 1450 470 L 1500 590 Z" />
+          </svg>
+          <svg viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
+            <path
+              className={styles.draw}
+              d="M 50 550 L 350 470 L 600 550 L 800 360 L 900 480 L 1000 400 L 1200 550 L 1450 550 Q 1200 440 1100 480 Q 1000 520 900 480 Q 800 440 800 360 Q 700 480 600 550 Q 500 470 350 470 Q 200 520 50 550 Z"
+            />
+            <path className={styles.accent} d="M 600 550 Q 800 420 900 480" />
+          </svg>
+        </div>
 
-      <div className={styles.forest}>
-        {TREES.map((tree, index) => (
-          <div
-            key={index}
-            className={cn(styles.tree, LAYER_CLASS[tree.layer])}
-            style={
-              {
-                ...tree.style,
-                "--sway": `${tree.sway}deg`,
-                animationDuration: `${tree.duration}s`,
-                animationDelay: `${tree.delay}s`,
-              } as CSSProperties
-            }
-          >
-            <svg viewBox="0 0 200 560">
-              <g fill="currentColor">
-                <rect x="93" y="472" width="14" height="72" />
-                {FIR_TIERS.map((points) => (
-                  <polygon key={points} points={points} />
-                ))}
-              </g>
-            </svg>
-          </div>
-        ))}
+        <div className={styles.forest}>
+          {TREES.map((tree, index) => (
+            <div
+              key={index}
+              className={cn(styles.tree, LAYER_CLASS[tree.layer])}
+              style={
+                {
+                  ...tree.style,
+                  "--sway": `${tree.sway}deg`,
+                  animationDuration: `${tree.duration}s`,
+                  animationDelay: `${tree.delay}s`,
+                } as CSSProperties
+              }
+            >
+              <svg viewBox="0 0 200 560">
+                <g fill="currentColor">
+                  <rect x="93" y="472" width="14" height="72" />
+                  {FIR_TIERS.map((points) => (
+                    <polygon key={points} points={points} />
+                  ))}
+                </g>
+              </svg>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

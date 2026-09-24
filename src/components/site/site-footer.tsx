@@ -12,7 +12,7 @@ export function SiteFooter({
   socialLinks?: Social[] | null;
 }) {
   return (
-    <footer className="page-container mt-section border-t border-border py-fib-lg text-sm text-muted-foreground">
+    <footer className="page-container mt-16 border-t border-border py-8 text-sm text-muted-foreground sm:mt-24">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <p>
           © {new Date().getFullYear()} {ownerName}

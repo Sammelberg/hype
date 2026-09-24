@@ -7,7 +7,7 @@ import { getHomePage, getSiteSettings } from "@/data/queries";
 import { firstParagraph } from "@/lib/rich-text";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
-import { MountainScene } from "./_components/mountain-scene";
+import { MountainHero } from "./_components/mountain-scene";
 
 // The start page is the Payload page with the slug „startseite“ (src/cms/collections/Pages.ts):
 // its title and content fill the page, its SEO tab the metadata. Without it, name and tagline
@@ -41,11 +41,8 @@ export default async function HomePage() {
         }}
       />
       {/* Hero fills the first screen below the sticky header; the mountains close it off. */}
-      <section
-        aria-labelledby="start-titel"
-        className="flex min-h-[calc(100svh-var(--spacing-header))] flex-col"
-      >
-        <div className="page-container pt-section pb-fib-2xl">
+      <MountainHero labelledBy="start-titel">
+        <div className="page-container pt-16 pb-20 sm:pt-24">
           <div className="max-w-4xl">
             <h1
               id="start-titel"
@@ -54,23 +51,22 @@ export default async function HomePage() {
               {title}
             </h1>
             {settings.tagline ? (
-              <p className="mt-fib-md max-w-2xl text-xl text-pretty text-muted-foreground">
+              <p className="mt-5 max-w-2xl text-xl text-pretty text-muted-foreground">
                 {settings.tagline}
               </p>
             ) : null}
-            <div className="mt-fib-lg flex flex-wrap gap-fib-sm">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/kontakt">Kontakt aufnehmen</Link>
               </Button>
             </div>
           </div>
         </div>
-        <MountainScene className="mt-auto" />
-      </section>
+      </MountainHero>
 
       {home?.content ? (
         <div className="page-container">
-          <section aria-label="Einführung" className="mt-section max-w-3xl">
+          <section aria-label="Einführung" className="mt-16 max-w-3xl sm:mt-24">
             <RichText data={home.content} />
           </section>
         </div>

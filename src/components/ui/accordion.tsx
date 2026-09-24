@@ -47,7 +47,7 @@ function AccordionTrigger({
         {/* One plus that turns into a cross when open: shows the state without swapping icons. */}
         <PlusIcon
           data-slot="accordion-trigger-icon"
-          className="pointer-events-none shrink-0 transition-transform duration-200 ease-(--ease-out) group-aria-expanded/accordion-trigger:rotate-45"
+          className="pointer-events-none shrink-0 transition-transform duration-200 ease-out group-aria-expanded/accordion-trigger:rotate-45"
         />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

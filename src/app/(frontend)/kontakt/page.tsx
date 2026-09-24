@@ -23,10 +23,10 @@ export default async function ContactPage() {
   const fields = (form?.fields ?? []).filter((field) => "name" in field) as ContactFormField[];
 
   return (
-    <main className="page-container max-w-3xl pt-section">
+    <main className="page-container max-w-3xl pt-16 sm:pt-24">
       <h1 className="text-4xl font-semibold tracking-tight text-balance">Kontakt</h1>
       {form && fields.length ? (
-        <div className="mt-fib-xl">
+        <div className="mt-12">
           <ContactForm
             fields={fields}
             submitLabel={form.submitButtonLabel || "Absenden"}
@@ -36,7 +36,7 @@ export default async function ContactPage() {
           />
         </div>
       ) : (
-        <p className="mt-fib-lg text-pretty text-muted-foreground">
+        <p className="mt-8 text-pretty text-muted-foreground">
           Das Kontaktformular ist gerade nicht verfügbar.
           {settings.contactEmail ? (
             <>

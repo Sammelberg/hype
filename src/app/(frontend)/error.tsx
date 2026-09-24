@@ -21,7 +21,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <main className="page-container max-w-3xl py-section">
+    <main className="page-container max-w-3xl py-16 sm:py-24">
       <p className="text-sm text-muted-foreground tabular-nums">Fehler</p>
       <h1
         ref={heading}

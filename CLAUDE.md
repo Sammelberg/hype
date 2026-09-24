@@ -1,6 +1,6 @@
 # starter — Next + Payload template
 
-This repo is a **starter template**. In a fresh copy, `pnpm init:project` sets name, ports, database, accent colour and seed identity (see `README.md`); after that, fill in „Project“ below and replace the home page.
+This repo is a **starter template**. In a fresh copy, `pnpm init:project` sets name, ports, database and seed identity (see `README.md`); after that, fill in „Project“ below and replace the home page.
 
 Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
 
@@ -10,6 +10,7 @@ Filled in per project. When a task depends on a point still marked _offen_, ask 
 
 - **Site / owner:** Neues Projekt — Beispiel GmbH
 - **Purpose and audience:** _offen_
+- **Design direction:** _offen_ — palette, theme, type, layout rhythm, motion; decided in the project's first design task (see „Styling“).
 - **Hosting:** own server at IONOS (Germany); no Vercel-specific features.
 - **Deviations from the template defaults below:** none.
 
@@ -49,14 +50,11 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
 
 ## Styling
 
-- `src/app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
-- **Dark-only brand palette:** black and its shades + one accent `--brand-accent` (default cyan `#01ccff`; feeds `--primary`, `--ring`, the chart ramp). No light theme, no toggle; `dark:` variants always apply. The accent marks interactive/primary things only. The OG image repeats it as hex (`ACCENT` in `opengraph-image.tsx`).
-- **Fibonacci layout system** (overrides any skill that prescribes a 4/8 grid):
-  - page shell `page-container` (max 1920px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
-  - golden ratio: `aspect-golden` for covers and cards, `grid-cols-golden` (61.8/38.2) for text + sidebar;
-  - Tailwind's default scale stays for component internals; long text keeps a reading width (`max-w-3xl`, `max-w-prose`);
-  - `--container-sm…2xl` stay untouched — shadcn's `max-w-*` depend on them.
-- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`. Curves are the tokens in `globals.css`: `--ease-out` for entering and UI state, `--ease-in-out` for an element moving on screen, `--ease-drawer` for sheets; scrubbed scroll motion uses `ease: "none"`. UI durations stay on Tailwind's 150/200/300/500; only a single emphasis moment (e.g. a hero line rise) runs 0.8–1.1s. A page that runs Lenis registers it in `src/lib/smooth-scroll.ts` so the menu can pause it.
+- **Every project gets its own design, made fresh.** The template is design-neutral on purpose: shadcn's neutral tokens (light, with a `.dark` set), Geist, Tailwind's default spacing, a plain header and footer. Build the direction from this project's subject and audience with `frontend-design` / `variate`, then record it under „Design direction“ in „Project“. Sources are this brief and material the owner supplies; other projects on this machine and earlier sites stay out of it, so no two sites share a look.
+- `src/app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it. A project's palette, radius and spacing rhythm replace the neutral values there; `--container-sm…2xl` stay untouched (shadcn's `max-w-*` depend on them). Colours outside CSS follow it by hand: `themeColor` in `layout.tsx`, `opengraph-image.tsx`, `global-error.tsx`, the icons.
+- `page-container` is the page column; long text keeps a reading width (`max-w-3xl`, `max-w-prose`). `.dark` on an element switches everything inside it to the dark token set (the home hero uses it).
+- **Home hero:** `_components/mountain-scene.tsx` — the owner's „Berge und Tannen“ block (night sky, ridges that draw in, swaying firs) with its own palette in `mountain-scene.module.css`. Keep it, restyle it or replace it per project.
+- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`; looping motion pauses off-screen.
 - `baseline-ui` is the default constraint set. Gradients, glow, custom easing or extra animation need an explicit request or a chosen art direction.
 - Reuse existing tokens, components and fonts; a new dependency needs approval.
 
@@ -108,7 +106,7 @@ No user, visitor or content data leaves our own infrastructure.
 - New project from the template: `pnpm init:project` (once, in a fresh copy).
 - Local: `pnpm db:up` (Postgres on the port in `docker-compose.yml`), `pnpm seed`, `pnpm dev` (app port in the `dev` script; `PORT=…` overrides). Scripts are in `package.json`.
 - `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
-- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-only palette + a11y), `menu` (open/close keeps scroll position and layout; runs with real scrollbars). Needs `pnpm seed`.
+- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form). Needs `pnpm seed`.
 - `pnpm knip` — run by hand; it lists planned-but-unused dependencies (motion, gsap, three, …) that stay on purpose.
 - Commits: Conventional Commits (commitlint hook); pre-commit runs lint-staged. Prettier with Tailwind class sorting runs on every edited file via `.claude/hooks/format-on-edit.mjs`.
 - CI (`.github/workflows/ci.yml`): format:check, typecheck, lint, test, migrate, seed, build, Playwright (production build). Dependabot weekly.
