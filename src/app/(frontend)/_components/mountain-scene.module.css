@@ -14,9 +14,13 @@
   --main-stroke: var(--primary-soft);
   --glow-rgb: 60 118 235; /* sapphire between primary and primary-soft, as RGB channels */
   --accent-line: var(--foreground);
-  --tree-back: oklch(0.3 0.055 262);
-  --tree-mid: oklch(0.18 0.04 262);
-  --tree-fore: oklch(0.08 0.02 262);
+  /* Firs by depth: haze-light at the back, darkest in front. No single shade separates a fir from
+     both the near-black sky and the lighter ridges, so mid and front firs carry a thin moonlit rim
+     in ice blue (--rim-rgb = primary-soft) that outlines them against any backdrop. */
+  --tree-back: oklch(0.4 0.07 258);
+  --tree-mid: oklch(0.26 0.055 260);
+  --tree-fore: oklch(0.06 0.015 262);
+  --rim-rgb: 129 180 246;
 }
 
 .scene {
@@ -146,11 +150,20 @@
   height: 100%;
 }
 
+.tree svg g {
+  stroke: rgb(var(--rim-rgb) / var(--rim, 0));
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .fore {
+  --rim: 0.5;
   color: var(--tree-fore);
 }
 
 .midTree {
+  --rim: 0.3;
   color: var(--tree-mid);
 }
 
