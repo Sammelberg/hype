@@ -1,7 +1,8 @@
-// PreToolUse hook: git commands that publish or destroy work stay with the human. Claude gets
-// exit code 2 and the reason; the user runs them with `! <command>` when wanted.
+// PreToolUse hook: git commands that destroy work stay with the human. A plain push is allowed;
+// one that rewrites or deletes remote history is not. Claude gets exit code 2 and the reason; the
+// user runs them with `! <command>` when wanted.
 const DANGEROUS = [
-  /\bgit\s+push\b/,
+  /\bgit\s+push\b.*(\s--force|\s-\w*f\b|\s--mirror\b|\s--delete\b|\s-d\b|\s\+\S|\s:\S)/,
   /\bgit\s+reset\s+.*--hard\b/,
   /\bgit\s+clean\s+-\w*f/,
   /\bgit\s+branch\s+.*-D\b/,
@@ -16,7 +17,7 @@ const command = JSON.parse(input).tool_input?.command ?? "";
 const match = DANGEROUS.find((pattern) => pattern.test(command));
 if (match) {
   console.error(
-    `BLOCKED: "${command}" matches ${match}. Publishing or discarding work is the user's call; ask them to run it with \`! <command>\`.`,
+    `BLOCKED: "${command}" matches ${match}. Rewriting remote history or discarding work is the user's call; ask them to run it with \`! <command>\`.`,
   );
   process.exit(2);
 }
