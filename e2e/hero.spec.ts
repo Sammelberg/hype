@@ -50,6 +50,23 @@ test("the ridge outline draws once and ends complete", async ({ page }) => {
   });
 });
 
+// Triangle motif: every stroke fully shown, every vertex dot lit.
+const triangles = (page: Page) =>
+  page.evaluate(() => ({
+    strokes: [...document.querySelectorAll("[data-tri-centre], [data-tri-side]")].map((el) =>
+      Number(getComputedStyle(el).strokeOpacity),
+    ),
+    dots: [...document.querySelectorAll("[data-tri-dot]")].map((el) =>
+      Number(getComputedStyle(el).opacity),
+    ),
+  }));
+
+test("the triangle motif draws after the ridge and ends complete", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
+});
+
 test("a page loaded below the hero starts with the firs paused", async ({ page }) => {
   await page.goto("/#vorgehen");
   await expect(page.locator("[data-scene]")).toHaveAttribute("data-paused", "", {
@@ -94,6 +111,7 @@ test.describe("reduced motion", () => {
     await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "");
     const { opacity, complete } = await outline(page);
     expect({ opacity, complete }).toEqual({ opacity: 1, complete: true });
+    expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
     // A still sky: stars are drawn and stay as they are.
     const first = await starlight(page);
     expect(first).toBeGreaterThan(0);

@@ -1,0 +1,60 @@
+/*
+ * Triangle motif in the site palette (the block's gold centre becomes ice blue — no orange here):
+ * centre = primary-soft, left = sapphire, right = starlight, connectors = muted navy.
+ * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden; mountain-scene.tsx draws them (or shows them for reduced motion).
+ */
+.motif {
+  --tri-centre: var(--primary-soft);
+  --tri-left: oklch(0.64 0.15 258);
+  --tri-right: oklch(0.93 0.015 250);
+  --tri-connector: oklch(0.45 0.09 262);
+}
+
+.motif svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+.stroke {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0;
+}
+
+.centre {
+  stroke: var(--tri-centre);
+}
+
+.left {
+  stroke: var(--tri-left);
+}
+
+.right {
+  stroke: var(--tri-right);
+}
+
+.connector {
+  stroke: var(--tri-connector);
+}
+
+.dotCentre,
+.dotLeft,
+.dotRight {
+  opacity: 0;
+}
+
+.dotCentre {
+  fill: var(--tri-centre);
+}
+
+.dotLeft {
+  fill: var(--tri-left);
+}
+
+.dotRight {
+  fill: var(--tri-right);
+}

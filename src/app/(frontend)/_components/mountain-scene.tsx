@@ -177,11 +177,27 @@ export function MountainHero({
             { drawSVG: "0%", opacity: 0 },
             { drawSVG: "100%", opacity: 0.6, duration: 2.2, ease: "power3.inOut" },
             0.3,
+          )
+          // Triangle motif (triangle-motif.tsx), the block's timing: 1.7s after load the centre
+          // peak draws, its dots light up, then the flanking peaks and connectors follow.
+          .fromTo(
+            "[data-tri-centre]",
+            { drawSVG: "0%", strokeOpacity: 0 },
+            { drawSVG: "100%", strokeOpacity: 1, duration: 1.2, ease: "power4.out" },
+            1.5,
+          )
+          .to("[data-tri-dot]", { opacity: 1, duration: 0.4, ease: "power4.out" }, 2.4)
+          .fromTo(
+            "[data-tri-side]",
+            { drawSVG: "0%", strokeOpacity: 0 },
+            { drawSVG: "100%", strokeOpacity: 1, duration: 1, ease: "power4.out" },
+            2.5,
           );
       });
 
       mm.add("(prefers-reduced-motion: reduce)", () => {
-        gsap.set("[data-line]", { strokeOpacity: 1 });
+        gsap.set("[data-line], [data-tri-centre], [data-tri-side]", { strokeOpacity: 1 });
+        gsap.set("[data-tri-dot]", { opacity: 1 });
         gsap.set("[data-accent]", { opacity: 0.6 });
         markDrawn();
       });
