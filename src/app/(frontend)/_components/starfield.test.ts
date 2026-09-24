@@ -6,6 +6,7 @@ import {
   createStars,
   MAX_STARS,
   meteorAt,
+  nextGap,
   random,
   starAlpha,
 } from "./starfield";
@@ -59,23 +60,40 @@ describe("starAlpha", () => {
 });
 
 describe("shooting stars", () => {
-  const meteors = Array.from({ length: 200 }, (_, i) => createMeteor(random(i + 1), 1440, 800, 10));
+  const meteors = Array.from({ length: 400 }, (_, i) => createMeteor(random(i + 1), 1440, 800, 10));
+  const angle = (m: (typeof meteors)[number]) => (Math.atan2(m.dy, Math.abs(m.dx)) * 180) / Math.PI;
 
-  it("all fall from one radiant: down and to the right, 25–38° below the horizon", () => {
+  it("always fall, at any angle from shallow to steep (15–65° below the horizon)", () => {
     for (const m of meteors) {
-      expect(m.dx).toBeGreaterThan(0);
       expect(m.dy).toBeGreaterThan(0);
-      const below = (Math.atan2(m.dy, m.dx) * 180) / Math.PI;
-      expect(below).toBeGreaterThanOrEqual(25 - 1e-9);
-      expect(below).toBeLessThanOrEqual(38 + 1e-9);
+      expect(angle(m)).toBeGreaterThanOrEqual(15 - 1e-9);
+      expect(angle(m)).toBeLessThanOrEqual(65 + 1e-9);
     }
   });
 
-  it("start in the upper sky, right of the headline", () => {
-    for (const m of meteors) {
-      expect(m.y).toBeLessThanOrEqual(800 * 0.4);
-      expect(m.x).toBeGreaterThanOrEqual(1440 * 0.4);
-    }
+  it("are random: both directions, spread angles and places, varied sizes", () => {
+    const left = meteors.filter((m) => m.dx < 0).length / meteors.length;
+    expect(left).toBeGreaterThan(0.35);
+    expect(left).toBeLessThan(0.65);
+    const angles = meteors.map(angle);
+    expect(Math.max(...angles) - Math.min(...angles)).toBeGreaterThan(40);
+    const xs = meteors.map((m) => m.x);
+    expect(Math.min(...xs)).toBeLessThan(1440 * 0.1);
+    expect(Math.max(...xs)).toBeGreaterThan(1440 * 0.9);
+    for (const m of meteors) expect(m.y).toBeLessThanOrEqual(800 * 0.45);
+    expect(meteors.some((m) => m.bright)).toBe(true);
+    expect(meteors.some((m) => m.alpha < 0.6)).toBe(true);
+    expect(new Set(meteors.map((m) => m.tint)).size).toBe(3);
+  });
+
+  it("come in an uneven rhythm: bursts, pauses and lulls", () => {
+    const rand = random(99);
+    const gaps = Array.from({ length: 500 }, () => nextGap(rand));
+    expect(gaps.some((g) => g < 0.35)).toBe(true);
+    expect(gaps.some((g) => g > 1.8)).toBe(true);
+    const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    expect(mean).toBeGreaterThan(0.6);
+    expect(mean).toBeLessThan(1.6);
   });
 
   it("fade in fast, grow their tail, fade out and burn out after their life", () => {
@@ -95,7 +113,7 @@ describe("shooting stars", () => {
     const m = meteors[1]!;
     const a = meteorAt(m, m.born + 0.1)!;
     const b = meteorAt(m, m.born + 0.2)!;
-    expect(b.x).toBeGreaterThan(a.x);
+    expect(Math.sign(b.x - a.x)).toBe(Math.sign(m.dx));
     expect(b.y).toBeGreaterThan(a.y);
   });
 });
