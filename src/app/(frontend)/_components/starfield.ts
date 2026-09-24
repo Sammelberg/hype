@@ -1,5 +1,6 @@
 // Starfall for the home hero: a 2D canvas, drawn by the caller's ticker (mountain-scene.tsx).
-// A quiet field of twinkling stars — mostly faint specks, a few with a soft halo, denser high up —
+// A quiet field of stars, new on every load — sharp specks, the brighter ones with a four-point
+// glint, denser high up, some slowly going out and coming back —
 // and over it a random starfall: every shooting star picks its own place, direction, angle,
 // speed, tail and brightness, in an uneven rhythm of bursts and lulls.
 
@@ -16,7 +17,11 @@ export type Star = {
   speed: number;
   phase: number;
   tint: number;
+  /** Brighter stars wear a four-point glint instead of a round glow. */
   halo: boolean;
+  /** Seconds for one slow fade out and back in (0 = always there): the sky keeps changing. */
+  cycle: number;
+  cyclePhase: number;
 };
 
 /** Starlight, ice blue, pale sapphire — the site palette as RGB channels. */
@@ -38,7 +43,7 @@ export function random(seed: number) {
   };
 }
 
-export function createStars(width: number, height: number, seed = 7): Star[] {
+export function createStars(width: number, height: number, seed: number): Star[] {
   const rand = random(seed);
   const count = Math.min(MAX_STARS, Math.round((width * height) / AREA_PER_STAR));
   const stars = Array.from({ length: count }, (): Star => {
@@ -55,6 +60,8 @@ export function createStars(width: number, height: number, seed = 7): Star[] {
       phase: rand() * Math.PI * 2,
       tint: tintRoll < 0.7 ? 0 : tintRoll < 0.92 ? 1 : 2,
       halo,
+      cycle: rand() < 0.22 ? 20 + rand() * 30 : 0,
+      cyclePhase: rand() * Math.PI * 2,
     };
   });
   // Grouped by tint, so a frame changes fillStyle three times instead of per star.
@@ -148,7 +155,12 @@ export function meteorAt(m: Meteor, t: number) {
 /** Brightness of a star at time t (seconds); `still` for reduced motion. */
 export function starAlpha(star: Star, t: number, still = false) {
   if (still) return star.alpha;
-  return star.alpha * (1 - star.amp * (0.5 + 0.5 * Math.sin(t * star.speed + star.phase)));
+  const twinkle = 1 - star.amp * (0.5 + 0.5 * Math.sin(t * star.speed + star.phase));
+  if (!star.cycle) return star.alpha * twinkle;
+  // Some stars slowly go out and come back, so the sky is never quite the same.
+  const wave = 0.5 + 0.5 * Math.sin((t / star.cycle) * Math.PI * 2 + star.cyclePhase);
+  const presence = wave * wave * (3 - 2 * wave);
+  return star.alpha * twinkle * presence;
 }
 
 /**
@@ -161,6 +173,8 @@ export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {})
   let meteors: Meteor[] = [];
   let nextMeteor = -1;
   const rand = random(Date.now() % 100_000);
+  // A new sky on every page load; kept across resizes so the stars do not jump.
+  const seed = Math.floor(rand() * 1e9);
   let last = { t: 0, fade: 0 };
 
   // Soft halo, rendered once and stamped with drawImage.
@@ -185,11 +199,8 @@ export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {})
     let tint = -1;
     for (const star of stars) {
       const a = starAlpha(star, t, still) * fade;
-      if (star.halo) {
-        ctx.globalAlpha = a * 0.6;
-        const size = star.r * 12 * dpr;
-        ctx.drawImage(halo, star.x * dpr - size / 2, star.y * dpr - size / 2, size, size);
-      }
+      if (a <= 0.003) continue;
+      if (star.halo) drawGlint(star, a, dpr);
       if (star.tint !== tint) {
         tint = star.tint;
         ctx.fillStyle = `rgb(${TINTS[tint]})`;
@@ -201,6 +212,40 @@ export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {})
     }
     if (!still) drawMeteors(t, fade, dpr);
     ctx.globalAlpha = 1;
+  }
+
+  // A crisp four-point glint (thin cross that tapers out), sized by the star's brightness —
+  // stars stay sharp points, unlike the soft, round lights rising from the forest.
+  function drawGlint(star: Star, a: number, dpr: number) {
+    if (!ctx) return;
+    const x = star.x * dpr;
+    const y = star.y * dpr;
+    const reach = star.r * (5 + 5 * a) * dpr;
+    ctx.globalAlpha = a * 0.85;
+    ctx.lineWidth = 0.6 * dpr;
+    for (const [dx, dy] of [
+      [1, 0],
+      [0, 1],
+    ] as const) {
+      const g = ctx.createLinearGradient(
+        x - dx * reach,
+        y - dy * reach,
+        x + dx * reach,
+        y + dy * reach,
+      );
+      g.addColorStop(0, `rgba(${TINTS[0]}, 0)`);
+      g.addColorStop(0.5, `rgba(${TINTS[0]}, 1)`);
+      g.addColorStop(1, `rgba(${TINTS[0]}, 0)`);
+      ctx.strokeStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(x - dx * reach, y - dy * reach);
+      ctx.lineTo(x + dx * reach, y + dy * reach);
+      ctx.stroke();
+    }
+    // A faint, tight bloom right at the point.
+    ctx.globalAlpha = a * 0.5;
+    const size = star.r * 4 * dpr;
+    ctx.drawImage(halo, x - size / 2, y - size / 2, size, size);
   }
 
   function drawMeteors(t: number, fade: number, dpr: number) {
@@ -247,7 +292,7 @@ export function bindStarfield(canvas: HTMLCanvasElement, { still = false } = {})
     const height = canvas.clientHeight;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
-    stars = createStars(width, height);
+    stars = createStars(width, height, seed);
     render(last.t, last.fade);
   }
 

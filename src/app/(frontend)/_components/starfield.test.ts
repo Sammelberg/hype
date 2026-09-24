@@ -13,16 +13,17 @@ import {
 
 describe("createStars", () => {
   it("scales the count with the sky's area and caps it", () => {
-    expect(createStars(900, 400)).toHaveLength(Math.round((900 * 400) / AREA_PER_STAR));
-    expect(createStars(4000, 2000)).toHaveLength(MAX_STARS);
+    expect(createStars(900, 400, 1)).toHaveLength(Math.round((900 * 400) / AREA_PER_STAR));
+    expect(createStars(4000, 2000, 1)).toHaveLength(MAX_STARS);
   });
 
-  it("draws the same sky for the same size", () => {
-    expect(createStars(1200, 600)).toEqual(createStars(1200, 600));
+  it("draws the same sky for the same seed and a different one for another", () => {
+    expect(createStars(1200, 600, 3)).toEqual(createStars(1200, 600, 3));
+    expect(createStars(1200, 600, 4)).not.toEqual(createStars(1200, 600, 3));
   });
 
   it("keeps every star inside the canvas and grouped by tint", () => {
-    const stars = createStars(1440, 700);
+    const stars = createStars(1440, 700, 1);
     for (const star of stars) {
       expect(star.x).toBeGreaterThanOrEqual(0);
       expect(star.x).toBeLessThan(1440);
@@ -34,7 +35,7 @@ describe("createStars", () => {
   });
 
   it("is a restrained sky: mostly faint specks, few haloed stars, denser up high", () => {
-    const stars = createStars(2560, 1200);
+    const stars = createStars(2560, 1200, 1);
     const haloed = stars.filter((s) => s.halo).length / stars.length;
     expect(haloed).toBeLessThan(0.1);
     expect(stars.filter((s) => s.r < 0.8).length / stars.length).toBeGreaterThan(0.6);
@@ -44,7 +45,7 @@ describe("createStars", () => {
 });
 
 describe("starAlpha", () => {
-  const star = createStars(1000, 500)[0]!;
+  const star = createStars(1000, 500, 1).find((s) => !s.cycle)!;
 
   it("twinkles between the dimmed and the resting brightness", () => {
     for (let t = 0; t < 20; t += 0.37) {
@@ -52,6 +53,15 @@ describe("starAlpha", () => {
       expect(a).toBeLessThanOrEqual(star.alpha + 1e-9);
       expect(a).toBeGreaterThanOrEqual(star.alpha * (1 - star.amp) - 1e-9);
     }
+  });
+
+  it("lets some stars slowly go out and come back", () => {
+    const cycling = createStars(1440, 700, 2).filter((s) => s.cycle);
+    expect(cycling.length).toBeGreaterThan(0);
+    const star = cycling[0]!;
+    const samples = Array.from({ length: 400 }, (_, i) => starAlpha(star, (i / 400) * star.cycle));
+    expect(Math.min(...samples)).toBeLessThan(0.01);
+    expect(Math.max(...samples)).toBeGreaterThan(star.alpha * (1 - star.amp) * 0.9);
   });
 
   it("holds the resting brightness for reduced motion", () => {

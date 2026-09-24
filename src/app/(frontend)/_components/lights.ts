@@ -1,7 +1,7 @@
-// Lights rising from the forest („Lichter“ of the owner's moon block): soft glowing motes born
-// at random along the ridges and firs, drifting upward with a gentle sway, flickering and fading
-// out — each one new, so the scene never loops. Drawn on a 2D canvas by the caller's ticker
-// (mountain-scene.tsx).
+// Lights rising from the forest („Lichter“ of the owner's moon block): soft bokeh orbs with a
+// fading trail — the opposite of the sharp stars. Each is born at random along the ridges and
+// firs, drifts upward with a gentle sway, pulses softly and fades out, and a new one takes its
+// place, so the scene never loops. Drawn on a 2D canvas by the caller's ticker (mountain-scene.tsx).
 
 import { random } from "./starfield";
 
@@ -15,7 +15,7 @@ export type Light = {
   sway: number;
   swaySpeed: number;
   phase: number;
-  /** Radius of the bright core, CSS px. */
+  /** Size of the orb: it is drawn about seven times this across, CSS px. */
   r: number;
   tint: number;
   born: number;
@@ -42,7 +42,7 @@ export function createLight(rand: () => number, width: number, height: number, n
     sway: 6 + rand() * 18,
     swaySpeed: 0.3 + rand() * 0.5,
     phase: rand() * Math.PI * 2,
-    r: 1 + rand() ** 2 * 1.6,
+    r: 1.4 + rand() ** 2 * 1.8,
     tint: tintRoll < 0.6 ? 0 : tintRoll < 0.88 ? 1 : 2,
     born: now,
     life: 9 + rand() * 7,
@@ -79,17 +79,23 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
   let height = 0;
   let last = { t: 0, fade: 0 };
 
-  const glow = document.createElement("canvas");
-  glow.width = glow.height = 48;
-  const g = glow.getContext("2d");
-  if (g) {
-    const gradient = g.createRadialGradient(24, 24, 0, 24, 24, 24);
-    gradient.addColorStop(0, "rgba(160, 196, 250, 0.55)");
-    gradient.addColorStop(0.35, "rgba(110, 155, 245, 0.22)");
-    gradient.addColorStop(1, "rgba(110, 155, 245, 0)");
-    g.fillStyle = gradient;
-    g.fillRect(0, 0, 48, 48);
-  }
+  // Soft bokeh orbs, one per tint: a gently lit disc with a feathered rim and no hard core —
+  // unlike the stars, which stay sharp points. Rendered once, stamped with drawImage.
+  const orbs = LIGHT_TINTS.map((tint) => {
+    const orb = document.createElement("canvas");
+    orb.width = orb.height = 64;
+    const o = orb.getContext("2d");
+    if (o) {
+      const gradient = o.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, `rgba(${tint}, 0.75)`);
+      gradient.addColorStop(0.28, `rgba(${tint}, 0.55)`);
+      gradient.addColorStop(0.5, `rgba(${tint}, 0.2)`);
+      gradient.addColorStop(1, `rgba(${tint}, 0)`);
+      o.fillStyle = gradient;
+      o.fillRect(0, 0, 64, 64);
+    }
+    return orb;
+  });
 
   function populate(t: number) {
     // Staggered ages at the start, so the forest is already alive instead of all lights rising at once.
@@ -114,14 +120,20 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
         ? { x: light.x, y: light.y - light.rise * 0.4, alpha: 0.8 }
         : lightAt(light, t);
       if (!at || at.alpha <= 0) continue;
-      const a = at.alpha * fade;
-      const halo = light.r * 9 * dpr;
-      ctx.globalAlpha = a;
-      ctx.drawImage(glow, at.x * dpr - halo / 2, at.y * dpr - halo / 2, halo, halo);
-      ctx.fillStyle = `rgba(${LIGHT_TINTS[light.tint]}, ${a})`;
-      ctx.beginPath();
-      ctx.arc(at.x * dpr, at.y * dpr, light.r * dpr, 0, Math.PI * 2);
-      ctx.fill();
+      const orb = orbs[light.tint]!;
+      const size = light.r * 7 * dpr;
+      // A short trail of fading, shrinking orbs where it just was, softening its climb.
+      if (!still) {
+        for (let k = 3; k >= 1; k--) {
+          const past = lightAt(light, t - k * 0.22);
+          if (!past) continue;
+          const s = size * (1 - k * 0.14);
+          ctx.globalAlpha = past.alpha * fade * (0.28 / k);
+          ctx.drawImage(orb, past.x * dpr - s / 2, past.y * dpr - s / 2, s, s);
+        }
+      }
+      ctx.globalAlpha = at.alpha * fade;
+      ctx.drawImage(orb, at.x * dpr - size / 2, at.y * dpr - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
   }
