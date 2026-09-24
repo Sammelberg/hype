@@ -97,6 +97,21 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* The thick stroke over the drawing outline: widths set by GSAP, only the wrapper's opacity
+   animates (compositor), so the thinning never changes a stroke width. */
+.trail {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.trail path {
+  fill: none;
+  stroke: var(--main-stroke);
+  stroke-linejoin: round;
+}
+
 .accent {
   fill: none;
   stroke: var(--accent-line);

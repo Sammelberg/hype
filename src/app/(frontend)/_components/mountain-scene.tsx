@@ -100,7 +100,7 @@ export function MountainHero({
   // Motion engine (GSAP, scoped to the hero, reverted on unmount). The block's own animation, kept
   // as designed and rendered more exactly:
   // - the ridge outline draws over its measured length (DrawSVG) instead of a guessed dash of 2200,
-  //   in step with the stroke thinning from 8 to 1.5 px and the glow fading;
+  //   while a thick stroke melts into the 1.5px outline and the glow fades;
   // - the highlight arc follows; both start the first time the scene comes into view;
   // - off-screen, the CSS sway of the firs pauses.
   // Reduced motion: the finished scene (the sway stops in CSS).
@@ -129,14 +129,17 @@ export function MountainHero({
         // that scale to stay the block's screen-pixel widths.
         const svg = scene?.querySelector("[data-line]")?.closest("svg");
         const px = 1500 / (svg?.getBoundingClientRect().width || 1500);
-        // One continuous ease for everything, so head, width and brightness move as one — two
-        // eased segments (8 → 4 → 1.5) restarted the ease halfway and read as a jolt.
+        // One continuous ease for head and brightness, so they move as one.
         const draw = { duration: 2.4, ease: "power1.out" };
 
         // Glow: at the start the whole ridge flares up in a soft halo that fades as the outline
         // draws — the block's 16px drop-shadow on the filled shape. The halo is its own layer with a
         // static blur; only its opacity animates, so the blur is rasterised once and the fade runs
         // on the compositor instead of re-blurring every frame.
+
+        // Fixed stroke widths in SVG units that equal the block's screen pixels.
+        gsap.set("[data-line]", { strokeWidth: 1.5 * px, autoRound: false });
+        gsap.set("[data-trail] path", { strokeWidth: 6 * px, autoRound: false });
 
         gsap
           .timeline({
@@ -147,13 +150,24 @@ export function MountainHero({
             },
             scrollTrigger: { trigger: "[data-scene]", start: "top bottom", once: true },
           })
-          .fromTo("[data-line]", { drawSVG: "0%" }, { drawSVG: "100%", ...draw }, 0)
           .fromTo(
-            "[data-line]",
-            { strokeWidth: 8 * px, strokeOpacity: 0 },
-            // autoRound off: GSAP rounds px values to whole pixels by default, which stepped the
-            // width 8 → 7 → 6 … px in visible jolts.
-            { strokeWidth: 1.5 * px, strokeOpacity: 1, autoRound: false, ...draw },
+            "[data-line], [data-trail] path",
+            { drawSVG: "0%" },
+            { drawSVG: "100%", ...draw },
+            0,
+          )
+          .fromTo("[data-line]", { strokeOpacity: 0 }, { strokeOpacity: 1, ...draw }, 0)
+          // The thick stroke rises and melts away (opacity, on the compositor): the eye reads the
+          // outline thinning from 8px to 1.5px, while no stroke width changes — animating a width
+          // below ~2px made its anti-aliasing flicker along the diagonals near the end.
+          .fromTo(
+            "[data-trail]",
+            { opacity: 0 },
+            {
+              keyframes: { opacity: [0, 0.6, 0], easeEach: "sine.inOut" },
+              duration: 2.4,
+              ease: "none",
+            },
             0,
           )
           .fromTo("[data-glow]", { opacity: 1 }, { opacity: 0, ...draw }, 0)
@@ -201,6 +215,11 @@ export function MountainHero({
             <path data-line className={styles.draw} d={MAIN_RIDGE} />
             <path data-accent className={styles.accent} d="M 600 550 Q 800 420 900 480" />
           </svg>
+          <div data-trail className={styles.trail}>
+            <svg viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
+              <path d={MAIN_RIDGE} />
+            </svg>
+          </div>
         </div>
 
         <div className={styles.forest}>
