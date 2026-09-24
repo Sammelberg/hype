@@ -36,16 +36,16 @@ pnpm install
 pnpm init:project
 ```
 
-`pnpm init:project` спрашивает имя проекта, название сайта, владельца, e-mail, порт Postgres
-(предлагает первый свободный) и акцентный цвет, затем:
+`pnpm init:project` спрашивает имя проекта, название сайта, владельца, e-mail, порты приложения и
+Postgres (предлагает первые свободные) и акцентный цвет, затем:
 
-- переписывает `package.json`, `docker-compose.yml` (своё имя контейнера и порт — проекты не
-  мешают друг другу), CI, `.env.example`;
+- переписывает `package.json` (порт `pnpm dev`), `docker-compose.yml` (своё имя контейнера и
+  порт — проекты не мешают друг другу), CI, Playwright, `.env.example`;
 - создаёт `.env` со случайным `PAYLOAD_SECRET`;
 - ставит акцент в `globals.css` (hex → OKLCH, график и P3 следуют за ним) и в OG-картинку,
   проверяет контраст;
-- подставляет название и владельца в сид-данные, `CLAUDE.md`, `README.md`, Reticle;
-- подключает библиотеку скиллов (симлинки, если она есть на машине);
+- подставляет название и владельца в сид-данные, `CLAUDE.md` (раздел „Project“), `README.md`, Reticle;
+- подключает библиотеку скиллов (симлинки, если она есть на машине) и строит индекс graft;
 - по желанию начинает чистую git-историю с одним коммитом.
 
 Без вопросов: `pnpm init:project --yes --name kunde-x --site-name "Kunde X" --owner "Kunde X GmbH"
@@ -56,7 +56,7 @@ pnpm init:project
 ```bash
 pnpm db:up     # Postgres в Docker
 pnpm seed      # примерные страницы, форма, редирект
-pnpm dev       # http://localhost:3000, первый админ — на /admin
+pnpm dev       # http://localhost:<порт приложения>, первый админ — на /admin
 ```
 
 ## После старта
@@ -70,7 +70,16 @@ pnpm dev       # http://localhost:3000, первый админ — на /admin
 4. Настоящие тексты Impressum и Datenschutz (сид-версии помечены „Platzhalter“).
 5. Схема изменилась → `pnpm migrate:create <имя>` и `pnpm generate:types` перед коммитом.
 
-Проверка перед сдачей: `pnpm check` и `pnpm test:e2e`. Правила проекта для агента — в `CLAUDE.md`.
+Проверка перед сдачей: `pnpm check` и `pnpm test:e2e`. Правила проекта для агента — в `CLAUDE.md`
+(раздел „Project“ заполнить сразу).
+
+## Скиллы
+
+Все скиллы из таблицы в `CLAUDE.md` лежат в `.claude/skills/`: свои и ядро, скопированное из
+`~/.claude/skills` (список — `.claude/skills/skill-router/vendored-skills.txt`). Поправили скилл
+в `~/.claude/skills` — обновите копии: `.claude/skills/skill-router/scripts/vendor-skills.sh`.
+Библиотека (~470 скиллов для роутера) — локальные симлинки:
+`.claude/skills/skill-router/scripts/link-library.sh`.
 
 ## Обновление самого шаблона
 

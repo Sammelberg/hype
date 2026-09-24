@@ -5,15 +5,15 @@ description: Verify scroll- and gesture-driven UI against real input before call
 
 # Verify interaction
 
-Scroll behaviour depends on the input device: one wheel notch, a trackpad flick and a touch swipe produce different event streams, and a headless run proves only the profile it replayed. The reference implementation is `e2e/manifesto.spec.ts`; copy its helpers rather than writing a throwaway script.
+Scroll behaviour depends on the input device: one wheel notch, a trackpad flick and a touch swipe produce different event streams, and a headless run proves only the profile it replayed. Build on the helpers under [Spec helpers](#spec-helpers) rather than writing a throwaway script.
 
 ## Steps
 
 1. **Name the consequence per input.** Write down, for one input of each profile below, what must be true afterwards ("one notch → next phrase, section top at 0"). Done when every profile the feature responds to has a checkable consequence.
-2. **Expose the state.** Give the component a `data-*` attribute that carries the state under test (`data-active` on the manifesto). Assertions read that, never class names or opacity.
-3. **Encode it as an e2e spec** in `e2e/`, following `manifesto.spec.ts`:
+2. **Expose the state.** Give the component a `data-*` attribute that carries the state under test (e.g. `data-active` on a stepped section). Assertions read that, never class names or opacity.
+3. **Encode it as an e2e spec** in `e2e/` with the helpers below:
    - hide Reticle overlays in `beforeEach` (they catch clicks and the wheel);
-   - on the homepage, wait for `<html class="lenis">`; wheel input before Lenis runs is native scrolling and gives false failures;
+   - on a page that runs Lenis, wait for `<html class="lenis">`; wheel input before Lenis runs is native scrolling and gives false failures;
    - send one input, then poll until the section stops moving (glides run up to ~1s) before asserting;
    - skip wheel-only behaviour on the `mobile` project.
      Done when the spec fails on the reported bug (revert the fix or reason it through) and passes with it.
@@ -32,3 +32,38 @@ Scroll behaviour depends on the input device: one wheel notch, a trackpad flick 
 | Keyboard / scrollbar | `window.scrollTo` or `PageDown`; no wheel events at all       |
 
 A `window.scrollTo` jump followed by a wheel event can leave Lenis on its old position; drive with the wheel, or send a 1px wheel event first.
+
+## Spec helpers
+
+```ts
+import { expect, type Page } from "@playwright/test";
+
+const NOTCH = 53; // one wheel notch in Chrome on Linux
+
+// Reads the state the component exposes (step 2) plus its position.
+const read = (page: Page, selector: string) =>
+  page.locator(selector).evaluate((el) => ({
+    active: Number(el.getAttribute("data-active")),
+    top: Math.round(el.getBoundingClientRect().top),
+  }));
+
+// One notch, then poll until the section stops moving (glides take up to ~1s).
+async function notch(page: Page, selector: string, direction: 1 | -1) {
+  await page.mouse.wheel(0, direction * NOTCH);
+  let last = Number.NaN;
+  await expect
+    .poll(
+      async () => {
+        const { top } = await read(page, selector);
+        const settled = top === last;
+        last = top;
+        return settled;
+      },
+      { intervals: [250] },
+    )
+    .toBe(true);
+  return read(page, selector);
+}
+```
+
+Wheel-only specs start with `test.skip(({ isMobile }) => isMobile, "wheel input needs a fine pointer")`.

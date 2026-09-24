@@ -1,6 +1,5 @@
 {
   "_comment": "Триггеры на русском и немецком для скиллов библиотеки, полезных этому проекту (по полному чтению библиотеки 2026-09-24). route.py ищет по ним с весом имени. Пиши, что делает скилл, словами пользователя; не копируй запросы из bench.py.",
-
   "scroll-scrubbed-word-reveal": [
     "слова проявляются по одному при скролле",
     "текст по словам в такт прокрутке",
@@ -73,7 +72,6 @@
     "маска градиентом по краю",
     "Kanten ausblenden Maske"
   ],
-
   "gsap-plugins": [
     "плагины gsap",
     "splittext flip observer drawsvg scrollto",
@@ -187,7 +185,6 @@
     "пентест",
     "Sicherheitsprüfung Schwachstellen"
   ],
-
   "optimize-web-animations": [
     "анимации за экраном",
     "тормозит страница",
@@ -231,7 +228,6 @@
     "склеить скриншоты",
     "ganzseitiger Screenshot"
   ],
-
   "image": [
     "права на фото",
     "согласие людей в кадре",
@@ -264,12 +260,15 @@
   "social": [
     "посты для соцсетей",
     "инстаграм linkedin из проектов",
-    "Social-Media-Beiträge Instagram"
+    "Social-Media-Beiträge Instagram",
+    "посты из материалов сайта"
   ],
   "competitor-profiling": [
     "профиль конкурентов",
     "другие фотографы и студии",
-    "Wettbewerber analysieren"
+    "Wettbewerber analysieren",
+    "разобрать сайт конкурента",
+    "Konkurrenz-Website analysieren"
   ],
   "competitors": [
     "страница сравнения с конкурентом",
@@ -279,7 +278,6 @@
   "marketing-ideas": ["как получить больше заявок", "идеи продвижения", "mehr Anfragen gewinnen"],
   "cro": ["конверсия страницы", "больше заявок с формы", "Conversion optimieren"],
   "public-relations": ["пресс-кит", "страница для прессы", "Pressemappe Presse"],
-
   "form-design": [
     "форма обратной связи",
     "поля формы и подписи",
@@ -357,22 +355,28 @@
   "peak-end-rule": ["финал впечатления", "запоминающееся завершение", "Peak-End-Regel"],
   "loading-states": ["скелетон загрузки", "состояние загрузки", "Ladezustand Skeleton"],
   "gesture-patterns": ["жесты свайп", "перетаскивание галереи пальцем", "Gesten Wischen"],
-
   "editorial-portfolio-chapters": [
     "портфолио фотографа",
     "главы проектов",
     "студийное портфолио",
-    "Fotografen-Portfolio Kapitel"
+    "Fotografen-Portfolio Kapitel",
+    "главная как журнал",
+    "услуги большими главами",
+    "Startseite wie ein Magazin"
   ],
   "documentary-brutalist-agency": [
     "портфолио продакшн-студии",
     "документальный стиль",
-    "Filmproduktion Portfolio"
+    "Filmproduktion Portfolio",
+    "сайт агентства в документальном стиле",
+    "Agentur-Website dokumentarisch"
   ],
   "image-first-grid-layout": [
     "фото на весь экран в герое",
     "сетка с фотографиями во главе",
-    "bildstarkes Raster"
+    "bildstarkes Raster",
+    "сетка, где ведут картинки",
+    "bildgeführtes Layout"
   ],
   "split-layout-technical": [
     "две панели медиа и характеристики",

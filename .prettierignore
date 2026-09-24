@@ -13,3 +13,30 @@ test-results
 src/payload-types.ts
 src/app/(payload)/admin/importMap.js
 .reticle
+# BEGIN vendored skills (vendor-skills.sh)
+.claude/skills/apple-design
+.claude/skills/baseline-ui
+.claude/skills/better-colors
+.claude/skills/better-typography
+.claude/skills/break
+.claude/skills/codebase-design
+.claude/skills/diagnosing-bugs
+.claude/skills/domain-modeling
+.claude/skills/emil-design-eng
+.claude/skills/find-animation-opportunities
+.claude/skills/fixing-metadata
+.claude/skills/frontend-design
+.claude/skills/gsap-core
+.claude/skills/gsap-react
+.claude/skills/gsap-scrolltrigger
+.claude/skills/img2threejs
+.claude/skills/industrial-brutalist-ui
+.claude/skills/minimalist-ui
+.claude/skills/planning-with-files
+.claude/skills/review-animations
+.claude/skills/schema
+.claude/skills/shadcn
+.claude/skills/tdd
+.claude/skills/variate
+.claude/skills/web-design-engineer
+# END vendored skills

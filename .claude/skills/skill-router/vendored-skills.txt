@@ -1,0 +1,28 @@
+# Core skills copied from ~/.claude/skills so the template works on any machine and in cloud
+# sessions. Locally the user-level copy of the same name shadows these. Refresh with
+# .claude/skills/skill-router/scripts/vendor-skills.sh after updating a skill in ~/.claude/skills.
+apple-design
+baseline-ui
+better-colors
+better-typography
+break
+codebase-design
+diagnosing-bugs
+domain-modeling
+emil-design-eng
+find-animation-opportunities
+fixing-metadata
+frontend-design
+gsap-core
+gsap-react
+gsap-scrolltrigger
+img2threejs
+industrial-brutalist-ui
+minimalist-ui
+planning-with-files
+review-animations
+schema
+shadcn
+tdd
+variate
+web-design-engineer

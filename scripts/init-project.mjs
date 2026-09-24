@@ -1,10 +1,11 @@
 // `pnpm init:project` — turns a fresh copy of this template into a new project.
-// Asks for name, site name, owner, contact e-mail, database port and accent colour, then rewrites
-// package.json, docker-compose.yml, CI, .env(.example), the brand accent, seed data, CLAUDE.md,
-// README.md and the Reticle project id. Optionally starts a fresh git history.
+// Asks for name, site name, owner, contact e-mail, app and database ports and accent colour, then
+// rewrites package.json, docker-compose.yml, CI, Playwright, .env(.example), the brand accent, seed
+// data, CLAUDE.md, README.md and the Reticle project id; links the skill library, builds the graft
+// index and optionally starts a fresh git history.
 //
 // Non-interactive: pnpm init:project --yes --name kunde-x --site-name "Kunde X" --owner "Kunde X GmbH" \
-//   --email hallo@kunde-x.de --db-port 5434 --accent "#ff5a1f" --git fresh
+//   --email hallo@kunde-x.de --app-port 3001 --db-port 5434 --accent "#ff5a1f" --git fresh
 // Plain Node, no dependencies: it runs right after `pnpm install`.
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -26,6 +27,7 @@ const { values: args } = parseArgs({
     "site-name": { type: "string" },
     owner: { type: "string" },
     email: { type: "string" },
+    "app-port": { type: "string" },
     "db-port": { type: "string" },
     accent: { type: "string" },
     git: { type: "string" }, // fresh | keep
@@ -146,6 +148,12 @@ const email = await ask("Öffentliche Kontakt-E-Mail", "hallo@example.com", {
   flag: "email",
   validate: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "Keine gültige E-Mail-Adresse."),
 });
+// Each project gets its own app port: Playwright reuses whatever server answers on its port, so two
+// projects on 3000 would test each other.
+const appPort = await ask("Lokaler App-Port (pnpm dev)", String(await firstFreePort(3000)), {
+  flag: "app-port",
+  validate: (v) => (/^\d{4,5}$/.test(v) ? null : "Eine Portnummer, z. B. 3001."),
+});
 const dbPort = await ask("Lokaler Postgres-Port", String(await firstFreePort(5433)), {
   flag: "db-port",
   validate: (v) => (/^\d{4,5}$/.test(v) ? null : "Eine Portnummer, z. B. 5434."),
@@ -167,6 +175,9 @@ const db = name.replace(/-/g, "_");
 const databaseUrl = `postgres://${db}:${db}@localhost:${dbPort}/${db}`;
 
 pkg.name = name;
+for (const script of ["dev", "start"]) {
+  pkg.scripts[script] = pkg.scripts[script].replace(/\$\{PORT:-\d+\}/, `\${PORT:-${appPort}}`);
+}
 pkg.version = "0.1.0";
 writeFileSync(file("package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
 changed.push("package.json");
@@ -189,13 +200,23 @@ edit(".github/workflows/ci.yml", [
   ],
   [`pg_isready -U ${oldDb} -d ${oldDb}`, `pg_isready -U ${db} -d ${db}`],
   [/DATABASE_URL: postgres:\/\/\S+/, `DATABASE_URL: postgres://${db}:${db}@localhost:5432/${db}`],
+  [
+    /NEXT_PUBLIC_SERVER_URL: http:\/\/localhost:\d+/,
+    `NEXT_PUBLIC_SERVER_URL: http://localhost:${appPort}`,
+  ],
 ]);
 
-edit(".env.example", [[/^DATABASE_URL=.*$/m, `DATABASE_URL=${databaseUrl}`]]);
+edit("playwright.config.ts", [[/process\.env\.PORT \?\? \d+/, `process.env.PORT ?? ${appPort}`]]);
+
+edit(".env.example", [
+  [/^DATABASE_URL=.*$/m, `DATABASE_URL=${databaseUrl}`],
+  [/^NEXT_PUBLIC_SERVER_URL=.*$/m, `NEXT_PUBLIC_SERVER_URL=http://localhost:${appPort}`],
+]);
 
 if (existsSync(file(".env"))) {
   console.log(
-    "\n.env existiert bereits und bleibt unverändert. Neue DATABASE_URL:\n  " + databaseUrl,
+    "\n.env existiert bereits und bleibt unverändert. Neue Werte:\n" +
+      `  DATABASE_URL=${databaseUrl}\n  NEXT_PUBLIC_SERVER_URL=http://localhost:${appPort}`,
   );
 } else {
   const env = read(".env.example").replace(
@@ -234,6 +255,7 @@ edit("CLAUDE.md", [
   [/^# .*$/m, `# ${name} — ${siteName}`],
   // The "this repo is a template" note; the project is no longer one.
   [/^This repo is a \*\*starter template\*\*.*\n\n/m, ""],
+  [/^- \*\*Site \/ owner:\*\* .*$/m, `- **Site / owner:** ${siteName} — ${owner}`],
 ]);
 edit("README.md", [[/^# .*$/m, `# ${siteName}`]]);
 
@@ -254,12 +276,26 @@ if (!libraryLinked && existsSync(linkLibrary)) {
   }
 }
 
+// graft's code graph is gitignored; a new checkout needs its own. Optional tool.
+let graftBuilt = false;
+try {
+  execFileSync("graft", ["build"], { cwd: root, stdio: "ignore", timeout: 300_000 });
+  graftBuilt = true;
+  changed.push("graft/ (Index, nicht in git)");
+} catch {
+  /* graft not installed or failed; reported below */
+}
+
 // --- Report -----------------------------------------------------------------------------------
 
 console.log("\nGeändert:");
 for (const path of changed) console.log(`  ${path}`);
 
 const ratio = contrast(accent, BACKGROUND);
+if (!graftBuilt) {
+  console.log("\ngraft-Index nicht gebaut (graft fehlt?). Später: graft build");
+}
+
 if (!libraryLinked) {
   console.log(
     "\nSkill-Bibliothek nicht verknüpft: .claude/skills/skill-router/scripts/link-library.sh\n" +
@@ -310,5 +346,5 @@ console.log(`
 Weiter:
   pnpm db:up        Postgres auf Port ${dbPort} (Container ${name}-postgres-1)
   pnpm seed         Beispielinhalte
-  pnpm dev          http://localhost:3000, erstes Admin-Konto unter /admin anlegen
+  pnpm dev          http://localhost:${appPort}, erstes Admin-Konto unter /admin anlegen
 `);

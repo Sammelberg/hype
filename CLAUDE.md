@@ -1,12 +1,21 @@
 # starter — Next + Payload template
 
-This repo is a **starter template**. In a fresh copy, `pnpm init:project` sets name, database, accent colour and seed identity (see `README.md`); after that, rewrite this file's title line and the home page for the actual project.
+This repo is a **starter template**. In a fresh copy, `pnpm init:project` sets name, ports, database, accent colour and seed identity (see `README.md`); after that, fill in „Project“ below and replace the home page.
 
-Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm. Hosted on our own server at IONOS (Germany) — no Vercel-specific features.
+Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm.
+
+## Project
+
+Filled in per project. When a task depends on a point still marked _offen_, ask instead of assuming.
+
+- **Site / owner:** Neues Projekt — Beispiel GmbH
+- **Purpose and audience:** _offen_
+- **Hosting:** own server at IONOS (Germany); no Vercel-specific features.
+- **Deviations from the template defaults below:** none.
 
 ## Product rules
 
-- **German only, Anrede „Sie“.** All visible text, alt texts, metadata and URLs are German (`/kontakt`, `/suche`, `/ueber-uns`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is installed but unused).
+- **German only, Anrede „Sie“.** All visible text, alt texts, metadata and URLs are German (`/kontakt`, `/suche`, `/ueber-uns`). `<html lang="de">`, `og:locale de_DE`. No i18n layer.
 - **Legal pages:** Impressum and Datenschutzerklärung are Payload pages (slugs `impressum`, `datenschutz`, linked in the footer). The owner writes legal text; seeded versions are marked „Platzhalter“.
 - **Data sovereignty** is a hard rule — see its section before adding any service, origin, font or asset.
 
@@ -55,33 +64,33 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
 
 Load the skill before starting the work.
 
-| Task                                      | Skills                                                                                                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                                |
-| Several design options to choose from     | `variate`                                                                                                                   |
-| UI components                             | `shadcn` (existing component first), then `/break` on anything rendering CMS content                                        |
-| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                                        |
-| Component motion, hovers, dialogs, cmdk   | `animate` + `emil-design-eng`; `apple-design` for springs/gestures                                                          |
-| Scroll-driven motion, pinning, parallax   | `gsap-scrolltrigger`, `gsap-react`, `gsap-timeline` for sequences (+ Lenis); `gsap-performance` against jank                |
-| Scroll or gesture behaviour to verify     | `verify-interaction` — wheel/trackpad/touch profiles, e2e spec, user's device                                               |
-| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                                        |
-| Naming an effect the user describes       | `animation-vocabulary` via `skill-router` — settle the term before building                                                 |
-| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                                 |
-| Accessibility                             | `better-accessibility` — every new interactive UI                                                                           |
-| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)                          |
-| Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen`             |
-| Payload collections / data model          | `domain-modeling`, `codebase-design`; `cms-section` to carry a schema change end to end                                     |
-| New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                                          |
-| Bug or regression                         | `diagnosing-bugs`                                                                                                           |
-| Security review                           | `security-audit` via `skill-router`                                                                                         |
-| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                                       |
-| Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                            |
-| Editing CLAUDE.md or a skill              | `writing-for-agents`                                                                                                        |
-| Nothing above fits / a specific effect    | the library catalog below first, then `skill-router` for the rest of the ~470-skill library (local only; project rules win) |
+| Task                                      | Skills                                                                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                      |
+| Several design options to choose from     | `variate`                                                                                                         |
+| UI components                             | `shadcn` (existing component first), then `/break` on anything rendering CMS content                              |
+| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                              |
+| Component motion, hovers, dialogs, cmdk   | `animate` + `emil-design-eng`; `apple-design` for springs/gestures                                                |
+| Scroll-driven motion, pinning, parallax   | `gsap-scrolltrigger`, `gsap-react`, `gsap-timeline` for sequences (+ Lenis); `gsap-performance` against jank      |
+| Scroll or gesture behaviour to verify     | `verify-interaction` — wheel/trackpad/touch profiles, e2e spec, user's device                                     |
+| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                              |
+| Naming an effect the user describes       | `animation-vocabulary` via `skill-router` — settle the term before building                                       |
+| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                       |
+| Accessibility                             | `better-accessibility` — every new interactive UI                                                                 |
+| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)                |
+| Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen`   |
+| Payload collections / data model          | `domain-modeling`, `codebase-design`; `cms-section` to carry a schema change end to end                           |
+| New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                                |
+| Bug or regression                         | `diagnosing-bugs`                                                                                                 |
+| Security review                           | `security-audit` via `skill-router`                                                                               |
+| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                             |
+| Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                  |
+| Editing CLAUDE.md or a skill              | `writing-for-agents`                                                                                              |
+| Nothing above fits / a specific effect    | read `.claude/skills/skill-router/CATALOG.md` (75 vetted library skills by task and symptom), then `skill-router` |
 
 `minimalist-ui` and `industrial-brutalist-ui` only on explicit request. `web-design-engineer` is for standalone HTML prototypes.
 
-@.claude/skills/skill-router/CATALOG.md
+**Where skills live.** Every skill in the table is in `.claude/skills/`: project skills plus core skills vendored from `~/.claude/skills` (list: `skill-router/vendored-skills.txt`; refresh with `skill-router/scripts/vendor-skills.sh`). The library behind the catalog and the router is local symlinks (`.claude/skills-library/`, gitignored): absent in CI, cloud sessions and fresh clones until `skill-router/scripts/link-library.sh` runs. Project rules win over any skill.
 
 ## Data sovereignty (hard rule)
 
@@ -96,7 +105,8 @@ No user, visitor or content data leaves our own infrastructure.
 
 ## Commands and checks
 
-- Local: `pnpm db:up` (Postgres on the port in `docker-compose.yml`), `pnpm seed`, `pnpm dev`. Scripts are in `package.json`.
+- New project from the template: `pnpm init:project` (once, in a fresh copy).
+- Local: `pnpm db:up` (Postgres on the port in `docker-compose.yml`), `pnpm seed`, `pnpm dev` (app port in the `dev` script; `PORT=…` overrides). Scripts are in `package.json`.
 - `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
 - `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-only palette + a11y), `menu` (open/close keeps scroll position and layout; runs with real scrollbars). Needs `pnpm seed`.
 - `pnpm knip` — run by hand; it lists planned-but-unused dependencies (motion, gsap, three, …) that stay on purpose.
@@ -112,7 +122,9 @@ No user, visitor or content data leaves our own infrastructure.
 - **e2e in dev:** Reticle overlays can swallow clicks; `e2e/features.spec.ts` hides them in `beforeEach` — reuse that for new interaction tests.
 - **Stale dev SSR:** after a client component is edited, `next dev` can keep serving the old server HTML; a hydration mismatch naming the old `className` means restart it, not a bug.
 - **Stopping the dev server:** `pkill -f "[n]ext dev"` — an unbracketed pattern also matches the invoking shell.
-- **Skill names:** user-level skills in `~/.claude/skills` shadow project skills of the same name; project variants get a suffix (`-de`).
+- **Skill names:** user-level skills in `~/.claude/skills` shadow project skills of the same name — locally the vendored copies are inactive, so edit a core skill in `~/.claude/skills` and re-vendor. Project variants of a user skill get a suffix (`-de`); the English originals are switched off in `.claude/settings.json` (`skillOverrides`).
+- **Several projects side by side:** each has its own app and database port. Playwright reuses whatever server answers on its port — with another project's dev server there, it silently tests the wrong site.
+- **graft** keeps its graph in `graft/` (gitignored); a fresh clone needs `graft build`.
 
 ## Definition of done
 

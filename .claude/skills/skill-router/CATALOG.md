@@ -5,6 +5,7 @@
 приём, — прочитай `.claude/skills-library/<путь>/SKILL.md` перед работой и одной строкой скажи,
 что подключил. Правила CLAUDE.md сильнее скилла. Чего здесь нет — ищи
 `python3 .claude/skills/skill-router/scripts/route.py "<задача>"` (ещё ~400 скиллов).
+Библиотеки нет (`.claude/skills-library/` пуст) — `.claude/skills/skill-router/scripts/link-library.sh`.
 
 ## Скролл, движение, эффекты
 
@@ -56,11 +57,11 @@
 - `kern/interface-review` — разбор изменений интерфейса в текущей работе или ветке.
 - `kern/design-md-planner` — зафиксировать визуальный стиль сайта в одном документе по интервью.
 
-## Портфолио и раскладки (только по запросу, палитра и сетка проекта сильнее)
+## Раскладки и стили (только по запросу, палитра и сетка проекта сильнее)
 
-- `styles/editorial-portfolio-chapters` — главная как журнал: проекты большими главами (⚠ без цветовых полей).
-- `styles/documentary-brutalist-agency` — портфолио продакшн-студии, документальная подача.
-- `styles/image-first-grid-layout` — фото на весь экран, сетка, где фото ведут.
+- `styles/editorial-portfolio-chapters` — главная как журнал: работы, услуги или темы большими главами (⚠ без цветовых полей).
+- `styles/documentary-brutalist-agency` — сайт агентства или студии, документальная подача.
+- `styles/image-first-grid-layout` — изображения на весь экран, сетка, где картинки ведут.
 - `styles/framed-grid-layout` — сетка в тонких рамках с уголками.
 - `styles/split-layout-technical` — две колонки: медиа и технические данные.
 - `styles/technical-wireframe-info-layout` — каркасный 3D-объект с подписями.
@@ -73,11 +74,11 @@
 - `marketing/image` — права на фото (люди в кадре, клиенты, здания), alt-тексты, оптимизация, можно ли генерировать картинки.
 - `marketing/customer-research` — отзывы и цитаты клиентов с согласием (DSGVO).
 - `marketing/content-strategy` — о чём писать: блог, журнал, план публикаций.
-- `marketing/social` — посты для Instagram/LinkedIn из проектов, контент-план.
-- `marketing/public-relations` — пресса, журналы, пресс-кит, выставка.
+- `marketing/social` — посты для Instagram/LinkedIn из материалов сайта, контент-план.
+- `marketing/public-relations` — пресса, пресс-кит, мероприятия, запуск.
 - `marketing/cro` — люди смотрят сайт, но не пишут: почему мало заявок.
 - `marketing/marketing-ideas` — как получать больше заказов, идеи продвижения.
-- `marketing/competitor-profiling` — разобрать другого фотографа или студию: подача, цены, аудитория.
+- `marketing/competitor-profiling` — разобрать конкурента: подача, цены, аудитория.
 - `marketing/competitors` — страница сравнения с конкурентом (редко нужна).
 - `marketing/site-architecture` — карта сайта, структура URL, внутренние ссылки.
 
@@ -91,7 +92,7 @@
 - `kern/prototype-logic` — быстрый прототип логики, чтобы проверить поток.
 - `kern/improve-codebase-architecture` — найти, где упростить и углубить модули кода.
 - `workflow/resolving-merge-conflicts` — конфликты после pull, merge или rebase.
-- `workflow/to-questionnaire` — анкета для владельца или заказчика: юридические тексты, факты по проектам.
-- `workflow/wizard` — пошаговый скрипт в терминале для ручной настройки (сервер IONOS, ключи).
+- `workflow/to-questionnaire` — анкета для владельца или заказчика: юридические тексты, факты, контент.
+- `workflow/wizard` — пошаговый скрипт в терминале для ручной настройки (сервер, ключи, деплой).
 - `meta-tooling/iterate-until-verified` — большая задача с явными проверками готовности.
 - `meta-tooling/stitched-full-page-capture` — скриншот всей страницы выходит пустым из-за анимаций.
