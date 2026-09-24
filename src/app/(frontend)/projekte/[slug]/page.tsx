@@ -68,7 +68,7 @@ export default async function ProjectPage({ params }: Props) {
           width={1920}
           height={1187}
           preload
-          sizes="(min-width: 1536px) 1426px, 100vw"
+          sizes="(min-width: 1920px) 1810px, 100vw"
           className="mt-fib-xl aspect-golden w-full rounded-lg object-cover"
         />
       ) : null}
@@ -87,7 +87,11 @@ export default async function ProjectPage({ params }: Props) {
               <div>
                 <dt className="text-muted-foreground">Link</dt>
                 <dd>
-                  <a href={project.url} rel="noopener" className="underline underline-offset-4">
+                  <a
+                    href={project.url}
+                    rel="noopener"
+                    className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+                  >
                     Projekt ansehen
                   </a>
                 </dd>
@@ -110,7 +114,7 @@ export default async function ProjectPage({ params }: Props) {
                   alt={item.alt}
                   width={960}
                   height={593}
-                  sizes="(min-width: 1536px) 696px, (min-width: 640px) 50vw, 100vw"
+                  sizes="(min-width: 1920px) 888px, (min-width: 640px) 50vw, 100vw"
                   className="aspect-golden w-full rounded-lg object-cover"
                 />
               </li>

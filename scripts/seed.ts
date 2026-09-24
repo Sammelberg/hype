@@ -2,6 +2,8 @@
 // Idempotent: re-running updates documents by slug and reuses generated images.
 // Refuses to run against a non-local database unless CI=true or --force is given.
 // Creates no users: the first admin signs up at /admin.
+import { readFile } from "node:fs/promises";
+
 import { getPayload, type Payload } from "payload";
 import sharp from "sharp";
 
@@ -9,6 +11,7 @@ import config from "../src/payload.config";
 import {
   lexical,
   SEED_REDIRECT,
+  seedClients,
   seedContactForm,
   seedPages,
   seedProjects,
@@ -122,7 +125,21 @@ async function main() {
   assertSafeTarget();
   const payload = await getPayload({ config });
 
-  await payload.updateGlobal({ slug: "site-settings", data: seedSettings, context });
+  const clients = [];
+  for (const client of seedClients) {
+    const logo = await upsertMedia(
+      payload,
+      `seed-logo-${client.file}.webp`,
+      `Logo ${client.name}`,
+      () => readFile(new URL(`./seed-assets/logos/${client.file}.webp`, import.meta.url)),
+    );
+    clients.push({ name: client.name, logo });
+  }
+  await payload.updateGlobal({
+    slug: "site-settings",
+    data: { ...seedSettings, clients },
+    context,
+  });
 
   for (const project of seedProjects) await seedProject(payload, project);
 

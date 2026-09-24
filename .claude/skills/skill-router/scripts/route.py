@@ -6,8 +6,11 @@
   route.py --cat styles "..."            только в категории
   route.py --list-cats                   категории и их размеры
   route.py --show <имя>                  карточка скилла: путь, описание, справочники
+
+Поиск: BM25 по полям скилла (имя, триггеры из aliases.json, описание, текст) с лёгким
+стеммингом для русского, немецкого и английского.
 """
-import argparse, json, os, re, sys
+import argparse, json, math, os, pickle, re, sys
 
 def _find_manifest():
     """Ищем индекс вверх по дереву — скрипт работает из любой точки проекта."""
@@ -98,27 +101,79 @@ LEX = {
     "реакт": "react component", "next": "nextjs react", "тейлвинд": "tailwind css",
     "свифт": "swift swiftui ios", "андроид": "android material native",
     "экран": "screen viewport page", "страниц": "page screen layout",
+    # Разговорные слова владельца: чем он описывает проблему, а не термин.
+    "нейросет": "ai generated slop", "ии": "ai generated slop", "шаблонн": "generic slop",
+    "лаг": "performance jank", "тормоз": "performance jank", "висн": "performance freeze",
+    "подвис": "performance jank", "груз": "loading performance", "долго": "performance loading",
+    "всплываш": "toast notification", "уведомлен": "notification toast",
+    "либу": "library package", "либа": "library package", "либы": "library package",
+    "газет": "press media public relations", "журнал": "press media magazine", "пресс": "press media",
+    "интервью в": "press interview", "заявк": "inquiry conversion lead", "обращен": "inquiry lead",
+    "дыры в без": "security vulnerability", "взлом": "security attack", "взгляд": "attention hierarchy focus",
+    "внимани": "attention hierarchy", "бросается": "emphasis hierarchy", "дырк": "gap empty state",
+    "пересобер": "refactor", "разнес": "critique challenge grill", "покритику": "critique review",
+    "стиль сайт": "design direction style guide", "вкус": "taste aesthetic direction",
+    "повтор": "recreate reference", "референс": "reference inspiration", "чуж": "reference external site",
+    "фотк": "photo image", "фото": "photo image photography", "ролик": "video film",
+    "съемк": "shoot photography production", "клиент": "client customer", "заказчик": "client customer",
+    "конкурент": "competitor", "коллег": "competitor peer", "продвиж": "marketing promotion growth",
+    "инстаграм": "instagram social", "сторис": "instagram social", "посты": "post social", "постов": "post social",
 }
-CAT_HINT = {
-    "styles": "style aesthetic visual look theme brand mood",
-    "web-effects": "effect webgl threejs shader scroll parallax canvas animation",
-    "ux-research": "research ux law usability persona interview strategy critique",
-    "marketing": "marketing seo ads email social conversion pricing growth",
-    "native": "native ios android expo swiftui material mobile",
-    "game-dev": "game gameplay enemy level combat inventory",
-    "media": "image video article slides brand asset generation",
-    "meta-tooling": "skill authoring capture profiling audit tooling",
-    "workflow": "ticket spec issue triage wizard workflow process",
-    "core": "",
+# Немецкие разговорные слова — к английским терминам индекса.
+LEX_DE = {
+    "anfrag": "inquiry conversion lead", "kontaktseit": "contact form conversion",
+    "kontaktformular": "contact form", "titelbild": "image cover", "generier": "generate image",
+    "bild": "image photo", "foto": "photo image", "presse": "press media",
+    "wettbewerb": "competitor", "konkurrent": "competitor", "beitrag": "post social",
+    "lad": "loading", "langsam": "performance slow", "sicherheit": "security",
 }
+
+
+
+ALIASES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "aliases.json")
+
+# Вес поля в BM25: имя и триггеры решают, текст скилла лишь добирает.
+FIELDS = {"name": 3.0, "alias": 3.0, "desc": 2.0, "body": 0.5}
+# Нормализация по длине: триггеры — независимые фразы, их число не должно ослаблять каждую.
+FIELD_B = {"name": 0.3, "alias": 0.0, "desc": 0.75, "body": 0.75}
+K1 = 1.2
+
+STOPWORDS = set("""и в во на с со по к ко о об от до из за для что как это то же ли не ни а но или
+у при над под про без так там тут где когда чтобы нужно надо можно сделать сделай хочу мне нам
+наш наша наши свой все всё его её их она они оно был была были быть есть этот эта эти тот та те
+пока чтоб типа вот еще ещё очень просто вообще уже тоже также потом сам сама весь вся всех чем если раз
+даже только какой какая какие какое кто кого чего где-то как-то тоже будет было давай пусть сейчас
+der die das und oder mit von für auf ein eine einer eines den dem des ist sind wie was bei im zu
+the a an and or of for to in on with is are be as by it this that from at into how what when""".split())
+
+RU_END = sorted("""иями ями ами ией ого его ому ему ыми ими ией иях ах ях ов ев ей ой ый ий ая яя
+ое ее ые ие ам ям ом ем ую юю ии ия ью ть ет ют ат ят ит ишь ешь ся сь а я о е ы и у ю ь й""".split(),
+                key=len, reverse=True)
+LAT_END = ["ations", "ation", "ings", "ing", "ies", "es", "ed", "ly", "en", "er", "s", "e", "n"]
+
+
+def stem(w):
+    w = w.lower().replace("ё", "е")
+    if re.search("[а-я]", w):
+        for e in RU_END:
+            if w.endswith(e) and len(w) - len(e) >= 3:
+                return w[: -len(e)]
+        return w
+    w = w.replace("ä", "a").replace("ö", "o").replace("ü", "u").replace("ß", "ss")
+    for e in LAT_END:
+        if w.endswith(e) and len(w) - len(e) >= 4:
+            return w[: -len(e)]
+    return w
+
+
+def terms(text):
+    words = re.findall(r"[a-zа-яёäöüß0-9]+", text.lower())
+    return [stem(w) for w in words if len(w) >= 2 and w not in STOPWORDS]
 
 
 def expand(q):
-    """Русские стемы -> английские термины индекса.
-
-    Сопоставляем по НАЧАЛУ слова, иначе 'система' ловится стемом 'тем'
-    и запрос про дизайн-систему уезжает в тёмную тему.
-    """
+    """Запрос + английские термины индекса для русских слов (по НАЧАЛУ слова: иначе 'система'
+    ловится стемом 'тем' и дизайн-система уезжает в тёмную тему)."""
     ql = q.lower().replace("ё", "е")
     words = re.findall(r"[a-zа-я0-9\-]+", ql)
     extra = []
@@ -127,43 +182,151 @@ def expand(q):
         hit = key in ql if (" " in key or "-" in key) else any(w.startswith(key) for w in words)
         if hit:
             extra.append(v)
-    return ql + " " + " ".join(extra)
+    for w in re.findall(r"[a-zäöüß]+", ql):
+        extra += [v for k, v in LEX_DE.items() if w.startswith(k)]
+    return terms(q), terms(" ".join(extra))
 
 
-def tokens(s):
-    return [t for t in re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9\-]{3,}", s.lower())]
+_INDEX = {}
 
 
-def score(row, terms, qtext):
-    name = row["name"].lower()
-    namewords = set(name.split("-"))
-    kws = set(row["kw"])
-    desc = row["desc"].lower()
+def index(rows):
+    """Частоты термов по полям и IDF. Кэш на диске рядом с manifest.json: сборка индекса
+    занимает ~0.3 с, поиск — миллисекунды. Кэш сбрасывается, когда меняется
+    индекс, триггеры или этот файл."""
+    key = id(rows)
+    if key in _INDEX:
+        return _INDEX[key]
+    stamp = tuple(os.path.getmtime(p) if os.path.isfile(p) else 0
+                  for p in (MANIFEST, ALIASES_FILE, os.path.abspath(__file__)))
+    cache = os.path.join(os.path.dirname(MANIFEST), ".route-index.pkl")
+    try:
+        with open(cache, "rb") as f:
+            saved_stamp, saved = pickle.load(f)
+        if saved_stamp == stamp and len(saved[0]) == len(rows):
+            _INDEX[key] = saved
+            return saved
+    except (OSError, EOFError, pickle.UnpicklingError, ValueError):
+        pass
+    aliases = {}
+    if os.path.isfile(ALIASES_FILE):
+        aliases = {k: v for k, v in json.load(open(ALIASES_FILE, encoding="utf-8")).items()
+                   if not k.startswith("_")}
+    docs = []
+    for r in rows:
+        fields = {
+            "name": terms(r["name"].replace("-", " ")),
+            "alias": terms(" ".join(aliases.get(r["name"], []))),
+            "desc": terms(r["desc"] + " " + " ".join(r["kw"])),
+            "body": terms(r.get("body", "")),
+        }
+        tf = {f: {} for f in FIELDS}
+        for f, ts in fields.items():
+            for t in ts:
+                tf[f][t] = tf[f].get(t, 0) + 1
+        docs.append((r, tf, {f: len(ts) for f, ts in fields.items()}))
+    n = len(docs)
+    avg = {f: max(1.0, sum(d[2][f] for d in docs) / n) for f in FIELDS}
+    df = {}
+    for _, tf, _ in docs:
+        for t in set().union(*(tf[f].keys() for f in FIELDS)):
+            df[t] = df.get(t, 0) + 1
+    idf = {t: math.log(1 + (n - c + 0.5) / (c + 0.5)) for t, c in df.items()}
+    _INDEX[key] = (docs, avg, idf)
+    try:
+        with open(cache, "wb") as f:
+            pickle.dump((stamp, _INDEX[key]), f)
+    except OSError:
+        pass
+    return _INDEX[key]
+
+
+def score(doc, avg, idf, qterms, weight=1.0):
+    r, tf, ln = doc
     s = 0.0
-    for t in terms:
-        if t == name:
-            s += 30
-        elif t in namewords:
-            s += 12
-        elif t in name:
-            s += 6
-        if t in kws:
-            s += 4
-        elif any(t in k or k in t for k in kws):
-            s += 1.5
-        if t in desc:
-            s += 2
-    hint = CAT_HINT.get(row["cat"], "")
-    if hint:
-        s += 1.5 * sum(1 for t in terms if t in hint)
-    if row["active"]:
-        s *= 0.55  # ядро уже загружено — не занимать им места в выдаче
+    for t in set(qterms):
+        w = 0.0
+        for f, fw in FIELDS.items():
+            c = tf[f].get(t, 0)
+            if c:
+                b = FIELD_B[f]
+                w += fw * c / (c + K1 * (1 - b + b * ln[f] / avg[f]))
+        s += idf.get(t, 0) * w * weight
     return s
+
+
+def rank(rows, q, cat=None):
+    """(библиотека, ядро, исключённые): списки (оценка, скилл) по убыванию."""
+    docs, avg, idf = index(rows)
+    own, extra = expand(q)
+    ranked = []
+    for doc in docs:
+        if cat and doc[0]["cat"] != cat:
+            continue
+        s = score(doc, avg, idf, own) + score(doc, avg, idf, extra, 0.4)
+        if s > 0:
+            ranked.append((s, doc[0]))
+    ranked.sort(key=lambda x: -x[0])
+    blocked = [r["name"] for s, r in ranked[:15] if r["name"] in BLOCKED][:5]
+    ranked = [(s, r) for s, r in ranked if r["name"] not in BLOCKED]
+    lib = [(s, r) for s, r in ranked if not r["active"] and r["name"] not in DUPLICATES]
+    core = [(s, r) for s, r in ranked if r["active"]][:4]
+    return lib, core, blocked
+
+
+# Скиллы, которые в этом проекте вредят (проверено полным чтением библиотеки 2026-09-24).
+# BLOCKED в выдачу не попадают; WARN показываются с пометкой — брать только идею.
+BLOCKED = {
+    "dark-mode-design": "переключатель тем и обесцвечивание фирменного цвета; сайт только тёмный",
+    "spacing-system": "сетка 4/8 вместо Фибоначчи",
+    "layout-grid": "сетка 4/8 вместо Фибоначчи и золотого сечения",
+    "motion-system": "токены противоречат animate и globals.css",
+    "theming-system": "архитектура нескольких тем; сайт только тёмный",
+    "expo-data-fetching": "React Native; требует себя для любой сетевой работы",
+    "performance-profiling": "только Apple Instruments, не веб",
+    "marketing-psychology": "opt-out-подписки и давление — нарушает DSGVO/UWG",
+    "tastemaker": "сам ходит в Openverse/Pixabay/Iconify, пишет в ~/.tastemaker",
+    "ui-ux-pro-max": "сломанный путь к скрипту (CLAUDE_PLUGIN_ROOT)",
+    "frontend-ui-ux": "ссылки на несуществующие файлы, ставит зависимости, curl lazyweb.com",
+    "anti-ui-slop": "платный MCP UIZZE — внешний сервис",
+    "aura-asset-images": "удалённые картинки (Supabase-хотлинки)",
+    "unsplash-asset-images": "удалённые стоковые картинки",
+    "gpt-image-2": "ключи уходят на сторонние шлюзы",
+    "design": "Gemini API и несуществующие скиллы",
+    "banner-design": "Gemini API и несуществующие скиллы",
+    "premium-frontend-ui": "Lenis с CDN, устаревший @studio-freight/lenis",
+    "gpt-taste": "picsum, анимация на всём, «симуляция Python»",
+    "design-taste-frontend-v1": "picsum, бесконечные микро-анимации; есть v2",
+    "tailwindcss": "советы Tailwind v3, у нас v4",
+    "gsap": "убивает все ScrollTrigger страницы; есть официальные gsap-*",
+    "animation-on-scroll": "вставляет <script> в <head>, нет prefers-reduced-motion",
+    "staggered-word-reveal": "aria-label на <p> роняет axe; лучше scroll-scrubbed-word-reveal",
+}
+WARN = {
+    "masked-reveal": "aria-label на <p> роняет axe; разметку брать из scroll-scrubbed-word-reveal",
+    "cinematic-gsap-lenis-motion-system": "ванильный код и aria-label на <p>; переносить на useGSAP",
+    "cinematic-scroll-storytelling": "то же, что cinematic-gsap-lenis-motion-system",
+    "design-taste-frontend": "picsum и CDN-иконки, запрет тире ломает немецкую типографику",
+    "taste-redesign-existing-projects": "picsum, выдуманные данные, cookie-баннер по умолчанию",
+    "editorial-portfolio-chapters": "цветовые поля проектов — не брать, палитра фиксирована",
+    "webgl-laser": "resize запускает лишний rAF-цикл, нет паузы за экраном",
+    "directory-submissions": "непроверенная статистика",
+}
+
+
+# Библиотечные копии скиллов, которые уже доступны (ядро проекта или ~/.claude/skills):
+# в выдаче они только занимают места.
+DUPLICATES = {
+    "copywriting": "copywriting-de", "product-marketing": "product-marketing-de",
+    "seo-audit": "seo-audit-de", "ai-seo": "ai-seo-de", "vermenschlichen": "vermenschlichen",
+    "schema": "schema", "case-study": "case-study", "minimalist-ui": "minimalist-ui",
+    "industrial-brutalist-ui": "industrial-brutalist-ui",
+}
 
 
 def load():
     if not os.path.isfile(MANIFEST):
-        sys.exit(f"нет индекса: {MANIFEST}\nпересоберите: route.py --reindex")
+        sys.exit(f"нет индекса: {MANIFEST}\nпересоберите: reindex.py")
     return json.load(open(MANIFEST, encoding="utf-8"))
 
 
@@ -194,6 +357,10 @@ def main():
         for r in rows:
             if r["name"] == a.show:
                 print(f"{r['name']}  [{r['cat']}{'/АКТИВЕН' if r['active'] else ''}]")
+                if r["name"] in BLOCKED:
+                    print(f"ЗАБЛОКИРОВАН для проекта: {BLOCKED[r['name']]}")
+                elif r["name"] in WARN:
+                    print(f"⚠ {WARN[r['name']]}")
                 print(f"путь: {r['path']}/SKILL.md")
                 print(f"описание: {r['desc']}")
                 if r["refs"]:
@@ -205,12 +372,8 @@ def main():
     if not q:
         print(__doc__)
         return
-    terms = list(dict.fromkeys(tokens(expand(q))))
-    cand = [r for r in rows if not a.cat or r["cat"] == a.cat]
-    ranked = sorted(((score(r, terms, q), r) for r in cand), key=lambda x: -x[0])
-    ranked = [(s, r) for s, r in ranked if s > 3]
-    lib = [(s, r) for s, r in ranked if not r["active"]][: a.n]
-    core = [(s, r) for s, r in ranked if r["active"]][:4]
+    lib, core, blocked = rank(rows, q, a.cat)
+    lib = lib[: a.n]
     if not lib and not core:
         print("совпадений нет — попробуйте другие слова или --cat")
         return
@@ -220,6 +383,8 @@ def main():
         for s, r in lib:
             print(f"  {s:6.1f}  {r['name']:<32} [{r['cat']}]")
             print(f"          {r['desc'][:145]}")
+            if r["name"] in WARN:
+                print(f"          ⚠ {WARN[r['name']]}")
             print(f"          {r['path']}/SKILL.md")
             if r["refs"]:
                 print(f"          + {', '.join(r['refs'][:5])}")
@@ -227,6 +392,8 @@ def main():
         print("\nУЖЕ В ЯДРЕ (доступны сразу, читать не нужно):")
         for s, r in core:
             print(f"  {r['name']:<32} {r['desc'][:95]}")
+    if blocked:
+        print("\nИСКЛЮЧЕНЫ для проекта (route.py, BLOCKED): " + ", ".join(blocked))
 
 
 if __name__ == "__main__":

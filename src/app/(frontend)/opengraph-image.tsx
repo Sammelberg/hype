@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 
 import { getSiteSettings } from "@/data/queries";
@@ -8,7 +11,10 @@ export const contentType = "image/png";
 
 // Rendered on our own server with next/og's bundled font — no external font or image service.
 export default async function OpengraphImage() {
-  const settings = await getSiteSettings();
+  const [settings, mark] = await Promise.all([
+    getSiteSettings(),
+    readFile(join(process.cwd(), "public/brand/logo-mark.png"), "base64"),
+  ]);
   return new ImageResponse(
     <div
       style={{
@@ -22,11 +28,18 @@ export default async function OpengraphImage() {
         color: "#fafafa",
       }}
     >
+      <img
+        src={`data:image/png;base64,${mark}`}
+        width={160}
+        height={160}
+        alt=""
+        style={{ marginBottom: 48 }}
+      />
       <div style={{ fontSize: 72, fontWeight: 600, letterSpacing: -2 }}>
         {settings.ownerName || settings.siteName || "Portfolio"}
       </div>
       {settings.tagline ? (
-        <div style={{ marginTop: 20, fontSize: 32, color: "#a3a3a3" }}>{settings.tagline}</div>
+        <div style={{ marginTop: 20, fontSize: 32, color: "#01ccff" }}>{settings.tagline}</div>
       ) : null}
     </div>,
     size,

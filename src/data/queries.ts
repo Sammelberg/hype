@@ -8,7 +8,7 @@ import { normalizePath, resolveRedirect } from "@/lib/redirects";
 
 export const getSiteSettings = cache(async () => {
   const payload = await getPayloadClient();
-  return payload.findGlobal({ slug: "site-settings", depth: 0 });
+  return payload.findGlobal({ slug: "site-settings", depth: 1 });
 });
 
 export const getPublishedProjects = cache(async () => {

@@ -10,7 +10,93 @@ export const seedSettings = {
   tagline: "Gestaltung und Entwicklung von Websites für Kultur, Handwerk und Mittelstand.",
   description:
     "Portfolio von Max Mustermann: ausgewählte Web-Projekte aus Gestaltung und Entwicklung.",
+  hero: {
+    eyebrow: "Freiburg im Breisgau · Film, Foto, Digital",
+    headline: "Bilder, die\nbleiben.\nSysteme, die\ntragen.",
+    intro:
+      "Wir produzieren Film und Content für Kultur, Marken und Mittelstand und bauen die digitalen Systeme, die solche Abläufe im Hintergrund tragen.",
+    links: [
+      { label: "Video & Content ansehen", href: "/#projekte" },
+      { label: "Digitale Lösungen entdecken", href: "/#leistungen" },
+    ],
+  },
   contactEmail: "hallo@example.com",
+  services: [
+    {
+      title: "Gestaltung",
+      description:
+        "Seitenaufbau, Typografie und Farben, abgestimmt auf Ihre Inhalte und Ihr Publikum. Sie sehen Entwürfe im Browser, nicht nur als Bild.",
+    },
+    {
+      title: "Entwicklung",
+      description:
+        "Schnelle, barrierearme Websites mit Next.js. Gehostet in Deutschland, ohne Tracking von Drittanbietern.",
+    },
+    {
+      title: "Redaktionssystem",
+      description:
+        "Ein CMS, in dem Ihr Team Texte, Bilder und Termine selbst pflegt, mit Vorschau vor dem Veröffentlichen.",
+    },
+    {
+      title: "Betreuung",
+      description:
+        "Updates, Sicherungen und kleine Änderungen nach dem Start, damit die Website aktuell und sicher bleibt.",
+    },
+  ],
+  // Fictional sample: one sentence split across screens. The owner writes the real text.
+  manifesto: {
+    phrases: [
+      { text: "Wer zehn Jahre" },
+      { text: "Bilder macht," },
+      { text: "weiß, was" },
+      { text: "hängen bleibt." },
+    ],
+    caption: "Johann Pictures",
+  },
+  faq: [
+    {
+      question: "Was kostet eine Website?",
+      answer:
+        "Das hängt vom Umfang ab. Nach dem ersten Gespräch erhalten Sie ein schriftliches Angebot mit Festpreis für die vereinbarten Leistungen.",
+    },
+    {
+      question: "Können wir die Inhalte später selbst ändern?",
+      answer:
+        "Ja. Texte, Bilder und Termine pflegen Sie im Redaktionssystem. Eine Einweisung gehört zu jedem Projekt.",
+    },
+    {
+      question: "Wo wird die Website gehostet?",
+      answer:
+        "Auf einem Server in Deutschland. Schriften und Skripte werden nicht von fremden Diensten geladen.",
+    },
+    {
+      question: "Wie lange dauert ein Projekt?",
+      answer:
+        "Eine kleinere Website ist oft nach vier bis acht Wochen online. Den genauen Zeitplan legen wir gemeinsam fest.",
+    },
+  ],
+  process: [
+    {
+      title: "Kennenlernen",
+      description:
+        "Wir sprechen über Ziele, Inhalte und Zeitrahmen. Danach erhalten Sie ein schriftliches Angebot.",
+    },
+    {
+      title: "Konzept",
+      description:
+        "Seitenstruktur und Inhalte werden festgelegt. Sie wissen früh, welche Seiten es gibt und was darauf steht.",
+    },
+    {
+      title: "Gestaltung und Umsetzung",
+      description:
+        "Entwürfe entstehen direkt im Browser. Sie testen Zwischenstände auf eigenen Geräten und geben Rückmeldung.",
+    },
+    {
+      title: "Start und Einweisung",
+      description:
+        "Die Website geht online, und Ihr Team lernt in einer Schulung, Inhalte selbst zu pflegen.",
+    },
+  ],
 };
 
 export type SeedProject = {
@@ -115,7 +201,7 @@ export const seedProjects: SeedProject[] = [
     role: "Gestaltung und Entwicklung",
     client: "Weingut (fiktiv)",
     tags: ["Gastronomie", "Payload"],
-    featured: false,
+    featured: true,
     palette: ["#5a1e2e", "#e8d3b0"],
     content: [
       {
@@ -228,3 +314,29 @@ export function lexical(blocks: Block[]) {
     },
   };
 }
+
+// Client logos for the band below the hero: white artwork on transparent ground,
+// files in scripts/seed-assets/logos/<file>.webp.
+export const seedClients = [
+  { name: "Constantin Entertainment", file: "constantin-entertainment" },
+  { name: "ZDF", file: "zdf" },
+  { name: "ProSiebenSat.1", file: "prosiebensat1" },
+  { name: "RTL", file: "rtl" },
+  { name: "ARD", file: "ard" },
+  { name: "SWR Fernsehen", file: "swr-fernsehen" },
+  { name: "arte", file: "arte" },
+  { name: "Galileo", file: "galileo" },
+  { name: "Welt der Wunder TV", file: "welt-der-wunder" },
+  { name: "Tele 1", file: "tele1" },
+  { name: "Bundesliga", file: "bundesliga" },
+  { name: "Red Bull 400", file: "red-bull-400" },
+  { name: "Sony Classical", file: "sony-classical" },
+  { name: "Geberit", file: "geberit" },
+  { name: "PwC", file: "pwc" },
+  { name: "Best Western", file: "best-western" },
+  { name: "BBI Solutions", file: "bbi-solutions" },
+  { name: "TennisGate", file: "tennisgate" },
+  { name: "The Mountain", file: "the-mountain" },
+  { name: "Jazz & Rock Schulen Freiburg", file: "jazz-rock-schulen-freiburg" },
+  { name: "Francek", file: "francek" },
+];

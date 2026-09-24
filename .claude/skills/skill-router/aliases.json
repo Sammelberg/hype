@@ -1,0 +1,388 @@
+{
+  "_comment": "Триггеры на русском и немецком для скиллов библиотеки, полезных этому проекту (по полному чтению библиотеки 2026-09-24). route.py ищет по ним с весом имени. Пиши, что делает скилл, словами пользователя; не копируй запросы из bench.py.",
+
+  "scroll-scrubbed-word-reveal": [
+    "слова проявляются по одному при скролле",
+    "текст по словам в такт прокрутке",
+    "проявление слов заголовка",
+    "Wörter erscheinen beim Scrollen",
+    "Text Wort für Wort"
+  ],
+  "scroll-scrubbed-visual-sequence": [
+    "видео или кадры управляются прокруткой",
+    "последовательность кадров на скролле",
+    "видео по скроллу",
+    "Videosequenz beim Scrollen",
+    "Bildsequenz scrubben"
+  ],
+  "scroll-progress-timeline": [
+    "таймлайн шагов процесса",
+    "линия прогресса этапов",
+    "этапы работы по порядку",
+    "Zeitleiste Ablauf Schritte",
+    "Fortschrittslinie"
+  ],
+  "reveal-hover-effect": [
+    "до и после",
+    "сравнение двух изображений под курсором",
+    "второе изображение проявляется под мышью",
+    "ретушь цветокоррекция сравнение",
+    "vorher nachher",
+    "Bildvergleich Maus"
+  ],
+  "cinematic-gsap-lenis-motion-system": [
+    "кинематографичная анимация сайта",
+    "система движения gsap lenis",
+    "плавный скролл и пины",
+    "filmische Scroll-Animation"
+  ],
+  "cinematic-scroll-storytelling": [
+    "история на скролле",
+    "стек карточек при прокрутке",
+    "футер открывается снизу",
+    "Scroll-Storytelling"
+  ],
+  "masked-reveal": [
+    "слова поднимаются из маски",
+    "появление заголовка через маску",
+    "Maske Überschrift enthüllen"
+  ],
+  "build-threejs-scroll-worlds": [
+    "3d мир на скролле",
+    "трёхмерная сцена управляется прокруткой",
+    "3D-Welt beim Scrollen"
+  ],
+  "scroll-world-storytelling": [
+    "лонгрид история на скролле",
+    "повествование кейса при прокрутке",
+    "Geschichte beim Scrollen erzählen"
+  ],
+  "add-mouse-driven-orbit": [
+    "3d объект поворачивается за мышью",
+    "параллакс за курсором в герое",
+    "Maus dreht 3D-Objekt"
+  ],
+  "progressive-blur": [
+    "постепенное размытие края",
+    "размытие под шапкой поверх фото",
+    "blur шапки",
+    "progressiver Weichzeichner"
+  ],
+  "css-alpha-masking": [
+    "мягкое затухание краёв",
+    "маска градиентом по краю",
+    "Kanten ausblenden Maske"
+  ],
+
+  "gsap-plugins": [
+    "плагины gsap",
+    "splittext flip observer drawsvg scrollto",
+    "разбить текст на буквы gsap",
+    "GSAP Plugins"
+  ],
+  "gsap-utils": ["утилиты gsap", "mapRange clamp wrap toArray", "GSAP utils"],
+  "better-ui": [
+    "полировка интерфейса",
+    "мелкие детали отделки",
+    "обводка у фото в тёмной теме",
+    "UI Feinschliff"
+  ],
+  "better-layout": [
+    "структура и группировка блоков",
+    "порядок чтения и зум 200",
+    "Layout Struktur Gruppierung"
+  ],
+  "better-writing": [
+    "микротексты интерфейса",
+    "текст кнопок и ошибок",
+    "Mikrotexte Buttons Fehlermeldungen"
+  ],
+  "better-interface": [
+    "общий разбор интерфейса одним вердиктом",
+    "комплексное ревью ui",
+    "Interface Gesamtreview"
+  ],
+  "interface-review": [
+    "ревью изменений интерфейса",
+    "проверить что поменялось в ui",
+    "UI-Änderungen prüfen"
+  ],
+  "explain-interface": [
+    "как сделано на чужом сайте",
+    "разобрать эффект другого сайта",
+    "повторить эффект с референса",
+    "wie wurde das gebaut",
+    "Effekt einer fremden Website nachbauen"
+  ],
+  "improve-animations": [
+    "аудит анимаций в коде",
+    "план улучшения движения",
+    "Animationen prüfen verbessern"
+  ],
+  "design-md-planner": [
+    "описать дизайн-систему в design.md",
+    "зафиксировать визуальное направление",
+    "DESIGN.md anlegen"
+  ],
+  "ask-sonner": ["тосты sonner", "всплывающие уведомления", "Toast Benachrichtigung"],
+  "grilling": [
+    "допроси меня про план",
+    "проверить идею вопросами",
+    "стресс-тест решения",
+    "Plan hinterfragen"
+  ],
+  "grill-with-docs": [
+    "интервью по плану с записью решений",
+    "adr и глоссарий",
+    "Entscheidungen dokumentieren"
+  ],
+  "improve-codebase-architecture": [
+    "улучшить архитектуру кода",
+    "углубить модули",
+    "Architektur verbessern"
+  ],
+  "handoff": [
+    "передать работу другому агенту",
+    "документ передачи контекста",
+    "продолжить в новой сессии",
+    "Übergabe an neuen Agenten"
+  ],
+  "research": [
+    "исследовать вопрос по первоисточникам",
+    "найти достоверные источники",
+    "Recherche Primärquellen"
+  ],
+  "resolving-merge-conflicts": [
+    "конфликт слияния",
+    "мерж конфликт",
+    "rebase конфликт",
+    "Merge-Konflikt lösen"
+  ],
+  "to-questionnaire": [
+    "анкета вопросов для владельца",
+    "опросник для заказчика",
+    "собрать ответы у клиента",
+    "Fragebogen für den Kunden"
+  ],
+  "wizard": [
+    "пошаговый мастер для человека",
+    "скрипт который ведёт по ручным шагам",
+    "настройка сервера вручную",
+    "Schritt-für-Schritt-Assistent"
+  ],
+  "prototype-logic": [
+    "прототип логики состояний",
+    "проверить поток формы прототипом",
+    "Logik-Prototyp"
+  ],
+  "animation-vocabulary": [
+    "как называется эффект",
+    "название анимации",
+    "термин для движения",
+    "wie heißt dieser Effekt"
+  ],
+  "security-audit": [
+    "аудит безопасности",
+    "уязвимости кода",
+    "пентест",
+    "Sicherheitsprüfung Schwachstellen"
+  ],
+
+  "optimize-web-animations": [
+    "анимации за экраном",
+    "тормозит страница",
+    "утечки памяти",
+    "пауза анимаций вне экрана",
+    "requestAnimationFrame цикл",
+    "Animationen außerhalb des Bildschirms pausieren",
+    "Speicherleck"
+  ],
+  "video-to-superprompt": [
+    "видео референс анимации",
+    "разобрать анимацию по видео",
+    "видео примера эффекта",
+    "Referenzvideo analysieren"
+  ],
+  "no-ai-design-slop": [
+    "шаблонный дизайн как от ии",
+    "убрать ии-клише",
+    "выглядит сгенерированным",
+    "KI-Look entfernen"
+  ],
+  "audit-ai-design-slop": [
+    "аудит ии-клише в дизайне",
+    "проверить дизайн на шаблонность",
+    "KI-Design-Klischees prüfen"
+  ],
+  "audit-reference-originality": [
+    "слишком похоже на референс",
+    "проверить на плагиат",
+    "оригинальность относительно образца",
+    "Plagiat Referenz prüfen"
+  ],
+  "iterate-until-verified": [
+    "повторять пока не проверено",
+    "цикл проверки большой задачи",
+    "bis zur Verifikation iterieren"
+  ],
+  "stitched-full-page-capture": [
+    "скриншот всей страницы",
+    "полностраничный снимок пустой",
+    "склеить скриншоты",
+    "ganzseitiger Screenshot"
+  ],
+
+  "image": [
+    "права на фото",
+    "согласие людей в кадре",
+    "alt тексты изображений",
+    "оптимизация изображений avif webp",
+    "Bildrechte",
+    "Alt-Texte",
+    "Bilder optimieren"
+  ],
+  "content-strategy": [
+    "контент-план",
+    "журнал или блог",
+    "какие страницы писать",
+    "Content-Strategie Redaktionsplan"
+  ],
+  "customer-research": [
+    "отзывы клиентов",
+    "цитаты заказчиков",
+    "интервью с клиентами",
+    "Kundenstimmen",
+    "Testimonials",
+    "Kundeninterviews"
+  ],
+  "site-architecture": [
+    "карта сайта",
+    "структура урлов",
+    "внутренние ссылки",
+    "Seitenstruktur URL-Struktur Sitemap"
+  ],
+  "social": [
+    "посты для соцсетей",
+    "инстаграм linkedin из проектов",
+    "Social-Media-Beiträge Instagram"
+  ],
+  "competitor-profiling": [
+    "профиль конкурентов",
+    "другие фотографы и студии",
+    "Wettbewerber analysieren"
+  ],
+  "competitors": [
+    "страница сравнения с конкурентом",
+    "альтернатива конкуренту",
+    "Vergleichsseite Wettbewerber"
+  ],
+  "marketing-ideas": ["как получить больше заявок", "идеи продвижения", "mehr Anfragen gewinnen"],
+  "cro": ["конверсия страницы", "больше заявок с формы", "Conversion optimieren"],
+  "public-relations": ["пресс-кит", "страница для прессы", "Pressemappe Presse"],
+
+  "form-design": [
+    "форма обратной связи",
+    "поля формы и подписи",
+    "валидация полей",
+    "Kontaktformular gestalten"
+  ],
+  "error-handling-ux": [
+    "сообщения об ошибках",
+    "страница ошибки",
+    "что показать при ошибке",
+    "Fehlermeldungen gestalten"
+  ],
+  "feedback-patterns": [
+    "подтверждение отправки",
+    "сообщение об успехе",
+    "тост или сообщение в строке",
+    "Erfolgsmeldung Bestätigung"
+  ],
+  "heuristic-evaluation": [
+    "эвристики нильсена",
+    "юзабилити-аудит по эвристикам",
+    "Heuristiken Nielsen"
+  ],
+  "critique-visual-hierarchy": [
+    "визуальная иерархия",
+    "куда смотрит глаз",
+    "акцент на экране",
+    "visuelle Hierarchie"
+  ],
+  "critique-composition": ["композиция секции", "баланс и воздух", "Komposition Weißraum"],
+  "critique-affordance": [
+    "что выглядит кликабельным",
+    "понятность кнопок и ссылок",
+    "Klickbarkeit Affordance"
+  ],
+  "information-architecture": [
+    "информационная архитектура",
+    "структура навигации и контента",
+    "Informationsarchitektur"
+  ],
+  "design-token-audit": [
+    "захардкоженные значения",
+    "значения мимо токенов",
+    "аудит токенов",
+    "Token-Audit harte Werte"
+  ],
+  "design-qa-checklist": [
+    "чеклист перед релизом дизайна",
+    "проверка всех состояний",
+    "Design-QA Checkliste"
+  ],
+  "doherty-threshold": [
+    "время отклика интерфейса",
+    "когда показывать спиннер",
+    "Antwortzeit Ladeanzeige"
+  ],
+  "search-ux": [
+    "поиск по сайту",
+    "пустые результаты поиска",
+    "ничего не найдено",
+    "Suche keine Ergebnisse"
+  ],
+  "navigation-patterns": [
+    "навигация",
+    "хлебные крошки",
+    "меню и активный пункт",
+    "Navigation Breadcrumbs Menü"
+  ],
+  "law-of-figure-ground": [
+    "текст поверх фотографии",
+    "отделить текст от фона",
+    "Text auf Foto lesbar"
+  ],
+  "state-machine": ["машина состояний", "состояния формы", "Zustandsautomat"],
+  "peak-end-rule": ["финал впечатления", "запоминающееся завершение", "Peak-End-Regel"],
+  "loading-states": ["скелетон загрузки", "состояние загрузки", "Ladezustand Skeleton"],
+  "gesture-patterns": ["жесты свайп", "перетаскивание галереи пальцем", "Gesten Wischen"],
+
+  "editorial-portfolio-chapters": [
+    "портфолио фотографа",
+    "главы проектов",
+    "студийное портфолио",
+    "Fotografen-Portfolio Kapitel"
+  ],
+  "documentary-brutalist-agency": [
+    "портфолио продакшн-студии",
+    "документальный стиль",
+    "Filmproduktion Portfolio"
+  ],
+  "image-first-grid-layout": [
+    "фото на весь экран в герое",
+    "сетка с фотографиями во главе",
+    "bildstarkes Raster"
+  ],
+  "split-layout-technical": [
+    "две панели медиа и характеристики",
+    "split layout",
+    "zweispaltig Medien Details"
+  ],
+  "technical-wireframe-info-layout": [
+    "каркасный технический 3d объект с подписями",
+    "wireframe hero",
+    "technische Wireframe-Darstellung"
+  ],
+  "framed-grid-layout": ["сетка в рамках", "уголки рамки", "gerahmtes Raster"]
+}

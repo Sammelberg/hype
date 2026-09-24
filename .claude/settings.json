@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/block-dangerous-git.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
@@ -75,6 +87,17 @@
       "Bash(npx graft:*)",
       "Bash(graft-dev:*)",
       "Bash(node dist/cli.js:*)"
-    ]
+    ],
+    "deny": ["mcp__claude_ai_Higsfield__*"]
+  },
+  "enabledPlugins": {
+    "stripe@claude-plugins-official": false
+  },
+  "skillOverrides": {
+    "copywriting": "off",
+    "seo-audit": "off",
+    "ai-seo": "off",
+    "product-marketing": "off",
+    "fixing-accessibility": "off"
   }
 }

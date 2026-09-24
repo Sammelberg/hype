@@ -914,11 +914,90 @@ export interface SiteSetting {
   ownerName: string;
   tagline?: string | null;
   description?: string | null;
+  /**
+   * Der erste Bildschirm: Textkarte links, Showreel rechts, darunter zwei gleich breite Link-Karten. Leere Felder fallen auf Name und Untertitel zurück.
+   */
+  hero?: {
+    /**
+     * Kurz, z. B. Ort und Arbeitsfelder.
+     */
+    eyebrow?: string | null;
+    /**
+     * Jede Zeile wird eine Zeile im Titel. Ein Punkt am Ende erscheint in der Akzentfarbe.
+     */
+    headline?: string | null;
+    intro?: string | null;
+    /**
+     * Beide Karten stehen gleichwertig nebeneinander.
+     */
+    links?:
+      | {
+          label: string;
+          /**
+           * Interner Pfad, z. B. /#projekte oder /kontakt.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
   contactEmail?: string | null;
   socialLinks?:
     | {
         label: string;
         url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Abschnitt „Kunden“: laufendes Logo-Band unter dem Einstieg. Logos als weiße Grafik mit transparentem Hintergrund (PNG, WebP oder SVG).
+   */
+  clients?:
+    | {
+        name: string;
+        logo: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Was Sie anbieten. Erscheint als Abschnitt „Leistungen“.
+   */
+  services?:
+    | {
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Bildschirmfüllende Sätze, die beim Scrollen nacheinander erscheinen. Ohne Sätze entfällt der Abschnitt.
+   */
+  manifesto?: {
+    phrases?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    caption?: string | null;
+  };
+  /**
+   * Fragen, die Interessierte oft stellen. Abschnitt „Häufige Fragen“.
+   */
+  faq?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Die Schritte eines Projekts, in Reihenfolge. Abschnitt „Ablauf“.
+   */
+  process?:
+    | {
+        title: string;
+        description: string;
         id?: string | null;
       }[]
     | null;
@@ -934,12 +1013,65 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   ownerName?: T;
   tagline?: T;
   description?: T;
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        headline?: T;
+        intro?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+      };
   contactEmail?: T;
   socialLinks?:
     | T
     | {
         label?: T;
         url?: T;
+        id?: T;
+      };
+  clients?:
+    | T
+    | {
+        name?: T;
+        logo?: T;
+        id?: T;
+      };
+  services?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  manifesto?:
+    | T
+    | {
+        phrases?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        caption?: T;
+      };
+  faq?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  process?:
+    | T
+    | {
+        title?: T;
+        description?: T;
         id?: T;
       };
   updatedAt?: T;

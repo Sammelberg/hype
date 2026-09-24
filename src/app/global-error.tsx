@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // Replaces the root layout when it fails, so globals.css and fonts are not available:
-// styles are inline and follow the OS colour scheme.
+// styles are inline and use the dark brand colours.
 export default function GlobalError({
   error,
   retry,
@@ -25,9 +25,9 @@ export default function GlobalError({
           placeItems: "center",
           padding: "1.3125rem",
           fontFamily: "system-ui, sans-serif",
-          colorScheme: "light dark",
-          background: "Canvas",
-          color: "CanvasText",
+          colorScheme: "dark",
+          background: "#0a0a0a",
+          color: "#f5f5f5",
         }}
       >
         <title>Fehler</title>

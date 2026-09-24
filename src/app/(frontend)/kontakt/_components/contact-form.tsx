@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { prefillValues } from "../_lib/prefill";
 import { HONEYPOT, STARTED_AT, type ContactField } from "../_lib/validation";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,15 @@ export function ContactForm({
 
   useEffect(() => {
     if (startedRef.current) startedRef.current.value = String(Date.now());
+    // Start values from the link (homepage configurator); never overwrite what is already typed.
+    for (const [name, value] of Object.entries(prefillValues(window.location.search, fields))) {
+      const input = formRef.current?.elements.namedItem(name);
+      if (input instanceof HTMLTextAreaElement || input instanceof HTMLInputElement) {
+        if (!input.value) input.value = value;
+      }
+    }
+    // Runs once on mount: later field changes must not refill the form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -174,7 +184,10 @@ export function ContactForm({
             <>
               {" "}
               oder schreiben Sie an{" "}
-              <a href={`mailto:${contactEmail}`} className="underline underline-offset-4">
+              <a
+                href={`mailto:${contactEmail}`}
+                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+              >
                 {contactEmail}
               </a>
             </>
@@ -189,7 +202,10 @@ export function ContactForm({
         </Button>
         <p className="text-sm text-muted-foreground">
           Hinweise zur Verarbeitung Ihrer Angaben finden Sie in der{" "}
-          <Link href={"/datenschutz" as never} className="underline underline-offset-4">
+          <Link
+            href={"/datenschutz" as never}
+            className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+          >
             Datenschutzerklärung
           </Link>
           .

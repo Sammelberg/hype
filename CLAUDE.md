@@ -12,13 +12,13 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 Application code lives in `src/` (`@/*` → `src/*`); the root holds configuration, `e2e/` and `scripts/`. Place new code by what it is:
 
-- `src/app/(frontend)/` — routes only: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche`, `/kontakt`, German `error.tsx`, placeholder icons, `opengraph-image.tsx`, `next/preview`.
+- `src/app/(frontend)/` — routes only: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche`, `/kontakt`, German `error.tsx`, logo icons (`icon.png`, `apple-icon.png`), `opengraph-image.tsx`, `next/preview`.
 - `src/app/(frontend)/<route>/_components/`, `_lib/` — code used by that one route (`kontakt/_components/contact-form.tsx`, `kontakt/_lib/validation.ts`). Promote it to `src/components/` or `src/lib/` once a second route needs it.
 - `src/app/(payload)/` — Payload admin and API, generated; `pnpm generate:importmap` after adding admin components. `src/app/` also holds `global-error.tsx`, `sitemap.ts`, `robots.ts`.
 - `src/cms/` — Payload schema: `collections/`, `globals/`, `hooks/` (Payload hooks such as revalidation), `plugins.ts`.
 - `src/data/` — server-only data layer: `payload.ts` (`getPayloadClient`), `queries.ts` (all frontend reads; React `cache`, draft-aware), `redirect-or-not-found.ts`.
 - `src/components/` — `ui/` shadcn (`pnpm dlx shadcn@latest add <name>`, then adapt), `site/` shared site components, `dev/` dev-only tools (Reticle bridge).
-- `src/lib/` — pure helpers with colocated `*.test.ts`: `seo.tsx`, `redirects.ts`, `initials.ts`, `utils.ts` (`cn` from the `cn` package).
+- `src/lib/` — pure helpers with colocated `*.test.ts`: `seo.tsx`, `redirects.ts`, `rich-text.ts`, `utils.ts` (`cn` from the `cn` package).
 - `src/payload.config.ts`, `src/payload-types.ts` (generated), `src/migrations/`, `src/env.ts` (validated env — import `env`, never `process.env`; new variables go into `env.ts` and `.env.example`).
 
 ## CMS (Payload)
@@ -37,13 +37,13 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
 ## Styling
 
 - `src/app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
-- **Dark mode follows the OS** (`prefers-color-scheme`); `dark:` variants and dark tokens are media-query based — there is no `.dark` class or toggle.
+- **Dark-only brand palette:** black and its shades + logo cyan `#01ccff` (`--primary`, `--ring`, charts). No light theme, no toggle; `dark:` variants always apply. Cyan marks interactive/primary things only.
 - **Fibonacci layout system** (overrides any skill that prescribes a 4/8 grid):
-  - page shell `page-container` (max 1536px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
+  - page shell `page-container` (max 1920px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
   - golden ratio: `aspect-golden` for covers and cards, `grid-cols-golden` (61.8/38.2) for text + sidebar;
   - Tailwind's default scale stays for component internals; long text keeps a reading width (`max-w-3xl`, `max-w-prose`);
   - `--container-sm…2xl` stay untouched — shadcn's `max-w-*` depend on them.
-- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`.
+- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`. Curves are the tokens in `globals.css`: `--ease-out` for entering and UI state, `--ease-in-out` for an element moving on screen, `--ease-drawer` for sheets; scrubbed scroll motion uses `ease: "none"`. UI durations stay on Tailwind's 150/200/300/500; only a single emphasis moment (hero line rise, manifesto roll) runs 0.8–1.1s.
 - `baseline-ui` is the default constraint set. Gradients, glow, custom easing or extra animation need an explicit request or a chosen art direction.
 - Reuse existing tokens, components and fonts; a new dependency needs approval.
 
@@ -51,29 +51,34 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
 
 Load the skill before starting the work.
 
-| Task                                      | Skills                                                                                                          |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                    |
-| Several design options to choose from     | `variate`                                                                                                       |
-| UI components                             | `shadcn` (existing component first), then `/break` on anything rendering CMS content                            |
-| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                            |
-| Component motion, hovers, dialogs, cmdk   | `animate` + `emil-design-eng`; `apple-design` for springs/gestures                                              |
-| Scroll-driven motion, pinning, parallax   | `gsap-scrolltrigger`, `gsap-react` (+ Lenis)                                                                    |
-| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                            |
-| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                     |
-| Accessibility                             | `fixing-accessibility` — every new interactive UI                                                               |
-| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)              |
-| Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen` |
-| Project pages / case studies              | `case-study`, then `copywriting-de`                                                                             |
-| Payload collections / data model          | `domain-modeling`, `codebase-design`                                                                            |
-| New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                              |
-| Bug or regression                         | `diagnosing-bugs`                                                                                               |
-| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                           |
-| Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                |
-| Editing CLAUDE.md or a skill              | `writing-for-agents` (via `skill-router`)                                                                       |
-| Nothing above fits / a specific effect    | `skill-router` — the ~460-skill library in `.claude/skills-library/` (local only; project rules win)            |
+| Task                                      | Skills                                                                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| New page, section or visual direction     | `frontend-design`, then `baseline-ui` as the constraint pass                                                                |
+| Several design options to choose from     | `variate`                                                                                                                   |
+| UI components                             | `shadcn` (existing component first), then `/break` on anything rendering CMS content                                        |
+| Typography / colour / tokens              | `better-typography`, `better-colors`                                                                                        |
+| Component motion, hovers, dialogs, cmdk   | `animate` + `emil-design-eng`; `apple-design` for springs/gestures                                                          |
+| Scroll-driven motion, pinning, parallax   | `gsap-scrolltrigger`, `gsap-react`, `gsap-timeline` for sequences (+ Lenis); `gsap-performance` against jank                |
+| Scroll or gesture behaviour to verify     | `verify-interaction` — wheel/trackpad/touch profiles, e2e spec, user's device                                               |
+| Where could motion help / audit motion    | `find-animation-opportunities`, `/review-animations`                                                                        |
+| Naming an effect the user describes       | `animation-vocabulary` via `skill-router` — settle the term before building                                                 |
+| 3D hero / object from a reference image   | `img2threejs` (R3F + drei + postprocessing)                                                                                 |
+| Accessibility                             | `better-accessibility` — every new interactive UI                                                                           |
+| Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)                          |
+| Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen`             |
+| Project pages / case studies              | `case-study`, then `copywriting-de`                                                                                         |
+| Payload collections / data model          | `domain-modeling`, `codebase-design`; `cms-section` to carry a schema change end to end                                     |
+| New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                                          |
+| Bug or regression                         | `diagnosing-bugs`                                                                                                           |
+| Security review                           | `security-audit` via `skill-router`                                                                                         |
+| Work with 5+ steps or spanning sessions   | `planning-with-files`                                                                                                       |
+| Finding code, callers, impact of a change | graft (`graft ask`, `graft callers`) before grep                                                                            |
+| Editing CLAUDE.md or a skill              | `writing-for-agents`                                                                                                        |
+| Nothing above fits / a specific effect    | the library catalog below first, then `skill-router` for the rest of the ~470-skill library (local only; project rules win) |
 
 `minimalist-ui` and `industrial-brutalist-ui` only on explicit request. `web-design-engineer` is for standalone HTML prototypes.
+
+@.claude/skills/skill-router/CATALOG.md
 
 ## Data sovereignty (hard rule)
 
@@ -90,7 +95,7 @@ No user, visitor or content data leaves our own infrastructure.
 
 - Local: `pnpm db:up` (Postgres on 5433), `pnpm seed`, `pnpm dev`. Scripts are in `package.json`.
 - `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
-- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-mode a11y). Needs `pnpm seed`.
+- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-only palette + a11y), `menu` (open/close keeps scroll position and layout; runs with real scrollbars), `manifesto` (one wheel notch per phrase; desktop only). Needs `pnpm seed`.
 - `pnpm knip` — run by hand; it lists planned-but-unused dependencies (motion, gsap, three, …) that stay on purpose.
 - Commits: Conventional Commits (commitlint hook); pre-commit runs lint-staged. Prettier with Tailwind class sorting runs on every edited file via `.claude/hooks/format-on-edit.mjs`.
 - CI (`.github/workflows/ci.yml`): format:check, typecheck, lint, test, migrate, seed, build, Playwright (production build). Dependabot weekly.
@@ -102,14 +107,15 @@ No user, visitor or content data leaves our own infrastructure.
 - **React Compiler lint:** `Date.now()` and other impure calls are rejected during render — compute them at module scope or in an effect.
 - **Local database runs in Payload dev-push mode:** `pnpm migrate` on it waits for an interactive prompt. Test a migration on a scratch database: `createdb` inside the container, `DATABASE_URL=… pnpm migrate && pnpm seed`, then drop it (seed files land in `/media` — remove the extras).
 - **e2e in dev:** Reticle overlays can swallow clicks; `e2e/features.spec.ts` hides them in `beforeEach` — reuse that for new interaction tests.
+- **Stale dev SSR:** after a client component is edited, `next dev` can keep serving the old server HTML; a hydration mismatch naming the old `className` means restart it, not a bug.
 - **Stopping the dev server:** `pkill -f "[n]ext dev"` — an unbracketed pattern also matches the invoking shell.
 - **Skill names:** user-level skills in `~/.claude/skills` shadow project skills of the same name; project variants get a suffix (`-de`).
 
 ## Definition of done
 
 1. `pnpm check` passes.
-2. New interactive UI passed `fixing-accessibility`.
-3. The changed flow is verified in the running app (Reticle; a Playwright script for viewport-dependent checks).
+2. New interactive UI passed `better-accessibility`.
+3. The changed flow is verified in the running app (Reticle; scroll and gesture behaviour via `verify-interaction`).
 4. `pnpm test:e2e` passes, including data sovereignty; new routes are in `SEED_PATHS`.
 
 <!-- BEGIN:nextjs-agent-rules -->

@@ -8,7 +8,10 @@ export default function NotFound() {
       <p className="mt-4 text-pretty text-muted-foreground">
         Die angeforderte Seite existiert nicht oder wurde verschoben.
       </p>
-      <Link href="/" className="mt-8 inline-block underline underline-offset-4">
+      <Link
+        href="/"
+        className="mt-8 inline-block underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+      >
         Zur Startseite
       </Link>
     </main>

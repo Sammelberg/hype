@@ -42,7 +42,10 @@ export default async function ContactPage() {
             <>
               {" "}
               Sie erreichen mich per E-Mail an{" "}
-              <a href={`mailto:${settings.contactEmail}`} className="underline underline-offset-4">
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+              >
                 {settings.contactEmail}
               </a>
               .

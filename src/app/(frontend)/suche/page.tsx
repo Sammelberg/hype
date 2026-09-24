@@ -70,7 +70,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   </p>
                   <Link
                     href={result.url as never}
-                    className="mt-1 inline-block font-medium underline-offset-4 hover:underline"
+                    className="mt-1 inline-block font-medium decoration-primary underline-offset-4 hover:underline"
                   >
                     {result.title}
                   </Link>
@@ -85,7 +85,10 @@ export default async function SearchPage({ searchParams }: Props) {
           ) : (
             <p className="mt-fib-md text-pretty text-muted-foreground">
               Versuchen Sie einen anderen Begriff oder sehen Sie sich die{" "}
-              <Link href="/#projekte" className="underline underline-offset-4">
+              <Link
+                href="/#projekte"
+                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+              >
                 Projekte
               </Link>{" "}
               an.

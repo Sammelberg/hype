@@ -13,12 +13,10 @@ import { getSiteSettings } from "@/data/queries";
 
 import "./globals.css";
 
-// Browser UI colour matches --background in light and dark mode (globals.css).
+// Browser UI colour matches --background; the site is dark-only (globals.css).
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#0a0a0a",
+  colorScheme: "dark",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -48,7 +46,11 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         >
           Zum Inhalt springen
         </a>
-        <SiteHeader siteName={settings.siteName || "Portfolio"} />
+        <SiteHeader
+          siteName={settings.siteName || "Portfolio"}
+          contactEmail={settings.contactEmail}
+          socialLinks={settings.socialLinks}
+        />
         <div id="inhalt" className="flex-1">
           {children}
         </div>

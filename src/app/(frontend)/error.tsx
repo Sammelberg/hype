@@ -39,7 +39,10 @@ export default function ErrorPage({
       ) : null}
       <div className="mt-8 flex flex-wrap items-center gap-6">
         <Button onClick={() => retry()}>Erneut versuchen</Button>
-        <Link href="/" className="underline underline-offset-4">
+        <Link
+          href="/"
+          className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+        >
           Zur Startseite
         </Link>
       </div>

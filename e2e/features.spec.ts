@@ -63,15 +63,21 @@ test.describe("contact form", () => {
   });
 });
 
-test.describe("dark mode", () => {
-  test.use({ colorScheme: "dark" });
+test.describe("dark-only palette", () => {
+  // A light OS setting must not bring back a light theme.
+  test.use({ colorScheme: "light" });
 
   for (const path of ["/", "/kontakt", `/projekte/${SEED_REDIRECT.toProject}`]) {
-    test(`${path} has no a11y violations in dark mode`, async ({ page }) => {
+    test(`${path} stays dark and has no a11y violations`, async ({ page }) => {
       await page.goto(path);
-      // The dark tokens must actually apply: the page background is not the light one.
-      const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      expect(background).not.toMatch(/^(rgb\(255, 255, 255\)|oklch\(1 0 0\))$/);
+      // Paint the computed colour to a canvas so any notation (oklch, lab, rgb) becomes sRGB bytes.
+      const [r, g, b] = await page.evaluate(() => {
+        const ctx = document.createElement("canvas").getContext("2d")!;
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillRect(0, 0, 1, 1);
+        return [...ctx.getImageData(0, 0, 1, 1).data];
+      });
+      expect(Math.max(r!, g!, b!)).toBeLessThan(20); // --background #0a0a0a
       const { violations } = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa"])
         .exclude('[class*="reticle-"]')

@@ -14,7 +14,10 @@ export function RichText({
   return (
     <PayloadRichText
       data={data}
-      className={cn("prose max-w-none prose-neutral dark:prose-invert", className)}
+      className={cn(
+        "prose max-w-none prose-neutral prose-invert prose-a:decoration-primary prose-a:underline-offset-4 prose-a:transition-colors hover:prose-a:text-primary",
+        className,
+      )}
     />
   );
 }

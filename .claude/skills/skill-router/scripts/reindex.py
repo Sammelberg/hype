@@ -56,12 +56,27 @@ def read_skill(d, cat, active, problems):
         problems.append(f"имя не совпадает с папкой: {cat}/{name} -> name: {fm_name}")
     if not fm_name:
         problems.append(f"нет поля name: {cat}/{name}")
-    m = re.search(r"^description:\s*(.+?)$", raw, re.M)
-    desc = (m.group(1).strip().strip("\"'") if m else "")[:400]
+    m = re.search(r"^description:\s*(.*?)$", raw, re.M)
+    desc = m.group(1).strip() if m else ""
+    if m and desc in ("", ">", ">-", "|", "|-"):
+        # YAML block scalar: the description is the indented lines that follow.
+        tail = raw[m.end():].split("\n")[1:]
+        block = []
+        for line in tail:
+            if line.strip() and not line.startswith((" ", "\t")):
+                break
+            block.append(line.strip())
+        desc = " ".join(x for x in block if x)
+    desc = desc.strip("\"'")[:400]
     if not desc:
         problems.append(f"нет описания: {cat}/{name}")
     body = raw[:8000]
     heads = " ".join(re.findall(r"^#{1,3}\s+(.+)$", body, re.M))
+    # Text of the skill without frontmatter and code blocks: route.py searches it with a low
+    # weight, so terms that only live inside the skill ("before/after", "offscreen") still hit.
+    text = re.sub(r"\A---.*?^---\s*$", "", raw, flags=re.S | re.M)
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    text = re.sub(r"\s+", " ", text)[:6000]
     refs = [x for x in os.listdir(d) if x.endswith(".md") and x != "SKILL.md"]
     sub = os.path.join(d, "references")
     if os.path.isdir(sub):
@@ -72,6 +87,7 @@ def read_skill(d, cat, active, problems):
         "desc": desc,
         "kw": keywords(desc + " " + heads + " " + name.replace("-", " ")),
         "refs": sorted(refs)[:12],
+        "body": text,
     }
 
 
