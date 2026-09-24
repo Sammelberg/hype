@@ -9,6 +9,7 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 import styles from "./mountain-scene.module.css";
+import { bindStarfield } from "./starfield";
 
 // Tiers of the fir, bottom to top (viewBox 0 0 200 560).
 const FIR_TIERS = [
@@ -184,6 +185,35 @@ export function MountainHero({
         gsap.set("[data-accent]", { opacity: 0.6 });
         markDrawn();
       });
+
+      // Starry sky over the whole first screen: fades in with the ridge draw, twinkles on GSAP's
+      // ticker while the hero is on screen (the ticker also idles in hidden tabs); reduced motion
+      // shows it still.
+      const canvas = hero.current?.querySelector<HTMLCanvasElement>("[data-stars]");
+      if (!canvas) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const sky = bindStarfield(canvas, { still: reduced });
+      const fade = { value: reduced ? 1 : 0 };
+      const tick = () => sky.render(gsap.ticker.time, fade.value);
+      if (reduced) {
+        tick();
+      } else {
+        gsap.to(fade, { value: 1, duration: 1.8, delay: 0.5, ease: "power1.inOut" });
+        const toggle = ({ isActive }: ScrollTrigger) =>
+          isActive ? gsap.ticker.add(tick) : gsap.ticker.remove(tick);
+        toggle(
+          ScrollTrigger.create({
+            trigger: hero.current,
+            start: "top bottom",
+            end: "bottom top",
+            onToggle: toggle,
+          }),
+        );
+      }
+      return () => {
+        gsap.ticker.remove(tick);
+        sky.destroy();
+      };
     },
     { scope: hero },
   );
@@ -194,9 +224,10 @@ export function MountainHero({
       aria-labelledby={labelledBy}
       className={cn(
         styles.hero,
-        "flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
+        "relative isolate flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",
       )}
     >
+      <canvas data-stars aria-hidden="true" className={styles.stars} />
       {children}
       <div data-scene aria-hidden="true" className={cn(styles.scene, "mt-auto")}>
         <div className={styles.ridges}>

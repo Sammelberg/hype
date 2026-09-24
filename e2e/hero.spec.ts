@@ -68,6 +68,24 @@ test("the firs pause once the hero is off-screen and resume on return", async ({
   await expect(scene).not.toHaveAttribute("data-paused", "");
 });
 
+// Lit pixels of the star canvas, summed alpha — a twinkling sky changes it between frames.
+const starlight = (page: Page) =>
+  page.locator("[data-stars]").evaluate((canvas: HTMLCanvasElement) => {
+    const { data } = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+    let sum = 0;
+    for (let i = 3; i < data.length; i += 4) sum += data[i]!;
+    return sum;
+  });
+
+test("the sky fills with stars that twinkle", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  const first = await starlight(page);
+  expect(first).toBeGreaterThan(0);
+  await page.waitForTimeout(400);
+  expect(await starlight(page)).not.toBe(first);
+});
+
 test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
@@ -76,5 +94,10 @@ test.describe("reduced motion", () => {
     await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "");
     const { opacity, complete } = await outline(page);
     expect({ opacity, complete }).toEqual({ opacity: 1, complete: true });
+    // A still sky: stars are drawn and stay as they are.
+    const first = await starlight(page);
+    expect(first).toBeGreaterThan(0);
+    await page.waitForTimeout(400);
+    expect(await starlight(page)).toBe(first);
   });
 });
