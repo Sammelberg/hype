@@ -23,12 +23,12 @@ export type Light = {
   life: number;
 };
 
-/** Warm, muted glows — champagne, warm ivory, pale gold — so the lights read as fireflies and never
- * as the cold white-and-ice stars. Kept soft and desaturated: warm light, not orange. */
-export const LIGHT_TINTS = ["255, 222, 168", "255, 238, 212", "242, 204, 142"] as const;
+/** Warm golden glows — soft gold, pale honey, deeper gold (hue 37–40°) — so the lights read as
+ * fireflies and never as the cold white-and-ice stars. Golden, not orange. */
+export const LIGHT_TINTS = ["255, 208, 130", "255, 226, 172", "236, 188, 104"] as const;
 
 /** Heart of every light: a warm white. */
-const HEART = "255, 249, 238";
+const HEART = "255, 244, 220";
 
 /** One light per this many CSS px of width, 6 to MAX_LIGHTS (the block shows 16). */
 export const WIDTH_PER_LIGHT = 150;
