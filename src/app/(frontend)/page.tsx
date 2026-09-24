@@ -118,8 +118,9 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
-          {/* Above the headline on phones, beside it from lg up. */}
-          <TriangleMotif className="order-first w-36 sm:w-44 lg:order-none lg:w-[clamp(200px,24vw,340px)] 3xl:w-[clamp(340px,20vw,480px)]" />
+          {/* Above the headline on phones; from lg up a quiet accent at the level of the buttons,
+              leaving the sky above free for the moon. */}
+          <TriangleMotif className="order-first w-28 sm:w-32 lg:order-none lg:mb-2 lg:w-[clamp(170px,14vw,230px)] lg:self-end 3xl:w-[clamp(230px,11vw,280px)]" />
         </div>
       </MountainHero>
 
