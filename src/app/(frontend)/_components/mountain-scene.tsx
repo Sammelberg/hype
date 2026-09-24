@@ -100,7 +100,7 @@ export function MountainHero({
   // Motion engine (GSAP, scoped to the hero, reverted on unmount). The block's own animation, kept
   // as designed and rendered more exactly:
   // - the ridge outline draws over its measured length (DrawSVG) instead of a guessed dash of 2200,
-  //   while a thick stroke melts into the 1.5px outline and the glow fades;
+  //   while a thick stroke melts into the 2.5px outline and the glow fades;
   // - the highlight arc follows; both start the first time the scene comes into view;
   // - off-screen, the CSS sway of the firs pauses.
   // Reduced motion: the finished scene (the sway stops in CSS).
@@ -108,7 +108,7 @@ export function MountainHero({
     () => {
       const mm = gsap.matchMedia();
       const scene = hero.current?.querySelector<HTMLElement>("[data-scene]");
-      // data-drawn marks the finished outline (e2e/hero.spec.ts); CSS then keeps it 1.5px wide.
+      // data-drawn marks the finished outline (e2e/hero.spec.ts); CSS then keeps it 2.5px wide.
       const markDrawn = () => scene?.setAttribute("data-drawn", "");
 
       // onToggle fires only on a change, so the state is also set right away (a page reloaded
@@ -138,7 +138,7 @@ export function MountainHero({
         // on the compositor instead of re-blurring every frame.
 
         // Fixed stroke widths in SVG units that equal the block's screen pixels.
-        gsap.set("[data-line]", { strokeWidth: 1.5 * px, autoRound: false });
+        gsap.set("[data-line]", { strokeWidth: 2.5 * px, autoRound: false });
         gsap.set("[data-trail] path", { strokeWidth: 6 * px, autoRound: false });
 
         gsap
@@ -158,7 +158,7 @@ export function MountainHero({
           )
           .fromTo("[data-line]", { strokeOpacity: 0 }, { strokeOpacity: 1, ...draw }, 0)
           // The thick stroke rises and melts away (opacity, on the compositor): the eye reads the
-          // outline thinning from 8px to 1.5px, while no stroke width changes — animating a width
+          // outline thinning to 2.5px, while no stroke width changes — animating a width
           // below ~2px made its anti-aliasing flicker along the diagonals near the end.
           .fromTo(
             "[data-trail]",

@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-// The finished outline: fully opaque, no dash gap left, the block's 1.5px screen width.
+// The finished outline: fully opaque, no dash gap left, its 2.5px screen width.
 const outline = (page: Page) =>
   page.locator("[data-line]").evaluate((el) => {
     const style = getComputedStyle(el);
@@ -45,7 +45,7 @@ test("the ridge outline draws once and ends complete", async ({ page }) => {
   expect(await outline(page)).toEqual({
     opacity: 1,
     complete: true,
-    width: "1.5px",
+    width: "2.5px",
     vectorEffect: "non-scaling-stroke",
   });
 });

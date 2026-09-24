@@ -63,11 +63,11 @@
 
 /* Front ridge: filled from the start; GSAP draws its outline (DrawSVG) and reveals it, or sets the
    finished state for reduced motion. While drawing, the stroke scales with the SVG; once drawn
-   (data-drawn) it is the block's constant 1.5px. */
+   (data-drawn) it is a constant 2.5px — the block's 1.5px read too thin. */
 .draw {
   fill: var(--main);
   stroke: var(--main-stroke);
-  stroke-width: 1.5;
+  stroke-width: 2.5;
   stroke-opacity: 0;
 }
 
