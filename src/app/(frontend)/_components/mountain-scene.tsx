@@ -81,6 +81,10 @@ const TREES: Tree[] = [
 
 const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore };
 
+/** Brightness the ridge outline and its highlight settle to after the draw (e2e/hero.spec.ts checks it). */
+const RIDGE_REST = 0.45;
+const ACCENT_REST = 0.3;
+
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
 // Front ridge of the block: a closed ribbon, filled from the start; its outline is drawn.
@@ -194,13 +198,18 @@ export function MountainHero({
             { drawSVG: "0%", strokeOpacity: 0 },
             { drawSVG: "100%", strokeOpacity: 1, duration: 1, ease: "power4.out" },
             2.5,
-          );
+          )
+          // Once everything is drawn, the ridge settles: its outline and highlight dim to a quiet
+          // sketch, so the bright line belongs to the drawing and not to the resting scene.
+          .to("[data-line]", { strokeOpacity: RIDGE_REST, duration: 1.8, ease: "sine.inOut" }, 3.2)
+          .to("[data-accent]", { opacity: ACCENT_REST, duration: 1.8, ease: "sine.inOut" }, 3.2);
       });
 
       mm.add("(prefers-reduced-motion: reduce)", () => {
-        gsap.set("[data-line], [data-tri-centre], [data-tri-side]", { strokeOpacity: 1 });
+        gsap.set("[data-tri-centre], [data-tri-side]", { strokeOpacity: 1 });
+        gsap.set("[data-line]", { strokeOpacity: RIDGE_REST });
         gsap.set("[data-tri-dot]", { opacity: 1 });
-        gsap.set("[data-accent]", { opacity: 0.6 });
+        gsap.set("[data-accent]", { opacity: ACCENT_REST });
         markDrawn();
       });
 

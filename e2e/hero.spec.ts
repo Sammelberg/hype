@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-// The finished outline: fully opaque, no dash gap left, its 2.5px screen width.
+// The finished outline: settled to its quiet resting brightness, no dash gap left, 2.5px wide.
 const outline = (page: Page) =>
   page.locator("[data-line]").evaluate((el) => {
     const style = getComputedStyle(el);
@@ -43,7 +43,7 @@ test("the ridge outline draws once and ends complete", async ({ page }) => {
 
   await expect(scene).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
   expect(await outline(page)).toEqual({
-    opacity: 1,
+    opacity: 0.45,
     complete: true,
     width: "2.5px",
     vectorEffect: "non-scaling-stroke",
@@ -131,7 +131,7 @@ test.describe("reduced motion", () => {
     await page.goto("/");
     await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "");
     const { opacity, complete } = await outline(page);
-    expect({ opacity, complete }).toEqual({ opacity: 1, complete: true });
+    expect({ opacity, complete }).toEqual({ opacity: 0.45, complete: true });
     expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
     // Still lights, drawn once.
     const glow = await lightGlow(page);
