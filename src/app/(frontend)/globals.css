@@ -11,8 +11,7 @@
  *   foreground on background 18.1 · on card 17.3 · muted-foreground on background 9.0 · on secondary 7.9
  *   primary-soft on background 10.4 · on card 9.9 · primary-foreground on primary 5.9
  *   primary (fill) on background 3.3 (UI component ≥ 3) · destructive on background 6.4
- * Both accents are kept soft (moonlight, not neon); the only warm tone is the fireflies' gold,
- * echoed once by the triangle motif's peak.
+ * Both accents are kept soft (moonlight, not neon); the only warm tone is the fireflies' gold.
  */
 @custom-variant dark (&:where(*));
 

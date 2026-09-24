@@ -1,12 +1,11 @@
 /*
- * Triangle motif: the block's gold peak kept as soft gold (it echoes the fireflies), sapphire left,
- * starlight right, muted navy connectors.
+ * Triangle motif in the site's cool light (the owner turned down the gold peak): moonlit ice centre,
+ * sapphire left, starlight right, muted navy connectors.
  * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden; mountain-scene.tsx draws them (or shows them for reduced motion).
  */
 .motif {
-  /* The peak in soft gold, as in the owner's block: it answers the fireflies' warm light. */
-  --tri-centre: oklch(0.86 0.075 85);
-  --tri-centre-dot: oklch(0.84 0.11 80);
+  --tri-centre: var(--primary-soft);
+  --tri-centre-dot: var(--primary-soft);
   --tri-left: oklch(0.64 0.12 256);
   --tri-right: oklch(0.93 0.015 250);
   --tri-connector: oklch(0.45 0.09 262);
