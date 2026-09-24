@@ -21,7 +21,7 @@ Tailwind v4 · shadcn/ui · TypeScript · pnpm. Немецкий интерфе�
 ### Из GitHub-шаблона
 
 ```bash
-gh repo create kunde-x --template <owner>/starter --private --clone
+gh repo create kunde-x --template Sammelberg/start --private --clone
 cd kunde-x
 pnpm install
 pnpm init:project
