@@ -1,14 +1,13 @@
 /*
- * Triangle motif in gem tones (the owner's pick, „Edelsteine“ no. 8): a diamond peak with a fine
- * sparkle, deep emerald on the left, deep sapphire on the right, turquoise connectors.
- * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes, dots and the sparkle
- * start hidden; mountain-scene.tsx draws them (or shows them for reduced motion).
+ * Triangle motif in gem tones (the owner's pick, „Edelsteine“ no. 10): a diamond peak, emerald on
+ * the left, sapphire on the right, turquoise connectors.
+ * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden; mountain-scene.tsx draws them (or shows them for reduced motion).
  */
 .motif {
   --tri-centre: oklch(0.978 0.006 230); /* diamond #f4f8fb */
   --tri-centre-dot: oklch(0.978 0.006 230);
-  --tri-left: oklch(0.58 0.12 164); /* deep emerald #109067 */
-  --tri-right: oklch(0.52 0.13 260); /* deep sapphire #3967b3 */
+  --tri-left: oklch(0.7 0.14 162); /* emerald #2fb983 */
+  --tri-right: oklch(0.64 0.12 256); /* sapphire #598ed4 */
   --tri-connector: oklch(0.78 0.11 192); /* turquoise #50cec9 */
 }
 
@@ -59,37 +58,4 @@
 
 .dotRight {
   fill: var(--tri-right);
-}
-
-/* Diamond sparkle on the peak: a fine four-point glint. GSAP fades the wrapper in with the dots;
-   the glint itself breathes (scale, a slight turn) — still for reduced motion. */
-.sparkle {
-  opacity: 0;
-}
-
-.glint {
-  fill: oklch(1 0 0);
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: glint 2.6s ease-in-out infinite;
-}
-
-@keyframes glint {
-  0%,
-  100% {
-    transform: scale(0.55) rotate(0deg);
-    opacity: 0.55;
-  }
-  50% {
-    transform: scale(1) rotate(12deg);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .glint {
-    animation: none;
-    transform: scale(0.8);
-    opacity: 0.8;
-  }
 }
