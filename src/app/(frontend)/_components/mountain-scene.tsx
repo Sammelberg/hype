@@ -216,15 +216,18 @@ export function MountainHero({
       if (!root || !starCanvas || !lightCanvas || !skyCanvas) return;
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // The moon sits in the free sky above the triangle motif from lg up, small in the top
-      // right corner on narrower screens.
+      // The moon sits high in the free sky, up and to the left of the triangle motif from lg up,
+      // small in the upper right on narrower screens.
       const moon = () => {
         const box = root.getBoundingClientRect();
         const motif = root.querySelector("[data-motif]")?.getBoundingClientRect();
         const wide = window.innerWidth >= 1024;
         return {
-          x: wide && motif ? motif.left + motif.width / 2 - box.left : box.width * 0.82,
-          y: wide ? Math.max(96, box.height * 0.15) : 72,
+          x:
+            wide && motif
+              ? motif.left + motif.width / 2 - box.left - box.width * 0.12
+              : box.width * 0.74,
+          y: wide ? Math.max(52, box.height * 0.06) : 48,
           r: window.innerWidth >= 1920 ? 46 : wide ? 38 : 24,
         };
       };
