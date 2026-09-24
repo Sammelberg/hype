@@ -10,7 +10,7 @@ Filled in per project. When a task depends on a point still marked _offen_, ask 
 
 - **Site / owner:** Schwarzwald Systems (legal form, address and contact e-mail _offen_; seed uses `hallo@example.com`)
 - **Purpose and audience:** corporate site of a custom-software company (web apps, mobile apps, integrations, modernisation, operations) for German Mittelstand decision-makers; main job: project inquiries via `/kontakt`. Home copy is a draft — its claims (code handover, fixed contacts, hosting in Germany) await the owner's confirmation.
-- **Design direction:** „Tannennacht und Harz“ — dark-only; fir-tinted near-black neutrals (hue 165, from the name) and one resin-amber accent (hue 72) for interactive/primary things; tokens and measured contrast in `globals.css`. Geist, tight large headings. Brand mark: the fir in `src/components/site/fir-mark.tsx` (icons and share image use it — never the initials). Hero: the mountain block in site colours, amber ridge draw.
+- **Design direction:** „Deep Space“ — dark-only in space navy, indigo and blue: navy-tinted neutrals (hue 270) and one indigo-blue accent (hue 272) for interactive/primary things; tokens and measured contrast in `globals.css`. No orange, no green. Geist, tight large headings. Brand mark: the fir in `src/components/site/fir-mark.tsx` (icons and share image use it — never the initials). Hero: the owner's mountain block in navy with its original draw animation (GSAP renders it: exact path length, starts in view); change the look only on request.
 - **Hosting:** own server at IONOS (Germany); no Vercel-specific features.
 - **Deviations from the template defaults below:** none.
 

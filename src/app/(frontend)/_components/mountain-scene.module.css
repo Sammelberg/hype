@@ -1,22 +1,22 @@
 /*
  * Mountains and firs („Berge und Tannen“ block, supplied by the owner): its own composition,
- * sizes and motion, coloured in the site palette — ridges in fir greens fading into the night,
- * the front ridge drawn in resin amber (the accent). The scene closes off the first screen.
+ * sizes and motion, coloured in the site palette — navy ridges fading into deep space, the front
+ * ridge drawn in indigo blue (the accent) with its glow. The scene closes off the first screen.
  * The scene is as tall as its tallest fir (112% of the forest), so content above never meets it;
  * the ridges are wider than small screens and are clipped sideways only.
  */
 .hero {
-  --far: oklch(0.235 0.022 165);
-  --far-stroke: oklch(0.76 0.022 165 / 0.18);
-  --mid: oklch(0.195 0.02 165);
-  --mid-stroke: oklch(0.76 0.022 165 / 0.24);
-  --main: oklch(0.13 0.014 165);
+  --far: oklch(0.3 0.075 268);
+  --far-stroke: oklch(0.77 0.08 268 / 0.35);
+  --mid: oklch(0.24 0.065 268);
+  --mid-stroke: oklch(0.72 0.1 270 / 0.4);
+  --main: oklch(0.14 0.045 268);
   --main-stroke: var(--primary);
-  --glow: oklch(0.8 0.135 72 / 0.45);
+  --glow-rgb: 134, 158, 252; /* --primary as RGB, for the animated glow (mountain-scene.tsx) */
   --accent-line: var(--foreground);
-  --tree-back: oklch(0.29 0.03 165);
-  --tree-mid: oklch(0.17 0.02 165);
-  --tree-fore: oklch(0.1 0.012 165);
+  --tree-back: oklch(0.34 0.08 268);
+  --tree-mid: oklch(0.2 0.055 268);
+  --tree-fore: oklch(0.1 0.035 268);
 }
 
 .scene {
@@ -61,17 +61,18 @@
   vector-effect: non-scaling-stroke;
 }
 
-/* The front ridge draws itself: a thick glowing line that settles into a hairline. It waits for
-   data-seen (mountain-scene.tsx), so a scene below the fold draws when it scrolls in. */
+/* Front ridge: filled from the start; GSAP draws its outline (DrawSVG) and reveals it, or sets the
+   finished state for reduced motion. While drawing, the stroke scales with the SVG; once drawn
+   (data-drawn) it is the block's constant 1.5px. */
 .draw {
   fill: var(--main);
   stroke: var(--main-stroke);
   stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 2200;
-  stroke-dashoffset: 2200;
   stroke-opacity: 0;
-  animation: draw 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards paused;
+}
+
+.scene[data-drawn] .draw {
+  vector-effect: non-scaling-stroke;
 }
 
 .accent {
@@ -79,40 +80,7 @@
   stroke: var(--accent-line);
   stroke-width: 3;
   stroke-linecap: round;
-  stroke-dasharray: 420;
-  stroke-dashoffset: 420;
   opacity: 0;
-  animation: accent 2.2s var(--ease-in-out, cubic-bezier(0.77, 0, 0.175, 1)) 0.5s forwards paused;
-}
-
-.scene[data-seen] :is(.draw, .accent) {
-  animation-play-state: running;
-}
-
-@keyframes draw {
-  0% {
-    stroke-dashoffset: 2200;
-    stroke-width: 8;
-    stroke-opacity: 0;
-    filter: drop-shadow(0 0 16px var(--glow));
-  }
-  50% {
-    stroke-width: 4;
-    stroke-opacity: 0.4;
-  }
-  100% {
-    stroke-dashoffset: 0;
-    stroke-width: 1.5;
-    stroke-opacity: 1;
-    filter: none;
-  }
-}
-
-@keyframes accent {
-  to {
-    stroke-dashoffset: 0;
-    opacity: 0.6;
-  }
 }
 
 /* ── Firs ── */
@@ -163,7 +131,7 @@
   }
 }
 
-/* Off-screen or in a hidden tab the sway stops (set by mountain-scene.tsx). */
+/* Off-screen the sway stops (a ScrollTrigger in mountain-scene.tsx sets data-paused). */
 .scene[data-paused] .tree {
   animation-play-state: paused;
 }
@@ -171,18 +139,6 @@
 @media (prefers-reduced-motion: reduce) {
   .tree {
     animation: none;
-  }
-
-  .draw {
-    animation: none;
-    stroke-dashoffset: 0;
-    stroke-opacity: 1;
-  }
-
-  .accent {
-    animation: none;
-    stroke-dashoffset: 0;
-    opacity: 0.6;
   }
 }
 

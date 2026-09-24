@@ -15,7 +15,7 @@ import "./globals.css";
 
 // Browser UI colour matches --background (globals.css): the site is dark-only.
 export const viewport: Viewport = {
-  themeColor: "#070e0b",
+  themeColor: "#070c1e",
   colorScheme: "dark",
 };
 

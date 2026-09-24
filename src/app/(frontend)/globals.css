@@ -4,11 +4,11 @@
 @plugin "@tailwindcss/typography";
 
 /*
- * Schwarzwald Systems — „Tannennacht und Harz“: a dark-only site. Neutrals are fir-tinted near-black
- * (hue 165, the Black Forest the name comes from); the one accent is resin amber (hue 72) and marks
- * interactive and primary things only. Measured WCAG contrast (oklch → sRGB, WCAG 2):
- *   foreground on background 17.2 · on card 16.0 · muted-foreground on background 9.2 · on secondary 7.6
- *   primary on background 10.2 · primary-foreground on primary 9.5 · destructive on background 6.2
+ * Schwarzwald Systems — „Deep Space“: a dark-only site in space navy, indigo and blue. Neutrals are
+ * navy-tinted (hue 270); the one accent is indigo blue (hue 272) and marks interactive and primary
+ * things only. Measured WCAG contrast (oklch → sRGB, WCAG 2):
+ *   foreground on background 17.3 · on card 16.2 · muted-foreground on background 9.4 · on secondary 7.7
+ *   primary on background 7.7 · on card 7.2 · primary-foreground on primary 7.6 · destructive 6.2
  */
 @custom-variant dark (&:where(*));
 
@@ -80,37 +80,37 @@
 :root {
   color-scheme: dark;
   --radius: 0.5rem;
-  --background: oklch(0.155 0.014 165);
-  --foreground: oklch(0.955 0.008 165);
-  --card: oklch(0.195 0.017 165);
-  --card-foreground: oklch(0.955 0.008 165);
-  --popover: oklch(0.195 0.017 165);
-  --popover-foreground: oklch(0.955 0.008 165);
-  --primary: oklch(0.8 0.135 72);
-  --primary-foreground: oklch(0.2 0.035 72);
-  --secondary: oklch(0.245 0.02 165);
-  --secondary-foreground: oklch(0.955 0.008 165);
-  --muted: oklch(0.245 0.02 165);
-  --muted-foreground: oklch(0.76 0.022 165);
-  --accent: oklch(0.245 0.02 165); /* shadcn hover surface, stays neutral */
-  --accent-foreground: oklch(0.955 0.008 165);
+  --background: oklch(0.16 0.04 270);
+  --foreground: oklch(0.96 0.014 270);
+  --card: oklch(0.2 0.048 270);
+  --card-foreground: oklch(0.96 0.014 270);
+  --popover: oklch(0.2 0.048 270);
+  --popover-foreground: oklch(0.96 0.014 270);
+  --primary: oklch(0.72 0.14 272);
+  --primary-foreground: oklch(0.17 0.05 272);
+  --secondary: oklch(0.25 0.055 270);
+  --secondary-foreground: oklch(0.96 0.014 270);
+  --muted: oklch(0.25 0.055 270);
+  --muted-foreground: oklch(0.77 0.045 270);
+  --accent: oklch(0.25 0.055 270); /* shadcn hover surface, stays neutral */
+  --accent-foreground: oklch(0.96 0.014 270);
   --destructive: oklch(0.68 0.19 25);
-  --border: oklch(0.3 0.02 165);
-  --input: oklch(0.34 0.02 165);
-  --ring: oklch(0.8 0.135 72);
-  --chart-1: oklch(0.8 0.135 72);
-  --chart-2: oklch(0.7 0.09 165);
-  --chart-3: oklch(0.6 0.11 72);
-  --chart-4: oklch(0.55 0.07 165);
-  --chart-5: oklch(0.45 0.06 165);
-  --sidebar: oklch(0.195 0.017 165);
-  --sidebar-foreground: oklch(0.955 0.008 165);
-  --sidebar-primary: oklch(0.8 0.135 72);
-  --sidebar-primary-foreground: oklch(0.2 0.035 72);
-  --sidebar-accent: oklch(0.245 0.02 165);
-  --sidebar-accent-foreground: oklch(0.955 0.008 165);
-  --sidebar-border: oklch(0.3 0.02 165);
-  --sidebar-ring: oklch(0.8 0.135 72);
+  --border: oklch(0.32 0.06 270);
+  --input: oklch(0.36 0.065 270);
+  --ring: oklch(0.72 0.14 272);
+  --chart-1: oklch(0.72 0.14 272);
+  --chart-2: oklch(0.62 0.12 250);
+  --chart-3: oklch(0.55 0.16 285);
+  --chart-4: oklch(0.48 0.1 260);
+  --chart-5: oklch(0.4 0.08 270);
+  --sidebar: oklch(0.2 0.048 270);
+  --sidebar-foreground: oklch(0.96 0.014 270);
+  --sidebar-primary: oklch(0.72 0.14 272);
+  --sidebar-primary-foreground: oklch(0.17 0.05 272);
+  --sidebar-accent: oklch(0.25 0.055 270);
+  --sidebar-accent-foreground: oklch(0.96 0.014 270);
+  --sidebar-border: oklch(0.32 0.06 270);
+  --sidebar-ring: oklch(0.72 0.14 272);
 }
 
 @layer base {
