@@ -100,7 +100,7 @@ export function MountainHero({
   // Motion engine (GSAP, scoped to the hero, reverted on unmount). The block's own animation, kept
   // as designed and rendered more exactly:
   // - the ridge outline draws over its measured length (DrawSVG) instead of a guessed dash of 2200,
-  //   so it finishes in step with the stroke thinning 8 → 4 → 1.5 px and the glow fading;
+  //   in step with the stroke thinning from 8 to 1.5 px and the glow fading;
   // - the highlight arc follows; both start the first time the scene comes into view;
   // - off-screen, the CSS sway of the firs pauses.
   // Reduced motion: the finished scene (the sway stops in CSS).
@@ -125,43 +125,38 @@ export function MountainHero({
       );
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // DrawSVG measures in SVG units, so the drawn stroke scales with the SVG; widths are divided
-        // by that scale to stay the block's screen-pixel widths.
+        // DrawSVG measures in SVG units, so drawn strokes scale with the SVG; widths are divided by
+        // that scale to stay the block's screen-pixel widths.
         const svg = scene?.querySelector("[data-line]")?.closest("svg");
         const px = 1500 / (svg?.getBoundingClientRect().width || 1500);
-        // GSAP interpolates the numbers inside filter strings, not var(): read the glow colour once.
-        const rgb = scene ? getComputedStyle(scene).getPropertyValue("--glow-rgb").trim() : "";
-        const glow = `drop-shadow(0px 0px 16px rgba(${rgb}, 0.45))`;
-        const noGlow = `drop-shadow(0px 0px 0px rgba(${rgb}, 0))`;
+        // One continuous ease for everything, so head, width and brightness move as one — two
+        // eased segments (8 → 4 → 1.5) restarted the ease halfway and read as a jolt.
+        const draw = { duration: 2.4, ease: "power1.out" };
+
+        // Glow: at the start the whole ridge flares up in a soft halo that fades as the outline
+        // draws — the block's 16px drop-shadow on the filled shape. The halo is its own layer with a
+        // static blur; only its opacity animates, so the blur is rasterised once and the fade runs
+        // on the compositor instead of re-blurring every frame.
 
         gsap
           .timeline({
             delay: 0.2,
             onComplete: () => {
-              gsap.set("[data-line]", { clearProps: "strokeWidth,filter" });
+              gsap.set("[data-line]", { clearProps: "strokeWidth" });
               markDrawn();
             },
             scrollTrigger: { trigger: "[data-scene]", start: "top bottom", once: true },
           })
-          .fromTo(
-            "[data-line]",
-            { drawSVG: "0%", filter: glow },
-            { drawSVG: "100%", filter: noGlow, duration: 2.4, ease: "power1.out" },
-            0,
-          )
+          .fromTo("[data-line]", { drawSVG: "0%" }, { drawSVG: "100%", ...draw }, 0)
           .fromTo(
             "[data-line]",
             { strokeWidth: 8 * px, strokeOpacity: 0 },
-            {
-              keyframes: [
-                { strokeWidth: 4 * px, strokeOpacity: 0.4 },
-                { strokeWidth: 1.5 * px, strokeOpacity: 1 },
-              ],
-              duration: 2.4,
-              ease: "power1.out",
-            },
+            // autoRound off: GSAP rounds px values to whole pixels by default, which stepped the
+            // width 8 → 7 → 6 … px in visible jolts.
+            { strokeWidth: 1.5 * px, strokeOpacity: 1, autoRound: false, ...draw },
             0,
           )
+          .fromTo("[data-glow]", { opacity: 1 }, { opacity: 0, ...draw }, 0)
           .fromTo(
             "[data-accent]",
             { drawSVG: "0%", opacity: 0 },
@@ -197,6 +192,11 @@ export function MountainHero({
           <svg className={styles.mid} viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
             <path d="M 100 590 L 350 470 L 500 550 L 700 420 L 900 540 L 1100 410 L 1300 540 L 1450 470 L 1500 590 Z" />
           </svg>
+          <div data-glow className={styles.glow}>
+            <svg viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
+              <path d={MAIN_RIDGE} />
+            </svg>
+          </div>
           <svg viewBox="0 0 1500 650" preserveAspectRatio="xMidYMax meet">
             <path data-line className={styles.draw} d={MAIN_RIDGE} />
             <path data-accent className={styles.accent} d="M 600 550 Q 800 420 900 480" />

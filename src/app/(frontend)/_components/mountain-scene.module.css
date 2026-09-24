@@ -12,7 +12,7 @@
   --mid-stroke: oklch(0.72 0.1 270 / 0.4);
   --main: oklch(0.14 0.045 268);
   --main-stroke: var(--primary);
-  --glow-rgb: 134, 158, 252; /* --primary as RGB, for the animated glow (mountain-scene.tsx) */
+  --glow-rgb: 134 158 252; /* --primary as RGB channels, for the glow strokes */
   --accent-line: var(--foreground);
   --tree-back: oklch(0.34 0.08 268);
   --tree-mid: oklch(0.2 0.055 268);
@@ -72,6 +72,28 @@
 }
 
 .scene[data-drawn] .draw {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Halo around the whole front ridge, behind its fill. The blur sits on the inner SVG and is painted
+   once into the wrapper's own layer; GSAP animates only the wrapper's opacity, so the fade is a
+   compositor job and nothing is re-blurred per frame. Flares up when the draw starts, then fades. */
+.glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.glow svg {
+  filter: blur(10px);
+}
+
+.glow path {
+  fill: none;
+  stroke: rgb(var(--glow-rgb) / 0.8);
+  stroke-width: 12;
+  stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
