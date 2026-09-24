@@ -2,8 +2,10 @@
 // `verbatimModuleSyntax` and Node's type stripping those must be type-only imports.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const dir = new URL("../src/migrations/", import.meta.url).pathname;
+// fileURLToPath, not .pathname: the latter keeps %20 for spaces in the checkout path.
+const dir = fileURLToPath(new URL("../src/migrations/", import.meta.url));
 
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".ts") && f !== "index.ts")) {
   const path = join(dir, file);

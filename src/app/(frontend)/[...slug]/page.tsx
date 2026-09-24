@@ -17,10 +17,13 @@ export async function generateStaticParams() {
     limit: 1000,
     depth: 0,
   });
-  return docs
-    .map((doc) => pagePath(doc as unknown as Record<string, unknown>))
-    .filter((path): path is string => Boolean(path))
-    .map((path) => ({ slug: path.split("/").filter(Boolean) }));
+  return (
+    docs
+      .map((doc) => pagePath(doc as unknown as Record<string, unknown>))
+      // The home page (`/`) is rendered by app/(frontend)/page.tsx, not by this catch-all.
+      .filter((path): path is string => Boolean(path) && path !== "/")
+      .map((path) => ({ slug: path.split("/").filter(Boolean) }))
+  );
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

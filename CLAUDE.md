@@ -1,10 +1,12 @@
-# port — portfolio + CMS
+# starter — Next + Payload template
+
+This repo is a **starter template**. In a fresh copy, `pnpm init:project` sets name, database, accent colour and seed identity (see `README.md`); after that, rewrite this file's title line and the home page for the actual project.
 
 Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui (radix base, Nova preset) · pnpm. Hosted on our own server at IONOS (Germany) — no Vercel-specific features.
 
 ## Product rules
 
-- **German only, Anrede „Sie“.** All visible text, alt texts, metadata and URLs are German (`/projekte/…`, `/kontakt`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is installed but unused).
+- **German only, Anrede „Sie“.** All visible text, alt texts, metadata and URLs are German (`/kontakt`, `/suche`, `/ueber-uns`). `<html lang="de">`, `og:locale de_DE`. No i18n layer (`next-intl` is installed but unused).
 - **Legal pages:** Impressum and Datenschutzerklärung are Payload pages (slugs `impressum`, `datenschutz`, linked in the footer). The owner writes legal text; seeded versions are marked „Platzhalter“.
 - **Data sovereignty** is a hard rule — see its section before adding any service, origin, font or asset.
 
@@ -12,10 +14,10 @@ Next.js 16 (App Router, React Compiler, typed routes) · Payload CMS 3 (Postgres
 
 Application code lives in `src/` (`@/*` → `src/*`); the root holds configuration, `e2e/` and `scripts/`. Place new code by what it is:
 
-- `src/app/(frontend)/` — routes only: `/`, `/projekte/[slug]`, `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche`, `/kontakt`, German `error.tsx`, logo icons (`icon.png`, `apple-icon.png`), `opengraph-image.tsx`, `next/preview`.
+- `src/app/(frontend)/` — routes only: `/` (the Payload page with slug `startseite`), `/[...slug]` (Payload pages, nested via breadcrumbs), `/suche`, `/kontakt`, German `error.tsx`, placeholder monogram icons (`icon.tsx`, `apple-icon.tsx` — swap for designed `icon.png`/`apple-icon.png`), `opengraph-image.tsx`, `next/preview`.
 - `src/app/(frontend)/<route>/_components/`, `_lib/` — code used by that one route (`kontakt/_components/contact-form.tsx`, `kontakt/_lib/validation.ts`). Promote it to `src/components/` or `src/lib/` once a second route needs it.
 - `src/app/(payload)/` — Payload admin and API, generated; `pnpm generate:importmap` after adding admin components. `src/app/` also holds `global-error.tsx`, `sitemap.ts`, `robots.ts`.
-- `src/cms/` — Payload schema: `collections/`, `globals/`, `hooks/` (Payload hooks such as revalidation), `plugins.ts`.
+- `src/cms/` — Payload schema: `collections/`, `globals/`, `hooks/` (Payload hooks such as revalidation), `plugins.ts`, `paths.ts` (public URL per routed collection).
 - `src/data/` — server-only data layer: `payload.ts` (`getPayloadClient`), `queries.ts` (all frontend reads; React `cache`, draft-aware), `redirect-or-not-found.ts`.
 - `src/components/` — `ui/` shadcn (`pnpm dlx shadcn@latest add <name>`, then adapt), `site/` shared site components, `dev/` dev-only tools (Reticle bridge).
 - `src/lib/` — pure helpers with colocated `*.test.ts`: `seo.tsx`, `redirects.ts`, `rich-text.ts`, `utils.ts` (`cn` from the `cn` package).
@@ -23,7 +25,9 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
 
 ## CMS (Payload)
 
-- Collections: Users, Media, Projects, Pages; global `SiteSettings` (site name, owner, tagline, SEO description, contact email, profile links). Admin UI is German. `src/payload.config.ts`, `src/cms/**` and everything they import (`src/lib/redirects.ts`, `src/env.ts`) use **relative imports** — the Payload CLI does not resolve `@/`.
+- Collections: Users, Media, Pages; global `SiteSettings` (site name, owner, tagline, SEO description, contact email, profile links). Admin UI is German. `src/payload.config.ts`, `src/cms/**` and everything they import (`src/lib/redirects.ts`, `src/env.ts`) use **relative imports** — the Payload CLI does not resolve `@/`.
+- **Routed collections:** `src/cms/paths.ts` maps each collection with a frontend route to its path function. Redirects, search, SEO, live preview and the sitemap read it, so a new routed collection (e.g. `posts` → `/beitraege/[slug]`) needs its route, one entry there and revalidation via `revalidateCollection(...)`. Carry it end to end with `cms-section`.
+- **Home page:** the page with slug `startseite` (`HOME_SLUG`) renders at `/`; `pagePath` returns `/` for it and the catch-all skips it.
 - **Revalidation:** pages are static; publishing rebuilds them instantly via `src/cms/hooks/revalidate.ts`. A collection that feeds fixed paths gets `revalidatePathsOf(...)`.
 - **Draft preview:** live preview → `/next/preview?path=…` (needs a Payload session, enables draft mode) → `RefreshOnSave`; `/next/exit-preview` ends it.
 - **Plugins:** seo, nested-docs, storage-s3 (auto-on when S3 env is set; self-hosted/EU endpoint only), plus three wired into the site:
@@ -32,18 +36,18 @@ Application code lives in `src/` (`@/*` → `src/*`); the root holds configurati
   - **form-builder** — the form titled „Kontakt“ renders at `/kontakt`. The server action (`kontakt/actions.ts`) validates with `kontakt/_lib/validation.ts` (German messages, honeypot, minimum fill time) and writes via the Local API; public REST creation of submissions is closed. Email settings and US-only blocks are removed.
 - **Uploads** live on local disk in `/media` (gitignored; a persistent volume in production).
 - **Schema changes:** dev pushes automatically. Before merging: `pnpm migrate:create <name>`, then `pnpm generate:types`, commit `src/migrations/` and `src/payload-types.ts`. CI runs `pnpm migrate`.
-- **Dev content:** `pnpm seed` (`scripts/seed-data.ts`) — fictional projects, placeholder legal pages, a nested page, the „Kontakt“ form, redirect `/projekte/museum`. Idempotent, local databases only, creates no users (first admin signs up at `/admin`). Every new route gets seeded content and an entry in `SEED_PATHS`, which feeds the e2e tests.
+- **Dev content:** `pnpm seed` (`scripts/seed-data.ts`) — site settings, the `startseite` page with a share image, placeholder legal pages, a nested page (`/ueber-uns/team`), the „Kontakt“ form, redirect `/about` → `/ueber-uns`. Idempotent, local databases only, creates no users (first admin signs up at `/admin`). Every new route gets seeded content and an entry in `SEED_PATHS`, which feeds the e2e tests.
 
 ## Styling
 
 - `src/app/(frontend)/globals.css` holds all tokens; it is imported only by the frontend layout, so the admin stays unstyled by it.
-- **Dark-only brand palette:** black and its shades + logo cyan `#01ccff` (`--primary`, `--ring`, charts). No light theme, no toggle; `dark:` variants always apply. Cyan marks interactive/primary things only.
+- **Dark-only brand palette:** black and its shades + one accent `--brand-accent` (default cyan `#01ccff`; feeds `--primary`, `--ring`, the chart ramp). No light theme, no toggle; `dark:` variants always apply. The accent marks interactive/primary things only. The OG image repeats it as hex (`ACCENT` in `opengraph-image.tsx`).
 - **Fibonacci layout system** (overrides any skill that prescribes a 4/8 grid):
   - page shell `page-container` (max 1920px, fluid `px-gutter` 21→55px); sections `py-section`/`mt-section` (55→144px); content grids `gap-grid` (13→34px); fixed steps `*-fib-2xs … *-fib-4xl` (5…233px);
   - golden ratio: `aspect-golden` for covers and cards, `grid-cols-golden` (61.8/38.2) for text + sidebar;
   - Tailwind's default scale stays for component internals; long text keeps a reading width (`max-w-3xl`, `max-w-prose`);
   - `--container-sm…2xl` stay untouched — shadcn's `max-w-*` depend on them.
-- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`. Curves are the tokens in `globals.css`: `--ease-out` for entering and UI state, `--ease-in-out` for an element moving on screen, `--ease-drawer` for sheets; scrubbed scroll motion uses `ease: "none"`. UI durations stay on Tailwind's 150/200/300/500; only a single emphasis moment (hero line rise, manifesto roll) runs 0.8–1.1s.
+- **Motion:** `motion/react` for component/UI motion; GSAP (+ Lenis) only for scroll-driven or timeline sequences; one system per element; always honour `prefers-reduced-motion`. Curves are the tokens in `globals.css`: `--ease-out` for entering and UI state, `--ease-in-out` for an element moving on screen, `--ease-drawer` for sheets; scrubbed scroll motion uses `ease: "none"`. UI durations stay on Tailwind's 150/200/300/500; only a single emphasis moment (e.g. a hero line rise) runs 0.8–1.1s. A page that runs Lenis registers it in `src/lib/smooth-scroll.ts` so the menu can pause it.
 - `baseline-ui` is the default constraint set. Gradients, glow, custom easing or extra animation need an explicit request or a chosen art direction.
 - Reuse existing tokens, components and fonts; a new dependency needs approval.
 
@@ -66,7 +70,6 @@ Load the skill before starting the work.
 | Accessibility                             | `better-accessibility` — every new interactive UI                                                                           |
 | Metadata, OG, JSON-LD, SEO                | `fixing-metadata`, `schema`, `seo-audit-de`, `ai-seo-de` (DACH versions, not `seo-audit`/`ai-seo`)                          |
 | Site copy                                 | `product-marketing-de` (context file `.agents/product-marketing.md` first), `copywriting-de`, `vermenschlichen`             |
-| Project pages / case studies              | `case-study`, then `copywriting-de`                                                                                         |
 | Payload collections / data model          | `domain-modeling`, `codebase-design`; `cms-section` to carry a schema change end to end                                     |
 | New feature with logic                    | `tdd` (pure logic with a colocated `*.test.ts`, like `kontakt/_lib/validation.ts`)                                          |
 | Bug or regression                         | `diagnosing-bugs`                                                                                                           |
@@ -93,9 +96,9 @@ No user, visitor or content data leaves our own infrastructure.
 
 ## Commands and checks
 
-- Local: `pnpm db:up` (Postgres on 5433), `pnpm seed`, `pnpm dev`. Scripts are in `package.json`.
+- Local: `pnpm db:up` (Postgres on the port in `docker-compose.yml`), `pnpm seed`, `pnpm dev`. Scripts are in `package.json`.
 - `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
-- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-only palette + a11y), `menu` (open/close keeps scroll position and layout; runs with real scrollbars), `manifesto` (one wheel notch per phrase; desktop only). Needs `pnpm seed`.
+- `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form, dark-only palette + a11y), `menu` (open/close keeps scroll position and layout; runs with real scrollbars). Needs `pnpm seed`.
 - `pnpm knip` — run by hand; it lists planned-but-unused dependencies (motion, gsap, three, …) that stay on purpose.
 - Commits: Conventional Commits (commitlint hook); pre-commit runs lint-staged. Prettier with Tailwind class sorting runs on every edited file via `.claude/hooks/format-on-edit.mjs`.
 - CI (`.github/workflows/ci.yml`): format:check, typecheck, lint, test, migrate, seed, build, Playwright (production build). Dependabot weekly.

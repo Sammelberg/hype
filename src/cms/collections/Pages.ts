@@ -4,8 +4,12 @@ import { revalidateCollection } from "../hooks/revalidate";
 
 type Breadcrumb = { url?: string | null };
 
-// nested-docs stores the full path in the last breadcrumb (e.g. /ueber-mich/lebenslauf).
+// The page with this slug is the home page and lives at `/`, not at /startseite.
+export const HOME_SLUG = "startseite";
+
+// nested-docs stores the full path in the last breadcrumb (e.g. /ueber-uns/team).
 export const pagePath = (doc: Record<string, unknown>) => {
+  if (doc.slug === HOME_SLUG) return "/";
   const crumbs = doc.breadcrumbs as Breadcrumb[] | undefined;
   return crumbs?.at(-1)?.url ?? (doc.slug ? `/${String(doc.slug)}` : null);
 };
@@ -18,7 +22,8 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "slug", "_status", "updatedAt"],
-    description: "Pflichtseiten: „impressum“ und „datenschutz“ (URL-Kürzel).",
+    description:
+      "Sonderseiten (URL-Kürzel): „startseite“ ist die Startseite, „impressum“ und „datenschutz“ sind Pflicht.",
   },
   access: {
     read: ({ req }) => (req.user ? true : { _status: { equals: "published" } }),

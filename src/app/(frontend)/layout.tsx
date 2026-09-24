@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const siteName = settings.siteName || "Portfolio";
+  const siteName = settings.siteName || "Website";
   return {
     metadataBase: new URL(env.NEXT_PUBLIC_SERVER_URL),
     title: { default: siteName, template: `%s — ${siteName}` },
@@ -47,7 +47,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           Zum Inhalt springen
         </a>
         <SiteHeader
-          siteName={settings.siteName || "Portfolio"}
+          siteName={settings.siteName || "Website"}
           contactEmail={settings.contactEmail}
           socialLinks={settings.socialLinks}
         />
@@ -55,7 +55,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           {children}
         </div>
         <SiteFooter
-          ownerName={settings.ownerName || settings.siteName || "Portfolio"}
+          ownerName={settings.ownerName || settings.siteName || "Website"}
           contactEmail={settings.contactEmail}
           socialLinks={settings.socialLinks}
         />

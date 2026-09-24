@@ -1,7 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
 
-import logoMark from "../../../public/brand/logo-mark.png";
 import { MENU_LINKS } from "./menu-links";
 import { SiteMenu } from "./site-menu";
 
@@ -22,8 +20,8 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="flex h-header w-full items-center justify-between gap-fib-md px-fib-md sm:px-fib-lg">
+        {/* Wordmark placeholder: add the project's logo here (public/brand/, next/image with preload). */}
         <Link href="/" className="flex items-center gap-3 text-lg font-medium tracking-tight">
-          <Image src={logoMark} alt="" className="size-9 sm:size-11" preload />
           {siteName}
         </Link>
         <SiteMenu contactEmail={contactEmail} socialLinks={socialLinks} />

@@ -20,18 +20,18 @@ test.beforeEach(async ({ page }) => {
 
 test("a redirect from the admin leads to its target", async ({ page }) => {
   await page.goto(SEED_REDIRECT.from);
-  await expect(page).toHaveURL(new RegExp(`/projekte/${SEED_REDIRECT.toProject}$`));
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Stadtmuseum Freiburg");
+  await expect(page).toHaveURL(new RegExp(`${SEED_REDIRECT.toPath}$`));
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Über uns");
 });
 
-test("search finds a project by a word from its summary", async ({ page }) => {
+test("search finds a page by a word from its title", async ({ page }) => {
   await page.goto("/suche");
   const field = page.getByLabel("Suchbegriff");
-  await field.fill("Genossenschaft");
+  await field.fill("Datenschutz");
   await field.press("Enter");
-  await expect(page).toHaveURL(/\/suche\?q=Genossenschaft/);
+  await expect(page).toHaveURL(/\/suche\?q=Datenschutz/);
   await expect(page.getByRole("heading", { name: /Ergebnis/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Energiegenossenschaft Kinzigtal" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Datenschutzerklärung" })).toBeVisible();
 });
 
 test("search says so when nothing matches", async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe("dark-only palette", () => {
   // A light OS setting must not bring back a light theme.
   test.use({ colorScheme: "light" });
 
-  for (const path of ["/", "/kontakt", `/projekte/${SEED_REDIRECT.toProject}`]) {
+  for (const path of ["/", "/kontakt", SEED_REDIRECT.toPath]) {
     test(`${path} stays dark and has no a11y violations`, async ({ page }) => {
       await page.goto(path);
       // Paint the computed colour to a canvas so any notation (oklch, lab, rgb) becomes sRGB bytes.

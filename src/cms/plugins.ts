@@ -8,9 +8,8 @@ import type { Plugin } from "payload";
 
 import { env } from "../env";
 import { normalizePath } from "../lib/redirects";
-import { pagePath } from "./collections/Pages";
-import { projectPath } from "./collections/Projects";
 import { revalidatePathsOf } from "./hooks/revalidate";
+import { docPath, ROUTED_COLLECTIONS } from "./paths";
 
 const redirectRevalidation = revalidatePathsOf((doc) => [doc.from ? String(doc.from) : null]);
 const formRevalidation = revalidatePathsOf(() => ["/kontakt"]);
@@ -19,7 +18,7 @@ const s3Enabled = Boolean(env.S3_BUCKET && env.S3_ACCESS_KEY_ID && env.S3_SECRET
 
 export const plugins: Plugin[] = [
   seoPlugin({
-    collections: ["projects", "pages"],
+    collections: ROUTED_COLLECTIONS,
     uploadsCollection: "media",
     tabbedUI: true,
     generateTitle: ({ doc }) => (doc?.title ? String(doc.title) : ""),
@@ -30,7 +29,7 @@ export const plugins: Plugin[] = [
   }),
   // Resolved in the frontend before a 404 (src/data/queries.ts → findRedirect).
   redirectsPlugin({
-    collections: ["pages", "projects"],
+    collections: ROUTED_COLLECTIONS,
     redirectTypes: ["301", "302"],
     redirectTypeFieldOverride: {
       label: "Art",
@@ -53,7 +52,7 @@ export const plugins: Plugin[] = [
   }),
   // Feeds /suche. Only published documents are indexed.
   searchPlugin({
-    collections: ["projects", "pages"],
+    collections: ROUTED_COLLECTIONS,
     searchOverrides: {
       labels: { singular: "Suchindex-Eintrag", plural: "Suchindex" },
       fields: ({ defaultFields }) => [
@@ -65,7 +64,7 @@ export const plugins: Plugin[] = [
     beforeSync: ({ collectionSlug, originalDoc, searchDoc }) => ({
       ...searchDoc,
       summary: originalDoc.summary ?? originalDoc.meta?.description ?? "",
-      url: collectionSlug === "projects" ? projectPath(originalDoc.slug) : pagePath(originalDoc),
+      url: docPath(collectionSlug, originalDoc),
     }),
   }),
   // Contact form at /kontakt. No email adapter (data sovereignty): submissions are read in the

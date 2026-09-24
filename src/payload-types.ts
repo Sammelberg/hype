@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
-    projects: Project;
     pages: Page;
     redirects: Redirect;
     search: Search;
@@ -84,7 +83,6 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    projects: ProjectsSelect<false> | ProjectsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -209,54 +207,7 @@ export interface Media {
   };
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "projects".
- */
-export interface Project {
-  id: number;
-  title: string;
-  /**
-   * Kleinbuchstaben und Bindestriche, z. B. mein-projekt
-   */
-  slug: string;
-  summary: string;
-  cover: number | Media;
-  year: number;
-  role?: string | null;
-  client?: string | null;
-  url?: string | null;
-  tags?: string[] | null;
-  featured?: boolean | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  gallery?: (number | Media)[] | null;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * Pflichtseiten: „impressum“ und „datenschutz“ (URL-Kürzel).
+ * Sonderseiten (URL-Kürzel): „startseite“ ist die Startseite, „impressum“ und „datenschutz“ sind Pflicht.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
@@ -310,15 +261,10 @@ export interface Redirect {
   from: string;
   to?: {
     type?: ('reference' | 'custom') | null;
-    reference?:
-      | ({
-          relationTo: 'pages';
-          value: number | Page;
-        } | null)
-      | ({
-          relationTo: 'projects';
-          value: number | Project;
-        } | null);
+    reference?: {
+      relationTo: 'pages';
+      value: number | Page;
+    } | null;
     url?: string | null;
   };
   type: '301' | '302';
@@ -335,15 +281,10 @@ export interface Search {
   id: number;
   title?: string | null;
   priority?: number | null;
-  doc:
-    | {
-        relationTo: 'projects';
-        value: number | Project;
-      }
-    | {
-        relationTo: 'pages';
-        value: number | Page;
-      };
+  doc: {
+    relationTo: 'pages';
+    value: number | Page;
+  };
   summary?: string | null;
   url?: string | null;
   updatedAt: string;
@@ -520,10 +461,6 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'projects';
-        value: number | Project;
-      } | null)
-    | ({
         relationTo: 'pages';
         value: number | Page;
       } | null)
@@ -660,34 +597,6 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "projects_select".
- */
-export interface ProjectsSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  summary?: T;
-  cover?: T;
-  year?: T;
-  role?: T;
-  client?: T;
-  url?: T;
-  tags?: T;
-  featured?: T;
-  content?: T;
-  gallery?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -914,90 +823,11 @@ export interface SiteSetting {
   ownerName: string;
   tagline?: string | null;
   description?: string | null;
-  /**
-   * Der erste Bildschirm: Textkarte links, Showreel rechts, darunter zwei gleich breite Link-Karten. Leere Felder fallen auf Name und Untertitel zurück.
-   */
-  hero?: {
-    /**
-     * Kurz, z. B. Ort und Arbeitsfelder.
-     */
-    eyebrow?: string | null;
-    /**
-     * Jede Zeile wird eine Zeile im Titel. Ein Punkt am Ende erscheint in der Akzentfarbe.
-     */
-    headline?: string | null;
-    intro?: string | null;
-    /**
-     * Beide Karten stehen gleichwertig nebeneinander.
-     */
-    links?:
-      | {
-          label: string;
-          /**
-           * Interner Pfad, z. B. /#projekte oder /kontakt.
-           */
-          href: string;
-          id?: string | null;
-        }[]
-      | null;
-  };
   contactEmail?: string | null;
   socialLinks?:
     | {
         label: string;
         url: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Abschnitt „Kunden“: laufendes Logo-Band unter dem Einstieg. Logos als weiße Grafik mit transparentem Hintergrund (PNG, WebP oder SVG).
-   */
-  clients?:
-    | {
-        name: string;
-        logo: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Was Sie anbieten. Erscheint als Abschnitt „Leistungen“.
-   */
-  services?:
-    | {
-        title: string;
-        description: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Bildschirmfüllende Sätze, die beim Scrollen nacheinander erscheinen. Ohne Sätze entfällt der Abschnitt.
-   */
-  manifesto?: {
-    phrases?:
-      | {
-          text: string;
-          id?: string | null;
-        }[]
-      | null;
-    caption?: string | null;
-  };
-  /**
-   * Fragen, die Interessierte oft stellen. Abschnitt „Häufige Fragen“.
-   */
-  faq?:
-    | {
-        question: string;
-        answer: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Die Schritte eines Projekts, in Reihenfolge. Abschnitt „Ablauf“.
-   */
-  process?:
-    | {
-        title: string;
-        description: string;
         id?: string | null;
       }[]
     | null;
@@ -1013,65 +843,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   ownerName?: T;
   tagline?: T;
   description?: T;
-  hero?:
-    | T
-    | {
-        eyebrow?: T;
-        headline?: T;
-        intro?: T;
-        links?:
-          | T
-          | {
-              label?: T;
-              href?: T;
-              id?: T;
-            };
-      };
   contactEmail?: T;
   socialLinks?:
     | T
     | {
         label?: T;
         url?: T;
-        id?: T;
-      };
-  clients?:
-    | T
-    | {
-        name?: T;
-        logo?: T;
-        id?: T;
-      };
-  services?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        id?: T;
-      };
-  manifesto?:
-    | T
-    | {
-        phrases?:
-          | T
-          | {
-              text?: T;
-              id?: T;
-            };
-        caption?: T;
-      };
-  faq?:
-    | T
-    | {
-        question?: T;
-        answer?: T;
-        id?: T;
-      };
-  process?:
-    | T
-    | {
-        title?: T;
-        description?: T;
         id?: T;
       };
   updatedAt?: T;

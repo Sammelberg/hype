@@ -8,10 +8,10 @@ import { buildConfig } from "payload";
 import sharp from "sharp";
 
 import { Media } from "./cms/collections/Media";
-import { Pages, pagePath } from "./cms/collections/Pages";
-import { Projects, projectPath } from "./cms/collections/Projects";
+import { Pages } from "./cms/collections/Pages";
 import { Users } from "./cms/collections/Users";
 import { SiteSettings } from "./cms/globals/SiteSettings";
+import { docPath, ROUTED_COLLECTIONS } from "./cms/paths";
 import { plugins } from "./cms/plugins";
 import { env } from "./env";
 
@@ -28,11 +28,10 @@ export default buildConfig({
     livePreview: {
       // Goes through /next/preview, which checks the Payload session and enables Next draft mode.
       url: ({ data, collectionConfig }) => {
-        const path =
-          collectionConfig?.slug === "projects" ? projectPath(data?.slug) : pagePath(data ?? {});
+        const path = docPath(collectionConfig?.slug, data ?? {});
         return `${env.NEXT_PUBLIC_SERVER_URL}/next/preview?path=${encodeURIComponent(path ?? "/")}`;
       },
-      collections: ["projects", "pages"],
+      collections: ROUTED_COLLECTIONS,
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 390, height: 844 },
         { label: "Desktop", name: "desktop", width: 1440, height: 900 },
@@ -40,7 +39,7 @@ export default buildConfig({
     },
   },
   i18n: { supportedLanguages: { de }, fallbackLanguage: "de" },
-  collections: [Users, Media, Projects, Pages],
+  collections: [Users, Media, Pages],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET,

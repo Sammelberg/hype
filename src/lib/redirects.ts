@@ -1,7 +1,6 @@
 // Pure helpers for the redirects plugin. Relative imports only: also used from Payload hooks,
 // which the Payload CLI loads without the `@/` alias.
-import { pagePath } from "../cms/collections/Pages";
-import { projectPath } from "../cms/collections/Projects";
+import { docPath } from "../cms/paths";
 
 type Reference = {
   relationTo: string;
@@ -27,7 +26,7 @@ export function resolveRedirect(doc: RedirectDoc) {
     const ref = doc.to.reference;
     if (ref && typeof ref.value === "object") {
       const target = ref.value as Record<string, unknown>;
-      destination = ref.relationTo === "projects" ? projectPath(target.slug) : pagePath(target);
+      destination = docPath(ref.relationTo, target);
     }
   } else {
     destination = doc.to?.url?.trim() || null;

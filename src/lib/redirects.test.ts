@@ -5,7 +5,7 @@ describe("normalizePath", () => {
     ["/alt/pfad", "/alt/pfad"],
     ["alt/pfad/", "/alt/pfad"],
     ["https://example.com/alt?x=1#y", "/alt"],
-    ["/Projekte/Museum", "/projekte/museum"],
+    ["/Leistungen/Beratung", "/leistungen/beratung"],
     ["/", "/"],
     ["", "/"],
   ])("%s → %s", (input, expected) => {
@@ -14,16 +14,16 @@ describe("normalizePath", () => {
 });
 
 describe("resolveRedirect", () => {
-  it("resolves a reference to a project", () => {
+  it("resolves a reference to the home page to /", () => {
     expect(
       resolveRedirect({
         type: "301",
         to: {
           type: "reference",
-          reference: { relationTo: "projects", value: { slug: "stadtmuseum-freiburg" } },
+          reference: { relationTo: "pages", value: { slug: "startseite" } },
         },
       }),
-    ).toEqual({ destination: "/projekte/stadtmuseum-freiburg", permanent: true });
+    ).toEqual({ destination: "/", permanent: true });
   });
 
   it("resolves a reference to a nested page via its breadcrumbs", () => {
@@ -34,11 +34,11 @@ describe("resolveRedirect", () => {
           type: "reference",
           reference: {
             relationTo: "pages",
-            value: { slug: "werdegang", breadcrumbs: [{ url: "/ueber-mich/werdegang" }] },
+            value: { slug: "team", breadcrumbs: [{ url: "/ueber-uns/team" }] },
           },
         },
       }),
-    ).toEqual({ destination: "/ueber-mich/werdegang", permanent: false });
+    ).toEqual({ destination: "/ueber-uns/team", permanent: false });
   });
 
   it("keeps custom URLs as entered", () => {
@@ -56,8 +56,11 @@ describe("resolveRedirect", () => {
   it("returns null when the target is missing or unpopulated", () => {
     expect(resolveRedirect({ to: { type: "custom", url: "" } })).toBeNull();
     expect(
+      resolveRedirect({ to: { type: "reference", reference: { relationTo: "pages", value: 7 } } }),
+    ).toBeNull();
+    expect(
       resolveRedirect({
-        to: { type: "reference", reference: { relationTo: "projects", value: 7 } },
+        to: { type: "reference", reference: { relationTo: "unknown", value: { slug: "x" } } },
       }),
     ).toBeNull();
   });

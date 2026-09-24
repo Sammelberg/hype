@@ -1,5 +1,5 @@
 {
-  "name": "port",
+  "name": "starter",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -30,6 +30,7 @@
     "generate:importmap": "payload generate:importmap",
     "migrate": "payload migrate",
     "migrate:create": "node scripts/migrate-create.mjs",
+    "init:project": "node scripts/init-project.mjs",
     "seed": "payload run scripts/seed.ts"
   },
   "lint-staged": {

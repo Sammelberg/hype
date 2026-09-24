@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-import { SEED_REDIRECT } from "../scripts/seed-data";
-
 // Site menu (sheet) regressions. Real scrollbars: the scroll lock hides them, and a missing
 // width compensation must show up as a layout shift here. launchOptions is file-level only.
 test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
@@ -18,8 +16,9 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-// The homepage runs Lenis; a project page does not. Both once jumped to the top on close.
-for (const path of ["/", `/projekte/${SEED_REDIRECT.toProject}`]) {
+// Closing the menu once jumped to the top of the page. The home page and a CMS page share the
+// layout; a page that starts Lenis (src/lib/smooth-scroll.ts) belongs in this list too.
+for (const path of ["/", "/datenschutz"]) {
   test(`${path}: opening and closing keeps scroll position and layout`, async ({ page }) => {
     test.slow(); // the dev server compiles the page on first visit
     await page.goto(path);

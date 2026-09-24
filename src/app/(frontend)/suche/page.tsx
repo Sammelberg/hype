@@ -65,9 +65,7 @@ export default async function SearchPage({ searchParams }: Props) {
             <ul className="mt-fib-md divide-y divide-border border-y border-border">
               {results.map((result) => (
                 <li key={result.id} className="py-fib-md">
-                  <p className="text-xs text-muted-foreground">
-                    {result.doc.relationTo === "projects" ? "Projekt" : "Seite"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Seite</p>
                   <Link
                     href={result.url as never}
                     className="mt-1 inline-block font-medium decoration-primary underline-offset-4 hover:underline"
@@ -84,14 +82,14 @@ export default async function SearchPage({ searchParams }: Props) {
             </ul>
           ) : (
             <p className="mt-fib-md text-pretty text-muted-foreground">
-              Versuchen Sie einen anderen Begriff oder sehen Sie sich die{" "}
+              Versuchen Sie einen anderen Begriff oder gehen Sie zur{" "}
               <Link
-                href="/#projekte"
+                href="/"
                 className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
               >
-                Projekte
-              </Link>{" "}
-              an.
+                Startseite
+              </Link>
+              .
             </p>
           )}
         </section>

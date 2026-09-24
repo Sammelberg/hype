@@ -3,6 +3,7 @@ import "server-only";
 import { draftMode } from "next/headers";
 import { cache } from "react";
 
+import { HOME_SLUG } from "@/cms/collections/Pages";
 import { getPayloadClient } from "@/data/payload";
 import { normalizePath, resolveRedirect } from "@/lib/redirects";
 
@@ -11,23 +12,11 @@ export const getSiteSettings = cache(async () => {
   return payload.findGlobal({ slug: "site-settings", depth: 1 });
 });
 
-export const getPublishedProjects = cache(async () => {
-  const payload = await getPayloadClient();
-  const { docs } = await payload.find({
-    collection: "projects",
-    where: { _status: { equals: "published" } },
-    sort: "-year",
-    limit: 100,
-    depth: 1,
-  });
-  return docs;
-});
-
-export const getProjectBySlug = cache(async (slug: string) => {
+const getPageBySlug = cache(async (slug: string) => {
   const { isEnabled: draft } = await draftMode();
   const payload = await getPayloadClient();
   const { docs } = await payload.find({
-    collection: "projects",
+    collection: "pages",
     where: { slug: { equals: slug } },
     draft,
     overrideAccess: draft,
@@ -37,20 +26,13 @@ export const getProjectBySlug = cache(async (slug: string) => {
   return docs[0] ?? null;
 });
 
+// The page with the slug „startseite“ fills `/`; null until it exists.
+export const getHomePage = () => getPageBySlug(HOME_SLUG);
+
 export const getPageByPath = cache(async (segments: string[]) => {
-  const { isEnabled: draft } = await draftMode();
-  const payload = await getPayloadClient();
   const slug = segments.at(-1);
-  if (!slug) return null;
-  const { docs } = await payload.find({
-    collection: "pages",
-    where: { slug: { equals: slug } },
-    draft,
-    overrideAccess: draft,
-    limit: 1,
-    depth: 2,
-  });
-  const page = docs[0];
+  if (!slug || slug === HOME_SLUG) return null;
+  const page = await getPageBySlug(slug);
   const expected = `/${segments.join("/")}`;
   const actual = page?.breadcrumbs?.at(-1)?.url ?? (page ? `/${page.slug}` : null);
   return page && actual === expected ? page : null;

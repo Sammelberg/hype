@@ -1,23 +1,12 @@
 // `pnpm seed` — fills a development database with fictional content (scripts/seed-data.ts).
-// Idempotent: re-running updates documents by slug and reuses generated images.
+// Idempotent: re-running updates documents by slug and reuses the generated image.
 // Refuses to run against a non-local database unless CI=true or --force is given.
 // Creates no users: the first admin signs up at /admin.
-import { readFile } from "node:fs/promises";
-
 import { getPayload, type Payload } from "payload";
 import sharp from "sharp";
 
 import config from "../src/payload.config";
-import {
-  lexical,
-  SEED_REDIRECT,
-  seedClients,
-  seedContactForm,
-  seedPages,
-  seedProjects,
-  seedSettings,
-  type SeedProject,
-} from "./seed-data";
+import { lexical, SEED_REDIRECT, seedContactForm, seedPages, seedSettings } from "./seed-data";
 
 const context = { disableRevalidate: true };
 
@@ -73,7 +62,7 @@ async function upsertMedia(
   return doc.id;
 }
 
-async function upsertBySlug<C extends "projects" | "pages">(
+async function upsertBySlug<C extends "pages">(
   payload: Payload,
   collection: C,
   slug: string,
@@ -92,56 +81,19 @@ async function upsertBySlug<C extends "projects" | "pages">(
     : payload.create({ collection, data: body, context });
 }
 
-async function seedProject(payload: Payload, p: SeedProject) {
-  const cover = await upsertMedia(
-    payload,
-    `seed-${p.slug}.webp`,
-    `Abstrakte Grafik zum Projekt ${p.title}`,
-    () => artwork(p.palette, 0),
-  );
-  const gallery = [];
-  for (let i = 1; i <= p.galleryCount; i++) {
-    gallery.push(
-      await upsertMedia(payload, `seed-${p.slug}-${i}.webp`, `${p.title}, Abbildung ${i}`, () =>
-        artwork(p.palette, i),
-      ),
-    );
-  }
-  await upsertBySlug(payload, "projects", p.slug, {
-    title: p.title,
-    summary: p.summary,
-    year: p.year,
-    role: p.role,
-    client: p.client,
-    tags: p.tags,
-    featured: p.featured,
-    cover,
-    gallery,
-    content: lexical(p.content),
-  });
-}
-
 async function main() {
   assertSafeTarget();
   const payload = await getPayload({ config });
 
-  const clients = [];
-  for (const client of seedClients) {
-    const logo = await upsertMedia(
-      payload,
-      `seed-logo-${client.file}.webp`,
-      `Logo ${client.name}`,
-      () => readFile(new URL(`./seed-assets/logos/${client.file}.webp`, import.meta.url)),
-    );
-    clients.push({ name: client.name, logo });
-  }
-  await payload.updateGlobal({
-    slug: "site-settings",
-    data: { ...seedSettings, clients },
-    context,
-  });
+  await payload.updateGlobal({ slug: "site-settings", data: seedSettings, context });
 
-  for (const project of seedProjects) await seedProject(payload, project);
+  // Share image for the home page (SEO tab), so uploads and OG images are exercised.
+  const shareImage = await upsertMedia(
+    payload,
+    "seed-startseite.webp",
+    "Abstrakte Grafik in den Markenfarben",
+    () => artwork(["#0a0a0a", "#01ccff"], 0),
+  );
 
   // Parents first, so children can reference them (nested-docs builds the breadcrumbs).
   const ids = new Map<string, number | string>();
@@ -151,6 +103,7 @@ async function main() {
       title: page.title,
       content: lexical(page.content),
       ...(parent ? { parent } : {}),
+      ...(page.slug === "startseite" ? { meta: { image: shareImage } } : {}),
     });
     ids.set(page.slug, doc.id);
   }
@@ -168,30 +121,26 @@ async function main() {
     await payload.create({ collection: "forms", data: formBody, context });
   }
 
-  const target = await payload.find({
-    collection: "projects",
-    where: { slug: { equals: SEED_REDIRECT.toProject } },
-    limit: 1,
-  });
+  const target = ids.get(SEED_REDIRECT.toPage);
   const redirect = await payload.find({
     collection: "redirects",
     where: { from: { equals: SEED_REDIRECT.from } },
     limit: 1,
   });
-  if (target.docs[0] && !redirect.docs[0]) {
+  if (target && !redirect.docs[0]) {
     await payload.create({
       collection: "redirects",
       data: {
         from: SEED_REDIRECT.from,
         type: "301",
-        to: { type: "reference", reference: { relationTo: "projects", value: target.docs[0].id } },
+        to: { type: "reference", reference: { relationTo: "pages", value: target as number } },
       },
       context,
     });
   }
 
   payload.logger.info(
-    `Seed fertig: ${seedProjects.length} Projekte, ${seedPages.length} Seiten, Kontaktformular, Weiterleitung, Website-Einstellungen.`,
+    `Seed fertig: ${seedPages.length} Seiten, Kontaktformular, Weiterleitung, Website-Einstellungen.`,
   );
 }
 

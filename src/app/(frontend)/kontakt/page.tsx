@@ -8,7 +8,7 @@ import { buildMetadata } from "@/lib/seo";
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     fallbackTitle: "Kontakt",
-    fallbackDescription: "Schreiben Sie mir über das Kontaktformular.",
+    fallbackDescription: "Nehmen Sie über das Kontaktformular Kontakt auf.",
     path: "/kontakt",
   });
 }
@@ -41,7 +41,7 @@ export default async function ContactPage() {
           {settings.contactEmail ? (
             <>
               {" "}
-              Sie erreichen mich per E-Mail an{" "}
+              Sie erreichen uns per E-Mail an{" "}
               <a
                 href={`mailto:${settings.contactEmail}`}
                 className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
