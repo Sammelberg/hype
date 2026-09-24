@@ -1,22 +1,22 @@
 /*
  * Mountains and firs („Berge und Tannen“ block, supplied by the owner): its own composition,
  * sizes and motion, coloured in the site palette — navy ridges fading into deep space, the front
- * ridge drawn in indigo blue (the accent) with its glow. The scene closes off the first screen.
+ * ridge drawn in ice blue with a sapphire glow. The scene closes off the first screen.
  * The scene is as tall as its tallest fir (112% of the forest), so content above never meets it;
  * the ridges are wider than small screens and are clipped sideways only.
  */
 .hero {
-  --far: oklch(0.3 0.075 268);
-  --far-stroke: oklch(0.77 0.08 268 / 0.35);
-  --mid: oklch(0.24 0.065 268);
-  --mid-stroke: oklch(0.72 0.1 270 / 0.4);
-  --main: oklch(0.14 0.045 268);
-  --main-stroke: var(--primary);
-  --glow-rgb: 134 158 252; /* --primary as RGB channels, for the glow strokes */
+  --far: oklch(0.27 0.05 262);
+  --far-stroke: oklch(0.75 0.05 255 / 0.28);
+  --mid: oklch(0.21 0.045 262);
+  --mid-stroke: oklch(0.75 0.06 255 / 0.32);
+  --main: oklch(0.115 0.028 262);
+  --main-stroke: var(--primary-soft);
+  --glow-rgb: 60 118 235; /* sapphire between primary and primary-soft, as RGB channels */
   --accent-line: var(--foreground);
-  --tree-back: oklch(0.34 0.08 268);
-  --tree-mid: oklch(0.2 0.055 268);
-  --tree-fore: oklch(0.1 0.035 268);
+  --tree-back: oklch(0.3 0.055 262);
+  --tree-mid: oklch(0.18 0.04 262);
+  --tree-fore: oklch(0.08 0.02 262);
 }
 
 .scene {

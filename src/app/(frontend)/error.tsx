@@ -41,7 +41,7 @@ export default function ErrorPage({
         <Button onClick={() => retry()}>Erneut versuchen</Button>
         <Link
           href="/"
-          className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+          className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
         >
           Zur Startseite
         </Link>

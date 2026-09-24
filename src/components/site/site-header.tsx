@@ -12,7 +12,7 @@ export function SiteHeader({ siteName }: { siteName: string }) {
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="page-container flex h-header items-center justify-between gap-5">
         <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-          <FirMark className="size-6 text-primary" />
+          <FirMark className="size-6 text-primary-soft" />
           <span className="truncate">{siteName}</span>
         </Link>
         <nav aria-label="Hauptnavigation">

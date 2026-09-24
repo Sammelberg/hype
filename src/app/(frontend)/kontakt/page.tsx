@@ -44,7 +44,7 @@ export default async function ContactPage() {
               Sie erreichen uns per E-Mail an{" "}
               <a
                 href={`mailto:${settings.contactEmail}`}
-                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+                className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
               >
                 {settings.contactEmail}
               </a>

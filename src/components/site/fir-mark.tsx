@@ -14,9 +14,9 @@ export function FirMark({ className, color }: { className?: string; color?: stri
 
 // Brand colours as hex for next/og, which cannot read CSS variables (globals.css holds the tokens).
 export const BRAND_HEX = {
-  background: "#070c1e",
-  card: "#0e142c",
-  foreground: "#eef2fc",
-  muted: "#a9b3d2",
-  accent: "#869efc",
+  background: "#040813",
+  card: "#070f1e",
+  foreground: "#f0f4f9",
+  muted: "#a2afc1",
+  accent: "#81b4f6",
 } as const;

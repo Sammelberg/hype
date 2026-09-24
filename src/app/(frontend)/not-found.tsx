@@ -10,7 +10,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-8 inline-block underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+        className="mt-8 inline-block underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
       >
         Zur Startseite
       </Link>

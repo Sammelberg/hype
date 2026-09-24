@@ -26,8 +26,8 @@ export default function GlobalError({
           padding: "1.3125rem",
           fontFamily: "system-ui, sans-serif",
           colorScheme: "dark",
-          background: "#070c1e",
-          color: "#eef2fc",
+          background: "#040813",
+          color: "#f0f4f9",
         }}
       >
         <title>Fehler</title>

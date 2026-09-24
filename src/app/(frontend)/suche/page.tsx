@@ -68,7 +68,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   <p className="text-xs text-muted-foreground">Seite</p>
                   <Link
                     href={result.url as never}
-                    className="mt-1 inline-block font-medium decoration-primary underline-offset-4 hover:underline"
+                    className="mt-1 inline-block font-medium decoration-primary-soft underline-offset-4 hover:underline"
                   >
                     {result.title}
                   </Link>
@@ -85,7 +85,7 @@ export default async function SearchPage({ searchParams }: Props) {
               Versuchen Sie einen anderen Begriff oder gehen Sie zur{" "}
               <Link
                 href="/"
-                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+                className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
               >
                 Startseite
               </Link>

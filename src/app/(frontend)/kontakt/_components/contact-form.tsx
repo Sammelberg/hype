@@ -186,7 +186,7 @@ export function ContactForm({
               oder schreiben Sie an{" "}
               <a
                 href={`mailto:${contactEmail}`}
-                className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+                className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
               >
                 {contactEmail}
               </a>
@@ -204,7 +204,7 @@ export function ContactForm({
           Hinweise zur Verarbeitung Ihrer Angaben finden Sie in der{" "}
           <Link
             href={"/datenschutz" as never}
-            className="underline decoration-primary underline-offset-4 transition-colors hover:text-primary"
+            className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
           >
             Datenschutzerklärung
           </Link>

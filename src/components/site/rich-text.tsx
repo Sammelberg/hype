@@ -15,7 +15,7 @@ export function RichText({
     <PayloadRichText
       data={data}
       className={cn(
-        "prose max-w-none prose-neutral dark:prose-invert prose-a:decoration-primary prose-a:underline-offset-4 prose-a:transition-colors hover:prose-a:text-primary",
+        "prose max-w-none prose-neutral dark:prose-invert prose-a:decoration-primary-soft prose-a:underline-offset-4 prose-a:transition-colors hover:prose-a:text-primary-soft",
         className,
       )}
     />
