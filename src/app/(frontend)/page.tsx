@@ -98,11 +98,11 @@ export default async function HomePage() {
           <div>
             <h1
               id="start-titel"
-              className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl"
+              className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl 3xl:max-w-6xl 3xl:text-8xl"
             >
               Individuelle Software, die Ihre Abläufe trägt.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl">
+            <p className="mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl 3xl:max-w-3xl 3xl:text-2xl">
               Aus dem Schwarzwald entwickeln wir Web-Anwendungen, mobile Apps und Schnittstellen für
               mittelständische Unternehmen, deren Prozesse nicht in Standardsoftware passen.
             </p>
@@ -119,7 +119,7 @@ export default async function HomePage() {
             </div>
           </div>
           {/* Above the headline on phones, beside it from lg up. */}
-          <TriangleMotif className="order-first w-36 sm:w-44 lg:order-none lg:w-[clamp(200px,24vw,340px)]" />
+          <TriangleMotif className="order-first w-36 sm:w-44 lg:order-none lg:w-[clamp(200px,24vw,340px)] 3xl:w-[clamp(340px,20vw,480px)]" />
         </div>
       </MountainHero>
 
@@ -128,11 +128,11 @@ export default async function HomePage() {
           <div className="lg:sticky lg:top-[calc(var(--spacing-header)+3rem)] lg:self-start">
             <h2
               id="leistungen-titel"
-              className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+              className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
               Was wir entwickeln
             </h2>
-            <p className="mt-4 max-w-sm text-pretty text-muted-foreground">
+            <p className="mt-4 max-w-sm text-pretty text-muted-foreground 3xl:max-w-md 3xl:text-lg">
               Von der einzelnen Schnittstelle bis zur kompletten Plattform – geplant für Ihre
               Abläufe, nicht für einen Standardfall.
             </p>
@@ -143,8 +143,8 @@ export default async function HomePage() {
                 key={service.title}
                 className="grid gap-2 py-7 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-8"
               >
-                <h3 className="text-xl font-medium tracking-tight">{service.title}</h3>
-                <p className="text-pretty text-muted-foreground">{service.text}</p>
+                <h3 className="text-xl font-medium tracking-tight 3xl:text-2xl">{service.title}</h3>
+                <p className="text-pretty text-muted-foreground 3xl:text-lg">{service.text}</p>
               </li>
             ))}
           </ul>
@@ -155,7 +155,7 @@ export default async function HomePage() {
         <div className="page-container py-20 sm:py-28">
           <h2
             id="vorgehen-titel"
-            className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+            className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
           >
             So arbeiten wir
           </h2>
@@ -165,8 +165,10 @@ export default async function HomePage() {
                 <span className="text-sm font-medium text-primary-soft tabular-nums">
                   Schritt {index + 1}
                 </span>
-                <h3 className="mt-2 text-xl font-medium tracking-tight">{step.title}</h3>
-                <p className="mt-3 text-pretty text-muted-foreground">{step.text}</p>
+                <h3 className="mt-2 text-xl font-medium tracking-tight 3xl:text-2xl">
+                  {step.title}
+                </h3>
+                <p className="mt-3 text-pretty text-muted-foreground 3xl:text-lg">{step.text}</p>
               </li>
             ))}
           </ol>
@@ -177,15 +179,19 @@ export default async function HomePage() {
         <div className="page-container py-20 sm:py-28">
           <h2
             id="grundsaetze-titel"
-            className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+            className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
           >
             Unsere Grundsätze
           </h2>
           <dl className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
             {PRINCIPLES.map((principle) => (
               <div key={principle.title}>
-                <dt className="text-xl font-medium tracking-tight">{principle.title}</dt>
-                <dd className="mt-3 text-pretty text-muted-foreground">{principle.text}</dd>
+                <dt className="text-xl font-medium tracking-tight 3xl:text-2xl">
+                  {principle.title}
+                </dt>
+                <dd className="mt-3 text-pretty text-muted-foreground 3xl:text-lg">
+                  {principle.text}
+                </dd>
               </div>
             ))}
           </dl>
@@ -197,11 +203,11 @@ export default async function HomePage() {
           <div className="max-w-2xl">
             <h2
               id="anfrage-titel"
-              className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl"
+              className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl 3xl:text-6xl"
             >
               Erzählen Sie uns von Ihrem Vorhaben.
             </h2>
-            <p className="mt-4 text-lg text-pretty text-muted-foreground">
+            <p className="mt-4 text-lg text-pretty text-muted-foreground 3xl:text-xl">
               Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere
               Vorgehen.
             </p>

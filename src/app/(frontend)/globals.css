@@ -60,24 +60,26 @@
 }
 
 @theme {
+  /* Breakpoints: Tailwind's sm 640 · md 768 · lg 1024 · xl 1280 · 2xl 1536, plus a small-phone step
+     and two for large screens, where type and the page column grow once more. */
+  --breakpoint-xs: 30rem; /* 480px */
+  --breakpoint-3xl: 120rem; /* 1920px */
+  --breakpoint-4xl: 160rem; /* 2560px */
+
+  /* Page column: up to 1760px wide; side gutter grows fluidly from 20px (375px) to 80px. */
+  --container-page: 110rem;
+  --spacing-gutter: clamp(1.25rem, 0.45rem + 3.4vw, 5rem);
+
   /* Height of the sticky site header (h-header); anchors and focus scrolling stop below it. */
   --spacing-header: 4rem;
 }
 
-/* Centered page column. Plain utilities (px-0, max-w-3xl) override it. */
+/* Centered page column with the fluid gutter. Plain utilities (px-0, max-w-3xl) override it. */
 @utility page-container {
   width: 100%;
-  max-width: 80rem;
+  max-width: var(--container-page);
   margin-inline: auto;
-  padding-inline: 1rem;
-
-  @media (width >= 40rem) {
-    padding-inline: 1.5rem;
-  }
-
-  @media (width >= 64rem) {
-    padding-inline: 2rem;
-  }
+  padding-inline: var(--spacing-gutter);
 }
 
 :root {
