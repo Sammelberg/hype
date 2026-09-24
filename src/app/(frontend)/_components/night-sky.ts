@@ -43,14 +43,15 @@ void main(){
     float veil=fbm(p+(warp-.5)*1.3);
     veil=smoothstep(.5-.05*breath,.9,veil)*smoothstep(.66,.22,ct)*smoothstep(-.02,.2,ct);
     sky+=vec3(.045,.075,.16)*veil*(.85+.3*breath);}
-  // Moonlight: a soft halo close around the disc.
-  sky+=vec3(.55,.66,.9)*(exp(-max(q-1.,0.)*1.35)*.34+exp(-max(q-1.,0.)*.28)*.05);
-  // The moon: cool white disc, darker toward the limb, faint maria, an anti-aliased edge.
+  // Moonlight: a bright silver halo close around the disc and a wide, faint sheen.
+  sky+=vec3(.74,.8,.92)*(exp(-max(q-1.,0.)*1.2)*.5+exp(-max(q-1.,0.)*.26)*.08);
+  // The moon: bright silver-white disc, a touch darker toward the limb, faint maria, an
+  // anti-aliased edge.
   if(q<1.2){
     vec2 m=(px-c)/r;
     float limb=sqrt(max(0.,1.-dot(m,m)));
     float maria=smoothstep(.45,.75,fbm(m*2.3+vec2(3.1,1.7)));
-    vec3 moon=vec3(.9,.93,.99)*(.72+.28*limb)*(1.-maria*.14);
+    vec3 moon=vec3(.97,.98,1.)*(.86+.14*limb)*(1.-maria*.08);
     float edge=1.-smoothstep(1.-1.5/r,1.,q);
     sky=mix(sky,moon,edge);
   }
