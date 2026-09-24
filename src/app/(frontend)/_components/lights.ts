@@ -1,7 +1,9 @@
-// Lights rising from the forest („Lichter“ of the owner's moon block): soft bokeh orbs with a
-// fading trail — the opposite of the sharp stars. Each is born at random along the ridges and
-// firs, drifts upward with a gentle sway, pulses softly and fades out, and a new one takes its
-// place, so the scene never loops. Drawn on a 2D canvas by the caller's ticker (mountain-scene.tsx).
+// Lights over the forest („Lichter“ of the owner's moon block), kept as small and quiet as the
+// block's own fireflies: 3–6px points, white at the heart fading to ice blue with a faint glow,
+// drifting only a little, with the block's firefly rhythm — glow up, dim to a third, brighten
+// again, go out. What changes: each light is born at a random place with its own path and is
+// replaced by a new one, so the scene never loops. Drawn on a 2D canvas by the caller's ticker
+// (mountain-scene.tsx).
 
 import { random } from "./starfield";
 
@@ -9,67 +11,100 @@ export type Light = {
   /** Birth point, CSS px. */
   x: number;
   y: number;
-  /** Upward travel over its life, px. */
-  rise: number;
-  /** Sideways sway amplitude (px) and frequency (radians per second). */
-  sway: number;
-  swaySpeed: number;
-  phase: number;
-  /** Size of the orb: it is drawn about seven times this across, CSS px. */
-  r: number;
+  /** Drift at mid-life, px (the block's --fx/--fy); it ends at 1.6× / 1.8× of it. */
+  dx: number;
+  dy: number;
+  /** Diameter, CSS px. */
+  size: number;
   tint: number;
+  /** A slight meander on top of the drift. */
+  phase: number;
   born: number;
   life: number;
 };
 
-/** Ice blue, starlight, sapphire — the site palette as RGB channels. */
-export const LIGHT_TINTS = ["129, 180, 246", "240, 244, 249", "96, 140, 240"] as const;
+/** Ice blue, starlight, sapphire — the site palette as RGB channels (the glow colour). */
+export const LIGHT_TINTS = ["110, 155, 255", "180, 205, 250", "80, 120, 235"] as const;
 
-/** One light per this many CSS px of width, up to MAX_LIGHTS. */
-export const WIDTH_PER_LIGHT = 70;
-export const MAX_LIGHTS = 40;
+/** One light per this many CSS px of width, 6 to MAX_LIGHTS (the block shows 16). */
+export const WIDTH_PER_LIGHT = 150;
+export const MAX_LIGHTS = 18;
 
 export const lightCount = (width: number) =>
   Math.max(6, Math.min(MAX_LIGHTS, Math.round(width / WIDTH_PER_LIGHT)));
 
-/** A light born at `now` in the forest band (the lower 35–5% of the hero), anywhere across. */
+/** A light born at `now` in the block's band (60–94% down the hero), anywhere across. */
 export function createLight(rand: () => number, width: number, height: number, now: number): Light {
   const tintRoll = rand();
   return {
     x: rand() * width,
-    y: height * (0.65 + rand() * 0.3),
-    rise: 100 + rand() * 180,
-    sway: 6 + rand() * 18,
-    swaySpeed: 0.3 + rand() * 0.5,
+    y: height * (0.6 + rand() * 0.34),
+    dx: (rand() < 0.5 ? -1 : 1) * (15 + rand() * 17),
+    dy: -(28 + rand() * 32),
+    size: 3 + rand() * 3,
+    tint: tintRoll < 0.7 ? 0 : tintRoll < 0.9 ? 1 : 2,
     phase: rand() * Math.PI * 2,
-    r: 1.4 + rand() ** 2 * 1.8,
-    tint: tintRoll < 0.6 ? 0 : tintRoll < 0.88 ? 1 : 2,
     born: now,
-    life: 9 + rand() * 7,
+    life: 6 + rand() * 4,
   };
 }
 
-/** A light's position and brightness at time t — null once it has faded. It drifts upward and
- * slows as it rises, sways gently, eases in over the first quarter of its life, glows with a slow
- * soft pulse and eases out over the last 40% — nothing sudden. */
+// The block's keyframes over a light's life: opacity 0 → 1 (15%) → 0.35 (50%) → 0.95 (85%) → 0,
+// scale 0.5 → 1 (50%) → 0.6, position 0 → drift (50%) → 1.6/1.8 × drift. Eased between keys
+// (cosine), so velocity is zero at every key and nothing jumps.
+type Keys = [number, number][];
+const OPACITY: Keys = [
+  [0, 0],
+  [0.15, 1],
+  [0.5, 0.35],
+  [0.85, 0.95],
+  [1, 0],
+];
+const SCALE: Keys = [
+  [0, 0.5],
+  [0.5, 1],
+  [1, 0.6],
+];
+const DRIFT_X: Keys = [
+  [0, 0],
+  [0.5, 1],
+  [1, 1.6],
+];
+const DRIFT_Y: Keys = [
+  [0, 0],
+  [0.5, 1],
+  [1, 1.8],
+];
+
+function keyed(keys: Keys, p: number) {
+  for (let i = 1; i < keys.length; i++) {
+    const [p1, v1] = keys[i]!;
+    const [p0, v0] = keys[i - 1]!;
+    if (p <= p1) {
+      const k = (p - p0) / (p1 - p0);
+      return v0 + (v1 - v0) * (0.5 - 0.5 * Math.cos(k * Math.PI));
+    }
+  }
+  return keys.at(-1)![1];
+}
+
+/** A light's position, scale and brightness at time t — null once it has gone out. */
 export function lightAt(light: Light, t: number) {
   const age = t - light.born;
   if (age < 0 || age > light.life) return null;
   const p = age / light.life;
-  const lift = 1 - (1 - p) ** 1.4; // slows as it rises
-  const smooth = (x: number) => x * x * (3 - 2 * x);
-  const envelope = p < 0.25 ? smooth(p / 0.25) : p > 0.6 ? smooth((1 - p) / 0.4) : 1;
-  const pulse = 0.85 + 0.15 * Math.sin(t * 1.3 + light.phase * 2);
   return {
-    x: light.x + Math.sin(t * light.swaySpeed + light.phase) * light.sway,
-    y: light.y - light.rise * lift,
-    alpha: Math.max(0, Math.min(1, envelope * pulse)),
+    x: light.x + light.dx * keyed(DRIFT_X, p) + Math.sin(p * Math.PI * 2 + light.phase) * 3,
+    y: light.y + light.dy * keyed(DRIFT_Y, p),
+    scale: keyed(SCALE, p),
+    alpha: keyed(OPACITY, p),
   };
 }
 
 /**
  * Binds a canvas: backing store at the device pixel ratio, a population that renews itself,
- * `render(t, fade)`. With `still`, lights are drawn once where they were born.
+ * `render(t, fade)`. With `still` (reduced motion), lights stay at their birth point at 0.8, as
+ * in the block.
  */
 export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
   const ctx = canvas.getContext("2d");
@@ -79,26 +114,30 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
   let height = 0;
   let last = { t: 0, fade: 0 };
 
-  // Soft bokeh orbs, one per tint: a gently lit disc with a feathered rim and no hard core —
-  // unlike the stars, which stay sharp points. Rendered once, stamped with drawImage.
-  const orbs = LIGHT_TINTS.map((tint) => {
-    const orb = document.createElement("canvas");
-    orb.width = orb.height = 64;
-    const o = orb.getContext("2d");
-    if (o) {
-      const gradient = o.createRadialGradient(32, 32, 0, 32, 32, 32);
-      gradient.addColorStop(0, `rgba(${tint}, 0.75)`);
-      gradient.addColorStop(0.28, `rgba(${tint}, 0.55)`);
-      gradient.addColorStop(0.5, `rgba(${tint}, 0.2)`);
-      gradient.addColorStop(1, `rgba(${tint}, 0)`);
-      o.fillStyle = gradient;
-      o.fillRect(0, 0, 64, 64);
+  // The block's look, one sprite per tint: white at the heart, the tint at 45%, clear at 75%,
+  // inside a faint glow of the tint (its 8px box-shadow).
+  const sprites = LIGHT_TINTS.map((tint) => {
+    const sprite = document.createElement("canvas");
+    sprite.width = sprite.height = 64;
+    const c = sprite.getContext("2d");
+    if (c) {
+      const glow = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      glow.addColorStop(0, `rgba(${tint}, 0.35)`);
+      glow.addColorStop(1, `rgba(${tint}, 0)`);
+      c.fillStyle = glow;
+      c.fillRect(0, 0, 64, 64);
+      const dot = c.createRadialGradient(32, 32, 0, 32, 32, 16);
+      dot.addColorStop(0, "rgba(255, 255, 255, 1)");
+      dot.addColorStop(0.45, `rgba(${tint}, 1)`);
+      dot.addColorStop(0.75, `rgba(${tint}, 0)`);
+      c.fillStyle = dot;
+      c.fillRect(16, 16, 32, 32);
     }
-    return orb;
+    return sprite;
   });
 
   function populate(t: number) {
-    // Staggered ages at the start, so the forest is already alive instead of all lights rising at once.
+    // Staggered ages at the start, so the forest is already alive instead of all lights at once.
     lights = Array.from({ length: lightCount(width) }, () => {
       const light = createLight(rand, width, height, t);
       light.born = t - rand() * light.life;
@@ -116,24 +155,12 @@ export function bindLights(canvas: HTMLCanvasElement, { still = false } = {}) {
       !still && !lightAt(light, t) ? createLight(rand, width, height, t) : light,
     );
     for (const light of lights) {
-      const at = still
-        ? { x: light.x, y: light.y - light.rise * 0.4, alpha: 0.8 }
-        : lightAt(light, t);
+      const at = still ? { x: light.x, y: light.y, scale: 1, alpha: 0.8 } : lightAt(light, t);
       if (!at || at.alpha <= 0) continue;
-      const orb = orbs[light.tint]!;
-      const size = light.r * 7 * dpr;
-      // A short trail of fading, shrinking orbs where it just was, softening its climb.
-      if (!still) {
-        for (let k = 3; k >= 1; k--) {
-          const past = lightAt(light, t - k * 0.22);
-          if (!past) continue;
-          const s = size * (1 - k * 0.14);
-          ctx.globalAlpha = past.alpha * fade * (0.28 / k);
-          ctx.drawImage(orb, past.x * dpr - s / 2, past.y * dpr - s / 2, s, s);
-        }
-      }
+      // The dot spans half of the sprite: draw the sprite at twice the light's size.
+      const size = light.size * at.scale * 2 * dpr;
       ctx.globalAlpha = at.alpha * fade;
-      ctx.drawImage(orb, at.x * dpr - size / 2, at.y * dpr - size / 2, size, size);
+      ctx.drawImage(sprites[light.tint]!, at.x * dpr - size / 2, at.y * dpr - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
   }

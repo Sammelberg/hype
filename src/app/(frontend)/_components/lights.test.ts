@@ -6,54 +6,56 @@ import { random } from "./starfield";
 describe("lights", () => {
   const lights = Array.from({ length: 300 }, (_, i) => createLight(random(i + 1), 1440, 900, 0));
 
-  it("scale with the width and stay within bounds", () => {
+  it("are few, like the block's sixteen", () => {
     expect(lightCount(375)).toBe(6);
-    expect(lightCount(1440)).toBe(21);
+    expect(lightCount(1440)).toBe(10);
+    expect(lightCount(2560)).toBe(17);
     expect(lightCount(4000)).toBe(MAX_LIGHTS);
   });
 
-  it("are born at random across the forest band", () => {
+  it("are small points born at random in the block's band", () => {
     const xs = lights.map((l) => l.x);
     expect(Math.min(...xs)).toBeLessThan(1440 * 0.1);
     expect(Math.max(...xs)).toBeGreaterThan(1440 * 0.9);
     for (const l of lights) {
-      expect(l.y).toBeGreaterThanOrEqual(900 * 0.65);
-      expect(l.y).toBeLessThanOrEqual(900 * 0.95);
+      expect(l.y).toBeGreaterThanOrEqual(900 * 0.6);
+      expect(l.y).toBeLessThanOrEqual(900 * 0.94);
+      expect(l.size).toBeGreaterThanOrEqual(3);
+      expect(l.size).toBeLessThanOrEqual(6);
     }
-    expect(new Set(lights.map((l) => l.tint)).size).toBe(3);
   });
 
-  it("rise, sway, fade in and out, and are gone after their life", () => {
-    const light = lights[0]!;
-    expect(lightAt(light, -0.1)).toBeNull();
-    const early = lightAt(light, light.life * 0.05)!;
-    const mid = lightAt(light, light.life * 0.5)!;
-    const late = lightAt(light, light.life * 0.97)!;
-    expect(mid.y).toBeLessThan(early.y);
-    expect(late.y).toBeLessThan(mid.y);
-    expect(late.y).toBeGreaterThanOrEqual(light.y - light.rise - 1e-9);
-    expect(early.alpha).toBeLessThan(mid.alpha);
-    expect(late.alpha).toBeLessThan(mid.alpha);
-    expect(Math.abs(mid.x - light.x)).toBeLessThanOrEqual(light.sway + 1e-9);
-    expect(lightAt(light, light.life + 0.01)).toBeNull();
-  });
-
-  it("are calm: slow to rise and to sway, long-lived", () => {
+  it("drift only a little, as in the block: up 28–60px by mid-life, at most ~120px in all", () => {
     for (const l of lights) {
-      expect(l.life).toBeGreaterThanOrEqual(9);
-      expect(l.rise / l.life).toBeLessThan(35); // px per second, on average
-      expect(l.swaySpeed).toBeLessThanOrEqual(0.8);
+      expect(-l.dy).toBeGreaterThanOrEqual(28);
+      expect(-l.dy).toBeLessThanOrEqual(60);
+      const end = lightAt(l, l.life * 0.999)!;
+      expect(Math.hypot(end.x - l.x, end.y - l.y)).toBeLessThan(125); // 1.6·32 across, 1.8·60 up, ±3 meander
+      expect(end.y).toBeLessThan(l.y);
     }
   });
 
-  it("each one differs: speed, rise, sway and size vary", () => {
-    const spread = (pick: (l: (typeof lights)[number]) => number) => {
-      const v = lights.map(pick);
-      return Math.max(...v) - Math.min(...v);
-    };
-    expect(spread((l) => l.life)).toBeGreaterThan(4);
-    expect(spread((l) => l.rise)).toBeGreaterThan(120);
-    expect(spread((l) => l.sway)).toBeGreaterThan(15);
-    expect(spread((l) => l.r)).toBeGreaterThan(1);
+  it("keep the block's firefly rhythm: glow, dim to a third, glow again, go out", () => {
+    const l = lights[0]!;
+    const at = (p: number) => lightAt(l, l.life * p)!.alpha;
+    expect(at(0.001)).toBeLessThan(0.01);
+    expect(at(0.15)).toBeCloseTo(1, 5);
+    expect(at(0.5)).toBeCloseTo(0.35, 5);
+    expect(at(0.85)).toBeCloseTo(0.95, 5);
+    expect(at(0.999)).toBeLessThan(0.01);
+    expect(lightAt(l, l.life + 0.01)).toBeNull();
+    expect(lightAt(l, -0.01)).toBeNull();
+  });
+
+  it("change smoothly from frame to frame", () => {
+    const l = lights[5]!;
+    let prev = lightAt(l, 0)!;
+    for (let t = 1 / 60; t < l.life; t += 1 / 60) {
+      const now = lightAt(l, t);
+      if (!now) break;
+      expect(Math.abs(now.alpha - prev.alpha)).toBeLessThan(0.05);
+      expect(Math.hypot(now.x - prev.x, now.y - prev.y)).toBeLessThan(1.5);
+      prev = now;
+    }
   });
 });
