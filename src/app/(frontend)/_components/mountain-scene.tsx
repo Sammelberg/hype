@@ -189,6 +189,7 @@ export function MountainHero({
             1.5,
           )
           .to("[data-tri-dot]", { opacity: 1, duration: 0.4, ease: "power4.out" }, 2.4)
+          .to("[data-tri-sparkle]", { opacity: 1, duration: 0.6, ease: "power2.out" }, 2.6)
           .fromTo(
             "[data-tri-side]",
             { drawSVG: "0%", strokeOpacity: 0 },
@@ -199,7 +200,7 @@ export function MountainHero({
 
       mm.add("(prefers-reduced-motion: reduce)", () => {
         gsap.set("[data-line], [data-tri-centre], [data-tri-side]", { strokeOpacity: 1 });
-        gsap.set("[data-tri-dot]", { opacity: 1 });
+        gsap.set("[data-tri-dot], [data-tri-sparkle]", { opacity: 1 });
         gsap.set("[data-accent]", { opacity: 0.6 });
         markDrawn();
       });

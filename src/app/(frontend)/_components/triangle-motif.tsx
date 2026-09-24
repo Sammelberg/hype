@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 
 import styles from "./triangle-motif.module.css";
 
-// Triangle motif („Dreiecke“ block, supplied by the owner): three peaks — the tall centre one, two
-// flanking ones — joined at their bases. Decorative. MountainHero's GSAP timeline draws it once
+// Triangle motif („Dreiecke“ block, supplied by the owner): three peaks — the tall centre one with a
+// diamond sparkle, two flanking ones — joined at their bases. Decorative. MountainHero's GSAP timeline draws it once
 // the ridge has started (data-tri-* hooks); until then the strokes are hidden.
 export function TriangleMotif({ className }: { className?: string }) {
   return (
@@ -17,6 +17,12 @@ export function TriangleMotif({ className }: { className?: string }) {
             strokeWidth="3"
           />
           <circle data-tri-dot className={styles.dotCentre} cx="40" cy="50" r="4" />
+          <g data-tri-sparkle className={styles.sparkle} transform="translate(40 50)">
+            <path
+              className={styles.glint}
+              d="M0 -13 L1.4 -1.4 L13 0 L1.4 1.4 L0 13 L-1.4 1.4 L-13 0 L-1.4 -1.4 Z"
+            />
+          </g>
         </g>
         <g transform="translate(-40 194) scale(1.15) translate(40 -194)">
           <path
