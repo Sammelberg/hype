@@ -13,7 +13,9 @@
   --main: oklch(0.115 0.028 262);
   --main-stroke: var(--primary-soft);
   --glow-rgb: 72 124 214; /* sapphire between primary and primary-soft, as RGB channels */
-  --accent-line: var(--foreground);
+  --accent-line: oklch(
+    0.86 0.12 82
+  ); /* gold, the fireflies' warm light — the ridge's one bright line */
   /* Firs by depth: haze-light at the back, darkest in front. No single shade separates a fir from
      both the near-black sky and the lighter ridges, so mid and front firs carry a thin moonlit rim
      in ice blue (--rim-rgb = primary-soft) that outlines them against any backdrop. */

@@ -83,7 +83,7 @@ const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore 
 
 /** Brightness the ridge outline and its highlight settle to after the draw (e2e/hero.spec.ts checks it). */
 const RIDGE_REST = 0.45;
-const ACCENT_REST = 0.3;
+const ACCENT_REST = 0.85;
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
@@ -181,7 +181,7 @@ export function MountainHero({
           .fromTo(
             "[data-accent]",
             { drawSVG: "0%", opacity: 0 },
-            { drawSVG: "100%", opacity: 0.6, duration: 2.2, ease: "power3.inOut" },
+            { drawSVG: "100%", opacity: 1, duration: 2.2, ease: "power3.inOut" },
             0.3,
           )
           // Triangle motif (triangle-motif.tsx), the block's timing: 1.7s after load the centre
@@ -199,8 +199,8 @@ export function MountainHero({
             { drawSVG: "100%", strokeOpacity: 1, duration: 1, ease: "power4.out" },
             2.5,
           )
-          // Once everything is drawn, the ridge settles: its outline and highlight dim to a quiet
-          // sketch, so the bright line belongs to the drawing and not to the resting scene.
+          // Once everything is drawn, the ridge settles: its outline dims to a quiet sketch, while the
+          // golden highlight arc stays bright and becomes the scene's one warm line.
           .to("[data-line]", { strokeOpacity: RIDGE_REST, duration: 1.8, ease: "sine.inOut" }, 3.2)
           .to("[data-accent]", { opacity: ACCENT_REST, duration: 1.8, ease: "sine.inOut" }, 3.2);
       });
