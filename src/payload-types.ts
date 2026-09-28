@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     pages: Page;
+    projekte: Projekte;
     redirects: Redirect;
     search: Search;
     forms: Form;
@@ -84,6 +85,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    projekte: ProjekteSelect<false> | ProjekteSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
@@ -253,6 +255,48 @@ export interface Page {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Referenzprojekte für die Seite „Projekte“.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projekte".
+ */
+export interface Projekte {
+  id: number;
+  title: string;
+  slug: string;
+  kunde: string;
+  /**
+   * Für die Projektübersicht und den Suchindex.
+   */
+  summary: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -261,10 +305,15 @@ export interface Redirect {
   from: string;
   to?: {
     type?: ('reference' | 'custom') | null;
-    reference?: {
-      relationTo: 'pages';
-      value: number | Page;
-    } | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'projekte';
+          value: number | Projekte;
+        } | null);
     url?: string | null;
   };
   type: '301' | '302';
@@ -281,10 +330,15 @@ export interface Search {
   id: number;
   title?: string | null;
   priority?: number | null;
-  doc: {
-    relationTo: 'pages';
-    value: number | Page;
-  };
+  doc:
+    | {
+        relationTo: 'pages';
+        value: number | Page;
+      }
+    | {
+        relationTo: 'projekte';
+        value: number | Projekte;
+      };
   summary?: string | null;
   url?: string | null;
   updatedAt: string;
@@ -465,6 +519,10 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
+        relationTo: 'projekte';
+        value: number | Projekte;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: number | Redirect;
       } | null)
@@ -621,6 +679,27 @@ export interface PagesSelect<T extends boolean = true> {
         url?: T;
         label?: T;
         id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projekte_select".
+ */
+export interface ProjekteSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  kunde?: T;
+  summary?: T;
+  content?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -831,6 +910,64 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Abschnitt „Was wir entwickeln“ auf der Startseite und /leistungen.
+   */
+  services?:
+    | {
+        title: string;
+        /**
+         * Für die Leiste (schmale Bildschirme, Navigation).
+         */
+        short: string;
+        /**
+         * Ergibt /leistungen/<kürzel>.
+         */
+        slug: string;
+        /**
+         * Fest gezeichnetes Symbol — es gibt genau diese fünf, keine weiteren.
+         */
+        glyph: 'web' | 'mobile' | 'integration' | 'modernisation' | 'operations';
+        text: string;
+        examples?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Abschnitt „So arbeiten wir“ auf der Startseite.
+   */
+  steps?:
+    | {
+        title: string;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Abschnitt „Unsere Grundsätze“ auf der Startseite.
+   */
+  principles?:
+    | {
+        title: string;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Häufige Fragen auf /leistungen.
+   */
+  faq?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -849,6 +986,43 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         label?: T;
         url?: T;
+        id?: T;
+      };
+  services?:
+    | T
+    | {
+        title?: T;
+        short?: T;
+        slug?: T;
+        glyph?: T;
+        text?: T;
+        examples?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  steps?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  principles?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  faq?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
         id?: T;
       };
   updatedAt?: T;

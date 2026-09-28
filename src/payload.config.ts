@@ -9,6 +9,7 @@ import sharp from "sharp";
 
 import { Media } from "./cms/collections/Media";
 import { Pages } from "./cms/collections/Pages";
+import { Projekte } from "./cms/collections/Projekte";
 import { Users } from "./cms/collections/Users";
 import { SiteSettings } from "./cms/globals/SiteSettings";
 import { docPath, ROUTED_COLLECTIONS } from "./cms/paths";
@@ -39,7 +40,7 @@ export default buildConfig({
     },
   },
   i18n: { supportedLanguages: { de }, fallbackLanguage: "de" },
-  collections: [Users, Media, Pages],
+  collections: [Users, Media, Pages, Projekte],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET,

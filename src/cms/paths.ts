@@ -1,4 +1,5 @@
 import { pagePath } from "./collections/Pages";
+import { projektPath } from "./collections/Projekte";
 
 type PathFor = (doc: Record<string, unknown>) => string | null;
 
@@ -7,6 +8,7 @@ type PathFor = (doc: Record<string, unknown>) => string | null;
 // (e.g. `posts` → /beitraege/[slug]) is added here once, next to its route.
 export const routedCollections = {
   pages: pagePath,
+  projekte: projektPath,
 } satisfies Record<string, PathFor>;
 
 export type RoutedCollection = keyof typeof routedCollections;
