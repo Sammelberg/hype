@@ -9,6 +9,7 @@ import { absoluteUrl } from "@/lib/seo";
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl("/"), changeFrequency: "weekly", priority: 1 },
   { url: absoluteUrl("/kontakt"), priority: 0.6 },
+  { url: absoluteUrl("/projekte"), priority: 0.6 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

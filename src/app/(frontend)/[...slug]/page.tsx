@@ -20,8 +20,9 @@ export async function generateStaticParams() {
   return (
     docs
       .map((doc) => pagePath(doc as unknown as Record<string, unknown>))
-      // The home page (`/`) is rendered by app/(frontend)/page.tsx, not by this catch-all.
-      .filter((path): path is string => Boolean(path) && path !== "/")
+      // `/` is rendered by app/(frontend)/page.tsx; `/leistungen` by its own route (the Pages doc
+      // there only exists as a nested-docs anchor for the 5 child pages) — not by this catch-all.
+      .filter((path): path is string => Boolean(path) && path !== "/" && path !== "/leistungen")
       .map((path) => ({ slug: path.split("/").filter(Boolean) }))
   );
 }

@@ -6,7 +6,14 @@ import { getPayload, type Payload } from "payload";
 import sharp from "sharp";
 
 import config from "../src/payload.config";
-import { lexical, SEED_REDIRECT, seedContactForm, seedPages, seedSettings } from "./seed-data";
+import {
+  lexical,
+  SEED_REDIRECT,
+  seedContactForm,
+  seedPages,
+  seedProjects,
+  seedSettings,
+} from "./seed-data";
 
 const context = { disableRevalidate: true };
 
@@ -53,7 +60,7 @@ async function upsertMedia(
   return doc.id;
 }
 
-async function upsertBySlug<C extends "pages">(
+async function upsertBySlug<C extends "pages" | "projekte">(
   payload: Payload,
   collection: C,
   slug: string,
@@ -96,6 +103,15 @@ async function main() {
     ids.set(page.slug, doc.id);
   }
 
+  for (const project of seedProjects) {
+    await upsertBySlug(payload, "projekte", project.slug, {
+      title: project.title,
+      kunde: project.kunde,
+      summary: project.summary,
+      content: lexical(project.content),
+    });
+  }
+
   const form = await payload.find({
     collection: "forms",
     where: { title: { equals: seedContactForm.title } },
@@ -128,7 +144,7 @@ async function main() {
   }
 
   payload.logger.info(
-    `Seed fertig: ${seedPages.length} Seiten, Kontaktformular, Weiterleitung, Website-Einstellungen.`,
+    `Seed fertig: ${seedPages.length} Seiten, ${seedProjects.length} Projekt(e), Kontaktformular, Weiterleitung, Website-Einstellungen.`,
   );
 }
 
