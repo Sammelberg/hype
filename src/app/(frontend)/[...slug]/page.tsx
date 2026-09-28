@@ -5,6 +5,7 @@ import { RichText } from "@/components/site/rich-text";
 import { getPayloadClient } from "@/data/payload";
 import { getPageByPath } from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
+import { firstParagraph } from "@/lib/rich-text";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string[] }> };
@@ -34,6 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return buildMetadata({
     meta: page.meta,
     fallbackTitle: page.title,
+    fallbackDescription: firstParagraph(page.content),
     path: pagePath(page as unknown as Record<string, unknown>) ?? "/",
   });
 }
