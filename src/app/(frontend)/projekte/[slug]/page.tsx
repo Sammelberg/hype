@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { projektPath } from "@/cms/collections/Projekte";
+import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
 import { getProjekte, getProjektBySlug } from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
@@ -32,6 +33,14 @@ export default async function ProjektPage({ params }: Props) {
 
   return (
     <main className="page-container max-w-3xl pt-16 sm:pt-24">
+      <PageBreadcrumbs
+        trail={[
+          { name: "Startseite", path: "/" },
+          { name: "Projekte", path: "/projekte" },
+          { name: projekt.title, path: `/projekte/${projekt.slug}` },
+        ]}
+        className="mb-6"
+      />
       <p className="text-sm font-medium text-primary-soft">{projekt.kunde}</p>
       <h1 className="mt-1 text-4xl font-semibold tracking-tight text-balance">{projekt.title}</h1>
       <RichText data={projekt.content} className="mt-10" />

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import { pagePath } from "@/cms/collections/Pages";
+import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
 import { getPayloadClient } from "@/data/payload";
 import { getPageByPath } from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
+import { pageTrail } from "@/lib/breadcrumbs";
 import { firstParagraph } from "@/lib/rich-text";
 import { buildMetadata } from "@/lib/seo";
 
@@ -44,9 +46,12 @@ export default async function CmsPage({ params }: Props) {
   const { slug } = await params;
   const page = await getPageByPath(slug);
   if (!page) return redirectOrNotFound(`/${slug.join("/")}`);
+  const trail = pageTrail(page.breadcrumbs);
 
   return (
     <main className="page-container max-w-3xl pt-16 sm:pt-24">
+      {/* Top-level pages sit directly under the home page; a trail there would add nothing. */}
+      {trail.length > 2 ? <PageBreadcrumbs trail={trail} className="mb-6" /> : null}
       <h1 className="text-4xl font-semibold tracking-tight text-balance">{page.title}</h1>
       <RichText data={page.content} className="mt-10" />
     </main>
