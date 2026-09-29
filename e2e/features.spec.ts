@@ -73,3 +73,9 @@ test("pages without a CMS image share their own drawn preview", async ({ page, r
   }
   expect((await request.get("/vorschaubild/gibt-es-nicht")).status()).toBe(404);
 });
+
+test("search finds a word from deep inside a page, not only its title", async ({ page }) => {
+  await page.goto("/suche?q=kurzlebige");
+  const results = page.getByRole("region", { name: /Ergebnis/ });
+  await expect(results.getByRole("link", { name: "Web-Anwendungen" })).toBeVisible();
+});

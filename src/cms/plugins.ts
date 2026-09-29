@@ -8,6 +8,7 @@ import type { Plugin } from "payload";
 
 import { env } from "../env";
 import { normalizePath } from "../lib/redirects";
+import { firstParagraph, plainText } from "../lib/rich-text";
 import { revalidatePathsOf } from "./hooks/revalidate";
 import { docPath, ROUTED_COLLECTIONS } from "./paths";
 
@@ -59,11 +60,18 @@ export const plugins: Plugin[] = [
         ...defaultFields,
         { name: "summary", label: "Kurztext", type: "textarea", admin: { readOnly: true } },
         { name: "url", label: "Pfad", type: "text", admin: { readOnly: true } },
+        // The whole text of the page, so the site search finds words from anywhere in it.
+        { name: "text", label: "Volltext", type: "textarea", admin: { hidden: true } },
       ],
     },
     beforeSync: ({ collectionSlug, originalDoc, searchDoc }) => ({
       ...searchDoc,
-      summary: originalDoc.summary ?? originalDoc.meta?.description ?? "",
+      summary:
+        originalDoc.summary ??
+        originalDoc.meta?.description ??
+        firstParagraph(originalDoc.content) ??
+        "",
+      text: plainText(originalDoc.content),
       url: docPath(collectionSlug, originalDoc),
     }),
   }),

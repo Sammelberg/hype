@@ -114,7 +114,9 @@ export const searchSite = cache(async (query: string) => {
   const payload = await getPayloadClient();
   const { docs } = await payload.find({
     collection: "search",
-    where: { or: [{ title: { like: query } }, { summary: { like: query } }] },
+    where: {
+      or: [{ title: { like: query } }, { summary: { like: query } }, { text: { like: query } }],
+    },
     sort: "-priority",
     limit: 50,
     depth: 0,

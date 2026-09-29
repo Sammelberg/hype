@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { firstParagraph } from "./rich-text";
+import { firstParagraph, plainText } from "./rich-text";
 
 const text = (value: string) => ({ type: "text", text: value });
 const doc = (...children: unknown[]) => ({ root: { type: "root", children } });
@@ -27,5 +27,24 @@ describe("firstParagraph", () => {
     expect(firstParagraph(null)).toBeNull();
     expect(firstParagraph(undefined)).toBeNull();
     expect(firstParagraph(doc())).toBeNull();
+  });
+});
+
+describe("plainText", () => {
+  it("joins every block's text, headings and list items included, one block per line", () => {
+    const content = doc(
+      { type: "heading", children: [text("Titel")] },
+      {
+        type: "paragraph",
+        children: [text("Erster "), { type: "link", children: [text("Link")] }],
+      },
+      { type: "list", children: [{ type: "listitem", children: [text("ERP")] }] },
+    );
+    expect(plainText(content)).toBe("Titel\nErster Link\nERP");
+  });
+
+  it("returns an empty string without content", () => {
+    expect(plainText(null)).toBe("");
+    expect(plainText(doc())).toBe("");
   });
 });

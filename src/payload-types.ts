@@ -341,6 +341,7 @@ export interface Search {
       };
   summary?: string | null;
   url?: string | null;
+  text?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -732,6 +733,7 @@ export interface SearchSelect<T extends boolean = true> {
   doc?: T;
   summary?: T;
   url?: T;
+  text?: T;
   updatedAt?: T;
   createdAt?: T;
 }
