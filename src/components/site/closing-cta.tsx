@@ -1,9 +1,14 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { getSiteSettings } from "@/data/queries";
 
 // The invitation that ends the home page and the content pages: one sentence, one action.
-export function ClosingCta() {
+// Its text is edited under /admin → Website-Einstellungen → Allgemein → Anfrage.
+export async function ClosingCta() {
+  const { cta } = await getSiteSettings();
+  if (!cta?.title) return null;
+
   return (
     <section aria-labelledby="anfrage-titel" className="border-t">
       <div className="page-container flex flex-col items-start gap-8 py-20 sm:py-28 lg:flex-row lg:items-end lg:justify-between">
@@ -12,15 +17,14 @@ export function ClosingCta() {
             id="anfrage-titel"
             className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl 3xl:text-6xl"
           >
-            Erzählen Sie uns von Ihrem Vorhaben.
+            {cta.title}
           </h2>
-          <p className="mt-4 text-lg text-pretty text-muted-foreground 3xl:text-xl">
-            Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere
-            Vorgehen.
-          </p>
+          {cta.text ? (
+            <p className="mt-4 text-lg text-pretty text-muted-foreground 3xl:text-xl">{cta.text}</p>
+          ) : null}
         </div>
         <Button asChild size="lg" variant="outline">
-          <Link href="/kontakt">Projekt anfragen</Link>
+          <Link href="/kontakt">{cta.label}</Link>
         </Button>
       </div>
     </section>

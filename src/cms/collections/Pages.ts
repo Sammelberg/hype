@@ -45,6 +45,15 @@ export const Pages: CollectionConfig = {
           ? true
           : "Nur Kleinbuchstaben, Ziffern und Bindestriche.",
     },
+    {
+      name: "lead",
+      label: "Einleitung",
+      type: "textarea",
+      admin: {
+        description:
+          "Ein, zwei Sätze neben der Überschrift. Auch Vorschau in Übersichten und Suche, wenn gesetzt.",
+      },
+    },
     { name: "content", label: "Inhalt", type: "richText" },
   ],
 };

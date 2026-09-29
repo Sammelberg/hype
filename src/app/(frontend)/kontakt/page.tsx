@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import Link from "next/link";
-
 import { PageHeader } from "@/components/site/page-header";
 import { RichText } from "@/components/site/rich-text";
 import { getContactForm, getSiteSettings } from "@/data/queries";
@@ -10,9 +8,10 @@ import { buildMetadata } from "@/lib/seo";
 import { ContactForm, type ContactFormField } from "./_components/contact-form";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
   return buildMetadata({
     fallbackTitle: "Kontakt",
-    fallbackDescription: "Nehmen Sie über das Kontaktformular Kontakt auf.",
+    fallbackDescription: settings.kontaktLead || "Nehmen Sie über das Kontaktformular Kontakt auf.",
     path: "/kontakt",
   });
 }
@@ -27,6 +26,7 @@ export default async function ContactPage() {
   const fields = (form?.fields ?? []).filter((field) => "name" in field) as ContactFormField[];
 
   const email = settings.contactEmail;
+  const next = settings.kontaktNext;
   const mail = email ? (
     <a
       href={`mailto:${email}`}
@@ -38,11 +38,7 @@ export default async function ContactPage() {
 
   return (
     <main>
-      <PageHeader
-        title="Kontakt"
-        lead="Erzählen Sie uns von Ihrem Vorhaben. Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen."
-        horizonKey="/kontakt"
-      />
+      <PageHeader title="Kontakt" lead={settings.kontaktLead} horizonKey="/kontakt" />
       <div className="page-container grid gap-16 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
         <div className="max-w-3xl">
           {form && fields.length ? (
@@ -69,20 +65,12 @@ export default async function ContactPage() {
               </p>
             </div>
           ) : null}
-          <div>
-            <h2 className="text-xl font-medium tracking-tight">Was danach passiert</h2>
-            <p className="mt-3 text-lg text-pretty text-muted-foreground">
-              Wir lesen Ihre Nachricht und melden uns mit ersten Fragen. Danach klären wir in einem
-              Workshop Ziele, Nutzer und Randbedingungen – wie es weitergeht,{" "}
-              <Link
-                href={"/ueber-uns/arbeitsweise" as never}
-                className="text-foreground underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
-              >
-                zeigt unsere Arbeitsweise
-              </Link>
-              .
-            </p>
-          </div>
+          {next?.title ? (
+            <div>
+              <h2 className="text-xl font-medium tracking-tight">{next.title}</h2>
+              <RichText data={next.text} className="prose-lg mt-3" />
+            </div>
+          ) : null}
         </aside>
       </div>
     </main>

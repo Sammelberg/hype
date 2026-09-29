@@ -210,7 +210,7 @@ export function ServicesStrata({
 }: {
   id: string;
   title: string;
-  intro: string;
+  intro?: string;
   services: readonly Service[];
 }) {
   const root = useRef<HTMLElement>(null);
@@ -377,7 +377,7 @@ export function ServicesStrata({
         <h2 id={`${id}-titel`} className={styles.heading}>
           {title}
         </h2>
-        <p className={styles.intro}>{intro}</p>
+        {intro ? <p className={styles.intro}>{intro}</p> : null}
       </div>
 
       {/* The three drawn firs, once; every valley places copies of them. */}

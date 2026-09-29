@@ -218,6 +218,10 @@ export interface Page {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Ein, zwei Sätze neben der Überschrift. Auch Vorschau in Übersichten und Suche, wenn gesetzt.
+   */
+  lead?: string | null;
   content?: {
     root: {
       type: string;
@@ -664,6 +668,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  lead?: T;
   content?: T;
   meta?:
     | T
@@ -902,6 +907,9 @@ export interface SiteSetting {
   id: number;
   siteName: string;
   ownerName: string;
+  /**
+   * Im Fußbereich unter dem Namen.
+   */
   tagline?: string | null;
   description?: string | null;
   contactEmail?: string | null;
@@ -912,6 +920,36 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Abschluss am Ende der Startseite und der Inhaltsseiten; die Beschriftung gilt auch für den Aufruf oben auf der Startseite.
+   */
+  cta: {
+    title: string;
+    text?: string | null;
+    /**
+     * Führt immer zu /kontakt.
+     */
+    label: string;
+  };
+  /**
+   * Überschrift: Anfang, wechselndes Wort, Ende — z. B. „Wir entwickeln | mobile Apps | für den Mittelstand.“ Der erste Buchstabe erscheint in gebrochener Schrift.
+   */
+  hero: {
+    headline: string;
+    words?:
+      | {
+          word: string;
+          id?: string | null;
+        }[]
+      | null;
+    headlineEnd: string;
+    lead?: string | null;
+  };
+  servicesTitle: string;
+  /**
+   * Unter der Überschrift auf der Startseite und auf /leistungen.
+   */
+  servicesIntro?: string | null;
   /**
    * Abschnitt „Was wir entwickeln“ auf der Startseite und /leistungen.
    */
@@ -940,6 +978,7 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  stepsTitle: string;
   /**
    * Abschnitt „So arbeiten wir“ auf der Startseite.
    */
@@ -950,6 +989,7 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  principlesTitle: string;
   /**
    * Abschnitt „Unsere Grundsätze“ auf der Startseite.
    */
@@ -970,6 +1010,39 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Neben der Überschrift auf /projekte.
+   */
+  projekteLead?: string | null;
+  /**
+   * Steht auf /projekte, solange kein Projekt veröffentlicht ist.
+   */
+  projekteEmpty?: string | null;
+  /**
+   * Neben der Überschrift auf /kontakt.
+   */
+  kontaktLead?: string | null;
+  /**
+   * Randspalte auf /kontakt neben dem Formular.
+   */
+  kontaktNext?: {
+    title?: string | null;
+    text?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -990,6 +1063,28 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
+  cta?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        label?: T;
+      };
+  hero?:
+    | T
+    | {
+        headline?: T;
+        words?:
+          | T
+          | {
+              word?: T;
+              id?: T;
+            };
+        headlineEnd?: T;
+        lead?: T;
+      };
+  servicesTitle?: T;
+  servicesIntro?: T;
   services?:
     | T
     | {
@@ -1006,6 +1101,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  stepsTitle?: T;
   steps?:
     | T
     | {
@@ -1013,6 +1109,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         text?: T;
         id?: T;
       };
+  principlesTitle?: T;
   principles?:
     | T
     | {
@@ -1026,6 +1123,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         question?: T;
         answer?: T;
         id?: T;
+      };
+  projekteLead?: T;
+  projekteEmpty?: T;
+  kontaktLead?: T;
+  kontaktNext?:
+    | T
+    | {
+        title?: T;
+        text?: T;
       };
   updatedAt?: T;
   createdAt?: T;

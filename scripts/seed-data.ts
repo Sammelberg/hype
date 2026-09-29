@@ -9,7 +9,9 @@ type Block =
   | { kind: "p" | "h2"; text: string }
   /** One paragraph with line breaks (an address). */
   | { kind: "lines"; lines: string[] }
-  | { kind: "ul"; items: string[] };
+  | { kind: "ul"; items: string[] }
+  /** One paragraph with links inside (a part with `href` becomes a link). */
+  | { kind: "rich"; parts: (string | { text: string; href: string })[] };
 
 // The examples/steps/principles/FAQ describe kinds of work, not references; the principles' claims
 // are confirmed by the owner (2026-09-29). Edited under /admin → Website-Einstellungen.
@@ -22,6 +24,14 @@ export const seedSettings = {
   // Shown in the footer, on /kontakt and in the legal pages once set (the owner's address follows).
   contactEmail: null as string | null,
   socialLinks: [] as { label: string; url: string }[],
+  // The other home and page texts (headings, leads, the closing invitation) are the fields' default
+  // values in src/cms/globals/SiteSettings.ts; a fresh database gets them from there.
+  hero: {
+    // What we build, from the services below.
+    words: ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"].map((word) => ({
+      word,
+    })),
+  },
   services: [
     {
       title: "Web-Anwendungen",
@@ -116,6 +126,18 @@ export const seedSettings = {
       text: "Auf Wunsch betreiben wir Ihre Anwendung auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
     },
   ],
+  kontaktNext: {
+    text: lexical([
+      {
+        kind: "rich",
+        parts: [
+          "Wir lesen Ihre Nachricht und melden uns mit ersten Fragen. Danach klären wir in einem Workshop Ziele, Nutzer und Randbedingungen – wie es weitergeht, ",
+          { text: "zeigt unsere Arbeitsweise", href: "/ueber-uns/arbeitsweise" },
+          ".",
+        ],
+      },
+    ]) as never,
+  },
   faq: [
     {
       question: "Wo werden unsere Daten gespeichert?",
@@ -558,6 +580,23 @@ export function lexical(blocks: Block[]) {
               ...common,
               children: [text(item)],
             })),
+          };
+        if (b.kind === "rich")
+          return {
+            type: "paragraph",
+            textFormat: 0,
+            ...common,
+            children: b.parts.map((part) =>
+              typeof part === "string"
+                ? text(part)
+                : {
+                    type: "link",
+                    fields: { linkType: "custom", url: part.href, newTab: false },
+                    ...common,
+                    version: 3,
+                    children: [text(part.text)],
+                  },
+            ),
           };
         return { type: "paragraph", textFormat: 0, ...common, children: [text(b.text)] };
       }),

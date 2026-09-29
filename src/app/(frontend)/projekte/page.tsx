@@ -3,27 +3,24 @@ import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
-import { getProjekte } from "@/data/queries";
+import { getProjekte, getSiteSettings } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
   return buildMetadata({
     fallbackTitle: "Projekte",
-    fallbackDescription: "Ausgewählte Projekte von Schwarzwald Systems.",
+    fallbackDescription: settings.projekteLead,
     path: "/projekte",
   });
 }
 
 export default async function ProjekteIndex() {
-  const projekte = await getProjekte();
+  const [projekte, settings] = await Promise.all([getProjekte(), getSiteSettings()]);
 
   return (
     <main>
-      <PageHeader
-        title="Projekte"
-        lead="Ausgewählte Projekte, die wir für unsere Kundinnen und Kunden gebaut haben."
-        horizonKey="/projekte"
-      />
+      <PageHeader title="Projekte" lead={settings.projekteLead} horizonKey="/projekte" />
       {projekte.length > 0 ? (
         <ul aria-label="Projekte" className="page-container">
           {projekte.map((projekt) => (
@@ -50,11 +47,11 @@ export default async function ProjekteIndex() {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : settings.projekteEmpty ? (
         <p className="page-container py-16 text-lg text-muted-foreground">
-          Hier stellen wir bald unsere ersten Projekte vor.
+          {settings.projekteEmpty}
         </p>
-      )}
+      ) : null}
       <ClosingCta />
     </main>
   );

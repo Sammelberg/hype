@@ -8,9 +8,10 @@ import { getSiteSettings } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
   return buildMetadata({
     fallbackTitle: "Leistungen",
-    fallbackDescription: "Was wir für den Mittelstand entwickeln, im Detail.",
+    fallbackDescription: settings.servicesIntro,
     path: "/leistungen",
   });
 }
@@ -22,11 +23,7 @@ export default async function LeistungenIndex() {
 
   return (
     <main>
-      <PageHeader
-        title="Leistungen"
-        lead="Von der einzelnen Schnittstelle bis zur kompletten Plattform – geplant für Ihre Abläufe, nicht für einen Standardfall."
-        horizonKey="/leistungen"
-      />
+      <PageHeader title="Leistungen" lead={settings.servicesIntro} horizonKey="/leistungen" />
 
       {services.length > 0 ? (
         <ul aria-label="Leistungen" className="page-container">

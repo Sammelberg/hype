@@ -1,7 +1,24 @@
 import type { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical";
-import { RichText as PayloadRichText } from "@payloadcms/richtext-lexical/react";
+import {
+  type JSXConvertersFunction,
+  LinkJSXConverter,
+  RichText as PayloadRichText,
+} from "@payloadcms/richtext-lexical/react";
 
+import { docPath } from "@/cms/paths";
 import { cn } from "@/lib/utils";
+
+// A link to a page or project chosen in the editor resolves to that document's public path.
+const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
+  ...defaultConverters,
+  ...LinkJSXConverter({
+    internalDocToHref: ({ linkNode }) => {
+      const { relationTo, value } = linkNode.fields.doc ?? {};
+      if (!value || typeof value !== "object") return "#";
+      return docPath(relationTo, value as Record<string, unknown>) ?? "#";
+    },
+  }),
+});
 
 export function RichText({
   data,
@@ -14,6 +31,7 @@ export function RichText({
   return (
     <PayloadRichText
       data={data}
+      converters={converters}
       className={cn(
         // Typography's colours mapped onto the site tokens, as the home sections set them: text in
         // the soft muted blue, headings and bold in the foreground, links and bullets in ice.

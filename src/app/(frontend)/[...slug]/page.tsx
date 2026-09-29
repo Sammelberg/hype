@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return buildMetadata({
     meta: page.meta,
     fallbackTitle: page.title,
-    fallbackDescription: firstParagraph(page.content),
+    fallbackDescription: page.lead || firstParagraph(page.content),
     path: pagePath(page as unknown as Record<string, unknown>) ?? "/",
   });
 }
@@ -67,6 +67,7 @@ export default async function CmsPage({ params }: Props) {
     <main>
       <PageHeader
         title={page.title}
+        lead={page.lead}
         // Top-level pages sit directly under the home page; a trail there would add nothing.
         breadcrumbs={trail.length > 2 ? <PageBreadcrumbs trail={trail} /> : undefined}
         horizonKey={path}
@@ -116,7 +117,7 @@ export default async function CmsPage({ params }: Props) {
             </h2>
             <ul className="mt-10 grid gap-x-16 md:grid-cols-2">
               {children.map((child) => {
-                const summary = firstParagraph(child.content);
+                const summary = child.lead || firstParagraph(child.content);
                 return (
                   <li key={child.id} className="border-t py-8">
                     <h3 className="text-2xl font-medium tracking-tight 3xl:text-3xl">

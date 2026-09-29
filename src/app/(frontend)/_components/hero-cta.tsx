@@ -8,7 +8,8 @@ import { bindPolarStar } from "./polar-star";
 
 // The hero's call to action: large type, no frame. A mouse hover or keyboard focus raises the
 // twinkling pole star under the label (polar-star.ts); a tap on touch simply follows the link.
-export function HeroCta() {
+// The label is the site settings' CTA label; its first letter is set in blackletter.
+export function HeroCta({ label }: { label: string }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -44,7 +45,8 @@ export function HeroCta() {
       <canvas ref={canvasRef} className={styles.sky} aria-hidden="true" />
       {/* One flex item, so the link is named „Projekt anfragen“, not „P rojekt …“. */}
       <span className={styles.label}>
-        <span className={styles.initial}>P</span>rojekt anfragen
+        <span className={styles.initial}>{label.charAt(0)}</span>
+        {label.slice(1)}
       </span>
       <svg className={styles.arrow} viewBox="0 0 28 28" aria-hidden="true">
         <path d="M5 14h17M16 8l6 6-6 6" />

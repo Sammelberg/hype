@@ -22,10 +22,13 @@ const fraktur = localFont({
   fallback: ["serif"],
 });
 
-// Home page of Schwarzwald Systems. The sections below are written in code; the Payload page with
-// the slug „startseite“ still supplies the SEO tab (title, description, share image).
-// The changing word of the hero headline: what we build, from the services below.
-const HERO_WORDS = ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"];
+// Home page of Schwarzwald Systems. Its texts come from /admin → Website-Einstellungen (tab
+// „Startseite“); the Payload page with the slug „startseite“ supplies the SEO tab (title,
+// description, share image).
+
+// „A, B, C und D“: what a screen reader hears instead of the changing word.
+const listOf = (words: string[]) =>
+  words.length > 1 ? `${words.slice(0, -1).join(", ")} und ${words.at(-1)}` : (words[0] ?? "");
 
 export async function generateMetadata(): Promise<Metadata> {
   const [home, settings] = await Promise.all([getHomePage(), getSiteSettings()]);
@@ -56,6 +59,9 @@ export default async function HomePage() {
   const services = toServices(settings);
   const steps = settings.steps ?? [];
   const principles = settings.principles ?? [];
+  const { hero } = settings;
+  const words = (hero?.words ?? []).map((w) => w.word);
+  const headline = hero?.headline ?? "";
 
   return (
     <main>
@@ -77,21 +83,25 @@ export default async function HomePage() {
               className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl 3xl:max-w-6xl 3xl:text-8xl"
             >
               {/* A span, not ::first-letter: Chrome ignores text-stroke on ::first-letter. */}
-              <span className={styles.initial}>W</span>ir entwickeln{" "}
-              <RotatingWord
-                words={HERO_WORDS}
-                label="Web-Anwendungen, mobile Apps, Schnittstellen und Plattformen"
-                className="text-primary-soft"
-              />
-              für den Mittelstand.
+              <span className={styles.initial}>{headline.charAt(0)}</span>
+              {headline.slice(1)}{" "}
+              {/* A grid of its own, so it takes its own line: no space needed after it. */}
+              {words.length > 0 ? (
+                <RotatingWord words={words} label={listOf(words)} className="text-primary-soft" />
+              ) : null}
+              {hero?.headlineEnd}
             </h1>
             {/* One short line and one action: the scene around it already carries a lot. */}
-            <p className="mt-6 max-w-4xl text-lg text-pretty text-muted-foreground sm:text-xl 3xl:max-w-5xl 3xl:text-2xl">
-              Individuelle Software aus dem Schwarzwald.
-            </p>
-            <div className="mt-10">
-              <HeroCta />
-            </div>
+            {hero?.lead ? (
+              <p className="mt-6 max-w-4xl text-lg text-pretty text-muted-foreground sm:text-xl 3xl:max-w-5xl 3xl:text-2xl">
+                {hero.lead}
+              </p>
+            ) : null}
+            {settings.cta?.label ? (
+              <div className="mt-10">
+                <HeroCta label={settings.cta.label} />
+              </div>
+            ) : null}
           </div>
           {/* Above the headline and centred on phones and tablets; from lg up a quiet accent at the
               level of the buttons, leaving the sky above free for the moon. */}
@@ -103,8 +113,8 @@ export default async function HomePage() {
         <>
           <ServicesStrata
             id="leistungen"
-            title="Was wir entwickeln"
-            intro="Von der einzelnen Schnittstelle bis zur kompletten Plattform – geplant für Ihre Abläufe, nicht für einen Standardfall."
+            title={settings.servicesTitle}
+            intro={settings.servicesIntro ?? undefined}
             services={services}
           />
           <div className="page-container py-8 text-right text-sm">
@@ -122,7 +132,7 @@ export default async function HomePage() {
               id="vorgehen-titel"
               className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
-              So arbeiten wir
+              {settings.stepsTitle}
             </h2>
             <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
               {steps.map((step, index) => (
@@ -148,7 +158,7 @@ export default async function HomePage() {
               id="grundsaetze-titel"
               className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
-              Unsere Grundsätze
+              {settings.principlesTitle}
             </h2>
             <dl className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
               {principles.map((principle) => (

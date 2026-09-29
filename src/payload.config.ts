@@ -33,6 +33,8 @@ export default buildConfig({
         return `${env.NEXT_PUBLIC_SERVER_URL}/next/preview?path=${encodeURIComponent(path ?? "/")}`;
       },
       collections: ROUTED_COLLECTIONS,
+      // The home page's texts live in the global; its preview shows `/` (docPath has no entry).
+      globals: [SiteSettings.slug],
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 390, height: 844 },
         { label: "Desktop", name: "desktop", width: 1440, height: 900 },

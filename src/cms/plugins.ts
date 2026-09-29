@@ -68,6 +68,7 @@ export const plugins: Plugin[] = [
       ...searchDoc,
       summary:
         originalDoc.summary ??
+        originalDoc.lead ??
         originalDoc.meta?.description ??
         firstParagraph(originalDoc.content) ??
         "",
