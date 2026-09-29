@@ -38,8 +38,6 @@ export default defineConfig([
     "graft/**",
     "playwright-report/**",
     "test-results/**",
-    "src/payload-types.ts",
-    "src/migrations/**",
-    "src/app/(payload)/**",
+    "src/cms/migrations/**",
   ]),
 ]);

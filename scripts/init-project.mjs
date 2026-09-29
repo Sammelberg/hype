@@ -177,12 +177,8 @@ if (existsSync(file(".env"))) {
       `  DATABASE_URL=${databaseUrl}\n  NEXT_PUBLIC_SERVER_URL=http://localhost:${appPort}`,
   );
 } else {
-  const env = read(".env.example").replace(
-    /^PAYLOAD_SECRET=.*$/m,
-    `PAYLOAD_SECRET=${randomBytes(32).toString("hex")}`,
-  );
-  writeFileSync(file(".env"), env);
-  changed.push(".env (neu, mit zufälligem PAYLOAD_SECRET)");
+  writeFileSync(file(".env"), read(".env.example"));
+  changed.push(".env (neu)");
 }
 
 edit("scripts/seed-data.ts", [
@@ -276,6 +272,7 @@ if (freshGit) {
 console.log(`
 Weiter:
   pnpm db:up        Postgres auf Port ${dbPort} (Container ${name}-postgres-1)
+  pnpm migrate      Tabellen der CMS anlegen
   pnpm seed         Beispielinhalte
-  pnpm dev          http://localhost:${appPort}, erstes Admin-Konto unter /admin anlegen
+  pnpm dev          http://localhost:${appPort}, erstes Admin-Konto unter /admin/einrichtung anlegen
 `);

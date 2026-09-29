@@ -3,7 +3,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import bundleAnalyzer from "@next/bundle-analyzer";
-import { withPayload } from "@payloadcms/next/withPayload";
 import type { NextConfig } from "next";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -49,17 +48,11 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     localPatterns: [{ pathname: "/media/**" }],
   },
+  turbopack: { root: dirname },
+  // Uploads arrive through server actions (src/app/(admin)/admin/_actions/media.ts).
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "motion"],
-  },
-  turbopack: { root: dirname },
-  webpack: (config) => {
-    config.resolve.extensionAlias = {
-      ".cjs": [".cts", ".cjs"],
-      ".js": [".ts", ".tsx", ".js", ".jsx"],
-      ".mjs": [".mts", ".mjs"],
-    };
-    return config;
+    serverActions: { bodySizeLimit: "25mb" },
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
@@ -68,7 +61,4 @@ const nextConfig: NextConfig = {
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
-export default withReticle(
-  withBundleAnalyzer(withPayload(nextConfig, { devBundleServerPackages: false })),
-  { sourceMapping: false },
-);
+export default withReticle(withBundleAnalyzer(nextConfig), { sourceMapping: false });

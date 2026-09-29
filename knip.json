@@ -3,11 +3,11 @@
   "entry": [
     "scripts/seed.ts",
     "scripts/clean-e2e.ts",
-    "scripts/fix-migration-imports.mjs",
     "scripts/import-payload.ts",
     "src/cms/db/migrate.ts",
     "drizzle.config.ts",
-    "scripts/set-password.ts"
+    "scripts/set-password.ts",
+    "scripts/drop-payload-tables.ts"
   ],
   "ignore": [".claude/**", "graft/**", "src/components/ui/**"],
   "ignoreDependencies": ["tw-animate-css", "shadcn", "@tailwindcss/typography"]

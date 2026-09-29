@@ -8,8 +8,3 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   msw: false
-
-peerDependencyRules:
-  allowedVersions:
-    # @payloadcms/plugin-mcp pins sdk 1.30.0; its dep mcp-handler@1 pins 1.26.0 (same major)
-    "mcp-handler>@modelcontextprotocol/sdk": 1.30.0

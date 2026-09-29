@@ -28,3 +28,6 @@ __pycache__/
 
 # Local database dumps (pg_dump), never committed
 .db-backups/
+
+# Working memory of the planning-with-files skill (per session, not for the repo)
+.planning/

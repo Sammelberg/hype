@@ -5,12 +5,11 @@ export const HOME_SLUG = "startseite";
 
 type PathFor = (doc: Record<string, unknown>) => string | null;
 
-// A page's stored path; for documents from Payload (breadcrumbs, no path) the old rule still holds.
+// A page's stored path (content/pages.ts keeps it; the home page's is `/`).
 export const pagePath: PathFor = (doc) => {
   if (typeof doc.path === "string") return doc.path;
   if (doc.slug === HOME_SLUG) return "/";
-  const crumbs = doc.breadcrumbs as { url?: string | null }[] | undefined;
-  return crumbs?.at(-1)?.url ?? (doc.slug ? `/${String(doc.slug)}` : null);
+  return doc.slug ? `/${String(doc.slug)}` : null;
 };
 
 export const projektPathOf = (slug: string) => `/projekte/${slug}`;

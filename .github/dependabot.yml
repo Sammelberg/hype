@@ -13,12 +13,11 @@ updates:
       # `typescript` stays on 6 for the tools that need its JS API; TS 7 runs as `typescript-7`.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # Payload pins graphql 16.
-      - dependency-name: "graphql"
-        update-types: ["version-update:semver-major"]
     groups:
-      payload:
-        patterns: ["payload", "@payloadcms/*"]
+      drizzle:
+        patterns: ["drizzle-orm", "drizzle-kit", "pg", "@types/pg"]
+      lexical:
+        patterns: ["lexical", "@lexical/*"]
       next-react:
         patterns: ["next", "react", "react-dom", "eslint-config-next", "@next/*"]
       tooling:
