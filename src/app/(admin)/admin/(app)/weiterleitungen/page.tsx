@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
 
+import { listPages } from "@/cms/content/pages";
+import { listProjekte } from "@/cms/content/projekte";
+import { listRedirects } from "@/cms/content/redirects";
 import { PageShell } from "../../_components/page-shell";
+import { RedirectsManager } from "./_components/redirects-manager";
 
 export const metadata: Metadata = { title: "Weiterleitungen" };
 
-export default function Page() {
+export default async function RedirectsPage() {
+  const [redirects, pages, projekte] = await Promise.all([
+    listRedirects(),
+    listPages(),
+    listProjekte(),
+  ]);
   return (
-    <PageShell title="Weiterleitungen" lead="Dieser Bereich entsteht in den nächsten Etappen.">
-      <p className="text-muted-foreground">Noch nichts zu sehen.</p>
+    <PageShell
+      title="Weiterleitungen"
+      lead="Alte Adressen, die weiter funktionieren sollen: Links aus Mails, Visitenkarten, Suchmaschinen."
+    >
+      <RedirectsManager redirects={redirects} pages={pages} projekte={projekte} />
     </PageShell>
   );
 }

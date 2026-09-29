@@ -24,7 +24,7 @@ test("a wrong password and an unknown address get the same answer", async ({ pag
 
 test("the admin signs in, reaches every section and signs out", async ({ page }) => {
   await signIn(page);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Guten Tag");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Guten (Morgen|Tag|Abend)/);
 
   const nav = page.getByRole("navigation", { name: "Bereiche" });
   for (const label of [

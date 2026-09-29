@@ -6,7 +6,8 @@
     "scripts/fix-migration-imports.mjs",
     "scripts/import-payload.ts",
     "src/cms/db/migrate.ts",
-    "drizzle.config.ts"
+    "drizzle.config.ts",
+    "scripts/set-password.ts"
   ],
   "ignore": [".claude/**", "graft/**", "src/components/ui/**"],
   "ignoreDependencies": ["tw-animate-css", "shadcn", "@tailwindcss/typography"]
