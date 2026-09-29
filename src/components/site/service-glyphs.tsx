@@ -1,5 +1,7 @@
 import type { ReactNode, SVGProps } from "react";
 
+import { cn } from "@/lib/utils";
+
 // Line drawings of the five services (services-strata.tsx), in the style of the hero's ridge
 // outline: thin strokes in ice blue, no fills but a faint light in closed shapes. Every stroke
 // carries data-draw so GSAP DrawSVG can draw it in the order it appears; shapes that hold light
@@ -9,6 +11,8 @@ export type GlyphName = "web" | "mobile" | "integration" | "modernisation" | "op
 
 const STROKE: SVGProps<SVGSVGElement> = {
   fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
   strokeLinecap: "round",
   strokeLinejoin: "round",
 };
@@ -81,7 +85,17 @@ const GLYPHS: Record<GlyphName, ReactNode> = {
 
 export function ServiceGlyph({ name, className }: { name: GlyphName; className?: string }) {
   return (
-    <svg viewBox="0 0 400 400" aria-hidden="true" className={className} {...STROKE}>
+    <svg
+      viewBox="0 0 400 400"
+      aria-hidden="true"
+      // Outside the services ride (whose stylesheet draws them) the strokes keep their 1.5px at
+      // any size, and closed shapes hold a faint light of the line colour.
+      className={cn(
+        "overflow-visible [&_*]:[vector-effect:non-scaling-stroke] [&_[data-fill]]:fill-current [&_[data-fill]]:[fill-opacity:0.14]",
+        className,
+      )}
+      {...STROKE}
+    >
       {GLYPHS[name]}
     </svg>
   );

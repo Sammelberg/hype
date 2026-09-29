@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { FirMark } from "./fir-mark";
 import { MENU_LINKS } from "./menu-links";
+import { NavLink } from "./nav-link";
 
 // Sticky bar across the full width (fluid side gutter, wider than the page column): fir mark and
 // wordmark, the main navigation. Its height is the `header` spacing token, which scroll-margin in
@@ -23,12 +24,7 @@ export function SiteHeader({ siteName }: { siteName: string }) {
           <ul className="flex items-center gap-6 text-sm 3xl:gap-8 3xl:text-base">
             {MENU_LINKS.map((link) => (
               <li key={link.href} className={cn(link.wide && "hidden sm:block")}>
-                <Link
-                  href={link.href as never}
-                  className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
-                >
-                  {link.label}
-                </Link>
+                <NavLink href={link.href}>{link.label}</NavLink>
               </li>
             ))}
           </ul>

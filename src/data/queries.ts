@@ -38,6 +38,20 @@ export const getPageByPath = cache(async (segments: string[]) => {
   return page && actual === expected ? page : null;
 });
 
+// Published pages directly below a page, in the order they were created, for its overview of
+// what lies below it (Über uns → Team, Arbeitsweise).
+export const getChildPages = cache(async (parentId: number) => {
+  const payload = await getPayloadClient();
+  const { docs } = await payload.find({
+    collection: "pages",
+    where: { parent: { equals: parentId }, _status: { equals: "published" } },
+    sort: "createdAt",
+    limit: 50,
+    depth: 0,
+  });
+  return docs;
+});
+
 // Published projects, newest first, for the /projekte overview.
 export const getProjekte = cache(async () => {
   const payload = await getPayloadClient();

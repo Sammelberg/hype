@@ -39,6 +39,11 @@ export function SiteFooter({
               </li>
             ))}
             <li>
+              <Link href="/suche" className="hover:text-foreground">
+                Suche
+              </Link>
+            </li>
+            <li>
               <Link href={"/impressum" as never} className="hover:text-foreground">
                 Impressum
               </Link>

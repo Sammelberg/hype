@@ -12,7 +12,7 @@ import { type GlyphName, ServiceGlyph } from "@/components/site/service-glyphs";
 import { scrollPageTo } from "@/components/site/smooth-scroll";
 import { Button } from "@/components/ui/button";
 
-import { FIR_DESIGNS } from "./fir-shapes";
+import { FIR_DESIGNS } from "@/components/site/fir-shapes";
 import styles from "./services-strata.module.css";
 import { type Ridge, valley, VALLEY_H, VALLEY_W, type ValleySpec } from "./valley";
 

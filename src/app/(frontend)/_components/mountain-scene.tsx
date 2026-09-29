@@ -8,7 +8,7 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { FIR_DESIGNS, type FirDesign } from "./fir-shapes";
+import { FIR_DESIGNS, type FirDesign } from "@/components/site/fir-shapes";
 import styles from "./mountain-scene.module.css";
 import { bindLights } from "./lights";
 import { bindNightSky } from "./night-sky";

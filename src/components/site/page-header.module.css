@@ -1,0 +1,69 @@
+/*
+ * The horizon under a page heading: the land in the card navy, one ice ridge line, the copper arc
+ * over the highest crest and a few of the hero's drawn firs. It draws once when the page opens
+ * (ridge, then arc, then the firs rise); with reduced motion it is simply there.
+ */
+.horizon {
+  display: block;
+  width: 100%;
+  height: clamp(5.5rem, 3.5rem + 7vw, 11rem);
+  overflow: visible;
+}
+
+.ground {
+  fill: var(--card);
+}
+
+.ridge,
+.arc {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.ridge {
+  stroke: var(--primary-soft);
+}
+
+.arc {
+  /* The hero's copper gold: warm, never plain orange (CLAUDE.md). */
+  stroke: oklch(0.7 0.12 58);
+}
+
+.fir {
+  color: var(--primary-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ridge,
+  .arc {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 1.6s cubic-bezier(0.3, 0.55, 0.2, 1) 0.1s forwards;
+  }
+
+  .arc {
+    animation-duration: 0.6s;
+    animation-delay: 1.3s;
+  }
+
+  .fir {
+    opacity: 0;
+    translate: 0 6px;
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    animation-delay: calc(0.6s + var(--order) * 0.18s);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

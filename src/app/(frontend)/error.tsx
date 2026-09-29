@@ -21,30 +21,35 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <main className="page-container max-w-3xl py-16 sm:py-24">
-      <p className="text-sm text-muted-foreground tabular-nums">Fehler</p>
-      <h1
-        ref={heading}
-        tabIndex={-1}
-        className="mt-2 text-3xl font-semibold tracking-tight outline-none"
-      >
-        Etwas ist schiefgelaufen
-      </h1>
-      <p className="mt-4 text-pretty text-muted-foreground">
-        Die Seite konnte nicht geladen werden. Versuchen Sie es erneut oder kehren Sie zur
-        Startseite zurück.
-      </p>
-      {error.digest ? (
-        <p className="mt-4 font-mono text-xs text-muted-foreground">Fehler-ID: {error.digest}</p>
-      ) : null}
-      <div className="mt-8 flex flex-wrap items-center gap-6">
-        <Button onClick={() => retry()}>Erneut versuchen</Button>
-        <Link
-          href="/"
-          className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
-        >
-          Zur Startseite
-        </Link>
+    <main>
+      <div className="border-b">
+        <div className="page-container py-16 sm:py-24">
+          <h1
+            ref={heading}
+            tabIndex={-1}
+            className="text-[clamp(2.5rem,1.4rem+4vw,5rem)] leading-[0.98] font-semibold tracking-[-0.035em] text-balance outline-none"
+          >
+            Etwas ist schiefgelaufen
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg text-pretty text-muted-foreground">
+            Die Seite konnte nicht geladen werden. Versuchen Sie es erneut oder kehren Sie zur
+            Startseite zurück.
+          </p>
+          {error.digest ? (
+            <p className="mt-4 text-sm text-muted-foreground">Fehler-ID: {error.digest}</p>
+          ) : null}
+          <div className="mt-10 flex flex-wrap items-center gap-6">
+            <Button size="lg" onClick={() => retry()}>
+              Erneut versuchen
+            </Button>
+            <Link
+              href="/"
+              className="text-lg underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
+            >
+              Zur Startseite
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   );

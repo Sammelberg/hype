@@ -76,7 +76,7 @@ export function ContactForm({
       action={action}
       noValidate
       aria-busy={pending}
-      className="grid gap-5 sm:grid-cols-2"
+      className="grid gap-6 sm:grid-cols-2"
     >
       <p className="text-sm text-muted-foreground sm:col-span-2">
         Mit <span aria-hidden="true">*</span> markierte Felder sind Pflichtfelder.
@@ -118,14 +118,21 @@ export function ContactForm({
               </div>
             ) : (
               <>
-                <Label htmlFor={id}>{label}</Label>
+                <Label htmlFor={id} className="text-base">
+                  {label}
+                </Label>
                 {field.blockType === "textarea" ? (
-                  <Textarea {...common} rows={6} defaultValue={values[field.name]} />
+                  <Textarea
+                    {...common}
+                    rows={8}
+                    defaultValue={values[field.name]}
+                    className="min-h-40 text-base md:text-base"
+                  />
                 ) : field.blockType === "select" ? (
                   <select
                     {...common}
                     defaultValue={values[field.name] ?? ""}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                    className="h-11 rounded-md border border-input bg-transparent px-3 text-base"
                   >
                     <option value="">Bitte wählen</option>
                     {field.options?.map((option) => (
@@ -152,6 +159,7 @@ export function ContactForm({
                           : undefined
                     }
                     defaultValue={values[field.name]}
+                    className="h-11 text-base md:text-base"
                   />
                 )}
               </>
@@ -197,7 +205,7 @@ export function ContactForm({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-5 sm:col-span-2">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" size="lg" disabled={pending}>
           {pending ? "Wird gesendet …" : submitLabel}
         </Button>
         <p className="text-sm text-muted-foreground">

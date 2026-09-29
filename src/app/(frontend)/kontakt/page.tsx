@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
-import { ContactForm, type ContactFormField } from "./_components/contact-form";
+import Link from "next/link";
+
+import { PageHeader } from "@/components/site/page-header";
 import { RichText } from "@/components/site/rich-text";
 import { getContactForm, getSiteSettings } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
+
+import { ContactForm, type ContactFormField } from "./_components/contact-form";
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -22,37 +26,65 @@ export default async function ContactPage() {
   const [form, settings] = await Promise.all([getContactForm(), getSiteSettings()]);
   const fields = (form?.fields ?? []).filter((field) => "name" in field) as ContactFormField[];
 
+  const email = settings.contactEmail;
+  const mail = email ? (
+    <a
+      href={`mailto:${email}`}
+      className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
+    >
+      {email}
+    </a>
+  ) : null;
+
   return (
-    <main className="page-container max-w-3xl pt-16 sm:pt-24">
-      <h1 className="text-4xl font-semibold tracking-tight text-balance">Kontakt</h1>
-      {form && fields.length ? (
-        <div className="mt-12">
-          <ContactForm
-            fields={fields}
-            submitLabel={form.submitButtonLabel || "Absenden"}
-            confirmation={<RichText data={form.confirmationMessage} className="max-w-prose" />}
-            contactEmail={settings.contactEmail}
-            renderedAt={RENDERED_AT}
-          />
+    <main>
+      <PageHeader
+        title="Kontakt"
+        lead="Erzählen Sie uns von Ihrem Vorhaben. Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen."
+        horizonKey="/kontakt"
+      />
+      <div className="page-container grid gap-16 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        <div className="max-w-3xl">
+          {form && fields.length ? (
+            <ContactForm
+              fields={fields}
+              submitLabel={form.submitButtonLabel || "Absenden"}
+              confirmation={<RichText data={form.confirmationMessage} className="prose-lg" />}
+              contactEmail={email}
+              renderedAt={RENDERED_AT}
+            />
+          ) : (
+            <p className="text-lg text-pretty text-muted-foreground">
+              Das Kontaktformular ist gerade nicht verfügbar.
+              {mail ? <> Sie erreichen uns per E-Mail an {mail}.</> : null}
+            </p>
+          )}
         </div>
-      ) : (
-        <p className="mt-8 text-pretty text-muted-foreground">
-          Das Kontaktformular ist gerade nicht verfügbar.
-          {settings.contactEmail ? (
-            <>
-              {" "}
-              Sie erreichen uns per E-Mail an{" "}
-              <a
-                href={`mailto:${settings.contactEmail}`}
-                className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
-              >
-                {settings.contactEmail}
-              </a>
-              .
-            </>
+        <aside aria-label="Weitere Wege" className="space-y-10 lg:border-l lg:pl-12">
+          {mail ? (
+            <div>
+              <h2 className="text-xl font-medium tracking-tight">Lieber per E-Mail?</h2>
+              <p className="mt-3 text-lg text-pretty text-muted-foreground">
+                Schreiben Sie an {mail}.
+              </p>
+            </div>
           ) : null}
-        </p>
-      )}
+          <div>
+            <h2 className="text-xl font-medium tracking-tight">Was danach passiert</h2>
+            <p className="mt-3 text-lg text-pretty text-muted-foreground">
+              Wir lesen Ihre Nachricht und melden uns mit ersten Fragen. Danach klären wir in einem
+              Workshop Ziele, Nutzer und Randbedingungen – wie es weitergeht,{" "}
+              <Link
+                href={"/ueber-uns/arbeitsweise" as never}
+                className="text-foreground underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
+              >
+                zeigt unsere Arbeitsweise
+              </Link>
+              .
+            </p>
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }
