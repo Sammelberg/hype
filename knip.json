@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["scripts/seed.ts", "scripts/fix-migration-imports.mjs"],
+  "entry": ["scripts/seed.ts", "scripts/clean-e2e.ts", "scripts/fix-migration-imports.mjs"],
   "ignore": [".claude/**", "graft/**", "src/components/ui/**"],
   "ignoreDependencies": ["tw-animate-css", "shadcn", "@tailwindcss/typography"]
 }

@@ -1,9 +1,15 @@
-// Development content for `pnpm seed`. Fictional on purpose: no real clients, no real legal text.
+// Content for `pnpm seed`: the site's own pages, the legal pages with the owner's details
+// (Einzelunternehmen, 2026-09-29) and the home content. No client projects: real ones are entered in
+// /admin (the Krone Parkett project lives only in the database).
 // e2e tests import SEED_PATHS, so every seeded route is also checked for data sovereignty and a11y.
 // `pnpm init:project` rewrites siteName, ownerName and contactEmail below.
 
 type Text = { type: "text"; text: string };
-type Block = { kind: "p" | "h2"; text: string };
+type Block =
+  | { kind: "p" | "h2"; text: string }
+  /** One paragraph with line breaks (an address). */
+  | { kind: "lines"; lines: string[] }
+  | { kind: "ul"; items: string[] };
 
 // The examples/steps/principles/FAQ are draft copy like the rest of the site: kinds of work and
 // working assumptions, not confirmed claims or references. Edited under /admin → Website-Einstellungen.
@@ -13,7 +19,8 @@ export const seedSettings = {
   tagline: "Individuelle Software für den Mittelstand.",
   description:
     "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps und Schnittstellen.",
-  contactEmail: "hallo@example.com",
+  // Shown in the footer, on /kontakt and in the legal pages once set (the owner's address follows).
+  contactEmail: null as string | null,
   socialLinks: [] as { label: string; url: string }[],
   services: [
     {
@@ -137,45 +144,133 @@ export const seedSettings = {
   ],
 };
 
-const placeholder = (what: string): Block[] => [
-  { kind: "h2", text: "Platzhalter" },
-  {
-    kind: "p",
-    text: `Platzhalter: Den verbindlichen Text für ${what} verfasst der Inhaber der Website. Diese Seite wurde von „pnpm seed“ für die Entwicklung angelegt.`,
-  },
-];
-
 export type SeedPage = { slug: string; title: string; parent?: string; content: Block[] };
 
 export const seedPages: SeedPage[] = [
   {
-    // HOME_SLUG (src/cms/collections/Pages.ts): rendered at `/`.
+    // HOME_SLUG (src/cms/collections/Pages.ts): rendered at `/` by code; this doc carries the SEO
+    // tab and what the site search shows for the home page.
     slug: "startseite",
-    title: "Willkommen",
+    title: "Startseite",
     content: [
       {
         kind: "p",
-        text: "Dieser Text kommt aus der Seite „startseite“ im Redaktionssystem. Ersetzen Sie ihn unter /admin → Seiten.",
-      },
-      { kind: "h2", text: "Was hier entsteht" },
-      {
-        kind: "p",
-        text: "Beschreiben Sie in zwei, drei Sätzen, was Besucherinnen und Besucher auf dieser Website finden.",
+        text: "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps, Schnittstellen zwischen bestehenden Systemen, die Modernisierung gewachsener Software und ihren Betrieb.",
       },
     ],
   },
-  { slug: "impressum", title: "Impressum", content: placeholder("das Impressum") },
-  { slug: "datenschutz", title: "Datenschutzerklärung", content: placeholder("den Datenschutz") },
+  {
+    slug: "impressum",
+    title: "Impressum",
+    content: [
+      { kind: "p", text: "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)" },
+      {
+        kind: "lines",
+        lines: [
+          "Schwarzwald Systems",
+          "Inhaber: Oleksandr Zamula",
+          "Merianhof 5",
+          "79104 Freiburg im Breisgau",
+          "Deutschland",
+        ],
+      },
+      { kind: "h2", text: "Kontakt" },
+      { kind: "p", text: "Sie erreichen uns über das Kontaktformular auf der Seite „Kontakt“." },
+      { kind: "h2", text: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV" },
+      { kind: "p", text: "Oleksandr Zamula, Anschrift wie oben." },
+      { kind: "h2", text: "Verbraucherstreitbeilegung" },
+      {
+        kind: "p",
+        text: "Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+      },
+    ],
+  },
+  {
+    // Written from what the site actually does (CLAUDE.md, data sovereignty): no cookies for
+    // visitors, no third-party services, contact messages stored in our own database.
+    slug: "datenschutz",
+    title: "Datenschutzerklärung",
+    content: [
+      {
+        kind: "p",
+        text: "Diese Website setzt beim Besuch keine Cookies, nutzt keine Analyse- oder Werbedienste und lädt Schriften und Bilder ausschließlich von unserem eigenen Server. Personenbezogene Daten verarbeiten wir nur in zwei Fällen: in den technisch notwendigen Protokollen des Servers und wenn Sie uns über das Kontaktformular schreiben.",
+      },
+      { kind: "h2", text: "Verantwortlicher" },
+      {
+        kind: "lines",
+        lines: [
+          "Oleksandr Zamula",
+          "Schwarzwald Systems",
+          "Merianhof 5",
+          "79104 Freiburg im Breisgau",
+          "Deutschland",
+        ],
+      },
+      { kind: "p", text: "Sie erreichen uns über das Kontaktformular dieser Website." },
+      { kind: "h2", text: "Hosting" },
+      {
+        kind: "p",
+        text: "Die Website läuft auf einem Server der IONOS SE, Elgendorfer Straße 57, 56410 Montabaur, in einem Rechenzentrum in Deutschland. IONOS verarbeitet die Daten in unserem Auftrag; dafür besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.",
+      },
+      { kind: "h2", text: "Server-Protokolle" },
+      {
+        kind: "p",
+        text: "Bei jedem Aufruf einer Seite speichert der Server automatisch Ihre IP-Adresse, Datum und Uhrzeit, die aufgerufene Adresse, die übertragene Datenmenge, den Browser und das Betriebssystem sowie die zuvor besuchte Seite. Wir brauchen diese Angaben, um die Website sicher und stabil zu betreiben und Angriffe zu erkennen. Rechtsgrundlage ist unser berechtigtes Interesse nach Art. 6 Abs. 1 lit. f DSGVO. Die Protokolle werden nach 14 Tagen gelöscht.",
+      },
+      { kind: "h2", text: "Kontaktformular" },
+      {
+        kind: "p",
+        text: "Wenn Sie uns über das Kontaktformular schreiben, speichern wir Ihren Namen, Ihre E-Mail-Adresse und Ihre Nachricht in der Datenbank auf unserem Server, um Ihre Anfrage zu beantworten. Die Angaben werden an niemanden weitergegeben. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, wenn Ihre Anfrage einen Auftrag vorbereitet, sonst unser berechtigtes Interesse an der Beantwortung nach Art. 6 Abs. 1 lit. f DSGVO.",
+      },
+      {
+        kind: "p",
+        text: "Wir löschen Ihre Nachricht, sobald Ihr Anliegen erledigt ist. Wird aus der Anfrage ein Auftrag, bewahren wir sie so lange auf, wie es handels- und steuerrechtliche Fristen verlangen.",
+      },
+      { kind: "h2", text: "Verschlüsselung" },
+      {
+        kind: "p",
+        text: "Die Website wird ausschließlich über eine verschlüsselte Verbindung (HTTPS) ausgeliefert. Was Sie im Kontaktformular eingeben, kann unterwegs nicht mitgelesen werden.",
+      },
+      { kind: "h2", text: "Ihre Rechte" },
+      { kind: "p", text: "Sie haben das Recht auf" },
+      {
+        kind: "ul",
+        items: [
+          "Auskunft über die zu Ihnen gespeicherten Daten (Art. 15 DSGVO),",
+          "Berichtigung unrichtiger Daten (Art. 16 DSGVO),",
+          "Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO),",
+          "Herausgabe Ihrer Daten in einem gängigen Format (Art. 20 DSGVO),",
+          "Widerspruch gegen eine Verarbeitung, die auf unserem berechtigten Interesse beruht (Art. 21 DSGVO).",
+        ],
+      },
+      { kind: "p", text: "Dafür genügt eine Nachricht über das Kontaktformular." },
+      { kind: "h2", text: "Beschwerde bei einer Aufsichtsbehörde" },
+      {
+        kind: "p",
+        text: "Sie können sich bei einer Datenschutz-Aufsichtsbehörde beschweren. Für uns zuständig ist der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg, Lautenschlagerstraße 20, 70173 Stuttgart.",
+      },
+      { kind: "p", text: "Stand: September 2026" },
+    ],
+  },
   {
     slug: "ueber-uns",
     title: "Über uns",
-    content: [{ kind: "p", text: "Beispielseite. Wer steht hinter dem Angebot?" }],
-  },
-  {
-    slug: "team",
-    title: "Team",
-    parent: "ueber-uns",
-    content: [{ kind: "p", text: "Beispielseite, um verschachtelte Pfade zu testen." }],
+    content: [
+      {
+        kind: "p",
+        text: "Schwarzwald Systems ist ein Softwareunternehmen aus Freiburg im Breisgau. Wir entwickeln individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps, Schnittstellen zwischen bestehenden Systemen, die Modernisierung gewachsener Software und ihren Betrieb.",
+      },
+      { kind: "h2", text: "Wer hinter Schwarzwald Systems steht" },
+      {
+        kind: "p",
+        text: "Oleksandr Zamula hat Schwarzwald Systems gegründet und führt das Unternehmen als Inhaber. Wer bei uns anfragt, spricht direkt mit ihm.",
+      },
+      { kind: "h2", text: "Wie wir arbeiten" },
+      {
+        kind: "p",
+        text: "Jedes Projekt beginnt mit einem Workshop, in dem wir Ziele, Nutzer und Randbedingungen klären. Danach entsteht ein klickbarer Prototyp, dann die Software in kurzen Iterationen mit regelmäßig lauffähigen Zwischenständen. Wie das im Einzelnen abläuft, beschreibt die Seite „Unsere Arbeitsweise“.",
+      },
+    ],
   },
   {
     // Expands the 4 steps + 3 principles already live on the home page into real depth —
@@ -388,6 +483,9 @@ export const seedContactForm = {
 };
 
 // An old URL pointing at a page, to exercise the redirects plugin end to end.
+// Sender address of the contact form e2e test; scripts/clean-e2e.ts deletes its messages again.
+export const E2E_EMAIL = "erika@example.com";
+
 export const SEED_REDIRECT = { from: "/about", toPage: "ueber-uns", toPath: "/ueber-uns" };
 
 export type SeedProject = {
@@ -398,31 +496,17 @@ export type SeedProject = {
   content: Block[];
 };
 
-export const seedProjects: SeedProject[] = [
-  {
-    slug: "beispielprojekt",
-    title: "Beispielprojekt",
-    kunde: "Beispiel GmbH",
-    summary: "Platzhalter-Kurztext für die Projektübersicht.",
-    content: [
-      { kind: "h2", text: "Platzhalter" },
-      {
-        kind: "p",
-        text: "Platzhalter: Reale Projekte trägt der Inhaber der Website unter /admin → Projekte ein. Dieser Eintrag wurde von „pnpm seed“ für die Entwicklung angelegt.",
-      },
-    ],
-  },
-];
+// Real projects are entered in /admin; the seed brings none (no invented clients).
+export const seedProjects: SeedProject[] = [];
 
 export const SEED_PATHS = [
   "/kontakt",
   "/suche",
   "/impressum",
   "/datenschutz",
-  "/ueber-uns/team",
+  "/ueber-uns",
   "/ueber-uns/arbeitsweise",
   "/projekte",
-  "/projekte/beispielprojekt",
   "/leistungen",
   "/leistungen/web-anwendungen",
   "/leistungen/mobile-apps",
@@ -449,11 +533,34 @@ export function lexical(blocks: Block[]) {
     root: {
       type: "root",
       ...common,
-      children: blocks.map((b) =>
-        b.kind === "h2"
-          ? { type: "heading", tag: "h2", ...common, children: [text(b.text)] }
-          : { type: "paragraph", textFormat: 0, ...common, children: [text(b.text)] },
-      ),
+      children: blocks.map((b) => {
+        if (b.kind === "h2")
+          return { type: "heading", tag: "h2", ...common, children: [text(b.text)] };
+        if (b.kind === "lines")
+          return {
+            type: "paragraph",
+            textFormat: 0,
+            ...common,
+            children: b.lines.flatMap((line, i) =>
+              i === 0 ? [text(line)] : [{ type: "linebreak", version: 1 }, text(line)],
+            ),
+          };
+        if (b.kind === "ul")
+          return {
+            type: "list",
+            listType: "bullet",
+            tag: "ul",
+            start: 1,
+            ...common,
+            children: b.items.map((item, i) => ({
+              type: "listitem",
+              value: i + 1,
+              ...common,
+              children: [text(item)],
+            })),
+          };
+        return { type: "paragraph", textFormat: 0, ...common, children: [text(b.text)] };
+      }),
     },
   };
 }

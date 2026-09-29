@@ -40,8 +40,8 @@ test("the header lists every section and opens a section's pages", async ({ page
   await expect(nav.getByRole("link", { name: "Web-Anwendungen" })).toBeHidden();
 
   await nav.getByRole("button", { name: "Über uns" }).click();
-  await nav.getByRole("link", { name: "Team" }).click();
-  await expect(page).toHaveURL(/\/ueber-uns\/team$/);
+  await nav.getByRole("link", { name: "Unsere Arbeitsweise" }).click();
+  await expect(page).toHaveURL(/\/ueber-uns\/arbeitsweise$/);
 });
 
 test("the phone menu opens, traps focus, closes on Escape and leads to a page", async ({

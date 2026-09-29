@@ -3,7 +3,6 @@
 // Refuses to run against a non-local database unless CI=true or --force is given.
 // Creates no users: the first admin signs up at /admin.
 import { getPayload, type Payload } from "payload";
-import sharp from "sharp";
 
 import config from "../src/payload.config";
 import {
@@ -24,40 +23,6 @@ function assertSafeTarget() {
   throw new Error(
     `Seed abgebrochen: ${url.hostname} ist keine lokale Datenbank. Mit --force erzwingen.`,
   );
-}
-
-// Abstract golden-rectangle artwork, generated locally (no stock-photo service).
-// Neutral grey placeholder for the share image; the project replaces it with real artwork.
-async function artwork() {
-  const w = 1920;
-  const h = 1080;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-    <rect width="100%" height="100%" fill="#e5e5e5"/>
-    <path d="M0 0L${w} ${h}M${w} 0L0 ${h}" stroke="#d4d4d4" stroke-width="4"/>
-  </svg>`;
-  return sharp(Buffer.from(svg)).webp({ quality: 80 }).toBuffer();
-}
-
-async function upsertMedia(
-  payload: Payload,
-  filename: string,
-  alt: string,
-  data: () => Promise<Buffer>,
-) {
-  const existing = await payload.find({
-    collection: "media",
-    where: { filename: { equals: filename } },
-    limit: 1,
-  });
-  if (existing.docs[0]) return existing.docs[0].id;
-  const buffer = await data();
-  const doc = await payload.create({
-    collection: "media",
-    data: { alt },
-    file: { data: buffer, mimetype: "image/webp", name: filename, size: buffer.length },
-    context,
-  });
-  return doc.id;
 }
 
 async function upsertBySlug<C extends "pages" | "projekte">(
@@ -85,11 +50,6 @@ async function main() {
 
   await payload.updateGlobal({ slug: "site-settings", data: seedSettings, context });
 
-  // Share image for the home page (SEO tab), so uploads and OG images are exercised.
-  const shareImage = await upsertMedia(payload, "seed-startseite.webp", "Platzhalterbild", () =>
-    artwork(),
-  );
-
   // Parents first, so children can reference them (nested-docs builds the breadcrumbs).
   const ids = new Map<string, number | string>();
   for (const page of [...seedPages].sort((a, b) => Number(!!a.parent) - Number(!!b.parent))) {
@@ -98,7 +58,6 @@ async function main() {
       title: page.title,
       content: lexical(page.content),
       ...(parent ? { parent } : {}),
-      ...(page.slug === "startseite" ? { meta: { image: shareImage } } : {}),
     });
     ids.set(page.slug, doc.id);
   }

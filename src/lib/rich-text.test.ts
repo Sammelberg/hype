@@ -23,6 +23,14 @@ describe("firstParagraph", () => {
     expect(firstParagraph(content)).toBe("Siehe hier");
   });
 
+  it("keeps the words of lines apart (an address)", () => {
+    const content = doc({
+      type: "paragraph",
+      children: [text("Merianhof 5"), { type: "linebreak" }, text("79104 Freiburg")],
+    });
+    expect(firstParagraph(content)).toBe("Merianhof 5 79104 Freiburg");
+  });
+
   it("returns null without content", () => {
     expect(firstParagraph(null)).toBeNull();
     expect(firstParagraph(undefined)).toBeNull();

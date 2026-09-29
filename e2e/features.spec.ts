@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { SEED_REDIRECT } from "../scripts/seed-data";
+import { E2E_EMAIL, SEED_REDIRECT } from "../scripts/seed-data";
 
 // Needs `pnpm seed` (redirect, search index, contact form).
 
@@ -53,7 +53,7 @@ test.describe("contact form", () => {
   test("sends a message and confirms it", async ({ page }) => {
     await page.goto("/kontakt");
     await page.getByLabel("Name").fill("Erika Test");
-    await page.getByLabel("E-Mail").fill("erika@example.com");
+    await page.getByLabel("E-Mail").fill(E2E_EMAIL);
     await page.getByLabel("Nachricht").fill("Automatischer Test aus e2e/features.spec.ts.");
     // Stay above the minimum fill time of the spam filter (src/app/(frontend)/kontakt/_lib/validation.ts).
     await page.waitForTimeout(3100);
@@ -63,7 +63,7 @@ test.describe("contact form", () => {
 });
 
 test("pages without a CMS image share their own drawn preview", async ({ page, request }) => {
-  for (const path of ["/leistungen", "/leistungen/web-anwendungen", "/projekte/beispielprojekt"]) {
+  for (const path of ["/leistungen", "/leistungen/web-anwendungen", "/projekte"]) {
     await page.goto(path);
     const url = await page.locator('meta[property="og:image"]').getAttribute("content");
     expect(url).toMatch(new RegExp(`/vorschaubild${path}$`));
@@ -78,4 +78,15 @@ test("search finds a word from deep inside a page, not only its title", async ({
   await page.goto("/suche?q=kurzlebige");
   const results = page.getByRole("region", { name: /Ergebnis/ });
   await expect(results.getByRole("link", { name: "Web-Anwendungen" })).toBeVisible();
+});
+
+test("a project in the overview opens its own page", async ({ page }) => {
+  await page.goto("/projekte");
+  const first = page.getByRole("list", { name: "Projekte" }).getByRole("link").first();
+  // The seed brings no projects (real ones are entered in /admin); a fresh database has none.
+  test.skip((await first.count()) === 0, "no project in this database");
+  const title = await first.innerText();
+  await first.click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+  await expect(page.getByRole("navigation", { name: "Brotkrumen" })).toContainText("Projekte");
 });

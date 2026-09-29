@@ -2,6 +2,7 @@
 type Node = { type?: string; text?: string; children?: Node[] };
 
 function textOf(node: Node): string {
+  if (node.type === "linebreak") return " ";
   return node.text ?? node.children?.map(textOf).join("") ?? "";
 }
 
