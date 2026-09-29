@@ -1,0 +1,427 @@
+/*
+ * „Was wir entwickeln“ (services-strata.tsx): five wide cards, each a service beside a framed view
+ * into its own Black Forest valley (valley.ts). The one saturated place of the site: sapphire
+ * cards, per card --a (deep), --b (sapphire) and --glow set inline.
+ */
+.section {
+  --ice: oklch(0.86 0.09 252);
+  --white: oklch(0.985 0.005 250);
+  --soft: oklch(0.9 0.025 252);
+  --copper: oklch(0.7 0.12 58);
+  --night: oklch(0.11 0.03 262);
+}
+
+.head {
+  display: grid;
+  gap: 1.5rem;
+  padding-block: clamp(5rem, 12vh, 9rem) clamp(2.5rem, 7vh, 5rem);
+}
+
+.heading {
+  font-size: clamp(2.5rem, 1.5rem + 4.2vw, 5.75rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.intro {
+  max-width: 34rem;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+
+/* Default: a sideways track of cards to swipe or scroll through (phones, tablets, short screens,
+   reduced motion). */
+.stage {
+  position: relative;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0 var(--spacing-gutter) 1.25rem;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.track:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 0 0 min(88vw, 42rem);
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 0.75rem 0.75rem 2rem;
+  overflow: clip;
+  scroll-snap-align: start;
+  border-radius: var(--radius-2xl);
+  color: var(--white);
+  background: linear-gradient(165deg, var(--a), color-mix(in oklch, var(--a), var(--b) 70%));
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ice) 16%, transparent);
+}
+
+/* ── The window: a framed view into the valley ── */
+.window {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: clip;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    180deg,
+    oklch(0.13 0.045 262) 0%,
+    color-mix(in oklch, oklch(0.13 0.045 262), var(--b) 55%) 45%,
+    var(--glow) 100%
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ice) 26%, transparent);
+}
+
+.depth {
+  position: absolute;
+  inset: 0 -5%;
+  transform-origin: 50% 100%;
+}
+
+.depth > svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.star {
+  fill: var(--ice);
+}
+
+/* Aerial perspective: the farther the hills, the more they take on the haze of the sky. */
+.farHills {
+  fill: color-mix(in oklch, var(--glow) 34%, oklch(0.24 0.07 262));
+}
+
+.midHills {
+  fill: color-mix(in oklch, var(--b) 30%, oklch(0.16 0.05 262));
+}
+
+.mistStop {
+  stop-color: color-mix(in oklch, var(--glow), white 12%);
+}
+
+.nearFill {
+  fill: var(--night);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arc {
+  fill: none;
+  stroke: var(--copper);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* The hero's drawn firs; they sway from the foot while the section is on screen. */
+.fir {
+  color: var(--ice);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(calc(var(--sway) * -1));
+  }
+  50% {
+    transform: rotate(var(--sway));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .section[data-live] .fir {
+    animation: sway ease-in-out infinite;
+  }
+}
+
+/* ── The service ── */
+.copy {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  padding: 0 1rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.glyph {
+  flex: none;
+  width: 2.25rem;
+  margin-top: 0.3rem;
+}
+
+.glyph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+.glyph [data-fill] {
+  fill: var(--ice);
+  fill-opacity: 0.14;
+}
+
+.title {
+  font-size: clamp(2rem, 1rem + 3.6vw, 4.25rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  text-wrap: balance;
+  hyphens: auto;
+}
+
+.text {
+  max-width: 36rem;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--soft);
+  text-wrap: pretty;
+}
+
+.lead {
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ice);
+}
+
+.examples {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.examples li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.examples li::before {
+  content: "";
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  transform: rotate(45deg);
+  background: var(--ice);
+}
+
+/* The one light surface on the card: the way on to the service's own page. */
+.more {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.75rem;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--night);
+  background: var(--white);
+  transition: background-color 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.more:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .more:hover {
+    background: var(--ice);
+  }
+}
+
+/* ── The rail: every service by name, the current one lit, a step either way ── */
+.rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem var(--spacing-gutter) 0;
+}
+
+.rail ol {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop {
+  position: relative;
+  min-height: 2.5rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: color-mix(in oklch, var(--ice) 72%, transparent);
+  cursor: pointer;
+  transition: color 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stop::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0.3rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.4;
+  transform: scaleX(0.25);
+  transform-origin: 0 50%;
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.3s;
+}
+
+.stop[aria-current="true"] {
+  color: var(--white);
+}
+
+.stop[aria-current="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.stop:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (hover: hover) {
+  .stop:hover {
+    color: var(--white);
+  }
+}
+
+/* Phones: the rail's names would crowd; the arrows and the swipe carry it. */
+@media (max-width: 39.99rem) {
+  .rail ol {
+    display: none;
+  }
+}
+
+/* ── The ride: the stage holds under the header while the cards pass sideways (GSAP) ──
+   Same query as RIDE in services-strata.tsx. */
+@media (min-width: 64rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference) {
+  .stage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.25rem;
+    height: calc(100svh - var(--spacing-header));
+    overflow: clip;
+  }
+
+  .track {
+    flex: none;
+    gap: clamp(1.25rem, 2.5vw, 3rem);
+    height: min(80%, 48rem);
+    padding: 0 var(--spacing-gutter);
+    overflow: visible;
+    scroll-snap-type: none;
+    will-change: transform;
+  }
+
+  .card {
+    flex: 0 0 min(84vw, 100rem);
+    flex-direction: row;
+    align-items: stretch;
+    gap: clamp(2rem, 4vw, 4.5rem);
+    height: 100%;
+    padding: 0.875rem;
+  }
+
+  .copy {
+    order: -1;
+    flex: 1 1 0;
+    align-content: center;
+    padding: clamp(1.5rem, 4vh, 3rem) 0 clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3.5rem);
+  }
+
+  .window {
+    flex: 1.3 1 0;
+    aspect-ratio: auto;
+  }
+
+  .glyph {
+    width: 2.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .title {
+    font-size: clamp(2rem, 0.8rem + 2.9vw, 3.75rem);
+    hyphens: manual;
+  }
+
+  .text {
+    font-size: 1.1875rem;
+  }
+
+  .rail {
+    padding: 0;
+  }
+}
+
+@media (min-width: 120rem) {
+  .title {
+    font-size: clamp(4.25rem, 3.6vw, 5.75rem);
+  }
+
+  .text {
+    font-size: 1.3125rem;
+  }
+}

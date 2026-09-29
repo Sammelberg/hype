@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // Services, steps and principles are edited under /admin → Website-Einstellungen; this maps the
-// CMS shape onto services-strata.tsx's Service type (unrelated in-progress component, left as is).
+// CMS shape onto services-strata.tsx's Service type.
 function toServices(settings: Awaited<ReturnType<typeof getSiteSettings>>): readonly Service[] {
   return (settings.services ?? []).map((s) => ({
     title: s.title,
@@ -46,6 +46,7 @@ function toServices(settings: Awaited<ReturnType<typeof getSiteSettings>>): read
     glyph: s.glyph,
     text: s.text,
     examples: (s.examples ?? []).map((e) => e.text),
+    href: `/leistungen/${s.slug}`,
   }));
 }
 
