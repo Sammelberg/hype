@@ -6,7 +6,7 @@ type PathFor = (doc: Record<string, unknown>) => string | null;
 // Public URL of every collection that has a frontend route. Redirect targets, the search index,
 // live preview and the sitemap all resolve paths through this map — a new routed collection
 // (e.g. `posts` → /beitraege/[slug]) is added here once, next to its route.
-export const routedCollections = {
+const routedCollections = {
   pages: pagePath,
   projekte: projektPath,
 } satisfies Record<string, PathFor>;
