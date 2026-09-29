@@ -11,8 +11,8 @@ type Block =
   | { kind: "lines"; lines: string[] }
   | { kind: "ul"; items: string[] };
 
-// The examples/steps/principles/FAQ are draft copy like the rest of the site: kinds of work and
-// working assumptions, not confirmed claims or references. Edited under /admin → Website-Einstellungen.
+// The examples/steps/principles/FAQ describe kinds of work, not references; the principles' claims
+// are confirmed by the owner (2026-09-29). Edited under /admin → Website-Einstellungen.
 export const seedSettings = {
   siteName: "Schwarzwald Systems",
   ownerName: "Schwarzwald Systems",
