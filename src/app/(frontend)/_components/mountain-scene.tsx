@@ -282,9 +282,18 @@ export function MountainHero({
       const stars = bindStarfield(starCanvas, { still: reduced });
       const lights = bindLights(lightCanvas, { still: reduced });
       const fade = { stars: reduced ? 1 : 0, lights: reduced ? 1 : 0 };
+      // The sky's cloud shader is the one heavy draw, costlier than a whole frame at 144 Hz. It
+      // holds still while the page scrolls and drifts on once it rests, so no scroll frame waits
+      // for it; the clouds move too slowly for the pause to show.
+      let scrolledAt = -Infinity;
+      const onScroll = () => {
+        scrolledAt = performance.now();
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
       const tick = () => {
         const t = gsap.ticker.time;
-        night?.render(reduced ? 14 : t, reduced);
+        if (reduced || performance.now() - scrolledAt > 160)
+          night?.render(reduced ? 14 : t, reduced);
         stars.render(t, fade.stars);
         lights.render(t, fade.lights);
       };
@@ -309,6 +318,7 @@ export function MountainHero({
         );
       }
       return () => {
+        window.removeEventListener("scroll", onScroll);
         gsap.ticker.remove(tick);
         night?.destroy();
         stars.destroy();

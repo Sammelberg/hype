@@ -10,9 +10,12 @@ gsap.registerPlugin(ScrollTrigger);
 
 let lenis: Lenis | null = null;
 
-/** Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise. */
+/**
+ * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
+ * An immediate jump is forced, so Lenis does not glide on toward a target it had before.
+ */
 export function scrollPageTo(y: number, { immediate = false } = {}) {
-  if (lenis) lenis.scrollTo(y, { immediate });
+  if (lenis) lenis.scrollTo(y, { immediate, force: immediate });
   else window.scrollTo({ top: y, behavior: immediate ? "instant" : "smooth" });
 }
 

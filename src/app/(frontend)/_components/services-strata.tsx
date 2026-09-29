@@ -276,7 +276,7 @@ export function ServicesStrata({
         };
         // The first card arrives with the section itself, the others as they ride in.
         arrival(cards[0]!, false, {
-          scrollTrigger: { trigger: stage, start: "top 85%", end: "top 25%", scrub: 0.8 },
+          scrollTrigger: { trigger: stage, start: "top 85%", end: "top 25%", scrub: true },
         });
         const arrivals = cards.map((card, i) =>
           i === 0 ? null : arrival(card, true, { paused: true }),
@@ -303,7 +303,8 @@ export function ServicesStrata({
             anticipatePin: 1,
             start: () => `top ${header()}`,
             end: () => `+=${step() * units * PACE}`,
-            scrub: 0.4,
+            // Lenis already smooths the scroll; a scrub lag on top of it reads as sluggish.
+            scrub: true,
             invalidateOnRefresh: true,
           },
         });
