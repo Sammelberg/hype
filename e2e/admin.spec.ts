@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { hideDevOverlays, signIn } from "./_admin";
@@ -66,4 +67,43 @@ test("the setup page is closed once an account exists", async ({ page }) => {
   await signIn(page);
   const response = await page.goto("/admin/einrichtung");
   expect(response?.status()).toBe(404);
+});
+
+// WCAG 2 AA on the admin's own screens, signed in; the login page without a session.
+test("the admin's screens have no accessibility violations", async ({ page }) => {
+  // Eleven screens, each compiled on first visit in dev and scanned by axe.
+  test.setTimeout(120_000);
+  const check = async (path: string) => {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // Entrances fade in; axe measures the settled colours.
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa"])
+      .exclude('[class*="reticle-"]')
+      .analyze();
+    expect(
+      violations.map(
+        (v) => `${path} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`,
+      ),
+    ).toEqual([]);
+  };
+  await signIn(page);
+  for (const path of [
+    "/admin",
+    "/admin/seiten",
+    "/admin/seiten/neu",
+    "/admin/projekte",
+    "/admin/einstellungen",
+    "/admin/medien",
+    "/admin/weiterleitungen",
+    "/admin/formular",
+    "/admin/anfragen",
+    "/admin/benutzer",
+  ]) {
+    await check(path);
+  }
+  await page.getByRole("button", { name: "Konto und Darstellung" }).click();
+  await page.getByRole("menuitem", { name: "Abmelden" }).click();
+  await check("/admin/login");
 });

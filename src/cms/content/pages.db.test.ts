@@ -99,12 +99,14 @@ describe.skipIf(!process.env.DATABASE_URL)("pages repository", () => {
     const doc = emptyDocument();
     doc.root.children.push({
       type: "paragraph",
-      children: [{ type: "text", text: "Ein Wort wie Zwetschgenkuchen kommt sonst nirgends vor." }],
+      children: [
+        { type: "text", text: "Ein Wort wie Holunderbluetensirup kommt sonst nirgends vor." },
+      ],
     });
     const id = await createPage(input("test-suche", { content: doc }));
-    expect(await searchSite("Zwetschgenkuchen")).toEqual([]);
+    expect(await searchSite("Holunderbluetensirup")).toEqual([]);
     await publishPage(id, null);
-    expect((await searchSite("Zwetschgenkuchen")).map((r) => r.url)).toEqual(["/test-suche"]);
+    expect((await searchSite("Holunderbluetensirup")).map((r) => r.url)).toEqual(["/test-suche"]);
   });
 
   it("a redirect is found case-insensitively and points at the page's current path", async () => {

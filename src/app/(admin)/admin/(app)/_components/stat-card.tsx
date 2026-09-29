@@ -1,8 +1,8 @@
 "use client";
 
 import NumberFlow from "@number-flow/react";
-import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,14 +12,15 @@ export function StatCard({
   value,
   hint,
   href,
-  icon: Icon,
+  icon,
   index = 0,
 }: {
   label: string;
   value: number;
   hint?: string;
   href: string;
-  icon: LucideIcon;
+  /** Rendered by the server page: a function cannot cross into a client component. */
+  icon: ReactNode;
   index?: number;
 }) {
   return (
@@ -34,7 +35,9 @@ export function StatCard({
       >
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
-            <Icon className="size-4 text-primary-soft" aria-hidden="true" />
+            <span className="text-primary-soft [&_svg]:size-4" aria-hidden="true">
+              {icon}
+            </span>
             {label}
           </CardDescription>
           <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums" data-numeric>

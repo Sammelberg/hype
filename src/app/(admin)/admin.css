@@ -82,12 +82,13 @@
   --secondary: oklch(0.955 0.008 120);
   --secondary-foreground: oklch(0.3 0.02 160);
   --muted: oklch(0.955 0.008 120);
-  --muted-foreground: oklch(0.49 0.02 160);
+  --muted-foreground: oklch(0.44 0.02 160);
   --accent: oklch(0.94 0.025 158);
   --accent-foreground: oklch(0.3 0.06 158);
   --destructive: oklch(0.55 0.19 27);
-  --success: oklch(0.55 0.13 150);
-  --warning: oklch(0.7 0.14 70);
+  /* Status text on paper: both measured above 4.5:1 (axe, e2e/admin.spec.ts). */
+  --success: oklch(0.46 0.12 150);
+  --warning: oklch(0.52 0.13 70);
   --border: oklch(0.9 0.008 120);
   --input: oklch(0.88 0.01 120);
   --ring: oklch(0.55 0.11 158);

@@ -13,6 +13,18 @@ export async function signIn(page: Page) {
     await page.getByLabel("Passwort", { exact: true }).fill(ADMIN_PASSWORD);
     await page.getByLabel("Passwort wiederholen").fill(ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Zugang anlegen" }).click();
+    // Another spec may have created the account a moment earlier: then sign in normally.
+    await Promise.race([
+      page.waitForURL(/\/admin$/),
+      page.getByText("schon vergeben").waitFor(),
+      page.waitForURL(/\/admin\/login/),
+    ]);
+    if (!/\/admin$/.test(page.url())) {
+      await page.goto("/admin/login");
+      await page.getByLabel("E-Mail-Adresse").fill(E2E_ADMIN.email);
+      await page.getByLabel("Passwort").fill(ADMIN_PASSWORD);
+      await page.getByRole("button", { name: "Anmelden" }).click();
+    }
   } else {
     await page.getByLabel("E-Mail-Adresse").fill(E2E_ADMIN.email);
     await page.getByLabel("Passwort").fill(ADMIN_PASSWORD);

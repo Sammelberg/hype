@@ -88,6 +88,7 @@ function UploadForm() {
         multiple
         className="sr-only"
         id="media-files"
+        aria-label="Bilder auswählen"
         onChange={(e) => e.target.files && void upload(e.target.files)}
       />
       <Button

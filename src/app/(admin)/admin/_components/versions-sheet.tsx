@@ -72,6 +72,7 @@ export function VersionsSheet({
               {versions.map((version, index) => (
                 <Item
                   key={version.id}
+                  role="listitem"
                   variant="outline"
                   size="sm"
                   className="rise-in"

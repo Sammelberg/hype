@@ -185,6 +185,7 @@ export function UsersManager({ users, currentUserId }: { users: User[]; currentU
       <ItemGroup>
         {users.map((user, index) => (
           <Item
+            role="listitem"
             key={user.id}
             variant="outline"
             className="rise-in"

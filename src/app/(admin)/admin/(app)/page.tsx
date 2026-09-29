@@ -78,7 +78,7 @@ export default async function DashboardPage({
           value={unread}
           hint={`${submissions.length >= 6 ? "6+" : submissions.length} zuletzt`}
           href="/admin/anfragen"
-          icon={InboxIcon}
+          icon={<InboxIcon />}
         />
         <StatCard
           index={1}
@@ -86,7 +86,7 @@ export default async function DashboardPage({
           value={pages.filter((p) => p.status === "published").length}
           hint={`${pages.length} insgesamt`}
           href="/admin/seiten"
-          icon={FileTextIcon}
+          icon={<FileTextIcon />}
         />
         <StatCard
           index={2}
@@ -94,7 +94,7 @@ export default async function DashboardPage({
           value={projekte.filter((p) => p.status === "published").length}
           hint={`${projekte.length} insgesamt`}
           href="/admin/projekte"
-          icon={FolderKanbanIcon}
+          icon={<FolderKanbanIcon />}
         />
         <StatCard
           index={3}
@@ -102,7 +102,7 @@ export default async function DashboardPage({
           value={media.length}
           hint="in der Medienablage"
           href="/admin/medien"
-          icon={ImageIcon}
+          icon={<ImageIcon />}
         />
       </div>
 
