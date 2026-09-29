@@ -3,6 +3,12 @@ import { expect, type Page, test } from "@playwright/test";
 // Home hero (src/app/(frontend)/_components/mountain-scene.tsx): the ridge outline draws once when
 // the scene comes into view and ends complete; the firs pause off-screen.
 
+// The whole sequence (ridge, triangle, settle) takes about 6s with a GPU. Headless Chromium draws
+// WebGL in software; with the suite running in parallel, frames pass 500ms, and GSAP's lag smoothing
+// counts each as 33ms, so the draw can stretch to 20–30s. Wait for it rather than time it.
+const DRAWN = { timeout: 45_000 };
+test.describe.configure({ timeout: 60_000 });
+
 // Reticle overlays (dev tooling) can catch input; see features.spec.ts.
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -41,9 +47,9 @@ test("the ridge outline draws once and ends complete", async ({ page }) => {
     .evaluate((el) => getComputedStyle(el).strokeDasharray);
   expect(partial).not.toBe("none");
 
-  await expect(scene).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  await expect(scene).toHaveAttribute("data-drawn", "", DRAWN);
   expect(await outline(page)).toEqual({
-    opacity: 0.45,
+    opacity: 0.72,
     complete: true,
     width: "2.5px",
     vectorEffect: "non-scaling-stroke",
@@ -63,7 +69,7 @@ const triangles = (page: Page) =>
 
 test("the triangle motif draws after the ridge and ends complete", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", DRAWN);
   expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
 });
 
@@ -77,7 +83,7 @@ test("a page loaded below the hero starts with the firs paused", async ({ page }
 test("the firs pause once the hero is off-screen and resume on return", async ({ page }) => {
   await page.goto("/");
   const scene = page.locator("[data-scene]");
-  await expect(scene).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  await expect(scene).toHaveAttribute("data-drawn", "", DRAWN);
   await expect(scene).not.toHaveAttribute("data-paused", "");
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(scene).toHaveAttribute("data-paused", "");
@@ -105,7 +111,7 @@ const lightGlow = (page: Page) =>
 
 test("the night sky shows the moon, and lights rise from the forest", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", DRAWN);
   // WebGL sky in place (the CSS fallback moon stays hidden) and faded in.
   await expect(page.locator("[data-moon-fallback]")).toBeHidden();
   await expect(page.locator("[data-sky]")).toHaveCSS("opacity", "1");
@@ -117,11 +123,31 @@ test("the night sky shows the moon, and lights rise from the forest", async ({ p
 
 test("the sky fills with stars that twinkle", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", { timeout: 10_000 });
+  await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "", DRAWN);
   const first = await starlight(page);
   expect(first).toBeGreaterThan(0);
   await page.waitForTimeout(400);
   expect(await starlight(page)).not.toBe(first);
+});
+
+// The call to action's pole star (polar-star.ts) follows one spring, mirrored into --p on the link.
+const starSpring = (page: Page) =>
+  page
+    .locator("[data-hero-cta]")
+    .evaluate((el) => Number(getComputedStyle(el).getPropertyValue("--p") || 0));
+
+test("the call to action raises its pole star on hover and lets it go", async ({
+  page,
+  hasTouch,
+}) => {
+  test.skip(hasTouch, "the star answers a mouse hover; a tap follows the link");
+  await page.goto("/");
+  expect(await starSpring(page)).toBe(0);
+  await page.locator("[data-hero-cta]").hover();
+  // The spring steps per frame, so under a loaded headless run it needs longer than on a real screen.
+  await expect.poll(() => starSpring(page), { timeout: 5_000 }).toBeGreaterThan(0.9);
+  await page.mouse.move(0, 0);
+  await expect.poll(() => starSpring(page)).toBe(0);
 });
 
 test.describe("reduced motion", () => {
@@ -131,7 +157,7 @@ test.describe("reduced motion", () => {
     await page.goto("/");
     await expect(page.locator("[data-scene]")).toHaveAttribute("data-drawn", "");
     const { opacity, complete } = await outline(page);
-    expect({ opacity, complete }).toEqual({ opacity: 0.45, complete: true });
+    expect({ opacity, complete }).toEqual({ opacity: 0.72, complete: true });
     expect(await triangles(page)).toEqual({ strokes: [1, 1, 1, 1, 1], dots: [1, 1, 1] });
     // Still lights, drawn once.
     const glow = await lightGlow(page);
@@ -143,5 +169,13 @@ test.describe("reduced motion", () => {
     expect(first).toBeGreaterThan(0);
     await page.waitForTimeout(400);
     expect(await starlight(page)).toBe(first);
+  });
+
+  test("shows the pole star at once, without motion", async ({ page, hasTouch }) => {
+    test.skip(hasTouch, "the star answers a mouse hover");
+    await page.goto("/");
+    await page.locator("[data-hero-cta]").hover();
+    // At once means no spring, not the same tick: the hover still takes a frame to land.
+    await expect.poll(() => starSpring(page), { intervals: [50] }).toBe(1);
   });
 });

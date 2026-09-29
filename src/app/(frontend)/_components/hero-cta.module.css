@@ -1,0 +1,74 @@
+/* Hero call to action (hero-cta.tsx): large white type with no frame or fill; the space under the
+   label belongs to the pole star, drawn on a canvas that reaches past the link on every side
+   (BLEED in polar-star.ts). Its P is blackletter in outline, like the headline's initial. */
+.cta {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  /* The bottom padding is the star's band. */
+  padding: 0.4em 0.27em 1.2em;
+  margin-inline: -0.27em;
+  color: var(--foreground);
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  outline: none;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (min-width: 40rem) {
+  .cta {
+    font-size: 1.875rem;
+  }
+}
+@media (min-width: 120rem) {
+  .cta {
+    font-size: 2.25rem;
+  }
+}
+.cta:active {
+  transform: scale(0.97);
+}
+.cta:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+.sky {
+  position: absolute;
+  top: -30px;
+  left: -90px;
+  z-index: 0;
+  pointer-events: none;
+}
+.label {
+  position: relative;
+  z-index: 1;
+}
+.initial {
+  margin-right: 0.07em;
+  font-family: var(--font-fraktur);
+  font-size: 1.4em;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0;
+  color: transparent;
+  -webkit-text-stroke: 1.25px var(--primary-soft);
+}
+/* Follows the star's spring (--p, set by polar-star.ts), so arrow and star move as one. */
+.arrow {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 0.93em;
+  height: 0.93em;
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: translateX(calc(var(--p, 0) * 0.2em));
+}

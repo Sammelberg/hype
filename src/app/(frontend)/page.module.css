@@ -1,0 +1,11 @@
+/* Blackletter initial of the hero headline, drawn as an outline like the ridge in the hero. */
+.initial {
+  margin-right: 0.02em;
+  font-family: var(--font-fraktur);
+  font-size: 1.25em;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: transparent;
+  /* The ridge outline's 2.5px. */
+  -webkit-text-stroke: 2.5px var(--primary-soft);
+}

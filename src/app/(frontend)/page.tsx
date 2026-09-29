@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { getHomePage, getSiteSettings } from "@/data/queries";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
+import { HeroCta } from "./_components/hero-cta";
 import { MountainHero } from "./_components/mountain-scene";
+import { RotatingWord } from "./_components/rotating-word";
 import { type Service, ServicesStrata } from "./_components/services-strata";
 import { TriangleMotif } from "./_components/triangle-motif";
+import styles from "./page.module.css";
+
+// Blackletter initials of the hero headline and its call to action (UnifrakturMaguntia, OFL — licence beside the file).
+const fraktur = localFont({
+  src: "./_fonts/unifraktur-maguntia.woff2",
+  variable: "--font-fraktur",
+  display: "swap",
+  fallback: ["serif"],
+});
 
 // Home page of Schwarzwald Systems. The sections below are written in code; the Payload page with
 // the slug „startseite“ still supplies the SEO tab (title, description, share image).
+// The changing word of the hero headline: what we build, from the services below.
+const HERO_WORDS = ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"];
+
 export async function generateMetadata(): Promise<Metadata> {
   const [home, settings] = await Promise.all([getHomePage(), getSiteSettings()]);
   const image = mediaUrl(home?.meta?.image ?? null, "hero");
@@ -54,32 +69,31 @@ export default async function HomePage() {
 
       <MountainHero labelledBy="start-titel">
         <div className="page-container grid items-center gap-10 pt-16 pb-20 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
-          <div>
+          <div className={fraktur.variable}>
             <h1
               id="start-titel"
-              className="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl 3xl:max-w-6xl 3xl:text-8xl"
+              className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl 3xl:max-w-6xl 3xl:text-8xl"
             >
-              Individuelle Software, die Ihre Abläufe trägt.
+              {/* A span, not ::first-letter: Chrome ignores text-stroke on ::first-letter. */}
+              <span className={styles.initial}>W</span>ir entwickeln{" "}
+              <RotatingWord
+                words={HERO_WORDS}
+                label="Web-Anwendungen, mobile Apps, Schnittstellen und Plattformen"
+                className="text-primary-soft"
+              />
+              für den Mittelstand.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-pretty text-muted-foreground sm:text-xl 3xl:max-w-3xl 3xl:text-2xl">
-              Aus dem Schwarzwald entwickeln wir Web-Anwendungen, mobile Apps und Schnittstellen für
-              mittelständische Unternehmen, deren Prozesse nicht in Standardsoftware passen.
+            {/* One short line and one action: the scene around it already carries a lot. */}
+            <p className="mt-6 max-w-4xl text-lg text-pretty text-muted-foreground sm:text-xl 3xl:max-w-5xl 3xl:text-2xl">
+              Individuelle Software aus dem Schwarzwald.
             </p>
-            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Button asChild size="lg">
-                <Link href="/kontakt">Projekt anfragen</Link>
-              </Button>
-              <Link
-                href={"/#leistungen" as never}
-                className="text-sm font-medium underline decoration-border underline-offset-8 transition-colors duration-150 hover:decoration-foreground"
-              >
-                Leistungen ansehen
-              </Link>
+            <div className="mt-10">
+              <HeroCta />
             </div>
           </div>
-          {/* Above the headline on phones; from lg up a quiet accent at the level of the buttons,
-              leaving the sky above free for the moon. */}
-          <TriangleMotif className="order-first w-28 sm:w-32 lg:order-none lg:mb-2 lg:w-[clamp(170px,14vw,230px)] lg:self-end 3xl:w-[clamp(230px,11vw,280px)]" />
+          {/* Above the headline and centred on phones and tablets; from lg up a quiet accent at the
+              level of the buttons, leaving the sky above free for the moon. */}
+          <TriangleMotif className="order-first w-56 justify-self-center sm:w-68 lg:order-none lg:mb-2 lg:w-[clamp(240px,19.5vw,320px)] lg:self-end lg:justify-self-auto 3xl:w-[clamp(320px,15vw,390px)]" />
         </div>
       </MountainHero>
 
