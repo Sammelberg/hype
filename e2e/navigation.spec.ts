@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { SEED_PATHS } from "../scripts/seed-data";
+
 // Header, phone menu and footer: every section of the site can be reached from any page.
 
 test.beforeEach(async ({ page }) => {
@@ -13,18 +15,33 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("the header marks the section that is open", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the header shows only the contact link on phones");
+test("the header lists every section and opens a section's pages", async ({ page, isMobile }) => {
+  test.skip(isMobile, "phones get the menu button instead");
   await page.goto("/leistungen/web-anwendungen");
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  await expect(nav.getByRole("link", { name: "Leistungen" })).toHaveAttribute(
+  for (const name of ["Leistungen", "Branchen", "Projekte", "Über uns"]) {
+    await expect(nav.getByRole("button", { name })).toBeVisible();
+  }
+  await expect(nav.getByRole("link", { name: "Kontakt" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Suche" })).toBeVisible();
+
+  // By keyboard: Enter opens the section's menu, Escape closes it again.
+  await nav.getByRole("button", { name: "Leistungen" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(nav.getByRole("link", { name: "Übersicht Leistungen" })).toHaveAttribute(
+    "href",
+    "/leistungen",
+  );
+  await expect(nav.getByRole("link", { name: "Web-Anwendungen" })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  await expect(nav.getByRole("link", { name: "Projekte" })).not.toHaveAttribute(
-    "aria-current",
-    /.*/,
-  );
+  await page.keyboard.press("Escape");
+  await expect(nav.getByRole("link", { name: "Web-Anwendungen" })).toBeHidden();
+
+  await nav.getByRole("button", { name: "Über uns" }).click();
+  await nav.getByRole("link", { name: "Team" }).click();
+  await expect(page).toHaveURL(/\/ueber-uns\/team$/);
 });
 
 test("the phone menu opens, traps focus, closes on Escape and leads to a page", async ({
@@ -52,26 +69,17 @@ test("the phone menu opens, traps focus, closes on Escape and leads to a page", 
   await expect(page.locator("html")).not.toHaveClass(/lenis-stopped/);
 
   await button.click();
-  await menu.getByRole("link", { name: "Projekte" }).click();
+  await expect(menu.getByRole("link", { name: "Handwerk" })).toBeVisible();
+  await menu.getByRole("link", { name: "Projekte", exact: true }).click();
   await expect(page).toHaveURL(/\/projekte$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Projekte");
   await expect(menu).toBeHidden();
 });
 
-test("the footer leads to every section", async ({ page }) => {
+test("the footer links every page of the site", async ({ page }) => {
   await page.goto("/");
   const footer = page.getByRole("contentinfo");
-  for (const name of [
-    "Leistungen",
-    "Branchen",
-    "Projekte",
-    "Über uns",
-    "Arbeitsweise",
-    "Kontakt",
-    "Impressum",
-    "Datenschutz",
-    "Suche",
-  ]) {
-    await expect(footer.getByRole("link", { name, exact: true })).toBeVisible();
+  for (const path of SEED_PATHS) {
+    await expect(footer.locator(`a[href="${path}"]`).first()).toBeVisible();
   }
 });

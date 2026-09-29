@@ -6,6 +6,7 @@ import { cache } from "react";
 import { HOME_SLUG } from "@/cms/collections/Pages";
 import { getPayloadClient } from "@/data/payload";
 import { normalizePath, resolveRedirect } from "@/lib/redirects";
+import { siteNav } from "@/lib/site-nav";
 
 export const getSiteSettings = cache(async () => {
   const payload = await getPayloadClient();
@@ -50,6 +51,23 @@ export const getChildPages = cache(async (parentId: number) => {
     depth: 0,
   });
   return docs;
+});
+
+// Every page of the site as sections with the pages below them, for header, phone menu and footer.
+export const getSiteNav = cache(async () => {
+  const payload = await getPayloadClient();
+  const [{ docs: pages }, projekte] = await Promise.all([
+    payload.find({
+      collection: "pages",
+      where: { _status: { equals: "published" } },
+      sort: "createdAt",
+      limit: 500,
+      depth: 0,
+      select: { title: true, slug: true, parent: true, breadcrumbs: true },
+    }),
+    getProjekte(),
+  ]);
+  return siteNav(pages, projekte);
 });
 
 // Published projects, newest first, for the /projekte overview.

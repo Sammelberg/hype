@@ -1,16 +1,17 @@
 import Link from "next/link";
 
-import { cn } from "@/lib/utils";
+import { getSiteNav } from "@/data/queries";
 
+import { DesktopNav } from "./desktop-nav";
 import { FirMark } from "./fir-mark";
-import { MENU_LINKS } from "./menu-links";
 import { MobileMenu } from "./mobile-menu";
-import { NavLink } from "./nav-link";
 
 // Sticky bar across the full width (fluid side gutter, wider than the page column): fir mark and
-// wordmark, the main navigation. Its height is the `header` spacing token, which scroll-margin in
-// globals.css offsets against.
-export function SiteHeader({ siteName }: { siteName: string }) {
+// wordmark, then every page of the site — as menus from md up, behind the menu button below.
+// Its height is the `header` spacing token, which scroll-margin in globals.css offsets against.
+export async function SiteHeader({ siteName }: { siteName: string }) {
+  const sections = await getSiteNav();
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="flex h-header w-full items-center justify-between gap-5 px-gutter">
@@ -21,18 +22,10 @@ export function SiteHeader({ siteName }: { siteName: string }) {
           <FirMark className="size-6 text-primary-soft 3xl:size-7" />
           <span className="truncate">{siteName}</span>
         </Link>
-        <nav aria-label="Hauptnavigation">
-          <ul className="flex items-center gap-6 text-sm 3xl:gap-8 3xl:text-base">
-            {MENU_LINKS.map((link) => (
-              <li key={link.href} className={cn(link.wide && "hidden sm:block")}>
-                <NavLink href={link.href}>{link.label}</NavLink>
-              </li>
-            ))}
-            <li className="sm:hidden">
-              <MobileMenu />
-            </li>
-          </ul>
-        </nav>
+        <DesktopNav sections={sections} />
+        <div className="md:hidden">
+          <MobileMenu sections={sections} />
+        </div>
       </div>
     </header>
   );

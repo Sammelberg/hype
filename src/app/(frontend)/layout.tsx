@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SmoothScroll } from "@/components/site/smooth-scroll";
 import { env } from "@/env";
-import { getSiteSettings } from "@/data/queries";
+import { getSiteNav, getSiteSettings } from "@/data/queries";
 
 import "./globals.css";
 
@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FrontendLayout({ children }: { children: ReactNode }) {
-  const [settings, draft] = await Promise.all([getSiteSettings(), draftMode()]);
+  const [settings, draft, nav] = await Promise.all([getSiteSettings(), draftMode(), getSiteNav()]);
   return (
     <html
       lang="de"
@@ -53,6 +53,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           {children}
         </div>
         <SiteFooter
+          sections={nav}
           siteName={settings.siteName || "Website"}
           tagline={settings.tagline}
           ownerName={settings.ownerName || settings.siteName || "Website"}

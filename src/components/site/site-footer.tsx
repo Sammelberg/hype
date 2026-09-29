@@ -1,19 +1,21 @@
 import Link from "next/link";
 
 import { FirMark } from "./fir-mark";
-import { SITE_GROUPS } from "./menu-links";
+import type { NavSection } from "@/lib/site-nav";
 
 type Social = { label: string; url: string; id?: string | null };
 
 const LINK = "transition-colors hover:text-foreground";
 
 export function SiteFooter({
+  sections,
   siteName,
   ownerName,
   tagline,
   contactEmail,
   socialLinks,
 }: {
+  sections: NavSection[];
   siteName: string;
   ownerName: string;
   tagline?: string | null;
@@ -22,7 +24,7 @@ export function SiteFooter({
 }) {
   return (
     <footer className="border-t text-muted-foreground">
-      <div className="page-container grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] lg:gap-16">
+      <div className="page-container grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 xl:grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))]">
         <div className="max-w-sm">
           <Link
             href="/"
@@ -32,8 +34,13 @@ export function SiteFooter({
             {siteName}
           </Link>
           {tagline ? <p className="mt-4 text-pretty">{tagline}</p> : null}
+          <p className="mt-4">
+            <Link href="/kontakt" className={`inline-block py-1 ${LINK}`}>
+              Kontakt
+            </Link>
+          </p>
           {contactEmail ? (
-            <p className="mt-4">
+            <p className="mt-1">
               <a
                 href={`mailto:${contactEmail}`}
                 className="text-foreground underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
@@ -44,22 +51,31 @@ export function SiteFooter({
           ) : null}
         </div>
 
-        {SITE_GROUPS.map((group) => (
-          <nav key={group.label} aria-labelledby={`fuss-${group.label}`}>
-            <h2 id={`fuss-${group.label}`} className="text-sm font-medium text-primary-soft">
-              {group.label}
-            </h2>
-            <ul className="mt-4 space-y-1">
-              {group.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href as never} className={`inline-block py-1 ${LINK}`}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
+        {/* Every section with the pages below it: the whole site at a glance. Kontakt sits in the
+            brand column beside the e-mail address. */}
+        {sections
+          .filter((section) => section.href !== "/kontakt")
+          .map((section) => (
+            <nav key={section.href} aria-label={section.label}>
+              <Link
+                href={section.href as never}
+                className="text-sm font-medium text-primary-soft underline-offset-4 hover:underline"
+              >
+                {section.label}
+              </Link>
+              {section.children.length > 0 ? (
+                <ul className="mt-4 space-y-1">
+                  {section.children.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href as never} className={`inline-block py-1 ${LINK}`}>
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </nav>
+          ))}
 
         <nav aria-labelledby="fuss-rechtliches">
           <h2 id="fuss-rechtliches" className="text-sm font-medium text-primary-soft">

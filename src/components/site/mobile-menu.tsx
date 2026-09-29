@@ -5,16 +5,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { NavSection } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
-import { SITE_GROUPS } from "./menu-links";
 import { pauseSmoothScroll } from "./smooth-scroll";
 
-// The site's pages on phones, where the header only has room for the contact link. A sheet from
-// the top: Radix traps focus, closes on Escape and returns focus to the button; Lenis pauses so
-// the page behind it holds still.
-export function MobileMenu() {
+// Every page of the site on phones, where the header has no room for them. A sheet from the top:
+// Radix traps focus, closes on Escape and returns focus to the button; Lenis pauses so the page
+// behind it holds still.
+export function MobileMenu({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
+  const link = (href: string, label: string, className: string) => {
+    const current = pathname === href;
+    return (
+      <SheetClose asChild>
+        <Link
+          href={href as never}
+          aria-current={current ? "page" : undefined}
+          className={cn(
+            "block transition-colors hover:text-primary-soft",
+            className,
+            current && "text-primary-soft underline decoration-2 underline-offset-8",
+          )}
+        >
+          {label}
+        </Link>
+      </SheetClose>
+    );
+  };
 
   return (
     <Sheet onOpenChange={pauseSmoothScroll}>
@@ -27,42 +45,24 @@ export function MobileMenu() {
         className="max-h-dvh overflow-y-auto overscroll-contain border-b bg-background px-gutter pt-5 pb-10"
       >
         <SheetTitle className="text-sm font-medium text-muted-foreground">Menü</SheetTitle>
-        <nav aria-label="Seiten" className="mt-4 grid gap-8">
-          {SITE_GROUPS.map((group) => (
-            <div key={group.label}>
-              <h2 className="text-sm text-primary-soft">{group.label}</h2>
-              <ul className="mt-2">
-                {group.links.map((link) => {
-                  const current = pathname === link.href;
-                  return (
-                    <li key={link.href}>
-                      <SheetClose asChild>
-                        <Link
-                          href={link.href as never}
-                          aria-current={current ? "page" : undefined}
-                          className={cn(
-                            "block py-2 text-3xl font-semibold tracking-tight transition-colors hover:text-primary-soft",
-                            current &&
-                              "text-primary-soft underline decoration-2 underline-offset-8",
-                          )}
-                        >
-                          {link.label}
-                        </Link>
-                      </SheetClose>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-          <SheetClose asChild>
-            <Link
-              href="/suche"
-              className="inline-flex min-h-11 items-center text-lg text-muted-foreground underline decoration-primary-soft underline-offset-4 hover:text-foreground"
-            >
-              Suche
-            </Link>
-          </SheetClose>
+        <nav aria-label="Seiten" className="mt-2">
+          <ul className="grid gap-6">
+            {sections.map((section) => (
+              <li key={section.href}>
+                {link(section.href, section.label, "py-1 text-3xl font-semibold tracking-tight")}
+                {section.children.length > 0 ? (
+                  <ul className="mt-1 border-l border-primary-soft/40 pl-4">
+                    {section.children.map((child) => (
+                      <li key={child.href}>
+                        {link(child.href, child.label, "py-2 text-lg text-muted-foreground")}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            ))}
+            <li>{link("/suche", "Suche", "py-1 text-lg text-muted-foreground")}</li>
+          </ul>
         </nav>
       </SheetContent>
     </Sheet>

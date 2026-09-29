@@ -284,16 +284,24 @@ export function MountainHero({
       const fade = { stars: reduced ? 1 : 0, lights: reduced ? 1 : 0 };
       // The sky's cloud shader is the one heavy draw, costlier than a whole frame at 144 Hz. It
       // holds still while the page scrolls and drifts on once it rests, so no scroll frame waits
-      // for it; the clouds move too slowly for the pause to show.
+      // for it. The sky keeps its own clock, which stops with it: after a pause the clouds drift on
+      // from where they stood instead of jumping ahead by the time they were held.
       let scrolledAt = -Infinity;
       const onScroll = () => {
         scrolledAt = performance.now();
       };
       window.addEventListener("scroll", onScroll, { passive: true });
+      let skyTime = 0;
+      let lastTick = -1;
       const tick = () => {
         const t = gsap.ticker.time;
-        if (reduced || performance.now() - scrolledAt > 160)
-          night?.render(reduced ? 14 : t, reduced);
+        const dt = lastTick < 0 ? 0 : Math.min(t - lastTick, 0.1);
+        lastTick = t;
+        if (reduced) night?.render(14, true);
+        else if (performance.now() - scrolledAt > 160) {
+          skyTime += dt;
+          night?.render(skyTime);
+        }
         stars.render(t, fade.stars);
         lights.render(t, fade.lights);
       };
@@ -306,8 +314,12 @@ export function MountainHero({
         gsap.to(fade, { stars: 1, duration: 1.8, delay: 0.5, ease: "power1.inOut" });
         gsap.to(fade, { lights: 1, duration: 2.5, delay: 1.2, ease: "power1.inOut" });
         gsap.set(lightCanvas, { opacity: 1 });
-        const toggle = ({ isActive }: ScrollTrigger) =>
-          isActive ? gsap.ticker.add(tick) : gsap.ticker.remove(tick);
+        // Off screen the ticker stops; the sky's clock picks up again without a jump.
+        const toggle = ({ isActive }: ScrollTrigger) => {
+          lastTick = -1;
+          if (isActive) gsap.ticker.add(tick);
+          else gsap.ticker.remove(tick);
+        };
         toggle(
           ScrollTrigger.create({
             trigger: root,
