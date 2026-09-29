@@ -13,7 +13,9 @@ export async function getSiteSettings(draft = false): Promise<SiteSettings | nul
   if (!row) return null;
   const doc = draft && row.draft ? row.draft : row.data;
   const parsed = SiteSettingsSchema.safeParse(doc);
-  return parsed.success ? parsed.data : SiteSettingsSchema.parse(row.data);
+  if (parsed.success) return parsed.data;
+  const live = SiteSettingsSchema.safeParse(row.data);
+  return live.success ? live.data : (row.data as SiteSettings);
 }
 
 export async function getSiteSettingsForEditing(): Promise<{
@@ -91,4 +93,55 @@ export async function upsertSiteSettings(raw: SiteSettings) {
       target: siteSettings.id,
       set: { data, draft: null, updatedAt: new Date() },
     });
+}
+
+// The texts a fresh site starts with (the seed fills the rest); also what the site shows
+// while the settings row does not exist yet.
+export const SITE_TEXT_DEFAULTS = {
+  cta: {
+    title: "Erzählen Sie uns von Ihrem Vorhaben.",
+    text: "Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen.",
+    label: "Projekt anfragen",
+  },
+  hero: {
+    headline: "Wir entwickeln",
+    headlineEnd: "für den Mittelstand.",
+    lead: "Individuelle Software aus dem Schwarzwald.",
+  },
+  servicesTitle: "Was wir entwickeln",
+  servicesIntro:
+    "Von der einzelnen Schnittstelle bis zur kompletten Plattform – geplant für Ihre Abläufe, nicht für einen Standardfall.",
+  stepsTitle: "So arbeiten wir",
+  principlesTitle: "Unsere Grundsätze",
+  projekteLead: "Ausgewählte Projekte, die wir für unsere Kundinnen und Kunden gebaut haben.",
+  projekteEmpty: "Hier stellen wir bald unsere ersten Projekte vor.",
+  kontaktLead:
+    "Erzählen Sie uns von Ihrem Vorhaben. Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen.",
+  kontaktNextTitle: "Was danach passiert",
+} as const;
+
+export function emptySiteSettings(siteName = "Website"): SiteSettings {
+  const d = SITE_TEXT_DEFAULTS;
+  return {
+    siteName,
+    ownerName: siteName,
+    tagline: null,
+    description: null,
+    contactEmail: null,
+    socialLinks: [],
+    cta: { ...d.cta },
+    hero: { ...d.hero, words: [] },
+    servicesTitle: d.servicesTitle,
+    servicesIntro: d.servicesIntro,
+    services: [],
+    stepsTitle: d.stepsTitle,
+    steps: [],
+    principlesTitle: d.principlesTitle,
+    principles: [],
+    faq: [],
+    projekteLead: d.projekteLead,
+    projekteEmpty: d.projekteEmpty,
+    kontaktLead: d.kontaktLead,
+    kontaktNext: { title: d.kontaktNextTitle, text: null },
+  };
 }

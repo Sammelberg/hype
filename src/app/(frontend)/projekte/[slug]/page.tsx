@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { projektPath } from "@/cms/collections/Projekte";
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { PageHeader } from "@/components/site/page-header";
@@ -13,7 +12,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
   const projekte = await getProjekte();
-  return projekte.map((projekt) => ({ slug: String(projekt.slug) }));
+  return projekte.map((projekt) => ({ slug: projekt.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     meta: projekt.meta,
     fallbackTitle: projekt.title,
     fallbackDescription: projekt.summary,
-    path: projektPath(projekt as unknown as Record<string, unknown>) ?? `/projekte/${slug}`,
+    path: projekt.path,
   });
 }
 
@@ -33,7 +32,7 @@ export default async function ProjektPage({ params }: Props) {
   const projekt = await getProjektBySlug(slug);
   if (!projekt) return redirectOrNotFound(`/projekte/${slug}`);
 
-  const path = `/projekte/${projekt.slug}`;
+  const path = projekt.path;
 
   return (
     <main>

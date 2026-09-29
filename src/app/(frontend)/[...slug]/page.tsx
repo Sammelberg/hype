@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 
-import { pagePath } from "@/cms/collections/Pages";
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
 import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
 import { ServiceGlyph } from "@/components/site/service-glyphs";
-import { getPayloadClient } from "@/data/payload";
-import { getChildPages, getPageByPath, getSiteSettings } from "@/data/queries";
+import {
+  getChildPages,
+  getPageByPath,
+  getPublishedPagePaths,
+  getSiteSettings,
+} from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
 import { pageTrail } from "@/lib/breadcrumbs";
-import { firstParagraph } from "@/lib/rich-text";
+import { firstParagraph } from "@/cms/rich-text/text";
 import { buildMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
 export async function generateStaticParams() {
-  const payload = await getPayloadClient();
-  const { docs } = await payload.find({
-    collection: "pages",
-    where: { _status: { equals: "published" } },
-    limit: 1000,
-    depth: 0,
-  });
+  const paths = await getPublishedPagePaths();
   return (
-    docs
-      .map((doc) => pagePath(doc as unknown as Record<string, unknown>))
+    paths
       // `/` is rendered by app/(frontend)/page.tsx; `/leistungen` by its own route (the Pages doc
-      // there only exists as a nested-docs anchor for the 5 child pages) — not by this catch-all.
-      .filter((path): path is string => Boolean(path) && path !== "/" && path !== "/leistungen")
+      // there only anchors the 5 child pages) — not by this catch-all.
+      .filter((path) => path !== "/" && path !== "/leistungen")
       .map((path) => ({ slug: path.split("/").filter(Boolean) }))
   );
 }
@@ -44,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     meta: page.meta,
     fallbackTitle: page.title,
     fallbackDescription: page.lead || firstParagraph(page.content),
-    path: pagePath(page as unknown as Record<string, unknown>) ?? "/",
+    path: page.path,
   });
 }
 
@@ -141,7 +137,7 @@ export default async function CmsPage({ params }: Props) {
         </section>
       ) : null}
 
-      {LEGAL.has(page.slug ?? "") ? null : <ClosingCta />}
+      {LEGAL.has(page.slug) ? null : <ClosingCta />}
     </main>
   );
 }

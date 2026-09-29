@@ -1,7 +1,7 @@
 "use server";
 
 import { validateSubmission, type ContactField } from "./_lib/validation";
-import { getPayloadClient } from "@/data/payload";
+import { createSubmission } from "@/cms/content/forms";
 import { getContactForm } from "@/data/queries";
 
 export type ContactState =
@@ -14,7 +14,7 @@ export async function submitContact(_: ContactState, formData: FormData): Promis
   const form = await getContactForm();
   if (!form) return { status: "error" };
 
-  const fields = (form.fields ?? []).filter(
+  const fields = form.fields.filter(
     (field): field is ContactField & typeof field => "name" in field,
   );
   const result = validateSubmission(fields, formData);
@@ -29,12 +29,8 @@ export async function submitContact(_: ContactState, formData: FormData): Promis
   }
 
   try {
-    const payload = await getPayloadClient();
-    // Local API: public REST creation of submissions is closed in payload.config.ts.
-    await payload.create({
-      collection: "form-submissions",
-      data: { form: form.id, submissionData: result.data },
-    });
+    // Straight into our own table; there is no public API for messages.
+    await createSubmission(form.id, result.data);
     return { status: "success" };
   } catch (error) {
     console.error("Kontaktformular konnte nicht gespeichert werden", error);

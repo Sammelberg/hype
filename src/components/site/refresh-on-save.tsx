@@ -1,10 +1,21 @@
 "use client";
 
-import { RefreshRouteOnSave as PayloadRefresh } from "@payloadcms/live-preview-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-// Re-renders the page inside the admin's live-preview iframe whenever the document is saved.
-export function RefreshOnSave({ serverURL }: { serverURL: string }) {
+// Inside the admin's preview iframe: the editor posts `cms:refresh` after every save, and the
+// page re-renders with the new draft. Same origin only.
+export const REFRESH_MESSAGE = "cms:refresh";
+
+export function RefreshOnSave() {
   const router = useRouter();
-  return <PayloadRefresh refresh={() => router.refresh()} serverURL={serverURL} />;
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if ((event.data as { type?: string } | null)?.type === REFRESH_MESSAGE) router.refresh();
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [router]);
+  return null;
 }

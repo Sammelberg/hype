@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
-    localPatterns: [{ pathname: "/api/media/file/**" }],
+    localPatterns: [{ pathname: "/media/**" }],
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "motion"],

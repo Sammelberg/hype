@@ -1,28 +1,19 @@
 import type { Metadata } from "next";
 
 import { env } from "@/env";
-import type { Media } from "@/payload-types";
+import type { MediaDoc } from "@/cms/content/types";
 
-type Meta = { title?: string | null; description?: string | null; image?: number | Media | null };
+type Meta = { title?: string | null; description?: string | null; image?: MediaDoc | null };
 
 // Alt text of the drawn share images (components/site/share-image.tsx).
 export const SHARE_ALT = "Seitentitel von Schwarzwald Systems über einem gezeichneten Horizont";
 
 export const absoluteUrl = (path = "/") => new URL(path, env.NEXT_PUBLIC_SERVER_URL).toString();
 
-export const mediaUrl = (
-  media: number | Media | null | undefined,
-  size?: keyof NonNullable<Media["sizes"]>,
-) => {
-  if (!media || typeof media === "number") return null;
-  // Relative on purpose: next/image only optimises local paths, and metadataBase resolves OG URLs.
-  const url = (size && media.sizes?.[size]?.url) || media.url;
-  if (!url) return null;
-  // Payload prefixes serverURL; strip our own origin so next/image treats it as a local path.
-  const parsed = new URL(url, env.NEXT_PUBLIC_SERVER_URL);
-  return parsed.origin === new URL(env.NEXT_PUBLIC_SERVER_URL).origin
-    ? `${parsed.pathname}${parsed.search}`
-    : url;
+// Relative on purpose: next/image only optimises local paths, and metadataBase resolves OG URLs.
+export const mediaUrl = (media: MediaDoc | null | undefined, size?: keyof MediaDoc["sizes"]) => {
+  if (!media) return null;
+  return (size && media.sizes[size]?.url) || media.url || null;
 };
 
 // Builds page metadata from the SEO plugin's `meta` group with sensible fallbacks.

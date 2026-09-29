@@ -4,14 +4,9 @@
 // e2e tests import SEED_PATHS, so every seeded route is also checked for data sovereignty and a11y.
 // `pnpm init:project` rewrites siteName, ownerName and contactEmail below.
 
-type Text = { type: "text"; text: string };
-type Block =
-  | { kind: "p" | "h2"; text: string }
-  /** One paragraph with line breaks (an address). */
-  | { kind: "lines"; lines: string[] }
-  | { kind: "ul"; items: string[] }
-  /** One paragraph with links inside (a part with `href` becomes a link). */
-  | { kind: "rich"; parts: (string | { text: string; href: string })[] };
+import { type Block, lexical } from "../src/cms/rich-text/build";
+
+export { lexical };
 
 // The examples/steps/principles/FAQ describe kinds of work, not references; the principles' claims
 // are confirmed by the owner (2026-09-29). Edited under /admin → Website-Einstellungen.
@@ -24,8 +19,8 @@ export const seedSettings = {
   // Shown in the footer, on /kontakt and in the legal pages once set (the owner's address follows).
   contactEmail: null as string | null,
   socialLinks: [] as { label: string; url: string }[],
-  // The other home and page texts (headings, leads, the closing invitation) are the fields' default
-  // values in src/cms/globals/SiteSettings.ts; a fresh database gets them from there.
+  // The other home and page texts (headings, leads, the closing invitation) are SITE_TEXT_DEFAULTS
+  // in src/cms/content/site-settings.ts; the seed fills them in from there.
   hero: {
     // What we build, from the services below.
     words: ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"].map((word) => ({
@@ -136,7 +131,7 @@ export const seedSettings = {
           ".",
         ],
       },
-    ]) as never,
+    ]),
   },
   faq: [
     {
@@ -498,9 +493,9 @@ export const seedContactForm = {
     },
   ],
   fields: [
-    { blockType: "text", name: "name", label: "Name", required: true, width: 50 },
-    { blockType: "email", name: "email", label: "E-Mail", required: true, width: 50 },
-    { blockType: "textarea", name: "nachricht", label: "Nachricht", required: true },
+    { blockType: "text" as const, name: "name", label: "Name", required: true, width: 50 },
+    { blockType: "email" as const, name: "email", label: "E-Mail", required: true, width: 50 },
+    { blockType: "textarea" as const, name: "nachricht", label: "Nachricht", required: true },
   ],
 };
 
@@ -538,68 +533,3 @@ export const SEED_PATHS = [
   "/branchen",
   "/branchen/handwerk",
 ];
-
-// Minimal Lexical document (the shape Payload's richText field stores).
-export function lexical(blocks: Block[]) {
-  const text = (value: string): Text & Record<string, unknown> => ({
-    type: "text",
-    text: value,
-    format: 0,
-    detail: 0,
-    mode: "normal",
-    style: "",
-    version: 1,
-  });
-  const common = { format: "", indent: 0, version: 1, direction: "ltr" as const };
-  return {
-    root: {
-      type: "root",
-      ...common,
-      children: blocks.map((b) => {
-        if (b.kind === "h2")
-          return { type: "heading", tag: "h2", ...common, children: [text(b.text)] };
-        if (b.kind === "lines")
-          return {
-            type: "paragraph",
-            textFormat: 0,
-            ...common,
-            children: b.lines.flatMap((line, i) =>
-              i === 0 ? [text(line)] : [{ type: "linebreak", version: 1 }, text(line)],
-            ),
-          };
-        if (b.kind === "ul")
-          return {
-            type: "list",
-            listType: "bullet",
-            tag: "ul",
-            start: 1,
-            ...common,
-            children: b.items.map((item, i) => ({
-              type: "listitem",
-              value: i + 1,
-              ...common,
-              children: [text(item)],
-            })),
-          };
-        if (b.kind === "rich")
-          return {
-            type: "paragraph",
-            textFormat: 0,
-            ...common,
-            children: b.parts.map((part) =>
-              typeof part === "string"
-                ? text(part)
-                : {
-                    type: "link",
-                    fields: { linkType: "custom", url: part.href, newTab: false },
-                    ...common,
-                    version: 3,
-                    children: [text(part.text)],
-                  },
-            ),
-          };
-        return { type: "paragraph", textFormat: 0, ...common, children: [text(b.text)] };
-      }),
-    },
-  };
-}
