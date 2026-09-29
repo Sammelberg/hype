@@ -25,7 +25,16 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
 // (scroll-margin in globals.css); a link to another page drops any leftover inertia.
 export function SmoothScroll() {
   useEffect(() => {
-    const instance = new Lenis({ anchors: true, stopInertiaOnNavigate: true });
+    const instance = new Lenis({
+      anchors: true,
+      stopInertiaOnNavigate: true,
+      // A timed glide instead of Lenis' default lerp: the lerp's exponential tail crawls on for
+      // ~0.6s at under a pixel per frame, so the page stopped in visible one-pixel steps with
+      // pauses between them. An ease-out over a fixed time comes to rest in a few frames.
+      lerp: 0,
+      duration: 0.6,
+      easing: (t) => 1 - (1 - t) ** 3,
+    });
     lenis = instance;
     instance.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => instance.raf(time * 1000);
