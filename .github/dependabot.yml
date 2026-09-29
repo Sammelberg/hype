@@ -5,6 +5,17 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Held majors (see CLAUDE.md, Toolchain): each waits for the ecosystem to catch up.
+    ignore:
+      # eslint-config-next's react, import and jsx-a11y plugins do not support ESLint 10 yet.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # `typescript` stays on 6 for the tools that need its JS API; TS 7 runs as `typescript-7`.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Payload pins graphql 16.
+      - dependency-name: "graphql"
+        update-types: ["version-update:semver-major"]
     groups:
       payload:
         patterns: ["payload", "@payloadcms/*"]

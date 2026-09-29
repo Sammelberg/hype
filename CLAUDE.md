@@ -105,6 +105,8 @@ No user, visitor or content data leaves our own infrastructure.
 ## Commands and checks
 
 - New project from the template: `pnpm init:project` (once, in a fresh copy).
+- **Toolchain:** Node 26 (`.nvmrc`; `devEngines.runtime` makes pnpm run every script on it, downloading it if the shell has another), pnpm 12 via Corepack (`packageManager`). Install scripts run only for packages listed in `allowBuilds` (`pnpm-workspace.yaml`); add one there when pnpm reports an ignored build.
+- **Held majors** (mirrored as `ignore` in `.github/dependabot.yml`): `typescript` stays on 6, since typescript-eslint, the Next build and Payload load its JS API, which TS 7 lacks; TS 7 is installed as `typescript-7` and runs `pnpm typecheck` (the `tsc` bin also resolves to 7). ESLint stays on 9 until eslint-config-next's react, import and jsx-a11y plugins support 10. graphql stays on 16 for Payload.
 - Local: `pnpm db:up` (Postgres on the port in `docker-compose.yml`), `pnpm seed`, `pnpm dev` (app port in the `dev` script; `PORT=…` overrides). Scripts are in `package.json`.
 - `pnpm check` = typecheck + lint (zero warnings) + Vitest + build.
 - `pnpm test:e2e` — Playwright on a running dev server (or starts one): `smoke` (console errors + axe WCAG 2 AA on every `SEED_PATHS` route), `data-sovereignty`, `features` (redirect, search, contact form). Needs `pnpm seed`.

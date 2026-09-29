@@ -1,12 +1,13 @@
-onlyBuiltDependencies:
-  - "@parcel/watcher"
-  - "@swc/core"
-  - esbuild
-  - sharp
-  - unrs-resolver
+engineStrict: true
 
-ignoredBuiltDependencies:
-  - msw
+# Dependencies whose install scripts may run (pnpm 12 `allowBuilds`); anything unlisted is blocked.
+allowBuilds:
+  "@parcel/watcher": true
+  "@swc/core": true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  msw: false
 
 peerDependencyRules:
   allowedVersions:
