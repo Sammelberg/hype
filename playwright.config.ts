@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Default app port of this project (package.json dev/start; set by `pnpm init:project`).
-const PORT = Number(process.env.PORT ?? 3000);
+const PORT = Number(process.env.PORT ?? 3002);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({

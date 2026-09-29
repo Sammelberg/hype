@@ -25,3 +25,6 @@ next-env.d.ts
 # Python bytecode (skill-router scripts)
 __pycache__/
 .reticle-setup-crash.log
+
+# Local database dumps (pg_dump), never committed
+.db-backups/

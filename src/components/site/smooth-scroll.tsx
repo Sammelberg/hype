@@ -15,8 +15,12 @@ let lenis: Lenis | null = null;
  * An immediate jump is forced, so Lenis does not glide on toward a target it had before.
  */
 export function scrollPageTo(y: number, { immediate = false } = {}) {
-  if (lenis) lenis.scrollTo(y, { immediate, force: immediate });
-  else window.scrollTo({ top: y, behavior: immediate ? "instant" : "smooth" });
+  if (lenis) {
+    // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
+    // right after the services ride pinned (the page grew) a jump stopped at the old height.
+    lenis.resize();
+    lenis.scrollTo(y, { immediate, force: immediate });
+  } else window.scrollTo({ top: y, behavior: immediate ? "instant" : "smooth" });
 }
 
 /**
