@@ -142,6 +142,8 @@ test("the call to action raises its pole star on hover and lets it go", async ({
 }) => {
   test.skip(hasTouch, "the star answers a mouse hover; a tap follows the link");
   await page.goto("/");
+  // A hover before hydration meets no listener.
+  await expect(page.locator("[data-hero-cta]")).toHaveAttribute("data-ready", "");
   expect(await starSpring(page)).toBe(0);
   await page.locator("[data-hero-cta]").hover();
   // The spring steps per frame, so under a loaded headless run it needs longer than on a real screen.
@@ -174,6 +176,8 @@ test.describe("reduced motion", () => {
   test("shows the pole star at once, without motion", async ({ page, hasTouch }) => {
     test.skip(hasTouch, "the star answers a mouse hover");
     await page.goto("/");
+    // A hover before hydration meets no listener.
+    await expect(page.locator("[data-hero-cta]")).toHaveAttribute("data-ready", "");
     await page.locator("[data-hero-cta]").hover();
     // At once means no spring, not the same tick: the hover still takes a frame to land.
     await expect.poll(() => starSpring(page), { intervals: [50] }).toBe(1);

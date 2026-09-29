@@ -27,7 +27,10 @@ export function HeroCta() {
     link.addEventListener("pointerleave", leave);
     link.addEventListener("focus", focus);
     link.addEventListener("blur", blur);
+    // Listening from here on (e2e/hero.spec.ts waits for it before hovering).
+    link.setAttribute("data-ready", "");
     return () => {
+      link.removeAttribute("data-ready");
       link.removeEventListener("pointerenter", enter);
       link.removeEventListener("pointerleave", leave);
       link.removeEventListener("focus", focus);
