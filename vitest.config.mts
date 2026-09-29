@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
+import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -8,6 +9,8 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src/", import.meta.url)) },
   },
   test: {
+    // `.env` reaches the repository tests (`*.db.test.ts`); they skip without DATABASE_URL.
+    env: loadEnv("", process.cwd(), ""),
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
