@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { FirMark } from "./fir-mark";
 import { MENU_LINKS } from "./menu-links";
+import { MobileMenu } from "./mobile-menu";
 import { NavLink } from "./nav-link";
 
 // Sticky bar across the full width (fluid side gutter, wider than the page column): fir mark and
@@ -27,6 +28,9 @@ export function SiteHeader({ siteName }: { siteName: string }) {
                 <NavLink href={link.href}>{link.label}</NavLink>
               </li>
             ))}
+            <li className="sm:hidden">
+              <MobileMenu />
+            </li>
           </ul>
         </nav>
       </div>

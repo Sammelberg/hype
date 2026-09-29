@@ -19,6 +19,15 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
   else window.scrollTo({ top: y, behavior: immediate ? "instant" : "smooth" });
 }
 
+/**
+ * Holds the page still while an overlay (the phone menu) is open: Radix locks native scrolling,
+ * but Lenis would keep moving the page behind it on wheel input.
+ */
+export function pauseSmoothScroll(paused: boolean) {
+  if (paused) lenis?.stop();
+  else lenis?.start();
+}
+
 // Smooth wheel and trackpad scrolling for the whole site: Lenis on the window, driven by GSAP's
 // ticker so it moves in step with every ScrollTrigger. Touch stays native; with reduced motion
 // Lenis steps aside on its own. In-page anchors glide and still stop below the header

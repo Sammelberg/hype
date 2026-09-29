@@ -53,6 +53,8 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           {children}
         </div>
         <SiteFooter
+          siteName={settings.siteName || "Website"}
+          tagline={settings.tagline}
           ownerName={settings.ownerName || settings.siteName || "Website"}
           contactEmail={settings.contactEmail}
           socialLinks={settings.socialLinks}

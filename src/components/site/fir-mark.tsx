@@ -4,9 +4,18 @@
 export const FIR_PATH =
   "M12 1 17.5 8.5H14.8L19.5 15H16.6L21.5 21.5H13.4V23H10.6V21.5H2.5L7.4 15H4.5L9.2 8.5H6.5Z";
 
-export function FirMark({ className, color }: { className?: string; color?: string }) {
+export function FirMark({
+  className,
+  color,
+  size,
+}: {
+  className?: string;
+  color?: string;
+  /** Pixel size, for next/og, which sizes by attributes rather than classes. */
+  size?: number;
+}) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} width={size} height={size}>
       <path d={FIR_PATH} fill={color ?? "currentColor"} />
     </svg>
   );

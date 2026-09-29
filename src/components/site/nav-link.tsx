@@ -17,10 +17,11 @@ export function NavLink({ href, children }: { href: string; children: ReactNode 
       href={href as never}
       aria-current={current ? "page" : undefined}
       className={cn(
-        "relative text-muted-foreground transition-colors duration-150 hover:text-foreground",
+        // 44px tall, so the links are easy to hit on touch screens.
+        "relative inline-flex min-h-11 items-center text-muted-foreground transition-colors duration-150 hover:text-foreground",
         // A short ice line under the current section, like the rail under the services.
         current &&
-          "text-foreground after:absolute after:inset-x-0 after:-bottom-1.5 after:h-px after:bg-primary-soft",
+          "text-foreground after:absolute after:inset-x-0 after:bottom-2 after:h-px after:bg-primary-soft",
       )}
     >
       {children}

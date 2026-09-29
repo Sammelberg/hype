@@ -61,3 +61,15 @@ test.describe("contact form", () => {
     await expect(page.getByRole("status")).toContainText("Vielen Dank für Ihre Nachricht");
   });
 });
+
+test("pages without a CMS image share their own drawn preview", async ({ page, request }) => {
+  for (const path of ["/leistungen", "/leistungen/web-anwendungen", "/projekte/beispielprojekt"]) {
+    await page.goto(path);
+    const url = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(url).toMatch(new RegExp(`/vorschaubild${path}$`));
+    const response = await request.get(new URL(url!).pathname);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+  }
+  expect((await request.get("/vorschaubild/gibt-es-nicht")).status()).toBe(404);
+});
