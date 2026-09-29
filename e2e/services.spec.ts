@@ -1,9 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 
 // Services on the home page (src/app/(frontend)/_components/services-strata.tsx): from lg up with
-// motion allowed the stage holds under the header while five cards ride sideways; a rail names
-// them, steps either way and jumps. Below lg and with reduced motion the cards form a native
-// sideways track, the rail's arrows step through it.
+// motion allowed the stage holds under the header while five cards ride through its middle, each
+// resting there for a stretch of scrolling, the last one too before the page moves on; a rail
+// names them, steps either way and jumps. Below lg and with reduced motion the cards form a native
+// sideways track, centred card by card, the rail's arrows step through it.
 
 // Reticle overlays (dev tooling) can catch input; see features.spec.ts.
 test.beforeEach(async ({ page }) => {
@@ -46,11 +47,19 @@ async function settle(read: () => Promise<number>) {
   return last;
 }
 
-const inView = (page: Page, index: number) =>
+// How far a card's centre is from the middle of the screen (px).
+const offCentre = (page: Page, index: number) =>
   card(page, index).evaluate((el) => {
     const r = el.getBoundingClientRect();
-    return r.left >= 0 && r.right <= innerWidth + 1;
+    return Math.round(r.left + r.width / 2 - innerWidth / 2);
   });
+
+const header = (page: Page) =>
+  page.locator("header").evaluate((el: HTMLElement) => el.offsetHeight);
+const stageTop = (page: Page) =>
+  section(page)
+    .locator("[data-stage]")
+    .evaluate((el) => Math.round(el.getBoundingClientRect().top));
 
 test("the rail rides to a service and steps back", async ({ page, isMobile }) => {
   test.skip(isMobile, "the ride is lg and up");
@@ -63,7 +72,7 @@ test("the rail rides to a service and steps back", async ({ page, isMobile }) =>
   await target.click();
   await expect(target).toHaveAttribute("aria-current", "true");
   await settle(() => trackX(page));
-  expect(await inView(page, 3)).toBe(true);
+  expect(Math.abs(await offCentre(page, 3))).toBeLessThanOrEqual(2);
 
   await rail(page).getByRole("button", { name: "Vorherige Leistung" }).click();
   await expect(rail(page).getByRole("button", { name: "Schnittstellen" })).toHaveAttribute(
@@ -72,36 +81,37 @@ test("the rail rides to a service and steps back", async ({ page, isMobile }) =>
   );
 });
 
-test("the wheel moves the ride and nothing hijacks the scroll", async ({ page, isMobile }) => {
+test("the wheel moves the ride card by card and nothing hijacks the scroll", async ({
+  page,
+  isMobile,
+}) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
   await page.goto("/");
   await expect(section(page)).toHaveAttribute("data-ride", "");
-  // Where the stage docks under the header: the ride begins here.
-  const header = await page.locator("header").evaluate((el: HTMLElement) => el.offsetHeight);
+  // Where the stage docks under the header: the ride begins here, the first card in the middle.
+  const docked = await header(page);
   const start = await section(page)
     .locator("[data-stage]")
-    .evaluate((el, h) => Math.round(el.getBoundingClientRect().top + scrollY - h), header);
+    .evaluate((el, h) => Math.round(el.getBoundingClientRect().top + scrollY - h), docked);
   await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), start);
   await page.mouse.move(640, 360);
   let last = await settle(() => trackX(page));
+  expect(Math.abs(await offCentre(page, 0))).toBeLessThanOrEqual(2);
 
-  // Notch by notch the page moves exactly that far and the track slides further left each time,
-  // while the stage stays docked under the header.
+  // Notch by notch the page moves exactly that far and the stage stays docked; the track holds
+  // while the first card rests, then slides on, never back, until the second card is current.
   let notches = 0;
-  for (let round = 0; round < 4; round++) {
+  while ((await section(page).getAttribute("data-current")) !== "1") {
+    expect(notches).toBeLessThan(60);
     for (let i = 0; i < 4; i++) {
       await page.mouse.wheel(0, NOTCH);
       notches++;
     }
     const now = await settle(() => trackX(page));
-    expect(now).toBeLessThan(last);
+    expect(now).toBeLessThanOrEqual(last);
     last = now;
     expect(await page.evaluate(() => Math.round(scrollY))).toBe(start + notches * NOTCH);
-    expect(
-      await section(page)
-        .locator("[data-stage]")
-        .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
-    ).toBe(header);
+    expect(await stageTop(page)).toBe(docked);
   }
 
   // A trackpad flick back up brings the track back: the ride follows the scroll both ways.
@@ -112,7 +122,34 @@ test("the wheel moves the ride and nothing hijacks the scroll", async ({ page, i
   expect(await settle(() => trackX(page))).toBeGreaterThan(last);
 });
 
-test("tabbing into a card brings it into view", async ({ page, isMobile }) => {
+test("the last card rests in the middle before the page moves on", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the ride is lg and up");
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  const docked = await header(page);
+  const last = rail(page).getByRole("button", { name: "Betrieb" });
+  await last.click();
+  // The smooth scroll begins in the first card's rest, where the track does not move yet.
+  await expect(last).toHaveAttribute("aria-current", "true");
+  const x = await settle(() => trackX(page));
+  expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
+  await page.mouse.move(640, 360);
+
+  // Scrolling on: first the stage holds with the card in the middle, then it leaves upwards
+  // while the card stays where it came to rest.
+  let held = 0;
+  for (let i = 0; i < 40 && (await stageTop(page)) === docked; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await settle(() => stageTop(page));
+    if ((await stageTop(page)) === docked) held++;
+    expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
+  }
+  expect(held).toBeGreaterThan(0);
+  expect(await stageTop(page)).toBeLessThan(docked);
+  expect(await trackX(page)).toBe(x);
+});
+
+test("tabbing into a card brings it to the middle", async ({ page, isMobile }) => {
   test.skip(isMobile, "the ride is lg and up");
   await page.goto("/");
   await expect(section(page)).toHaveAttribute("data-ride", "");
@@ -122,7 +159,7 @@ test("tabbing into a card brings it into view", async ({ page, isMobile }) => {
     page.getByRole("link", { name: "Mehr erfahren über Betrieb und Weiterentwicklung" }),
   ).toBeFocused();
   await settle(() => trackX(page));
-  expect(await inView(page, 4)).toBe(true);
+  expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
 });
 
 test("below lg the cards swipe sideways and the arrows step through", async ({

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 import { FIR_DESIGNS } from "./fir-shapes";
 import styles from "./services-strata.module.css";
-import { valley, VALLEY_H, VALLEY_W, type ValleySpec } from "./valley";
+import { type Ridge, valley, VALLEY_H, VALLEY_W, type ValleySpec } from "./valley";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
@@ -39,69 +39,66 @@ const LIGHTS: readonly { a: string; b: string; glow: string }[] = [
 ];
 
 // Each valley hints at its service: web a wide open valley, mobile two hills side by side,
-// integration a saddle the copper arc bridges, modernisation one young steep hill before soft old
-// ones with young firs beside an old one, operations a long steady ridge.
+// integration a saddle the copper arc bridges, modernisation one young steep hill with young firs
+// beside an old one, operations a long steady ridge. The far and middle ridges and their groves
+// come from the seed; the near ridge and its large firs are drawn here.
 const VALLEYS: Record<GlyphName, ValleySpec> = {
   web: {
     seed: 11,
     near: [
-      [300, 520, 90],
-      [980, 560, 120],
+      [330, 520, 55],
+      [960, 560, 70],
     ],
-    arc: { crest: 980 },
+    arc: { crest: 850 },
     firs: [
-      { design: "dicht", x: 330, h: 300 },
-      { design: "schlank", x: 410, h: 200 },
-      { design: "konkav", x: 890, h: 320 },
+      { design: "dicht", x: 300, h: 250 },
+      { design: "schlank", x: 372, h: 170 },
+      { design: "konkav", x: 880, h: 260 },
     ],
   },
   mobile: {
     seed: 23,
     near: [
-      [470, 230, 170],
-      [790, 230, 185],
+      [500, 200, 80],
+      [760, 200, 88],
     ],
-    arc: { crest: 790 },
+    arc: { crest: 760 },
     firs: [
-      { design: "schlank", x: 300, h: 250 },
-      { design: "dicht", x: 880, h: 300 },
-      { design: "schlank", x: 935, h: 200 },
+      { design: "schlank", x: 300, h: 230 },
+      { design: "dicht", x: 870, h: 260 },
+      { design: "schlank", x: 930, h: 180 },
     ],
   },
   integration: {
     seed: 37,
     near: [
-      [330, 380, 170],
-      [900, 380, 170],
+      [340, 360, 80],
+      [880, 360, 80],
     ],
-    arc: { bridge: [330, 900] },
+    arc: { bridge: [340, 880] },
     firs: [
-      { design: "konkav", x: 300, h: 280 },
-      { design: "schlank", x: 920, h: 300 },
+      { design: "konkav", x: 305, h: 240 },
+      { design: "schlank", x: 915, h: 260 },
     ],
   },
   modernisation: {
     seed: 41,
-    near: [
-      [300, 600, 50],
-      [640, 240, 230],
-      [1000, 600, 50],
-    ],
+    near: [[640, 230, 105]],
     arc: { crest: 640 },
     firs: [
-      { design: "dicht", x: 290, h: 360 },
-      { design: "schlank", x: 370, h: 170 },
-      { design: "schlank", x: 415, h: 130 },
-      { design: "konkav", x: 920, h: 280 },
+      { design: "dicht", x: 310, h: 290 },
+      { design: "schlank", x: 380, h: 150 },
+      { design: "schlank", x: 425, h: 115 },
+      { design: "konkav", x: 895, h: 240 },
     ],
   },
   operations: {
     seed: 53,
-    near: [[600, 1600, 70]],
-    arc: { crest: 820 },
+    near: [[600, 1600, 40]],
+    arc: { crest: 780 },
     firs: [
-      { design: "dicht", x: 260, h: 300 },
-      { design: "konkav", x: 930, h: 300 },
+      { design: "dicht", x: 300, h: 250 },
+      { design: "konkav", x: 890, h: 250 },
     ],
   },
 };
@@ -110,21 +107,59 @@ const VALLEYS: Record<GlyphName, ValleySpec> = {
 const RIDE =
   "(min-width: 64rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference)";
 
-const VIEW = `0 0 ${VALLEY_W} ${VALLEY_H}`;
+/** How long the ride holds each card in the middle, in card-to-card moves. */
+const DWELL = 0.5;
 
-function Valley({ spec, mist, firs }: { spec: ValleySpec; mist: string; firs: string }) {
+const VIEW = `0 0 ${VALLEY_W} ${VALLEY_H}`;
+const FIR_CLASS: Record<Ridge, string | undefined> = {
+  far: styles.firFar,
+  mid: styles.firMid,
+  near: styles.firNear,
+};
+
+function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs: string }) {
   const v = valley(spec);
+  const trees = (ridge: Ridge) =>
+    v.firs
+      .filter((fir) => fir.ridge === ridge)
+      .map((fir, n) => {
+        const [, , vw, vh] = FIR_DESIGNS[fir.design].viewBox.split(" ").map(Number);
+        const w = (fir.h * vw!) / vh!;
+        const tree = (
+          <use
+            key={`${fir.design}-${fir.x}`}
+            href={`#${firs}-${fir.design}`}
+            x={r1(fir.x - w / 2)}
+            y={r1(fir.y - fir.h)}
+            width={r1(w)}
+            height={fir.h}
+            className={FIR_CLASS[ridge]}
+          />
+        );
+        // Only the near firs sway; far ones are too small for it to read.
+        return ridge === "near" ? (
+          <g
+            key={`${fir.design}-${fir.x}`}
+            className={styles.sway}
+            style={
+              {
+                "--sway": `${1 + (n % 3) * 0.3}deg`,
+                animationDuration: `${5.6 + ((spec.seed + n) % 4) * 0.7}s`,
+                animationDelay: `${-((spec.seed * 0.7 + n * 2.1) % 5)}s`,
+              } as CSSProperties
+            }
+          >
+            {tree}
+          </g>
+        ) : (
+          tree
+        );
+      });
+
   return (
     <div className={styles.window} aria-hidden="true">
       <div data-depth="far" className={styles.depth}>
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice">
-          <defs>
-            <linearGradient id={mist} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" className={styles.mistStop} stopOpacity="0" />
-              <stop offset="0.5" className={styles.mistStop} stopOpacity="0.3" />
-              <stop offset="1" className={styles.mistStop} stopOpacity="0" />
-            </linearGradient>
-          </defs>
           {v.stars.map((s) => (
             <circle
               key={`${s.x}-${s.y}`}
@@ -135,73 +170,47 @@ function Valley({ spec, mist, firs }: { spec: ValleySpec; mist: string; firs: st
               opacity={s.o}
             />
           ))}
-          <path className={styles.farHills} d={v.far} />
-          <rect
-            x="-20"
-            y={v.mist[0]!.y}
-            width={VALLEY_W + 40}
-            height={v.mist[0]!.h}
-            fill={`url(#${mist})`}
-          />
+          <path className={styles.farRidge} d={v.ridges.far.fill} />
+          <path className={styles.farEdge} d={v.ridges.far.edge} />
+          {trees("far")}
         </svg>
       </div>
       <div data-depth="mid" className={styles.depth}>
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice">
-          <path className={styles.midHills} d={v.mid} />
-          <rect
-            x="-20"
-            y={v.mist[1]!.y}
-            width={VALLEY_W + 40}
-            height={v.mist[1]!.h}
-            fill={`url(#${mist})`}
-          />
+          <path className={styles.midRidge} d={v.ridges.mid.fill} />
+          <path className={styles.midEdge} d={v.ridges.mid.edge} />
+          {trees("mid")}
         </svg>
       </div>
       <div data-depth="near" className={styles.depth}>
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice">
-          <path className={styles.nearFill} d={v.near.fill} />
-          <path data-ridge className={styles.edge} d={v.near.edge} />
-          <path data-arc className={styles.arc} d={v.near.arc} />
-          {v.firs.map((fir, n) => {
-            const design = FIR_DESIGNS[fir.design];
-            const [, , vw, vh] = design.viewBox.split(" ").map(Number);
-            const w = (fir.h * vw!) / vh!;
-            return (
-              <g
-                key={`${fir.design}-${fir.x}`}
-                className={styles.fir}
-                style={
-                  {
-                    "--sway": `${1.2 + (n % 3) * 0.3}deg`,
-                    animationDuration: `${5.6 + ((spec.seed + n) % 4) * 0.7}s`,
-                    animationDelay: `${-((spec.seed * 0.7 + n * 2.1) % 5)}s`,
-                  } as CSSProperties
-                }
-              >
-                <use
-                  href={`#${firs}-${fir.design}`}
-                  x={fir.x - w / 2}
-                  y={fir.y - fir.h}
-                  width={w}
-                  height={fir.h}
-                />
-              </g>
-            );
-          })}
+          <defs>
+            <linearGradient id={ground} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" className={styles.groundTop} />
+              <stop offset="1" className={styles.groundBottom} />
+            </linearGradient>
+          </defs>
+          <path fill={`url(#${ground})`} d={v.ridges.near.fill} />
+          <path data-ridge className={styles.edge} d={v.ridges.near.edge} />
+          <path data-arc className={styles.arc} d={v.arc} />
+          {trees("near")}
         </svg>
       </div>
     </div>
   );
 }
 
+const r1 = (n: number) => Math.round(n * 10) / 10;
+
 /**
  * „Was wir entwickeln“ as a gallery of framed views: the stage holds under the header and five
- * wide cards pass sideways, the service on the left and a window into its own Black Forest valley
- * on the right (valley.ts). As a card crosses the stage the view moves into the valley, the near
- * slope and firs coming closer faster than the far hills; the slope's ice line draws itself as the
- * card arrives, then its copper arc. A rail names the services, steps either way and jumps; focus
- * inside a card brings the card into view. Below lg, on short screens and with reduced motion the
- * cards form a finished sideways track, the rail beneath.
+ * wide cards ride through its middle one by one, the service on the left and a window into its own
+ * Black Forest valley on the right (valley.ts). Each card comes to rest in the middle for a stretch
+ * of scrolling before the next moves in, and the page scrolls on only after the last one has
+ * rested. As a card nears the middle its view moves into the valley, the near ridge coming closer
+ * faster than the far one, and its ice line draws, then its copper arc. A rail names the services,
+ * steps either way and jumps; focus inside a card brings it to the middle. Below lg, on short
+ * screens and with reduced motion the cards form a finished sideways track, centred card by card.
  */
 export function ServicesStrata({
   id,
@@ -225,16 +234,13 @@ export function ServicesStrata({
       const track = section?.querySelector<HTMLElement>("[data-track]");
       if (!section || !stage || !track) return;
       const cards = gsap.utils.toArray<HTMLElement>("[data-card]", track);
+      const count = cards.length;
+      const last = count - 1;
       const show = (index: number) => setCurrent((was) => (was === index ? was : index));
+      // The track is padded so the first card sits in the middle: card i is there at offset(i).
       const offset = (index: number) => cards[index]!.offsetLeft - cards[0]!.offsetLeft;
-      const nearest = (x: number, width: number) => {
-        const eye = x + width * 0.35;
-        let best = 0;
-        cards.forEach((_, i) => {
-          if (offset(i) <= eye) best = i;
-        });
-        return best;
-      };
+      const step = () => (count > 1 ? offset(1) : 1);
+      const nearest = (x: number) => gsap.utils.clamp(0, last, Math.round(x / step()));
 
       // The firs sway only while the section is on screen.
       ScrollTrigger.create({
@@ -251,52 +257,15 @@ export function ServicesStrata({
         // The track is no longer a scroll region of its own.
         track.removeAttribute("tabindex");
         const header = () => document.querySelector("header")?.offsetHeight ?? 64;
-        const distance = () => Math.max(1, track.scrollWidth - stage.clientWidth);
+        // One unit of the ride is one card-to-card move; each card also rests for DWELL units.
+        const units = count * DWELL + last;
 
-        const ride = gsap.to(track, {
-          x: () => -distance(),
-          ease: "none",
-          scrollTrigger: {
-            trigger: stage,
-            pin: true,
-            anticipatePin: 1,
-            start: () => `top ${header()}`,
-            end: () => `+=${distance()}`,
-            scrub: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => show(nearest(self.progress * distance(), stage.clientWidth)),
-          },
-        });
-
-        jump.current = (index, behavior = "smooth") => {
-          const st = ride.scrollTrigger;
-          if (!st) return;
-          const progress = Math.min(1, offset(index) / distance());
-          window.scrollTo({ top: st.start + (st.end - st.start) * progress, behavior });
-        };
-
-        // Tabbing into a card that is still off to the side brings it into view.
-        const follow = cards.map((card, i) => {
-          const onFocus = () => jump.current(i, "instant");
-          card.addEventListener("focusin", onFocus);
-          return () => card.removeEventListener("focusin", onFocus);
-        });
-
-        cards.forEach((card, i) => {
+        // Per card, two paused timelines set from its distance to the middle (sync below): the
+        // view moving into the valley, and the arrival (ice line, copper arc, words).
+        const depth = cards.map((card) => {
           const q = gsap.utils.selector(card);
-
-          // Into the valley: the nearer a layer, the more it grows toward the viewer.
-          gsap
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger: card,
-                containerAnimation: ride,
-                start: "left right",
-                end: "right left",
-                scrub: true,
-              },
-            })
+          return gsap
+            .timeline({ paused: true, defaults: { ease: "none" } })
             .fromTo(
               q("[data-depth='far']"),
               { scale: 1, xPercent: -2 },
@@ -306,7 +275,7 @@ export function ServicesStrata({
             .fromTo(
               q("[data-depth='mid']"),
               { scale: 1, xPercent: -1 },
-              { scale: 1.09, xPercent: 1 },
+              { scale: 1.08, xPercent: 1 },
               0,
             )
             .fromTo(
@@ -315,23 +284,11 @@ export function ServicesStrata({
               { scale: 1.12, yPercent: 3 },
               0,
             );
-
-          // Arrival: the ice line draws, then the copper arc; the words settle. The first card
-          // arrives with the section itself, the others with the ride.
-          const arrival = gsap
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger:
-                i === 0
-                  ? { trigger: stage, start: "top 85%", end: "top 25%", scrub: 0.8 }
-                  : {
-                      trigger: card,
-                      containerAnimation: ride,
-                      start: "left 90%",
-                      end: "left 30%",
-                      scrub: 0.8,
-                    },
-            })
+        });
+        const arrival = (card: HTMLElement, words: boolean, vars?: gsap.TimelineVars) => {
+          const q = gsap.utils.selector(card);
+          const tl = gsap
+            .timeline({ defaults: { ease: "none" }, ...vars })
             .fromTo(q("[data-ridge]"), { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.75 }, 0)
             .fromTo(
               q("[data-arc]"),
@@ -339,14 +296,68 @@ export function ServicesStrata({
               { drawSVG: "100%", autoAlpha: 1, duration: 0.3 },
               0.6,
             );
-          if (i > 0) {
-            arrival.fromTo(
+          if (words) {
+            tl.fromTo(
               q("[data-copy]"),
               { x: 40, autoAlpha: 0.15 },
               { x: 0, autoAlpha: 1, duration: 0.6 },
               0,
             );
           }
+          return tl;
+        };
+        // The first card arrives with the section itself, the others as they ride in.
+        arrival(cards[0]!, false, {
+          scrollTrigger: { trigger: stage, start: "top 85%", end: "top 25%", scrub: 0.8 },
+        });
+        const arrivals = cards.map((card, i) =>
+          i === 0 ? null : arrival(card, true, { paused: true }),
+        );
+
+        const sync = () => {
+          const x = -Number(gsap.getProperty(track, "x"));
+          const s = step();
+          cards.forEach((_, i) => {
+            // 0 in the middle, 1 one place to the right (arriving), -1 one to the left (leaving).
+            const t = (offset(i) - x) / s;
+            depth[i]!.progress(gsap.utils.clamp(0, 1, (1 - t) / 2));
+            arrivals[i]?.progress(gsap.utils.clamp(0, 1, 1 - t));
+          });
+          show(nearest(x));
+        };
+
+        const ride = gsap.timeline({
+          defaults: { ease: "none" },
+          onUpdate: sync,
+          scrollTrigger: {
+            trigger: stage,
+            pin: true,
+            anticipatePin: 1,
+            start: () => `top ${header()}`,
+            end: () => `+=${step() * units}`,
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+        ride.to({}, { duration: DWELL });
+        for (let i = 1; i < count; i++) {
+          ride.to(track, { x: () => -offset(i), duration: 1 }).to({}, { duration: DWELL });
+        }
+        sync();
+
+        // To the middle of card i's rest.
+        jump.current = (index, behavior = "smooth") => {
+          const st = ride.scrollTrigger;
+          if (!st) return;
+          const progress = (index * (1 + DWELL) + DWELL / 2) / units;
+          window.scrollTo({ top: st.start + (st.end - st.start) * progress, behavior });
+        };
+
+        // Tabbing into a card that is still off to the side brings it to the middle.
+        const follow = cards.map((card, i) => {
+          const onFocus = () => jump.current(i, "instant");
+          card.addEventListener("focusin", onFocus);
+          return () => card.removeEventListener("focusin", onFocus);
         });
 
         // A link such as /#vorgehen landed before the ride's spacer existed, so the page now stops
@@ -373,7 +384,7 @@ export function ServicesStrata({
             behavior: behavior ?? (reduce ? "auto" : "smooth"),
           });
         };
-        const onScroll = () => show(nearest(track.scrollLeft, track.clientWidth));
+        const onScroll = () => show(nearest(track.scrollLeft));
         track.addEventListener("scroll", onScroll, { passive: true });
         return () => track.removeEventListener("scroll", onScroll);
       });
@@ -426,7 +437,7 @@ export function ServicesStrata({
               >
                 <Valley
                   spec={VALLEYS[service.glyph] ?? VALLEYS.web}
-                  mist={`${id}-nebel-${i}`}
+                  ground={`${id}-grund-${i}`}
                   firs={`${id}-tanne`}
                 />
 
