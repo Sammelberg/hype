@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { firstParagraph } from "../rich-text/text";
 import type { LexicalDocument } from "../rich-text/schema";
-import { projektPath } from "./projekte";
+import { projektPathOf as projektPath } from "../paths";
 
 export type SearchResult = { id: string; title: string; summary: string | null; url: string };
 

@@ -17,7 +17,7 @@ export type LexicalNode = z.infer<typeof baseNode> & {
   children?: LexicalNode[];
 };
 
-const node: z.ZodType<LexicalNode> = baseNode.extend({
+const node: z.ZodType<LexicalNode, LexicalNode> = baseNode.extend({
   children: z.lazy(() => z.array(node)).optional(),
 });
 
@@ -39,6 +39,7 @@ export const TEXT_FORMAT = {
   code: 16,
 } as const;
 
+// Lexical refuses a root without children, so the empty document holds one empty paragraph.
 export const emptyDocument = (): LexicalDocument => ({
   root: {
     type: "root",
@@ -46,7 +47,17 @@ export const emptyDocument = (): LexicalDocument => ({
     indent: 0,
     version: 1,
     direction: "ltr",
-    children: [],
+    children: [
+      {
+        type: "paragraph",
+        format: "",
+        indent: 0,
+        version: 1,
+        direction: null,
+        textFormat: 0,
+        children: [],
+      },
+    ],
   },
 });
 

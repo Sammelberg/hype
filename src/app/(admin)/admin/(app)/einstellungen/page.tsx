@@ -1,13 +1,23 @@
 import type { Metadata } from "next";
 
-import { PageShell } from "../../_components/page-shell";
+import { emptySiteSettings, getSiteSettingsForEditing } from "@/cms/content/site-settings";
+import { listVersions } from "@/cms/content/versions";
+import { SettingsEditor } from "./_components/settings-editor";
 
 export const metadata: Metadata = { title: "Website" };
 
-export default function Page() {
+export default async function SettingsPage() {
+  const [found, versions] = await Promise.all([
+    getSiteSettingsForEditing(),
+    listVersions("site_settings", 1),
+  ]);
+  const editing = found?.editing ?? emptySiteSettings();
   return (
-    <PageShell title="Website" lead="Dieser Bereich entsteht in den nächsten Etappen.">
-      <p className="text-muted-foreground">Noch nichts zu sehen.</p>
-    </PageShell>
+    <SettingsEditor
+      key={`${found?.updatedAt.getTime() ?? 0}-${found?.hasDraft ?? false}`}
+      editing={editing}
+      hasDraft={found?.hasDraft ?? false}
+      versions={versions}
+    />
   );
 }

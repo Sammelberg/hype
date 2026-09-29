@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { firstParagraph, plainText } from "./rich-text";
+import type { LexicalDocument } from "./schema";
+import { firstParagraph, plainText } from "./text";
 
 const text = (value: string) => ({ type: "text", text: value });
-const doc = (...children: unknown[]) => ({ root: { type: "root", children } });
+const doc = (...children: unknown[]) => ({ root: { type: "root", children } }) as LexicalDocument;
 
 describe("firstParagraph", () => {
   it("returns the text of the first paragraph", () => {

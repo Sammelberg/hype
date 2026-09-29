@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { normalizePath } from "../../lib/redirects";
 import { db } from "../db/client";
 import { pages, projekte, redirects } from "../db/schema";
-import { projektPath } from "./projekte";
+import { projektPathOf as projektPath } from "../paths";
 import { type Redirect, type RedirectInput, RedirectInputSchema } from "./types";
 
 export class RedirectError extends Error {

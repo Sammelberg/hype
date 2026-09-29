@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 
 import { ReticleDev } from "@/components/dev/reticle-dev";
 import { Toaster } from "@/components/ui/sonner";
+import { THEME_SCRIPT, ThemeProvider } from "./_theme/theme";
 
 import "./admin.css";
 
@@ -30,13 +30,12 @@ export default function AdminRootLayout({ children }: { children: ReactNode }) {
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Applies the remembered theme before the first paint (the CSP allows inline scripts). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-dvh">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           {children}
           <Toaster position="bottom-right" closeButton />
           {process.env.NODE_ENV === "development" ? <ReticleDev /> : null}

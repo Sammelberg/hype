@@ -62,7 +62,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         />
         {draft.isEnabled ? (
           <>
-            <RefreshOnSave serverURL={env.NEXT_PUBLIC_SERVER_URL} />
+            <RefreshOnSave />
             {/* Route handler that clears the draft-mode cookie: needs a full navigation, not <Link>. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a

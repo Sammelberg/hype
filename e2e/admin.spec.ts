@@ -1,34 +1,11 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { E2E_ADMIN } from "../scripts/seed-data";
-
-// The admin: sign in (or set up the first account when the database has none), move around,
-// sign out. The account is the e2e admin the seed creates when E2E_ADMIN_PASSWORD is set; on a
-// database without any account the setup page creates it. e2e/teardown.ts removes it again.
-const password = process.env.E2E_ADMIN_PASSWORD ?? E2E_ADMIN.fallbackPassword;
-
-async function signIn(page: Page) {
-  await page.goto("/admin/login");
-  if (page.url().includes("/admin/einrichtung")) {
-    await page.getByLabel("Name").fill("E2E Admin");
-    await page.getByLabel("E-Mail-Adresse").fill(E2E_ADMIN.email);
-    await page.getByLabel("Passwort", { exact: true }).fill(password);
-    await page.getByLabel("Passwort wiederholen").fill(password);
-    await page.getByRole("button", { name: "Zugang anlegen" }).click();
-  } else {
-    await page.getByLabel("E-Mail-Adresse").fill(E2E_ADMIN.email);
-    await page.getByLabel("Passwort").fill(password);
-    await page.getByRole("button", { name: "Anmelden" }).click();
-  }
-  await expect(page).toHaveURL(/\/admin$/);
-}
+import { hideDevOverlays, signIn } from "./_admin";
 
 test.describe.configure({ mode: "serial" });
 
 test.beforeEach(async ({ page }) => {
-  await page
-    .addStyleTag({ content: "[data-reticle-panel], reticle-panel { display: none !important }" })
-    .catch(() => {});
+  await hideDevOverlays(page);
 });
 
 test("a wrong password and an unknown address get the same answer", async ({ page }) => {

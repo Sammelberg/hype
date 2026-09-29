@@ -9,7 +9,7 @@ import {
   SunIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
+import { type Theme, useTheme } from "../../_theme/theme";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -77,7 +77,7 @@ export function UserMenu({ user }: { user: { name: string | null; email: string 
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Darstellung
             </DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+            <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as Theme)}>
               <DropdownMenuRadioItem value="light">
                 <SunIcon /> Hell
               </DropdownMenuRadioItem>

@@ -13,7 +13,9 @@ export const pagePath: PathFor = (doc) => {
   return crumbs?.at(-1)?.url ?? (doc.slug ? `/${String(doc.slug)}` : null);
 };
 
-export const projektPath: PathFor = (doc) => (doc.slug ? `/projekte/${String(doc.slug)}` : null);
+export const projektPathOf = (slug: string) => `/projekte/${slug}`;
+
+export const projektPath: PathFor = (doc) => (doc.slug ? projektPathOf(String(doc.slug)) : null);
 
 const routedCollections = {
   pages: pagePath,

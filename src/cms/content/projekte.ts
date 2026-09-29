@@ -2,6 +2,7 @@
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../db/client";
+import { projektPathOf as projektPath } from "../paths";
 import { projekte } from "../db/schema";
 import { plainText } from "../rich-text/text";
 import { mediaByIds } from "./media";
@@ -19,8 +20,6 @@ export class ProjektError extends Error {
     super(message);
   }
 }
-
-export const projektPath = (slug: string) => `/projekte/${slug}`;
 
 const inputOf = (row: Row): ProjektInput => ({
   title: row.title,
@@ -72,6 +71,8 @@ async function build(rows: Row[], draft: boolean, client: Db | Tx = db) {
 }
 
 // Published projects, newest first.
+export { projektPath };
+
 export async function listPublishedProjekte(): Promise<Projekt[]> {
   const rows = await db
     .select()
