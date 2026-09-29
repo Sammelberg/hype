@@ -8,9 +8,9 @@
  * system (blue, 250–262 — clear of violet): neutrals are near-black navy with little chroma; the
  * accent is sapphire in two roles — `primary` (deep, filled buttons with white text) and
  * `primary-soft` (ice blue: accent text, icons, the drawn ridge). Measured WCAG contrast:
- *   foreground on background 18.1 · on card 17.3 · muted-foreground on background 9.0 · on secondary 7.9
- *   primary-soft on background 10.4 · on card 9.9 · primary-foreground on primary 5.9
- *   primary (fill) on background 3.3 (UI component ≥ 3) · destructive on background 6.4
+ *   foreground on background 18.4 · on card 17.3 · muted-foreground on background 9.2 · on secondary 7.9
+ *   primary-soft on background 10.6 · on card 9.9 · primary-foreground on primary 5.9
+ *   primary (fill) on background 3.3 (UI component ≥ 3) · destructive on background 6.5
  * Both accents are kept soft (moonlight, not neon); the only warm tone is the fireflies' gold.
  */
 @custom-variant dark (&:where(*));
@@ -86,7 +86,7 @@
 :root {
   color-scheme: dark;
   --radius: 0.5rem;
-  --background: oklch(0.135 0.028 262);
+  --background: oklch(0.115 0.03 262);
   --foreground: oklch(0.965 0.008 250);
   --card: oklch(0.17 0.033 262);
   --card-foreground: oklch(0.965 0.008 250);

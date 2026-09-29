@@ -96,14 +96,21 @@ describe("shooting stars", () => {
     expect(new Set(meteors.map((m) => m.tint)).size).toBe(3);
   });
 
-  it("come in an uneven rhythm: bursts, pauses and lulls", () => {
+  it("come rarely, in a calm but uneven rhythm: never in bursts, now and then a long lull", () => {
     const rand = random(99);
     const gaps = Array.from({ length: 500 }, () => nextGap(rand));
-    expect(gaps.some((g) => g < 0.35)).toBe(true);
-    expect(gaps.some((g) => g > 1.8)).toBe(true);
+    for (const g of gaps) expect(g).toBeGreaterThanOrEqual(2);
+    expect(gaps.some((g) => g > 8)).toBe(true);
     const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-    expect(mean).toBeGreaterThan(0.6);
-    expect(mean).toBeLessThan(1.6);
+    expect(mean).toBeGreaterThan(3.5);
+    expect(mean).toBeLessThan(7);
+  });
+
+  it("glide rather than flash: slow, and never at full brightness", () => {
+    for (const m of meteors) {
+      expect(m.speed).toBeLessThanOrEqual(450);
+      expect(m.alpha).toBeLessThanOrEqual(0.8);
+    }
   });
 
   it("fade in fast, grow their tail, fade out and burn out after their life", () => {

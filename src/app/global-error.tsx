@@ -26,7 +26,7 @@ export default function GlobalError({
           padding: "1.3125rem",
           fontFamily: "system-ui, sans-serif",
           colorScheme: "dark",
-          background: "#040813",
+          background: "#020510",
           color: "#f0f4f9",
         }}
       >

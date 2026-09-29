@@ -1,15 +1,18 @@
 /*
- * Triangle motif in dark, noble gem tones (the owner's pick, „Edle Steine“ no. 7): a diamond peak,
- * dark malachite on the left, indigo sapphire on the right, deep teal connectors.
+ * Triangle motif in noble gem tones (the owner's pick, „Edle Steine“ no. 7, saturated with a faint
+ * glow on request): a diamond peak, malachite on the left, sapphire on the right, turquoise between them — each in
+ * the true colour of its stone.
+ * The faint glow is an SVG filter in triangle-motif.tsx on the coloured gems only (each in its own
+ * colour); the diamond peak stays a clean line.
  * Width comes from the caller (page.tsx sizes it per breakpoint). Strokes and dots start hidden;
  * mountain-scene.tsx draws them (or shows them for reduced motion).
  */
 .motif {
   --tri-centre: oklch(0.978 0.006 230); /* diamond #f4f8fb */
   --tri-centre-dot: oklch(0.978 0.006 230);
-  --tri-left: oklch(0.42 0.09 162); /* dark malachite #055c3e */
-  --tri-right: oklch(0.42 0.12 262); /* indigo sapphire #264a8e */
-  --tri-connector: oklch(0.5 0.08 200); /* deep teal #147175 */
+  --tri-left: oklch(0.547 0.116 162); /* malachite #12855b */
+  --tri-right: oklch(0.467 0.176 260); /* sapphire #0f52ba */
+  --tri-connector: oklch(0.7 0.115 188); /* turquoise */
 }
 
 .motif svg {

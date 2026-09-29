@@ -2,7 +2,7 @@
 // A quiet field of stars, new on every load — sharp specks, the brighter ones with a four-point
 // glint, denser high up, some slowly going out and coming back —
 // and over it a random starfall: every shooting star picks its own place, direction, angle,
-// speed, tail and brightness, in an uneven rhythm of bursts and lulls.
+// speed, tail and brightness, gliding past now and then in a calm, uneven rhythm.
 
 export type Star = {
   x: number;
@@ -92,15 +92,16 @@ export type Meteor = {
 };
 
 /** At most this many shooting stars at once. */
-export const MAX_METEORS = 4;
+export const MAX_METEORS = 2;
 
-/** Seconds until the next shooting star: usually a pause of about a second, sometimes a quick
- * burst, sometimes a lull — the uneven rhythm of a real shower. */
+/** Seconds until the next shooting star: a quiet sky where one now and then glides past — usually
+ * every few seconds, sometimes sooner, sometimes after a long lull; never in bursts, so the starfall
+ * stays in the background of the headline. */
 export function nextGap(rand: () => number) {
   const roll = rand();
-  if (roll < 0.2) return 0.08 + rand() * 0.25; // burst
-  if (roll < 0.85) return 0.5 + rand() * 1.1;
-  return 1.8 + rand() * 1.7; // lull
+  if (roll < 0.2) return 2 + rand() * 1.5; // sooner
+  if (roll < 0.85) return 3.5 + rand() * 3.5;
+  return 8 + rand() * 5; // lull
 }
 
 /** A shooting star born at `now`, all of it random: anywhere in the upper sky, falling left or
@@ -115,7 +116,7 @@ export function createMeteor(
   const below = ((15 + rand() * 50) * Math.PI) / 180;
   const direction = rand() < 0.5 ? -1 : 1;
   const size = rand(); // 0 faint … 1 fireball
-  const bright = size > 0.82;
+  const bright = size > 0.92;
   const faint = size < 0.3;
   const tintRoll = rand();
   return {
@@ -123,13 +124,13 @@ export function createMeteor(
     y: rand() * height * 0.45,
     dx: direction * Math.cos(below),
     dy: Math.sin(below),
-    speed: 450 + rand() * 800,
+    speed: 220 + rand() * 230,
     length: bright ? 260 + rand() * 180 : faint ? 50 + rand() * 70 : 120 + rand() * 180,
     width: bright ? 2 + rand() * 0.6 : faint ? 0.8 + rand() * 0.3 : 1.2 + rand() * 0.6,
-    alpha: bright ? 1 : faint ? 0.35 + rand() * 0.25 : 0.6 + rand() * 0.35,
+    alpha: bright ? 0.8 : faint ? 0.25 + rand() * 0.15 : 0.45 + rand() * 0.25,
     tint: tintRoll < 0.55 ? 1 : tintRoll < 0.85 ? 0 : 2,
     born: now,
-    life: faint ? 0.35 + rand() * 0.35 : 0.55 + rand() * 0.7,
+    life: faint ? 0.6 + rand() * 0.4 : 0.9 + rand() * 0.6,
     bright,
   };
 }

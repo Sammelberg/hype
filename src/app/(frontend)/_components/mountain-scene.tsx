@@ -8,31 +8,18 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { FIR_DESIGNS, type FirDesign } from "./fir-shapes";
 import styles from "./mountain-scene.module.css";
 import { bindLights } from "./lights";
 import { bindNightSky } from "./night-sky";
 import { bindStarfield } from "./starfield";
 
-// Tiers of the fir, bottom to top (viewBox 0 0 200 560).
-const FIR_TIERS = [
-  "100,382 178,490 22,490",
-  "100,334 166,434 34,434",
-  "100,290 154,382 46,382",
-  "100,250 143,332 57,332",
-  "100,214 133,284 67,284",
-  "100,182 124,240 76,240",
-  "100,152 116,198 84,198",
-  "100,126 110,158 90,158",
-  "100,104 107,132 93,132",
-  "100,82 105,110 95,110",
-  "100,62 104,90 96,90",
-  "100,44 102,70 98,70",
-];
-
 type Tree = {
   layer: "back" | "mid" | "fore";
   /** Placement from the block: height and lift in % of the forest, gaps in vw. */
   style: CSSProperties;
+  /** Which of the three drawn firs this tree wears (fir-shapes.ts); the placement stays as it is. */
+  design: FirDesign;
   sway: number;
   duration: number;
   delay: number;
@@ -40,18 +27,34 @@ type Tree = {
 
 // The block's seven firs, left group then right group (margin-left: auto splits them).
 const TREES: Tree[] = [
-  { layer: "fore", style: { height: "100%", bottom: "12%" }, sway: 2, duration: 5.6, delay: -2.1 },
+  {
+    layer: "fore",
+    style: { height: "100%", bottom: "12%" },
+    design: "dicht",
+    sway: 2,
+    duration: 5.6,
+    delay: -2.1,
+  },
   {
     layer: "fore",
     style: { height: "82%", bottom: "9%", marginLeft: "9vw" },
+    design: "schlank",
     sway: 1.6,
     duration: 6.2,
     delay: -3.4,
   },
-  { layer: "mid", style: { height: "56%", bottom: "19%" }, sway: 1, duration: 7.5, delay: -1.2 },
+  {
+    layer: "mid",
+    style: { height: "56%", bottom: "19%" },
+    design: "konkav",
+    sway: 1,
+    duration: 7.5,
+    delay: -1.2,
+  },
   {
     layer: "back",
     style: { height: "74%", bottom: "10%", marginLeft: "auto", left: "-6vw" },
+    design: "schlank",
     sway: 1.4,
     duration: 6.5,
     delay: -4.3,
@@ -59,6 +62,7 @@ const TREES: Tree[] = [
   {
     layer: "mid",
     style: { height: "68%", bottom: "22%", marginLeft: "8vw" },
+    design: "dicht",
     sway: 1.3,
     duration: 6.8,
     delay: -0.5,
@@ -66,6 +70,7 @@ const TREES: Tree[] = [
   {
     layer: "fore",
     style: { height: "90%", bottom: "8%", marginLeft: "7vw", left: "-6vw" },
+    design: "konkav",
     sway: 1.8,
     duration: 5.9,
     delay: -1.8,
@@ -73,6 +78,7 @@ const TREES: Tree[] = [
   {
     layer: "back",
     style: { height: "62%", bottom: "21%", marginLeft: "3vw" },
+    design: "dicht",
     sway: 1.1,
     duration: 7.1,
     delay: -3,
@@ -82,8 +88,8 @@ const TREES: Tree[] = [
 const LAYER_CLASS = { back: styles.back, mid: styles.midTree, fore: styles.fore };
 
 /** Brightness the ridge outline and its highlight settle to after the draw (e2e/hero.spec.ts checks it). */
-const RIDGE_REST = 0.45;
-const ACCENT_REST = 0.5;
+const RIDGE_REST = 0.72;
+const ACCENT_REST = 0.75;
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
@@ -94,6 +100,10 @@ const MAIN_RIDGE =
 /**
  * First screen of the home page under a night sky, closed off by mountain ridges with swaying firs.
  */
+// TEMPORARILY OFF (owner's request, 2026-09-24): the moon; sky, mist and stars stay. Set back to
+// true to bring it back.
+const SHOW_MOON = false;
+
 export function MountainHero({
   labelledBy,
   children,
@@ -241,8 +251,24 @@ export function MountainHero({
           r: window.innerWidth >= 1920 ? 46 : wide ? 38 : 24,
         };
       };
-      const night = bindNightSky(skyCanvas, { sky: [4 / 255, 8 / 255, 19 / 255], moon });
-      if (!night) {
+      const night = bindNightSky(skyCanvas, {
+        sky: [1 / 255, 3 / 255, 12 / 255],
+        moon,
+        showMoon: SHOW_MOON,
+        // The triangle motif always has mist behind it.
+        cradle: () => {
+          const box = root.getBoundingClientRect();
+          const motif = root.querySelector("[data-motif]")?.getBoundingClientRect();
+          if (!motif?.width) return null;
+          return {
+            x: motif.left - box.left,
+            y: motif.top - box.top,
+            w: motif.width,
+            h: motif.height,
+          };
+        },
+      });
+      if (!night && SHOW_MOON) {
         const m = moon();
         const fallback = root.querySelector<HTMLElement>("[data-moon-fallback]");
         gsap.set(fallback, {
@@ -343,13 +369,8 @@ export function MountainHero({
                 } as CSSProperties
               }
             >
-              <svg viewBox="0 0 200 560">
-                <g fill="currentColor">
-                  <rect x="93" y="472" width="14" height="72" />
-                  {FIR_TIERS.map((points) => (
-                    <polygon key={points} points={points} />
-                  ))}
-                </g>
+              <svg viewBox={FIR_DESIGNS[tree.design].viewBox}>
+                <path fill="currentColor" d={FIR_DESIGNS[tree.design].d} />
               </svg>
             </div>
           ))}
