@@ -29,6 +29,7 @@ jobs:
       PAYLOAD_SECRET: ci-only-secret-not-used-in-production-000000
       NEXT_PUBLIC_SERVER_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: "1"
+      E2E_ADMIN_PASSWORD: ci-only-e2e-admin-passwort
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

@@ -5,6 +5,7 @@
 // Creates no users: the first admin signs up at /admin/einrichtung.
 import { randomBytes } from "node:crypto";
 
+import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { upsertForm } from "../src/cms/content/forms";
 import { listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
 import { upsertPublishedProjekt } from "../src/cms/content/projekte";
@@ -18,6 +19,7 @@ import {
   seedPages,
   seedProjects,
   seedSettings,
+  E2E_ADMIN,
 } from "./seed-data";
 
 function assertSafeTarget() {
@@ -106,6 +108,15 @@ async function main() {
       toPageId: target,
       toProjektId: null,
       toUrl: null,
+    });
+  }
+
+  // Test account for the e2e run, never without the variable, never twice.
+  if (process.env.E2E_ADMIN_PASSWORD && !(await findUserByEmail(E2E_ADMIN.email))) {
+    await createUser({
+      email: E2E_ADMIN.email,
+      name: "E2E Admin",
+      password: process.env.E2E_ADMIN_PASSWORD,
     });
   }
 
