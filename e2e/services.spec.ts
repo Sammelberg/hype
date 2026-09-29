@@ -93,6 +93,8 @@ test("the wheel moves the ride card by card and nothing hijacks the scroll", asy
   const start = await section(page)
     .locator("[data-stage]")
     .evaluate((el, h) => Math.round(el.getBoundingClientRect().top + scrollY - h), docked);
+  // Lenis drives the wheel: wait for it, and let it pick up the jump before the first notch.
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
   await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), start);
   await page.mouse.move(640, 360);
   let last = await settle(() => trackX(page));
@@ -110,7 +112,8 @@ test("the wheel moves the ride card by card and nothing hijacks the scroll", asy
     const now = await settle(() => trackX(page));
     expect(now).toBeLessThanOrEqual(last);
     last = now;
-    expect(await page.evaluate(() => Math.round(scrollY))).toBe(start + notches * NOTCH);
+    // Lenis glides to the target; it arrives exactly where the notches add up to.
+    await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(start + notches * NOTCH);
     expect(await stageTop(page)).toBe(docked);
   }
 

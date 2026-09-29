@@ -138,7 +138,7 @@
   :where(main, footer) * {
     scroll-margin-top: calc(var(--spacing-header) + 1.25rem);
   }
-  /* Smooth anchor jumps only for users who allow motion; off while Lenis runs, if a project adds it. */
+  /* Smooth anchor jumps only for users who allow motion; off while Lenis runs (smooth-scroll.tsx). */
   @media (prefers-reduced-motion: no-preference) {
     html:not(.lenis) {
       scroll-behavior: smooth;

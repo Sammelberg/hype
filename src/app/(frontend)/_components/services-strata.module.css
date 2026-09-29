@@ -92,10 +92,11 @@
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ice) 26%, transparent);
 }
 
+/* Each depth is its own composited layer: the ride only moves it. */
 .depth {
   position: absolute;
   inset: 0 -5%;
-  transform-origin: 50% 100%;
+  will-change: transform;
 }
 
 .depth > svg {
@@ -104,6 +105,11 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* The drawn ice line and copper arc: a layer of their own, so drawing repaints only them. */
+.lines {
+  will-change: transform;
 }
 
 .star {
@@ -166,28 +172,6 @@
 
 .firNear {
   color: var(--ice);
-}
-
-/* The near firs sway from the foot while the section is on screen. */
-.sway {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-
-@keyframes sway {
-  0%,
-  100% {
-    transform: rotate(calc(var(--sway) * -1));
-  }
-  50% {
-    transform: rotate(var(--sway));
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .section[data-live] .sway {
-    animation: sway ease-in-out infinite;
-  }
 }
 
 /* ── The service ── */

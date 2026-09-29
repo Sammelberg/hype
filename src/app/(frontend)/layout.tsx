@@ -8,6 +8,7 @@ import { ReticleDev } from "@/components/dev/reticle-dev";
 import { RefreshOnSave } from "@/components/site/refresh-on-save";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
+import { SmoothScroll } from "@/components/site/smooth-scroll";
 import { env } from "@/env";
 import { getSiteSettings } from "@/data/queries";
 
@@ -46,6 +47,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         >
           Zum Inhalt springen
         </a>
+        <SmoothScroll />
         <SiteHeader siteName={settings.siteName || "Website"} />
         <div id="inhalt" className="flex-1">
           {children}
