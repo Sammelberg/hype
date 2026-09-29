@@ -13,9 +13,10 @@ import { type Service, ServicesStrata } from "./_components/services-strata";
 import { TriangleMotif } from "./_components/triangle-motif";
 import styles from "./page.module.css";
 
-// Blackletter initials of the hero headline and its call to action (UnifrakturMaguntia, OFL — licence beside the file).
+// Blackletter initials of the hero headline and its call to action: Kanzleyrath, Peter Wiegel's
+// Kanzlei face (OFL, licence beside the file), the owner's pick from the board (2026-09-29).
 const fraktur = localFont({
-  src: "./_fonts/unifraktur-maguntia.woff2",
+  src: "./_fonts/kanzleyrath.ttf",
   variable: "--font-fraktur",
   display: "swap",
   fallback: ["serif"],
