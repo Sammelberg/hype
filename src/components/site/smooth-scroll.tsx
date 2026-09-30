@@ -9,23 +9,55 @@ import { useEffect } from "react";
 gsap.registerPlugin(ScrollTrigger);
 
 let lenis: Lenis | null = null;
+let holder: (() => void) | null = null;
 
 /**
  * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
  * An immediate jump is forced, so Lenis does not glide on toward a target it had before.
  */
 export function scrollPageTo(y: number, { immediate = false } = {}) {
+  // A scroll from code (an anchor, the admin's preview) outranks a section that holds the page.
+  const release = holder;
+  holder = null;
+  release?.();
   if (lenis) {
     // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
-    // right after the services ride pinned (the page grew) a jump stopped at the old height.
+    // right after the page grew, a jump would stop at the old height.
     lenis.resize();
     lenis.scrollTo(y, { immediate, force: immediate });
   } else window.scrollTo({ top: y, behavior: immediate ? "instant" : "smooth" });
 }
 
 /**
- * Holds the page still while an overlay (the phone menu) is open: Radix locks native scrolling,
- * but Lenis would keep moving the page behind it on wheel input.
+ * Glides the page to y over `duration` seconds on a curve of its own, deaf to wheel and keys
+ * meanwhile (Lenis' lock), then calls onComplete. The services ride docks and leaves with it.
+ */
+export function glidePageTo(
+  y: number,
+  {
+    duration,
+    easing,
+    onComplete,
+  }: { duration: number; easing: (t: number) => number; onComplete?: () => void },
+) {
+  if (lenis) {
+    lenis.resize();
+    lenis.scrollTo(y, {
+      duration,
+      easing,
+      lock: true,
+      force: true,
+      onComplete: () => onComplete?.(),
+    });
+  } else {
+    window.scrollTo({ top: y, behavior: "smooth" });
+    window.setTimeout(() => onComplete?.(), duration * 1000);
+  }
+}
+
+/**
+ * Holds the page still while an overlay (the phone menu) is open or the services ride has the
+ * wheel: Radix locks native scrolling, but Lenis would keep moving the page on wheel input.
  */
 export function pauseSmoothScroll(paused: boolean) {
   if (paused) lenis?.stop();
@@ -62,4 +94,18 @@ export function SmoothScroll() {
     };
   }, []);
   return null;
+}
+
+/**
+ * A section takes the wheel: the page stands still until `releasePage`, or until code scrolls it
+ * (scrollPageTo), which calls `release` first so the section lets go.
+ */
+export function holdPage(release: () => void) {
+  holder = release;
+  lenis?.stop();
+}
+
+export function releasePage() {
+  holder = null;
+  lenis?.start();
 }

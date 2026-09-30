@@ -1,10 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
 // Services on the home page (src/app/(frontend)/_components/services-strata.tsx): from lg up with
-// motion allowed the stage holds under the header while five cards ride through its middle, each
-// resting there for a stretch of scrolling, the last one too before the page moves on; a rail
-// names them, steps either way and jumps. Below lg and with reduced motion the cards form a native
-// sideways track, centred card by card, the rail's arrows step through it.
+// motion allowed the page glides onto the stage as it comes near and holds there; each gesture (a
+// wheel turn, a trackpad swipe, a key) moves exactly one card into the middle, one more after the
+// last glides the page on, and from below the stage takes the page back at the last card. A rail
+// names the cards, steps either way and jumps. Below lg and with reduced motion the cards form a
+// native sideways track, centred card by card, the rail's arrows step through it.
 
 // Reticle overlays (dev tooling) can catch input; see features.spec.ts.
 test.beforeEach(async ({ page }) => {
@@ -18,11 +19,12 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-const NOTCH = 53; // one wheel notch in Chrome on Linux
+const NOTCH = 53; // one wheel notch in Chrome on Linux, the smallest common step
 
 const section = (page: Page) => page.locator("#leistungen");
 const rail = (page: Page) => page.getByRole("navigation", { name: "Leistungen" });
 const card = (page: Page, index: number) => section(page).locator("[data-card]").nth(index);
+const current = (page: Page) => section(page).getAttribute("data-current");
 
 // How far the ride has moved the track (px, negative to the left).
 const trackX = (page: Page) =>
@@ -30,7 +32,7 @@ const trackX = (page: Page) =>
     .locator("[data-track]")
     .evaluate((el) => Math.round(new DOMMatrix(getComputedStyle(el).transform).m41));
 
-// Poll until a reading stops changing (the ride scrubs with a 1s lag).
+// Poll until a reading stops changing (a slide or a glide takes about a second).
 async function settle(read: () => Promise<number>) {
   let last = Number.NaN;
   await expect
@@ -61,6 +63,128 @@ const stageTop = (page: Page) =>
     .locator("[data-stage]")
     .evaluate((el) => Math.round(el.getBoundingClientRect().top));
 
+// Turns the wheel down notch by notch until the page has glided onto the stage and holds.
+async function rideIn(page: Page) {
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+  await page.mouse.move(700, 450);
+  for (let i = 0; i < 40 && (await section(page).getAttribute("data-held")) === null; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await page.waitForTimeout(250);
+  }
+  await expect(section(page)).toHaveAttribute("data-held", "");
+  expect(await stageTop(page)).toBe(await header(page));
+  // The turn that brought the page here must not count for the first card.
+  await page.waitForTimeout(400);
+}
+
+test("the page glides onto the stage, and each wheel turn brings exactly one card", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  expect(await current(page)).toBe("0");
+  const y = await page.evaluate(() => Math.round(scrollY));
+  for (const expected of ["1", "2", "3", "4"]) {
+    await page.mouse.wheel(0, NOTCH);
+    await expect.poll(() => current(page)).toBe(expected);
+    await settle(() => trackX(page));
+    expect(Math.abs(await offCentre(page, Number(expected)))).toBeLessThanOrEqual(2);
+    // The page stands still while the cards ride.
+    expect(await page.evaluate(() => Math.round(scrollY))).toBe(y);
+    await page.waitForTimeout(300);
+  }
+});
+
+test("a fast spin of the wheel counts every notch", async ({ page, isMobile }) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  for (let i = 0; i < 3; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await page.waitForTimeout(250);
+  }
+  await expect.poll(() => current(page)).toBe("3");
+  await settle(() => trackX(page));
+  expect(Math.abs(await offCentre(page, 3))).toBeLessThanOrEqual(2);
+});
+
+test("a trackpad swipe, gliding on for a second, moves one card, not several", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  for (let k = 0; k < 60; k++) {
+    await page.mouse.wheel(0, 80 * Math.exp(-k / 18) + 1);
+    await page.waitForTimeout(16);
+  }
+  await settle(() => trackX(page));
+  expect(await current(page)).toBe("1");
+});
+
+test("a second swipe while the first still glides on moves one more card", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  // A swipe gliding out, then a new push in the middle of the glide.
+  for (const start of [80, 80]) {
+    for (let k = 0; k < 25; k++) {
+      await page.mouse.wheel(0, start * Math.exp(-k / 8) + 1);
+      await page.waitForTimeout(16);
+    }
+  }
+  await settle(() => trackX(page));
+  expect(await current(page)).toBe("2");
+});
+
+test("after the last card the page moves on, and from below the stage takes it back", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  for (let i = 0; i < 4; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await page.waitForTimeout(400);
+  }
+  await expect.poll(() => current(page)).toBe("4");
+  await page.waitForTimeout(600);
+
+  // One more turn: the stage lets go and the page glides on by itself.
+  const docked = await header(page);
+  await page.mouse.wheel(0, NOTCH);
+  await expect(section(page)).not.toHaveAttribute("data-held");
+  expect(await settle(() => stageTop(page))).toBeLessThan(docked - 200);
+  expect(await current(page)).toBe("4");
+
+  // Back up: the stage takes the page again, at the last card, and the next turn up goes back.
+  for (let i = 0; i < 20 && (await section(page).getAttribute("data-held")) === null; i++) {
+    await page.mouse.wheel(0, -NOTCH);
+    await page.waitForTimeout(250);
+  }
+  await expect(section(page)).toHaveAttribute("data-held", "");
+  expect(await stageTop(page)).toBe(docked);
+  await page.waitForTimeout(400);
+  await page.mouse.wheel(0, -NOTCH);
+  await expect.poll(() => current(page)).toBe("3");
+});
+
+test("the arrow keys ride too, and Home lets the page go", async ({ page, isMobile }) => {
+  test.skip(isMobile, "keys need a keyboard");
+  await rideIn(page);
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => current(page)).toBe("1");
+  await page.keyboard.press("ArrowUp");
+  await expect.poll(() => current(page)).toBe("0");
+  await page.keyboard.press("Home");
+  await expect(section(page)).not.toHaveAttribute("data-held");
+  await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(0);
+});
+
 test("the rail rides to a service and steps back", async ({ page, isMobile }) => {
   test.skip(isMobile, "the ride is lg and up");
   await page.goto("/");
@@ -71,6 +195,7 @@ test("the rail rides to a service and steps back", async ({ page, isMobile }) =>
   const target = rail(page).getByRole("button", { name: "Modernisierung" });
   await target.click();
   await expect(target).toHaveAttribute("aria-current", "true");
+  await expect(section(page)).toHaveAttribute("data-held", "");
   await settle(() => trackX(page));
   expect(Math.abs(await offCentre(page, 3))).toBeLessThanOrEqual(2);
 
@@ -79,77 +204,6 @@ test("the rail rides to a service and steps back", async ({ page, isMobile }) =>
     "aria-current",
     "true",
   );
-});
-
-test("the wheel moves the ride card by card and nothing hijacks the scroll", async ({
-  page,
-  isMobile,
-}) => {
-  test.skip(isMobile, "wheel input needs a fine pointer");
-  await page.goto("/");
-  await expect(section(page)).toHaveAttribute("data-ride", "");
-  // Where the stage docks under the header: the ride begins here, the first card in the middle.
-  const docked = await header(page);
-  const start = await section(page)
-    .locator("[data-stage]")
-    .evaluate((el, h) => Math.round(el.getBoundingClientRect().top + scrollY - h), docked);
-  // Lenis drives the wheel: wait for it, and let it pick up the jump before the first notch.
-  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
-  await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), start);
-  await page.mouse.move(640, 360);
-  let last = await settle(() => trackX(page));
-  expect(Math.abs(await offCentre(page, 0))).toBeLessThanOrEqual(2);
-
-  // Notch by notch the page moves exactly that far and the stage stays docked; the track holds
-  // while the first card rests, then slides on, never back, until the second card is current.
-  let notches = 0;
-  while ((await section(page).getAttribute("data-current")) !== "1") {
-    expect(notches).toBeLessThan(60);
-    for (let i = 0; i < 4; i++) {
-      await page.mouse.wheel(0, NOTCH);
-      notches++;
-    }
-    const now = await settle(() => trackX(page));
-    expect(now).toBeLessThanOrEqual(last);
-    last = now;
-    // Lenis glides to the target; it arrives exactly where the notches add up to.
-    await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(start + notches * NOTCH);
-    expect(await stageTop(page)).toBe(docked);
-  }
-
-  // A trackpad flick back up brings the track back: the ride follows the scroll both ways.
-  for (let k = 0; k < 40; k++) {
-    await page.mouse.wheel(0, -60 * Math.exp(-k / 15));
-    await page.waitForTimeout(16);
-  }
-  expect(await settle(() => trackX(page))).toBeGreaterThan(last);
-});
-
-test("the last card rests in the middle before the page moves on", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the ride is lg and up");
-  await page.goto("/");
-  await expect(section(page)).toHaveAttribute("data-ride", "");
-  const docked = await header(page);
-  const last = rail(page).getByRole("button", { name: "Betrieb" });
-  await last.click();
-  // The smooth scroll begins in the first card's rest, where the track does not move yet.
-  await expect(last).toHaveAttribute("aria-current", "true");
-  const x = await settle(() => trackX(page));
-  expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
-  await page.mouse.move(640, 360);
-
-  // Scrolling on: first the stage holds with the card in the middle, then it leaves upwards
-  // while the card stays where it came to rest.
-  let held = 0;
-  for (let i = 0; i < 40 && (await stageTop(page)) === docked; i++) {
-    await page.mouse.wheel(0, NOTCH);
-    await settle(() => stageTop(page));
-    if ((await stageTop(page)) === docked) held++;
-    expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
-  }
-  expect(held).toBeGreaterThan(0);
-  expect(await stageTop(page)).toBeLessThan(docked);
-  expect(await trackX(page)).toBe(x);
 });
 
 test("tabbing into a card brings it to the middle", async ({ page, isMobile }) => {
