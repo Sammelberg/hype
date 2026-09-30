@@ -195,6 +195,10 @@ export const rechnungen = buero.table(
     summeSteuer: geld(),
     summeBrutto: geld(),
     bezahltAm: tag(),
+    // The XRechnung as first handed out, and its sha256: written once (migration 0006), so
+    // every later download is the same file, whatever the code that builds it becomes.
+    archivXml: text(),
+    archivSha256: varchar({ length: 64 }),
     ...timestamps,
   },
   (t) => [

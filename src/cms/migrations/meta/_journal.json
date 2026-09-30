@@ -43,6 +43,13 @@
       "when": 1790767116519,
       "tag": "0005_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790767705841,
+      "tag": "0006_gobd_haertung",
+      "breakpoints": true
     }
   ]
 }

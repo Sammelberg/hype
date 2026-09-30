@@ -1,7 +1,9 @@
 // Invoices: drafts are edited freely; issuing gives the number, freezes recipient, issuer and
 // totals, and from then on only payment and Storno move them (the trigger in migration 0002
 // enforces what this module does). Corrections are Stornos: a second, negative invoice.
-import { and, desc, eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
+
+import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../../cms/db/client";
 import { auftraege, kunden, rechnungen, vertraege } from "../db/schema";
@@ -250,9 +252,33 @@ export function ausgabeDaten(r: Rechnung, korrigiertNummer: string | null): XRec
   };
 }
 
+const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+
+// The XRechnung of an issued invoice. The first export is archived with its sha256 (write-once,
+// migration 0006); every later one hands out that same file, after checking it is unchanged.
 export async function xrechnungFuer(id: number, client: Db | Tx = db) {
   const found = await getRechnung(id, client);
   if (!found) throw new BueroError("Die Rechnung gibt es nicht mehr.");
+  const { rechnung } = found;
+  if (rechnung.archivXml !== null) {
+    if (sha256(rechnung.archivXml) !== rechnung.archivSha256)
+      throw new BueroError(
+        `Die archivierte E-Rechnung zu ${rechnung.nummer} passt nicht mehr zu ihrer Prüfsumme. Sie wird nicht ausgegeben; bitte prüfen Sie, wer Zugriff auf die Datenbank hat.`,
+      );
+    return { nummer: rechnung.nummer!, xml: rechnung.archivXml };
+  }
+  const erzeugt = erzeugeXrechnung(found);
+  // Only the first writer archives; a second export at the same moment gets the stored file.
+  const [gespeichert] = await client
+    .update(rechnungen)
+    .set({ archivXml: erzeugt.xml, archivSha256: sha256(erzeugt.xml) })
+    .where(and(eq(rechnungen.id, id), isNull(rechnungen.archivXml)))
+    .returning({ xml: rechnungen.archivXml });
+  if (gespeichert) return erzeugt;
+  return xrechnungFuer(id, client);
+}
+
+function erzeugeXrechnung(found: NonNullable<Awaited<ReturnType<typeof getRechnung>>>) {
   const daten = ausgabeDaten(found.rechnung, found.korrigiert?.nummer ?? null);
   const { xrechnung } = pruefeRechnung({
     firma: daten.verkaeufer,
