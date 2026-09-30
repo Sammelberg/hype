@@ -75,6 +75,9 @@ async function rideIn(page: Page) {
   }
   await expect(section(page)).toHaveAttribute("data-held", "");
   expect(await stageTop(page)).toBe(await header(page));
+  // Holding changes nothing on <html>: Lenis' stopped state clips its overflow, the scrollbar
+  // would vanish and the page shift sideways by its width.
+  await expect(page.locator("html")).not.toHaveClass(/lenis-stopped/);
   // The turn that brought the page here must not count for the first card.
   await page.waitForTimeout(400);
 }

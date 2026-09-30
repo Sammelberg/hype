@@ -38,10 +38,29 @@ export function glidePageTo(
     duration,
     easing,
     onComplete,
-  }: { duration: number; easing: (t: number) => number; onComplete?: () => void },
+    carry,
+  }: {
+    duration: number;
+    easing: (t: number) => number;
+    onComplete?: () => void;
+    /**
+     * Carry on at the speed the page already moves: the duration is chosen so the curve starts at
+     * that speed (`slope` is the easing's slope at 0), within `range` seconds. No push, no brake.
+     */
+    carry?: { slope: number; range: [number, number] };
+  },
 ) {
   if (lenis) {
     lenis.resize();
+    if (carry) {
+      const distance = Math.abs(y - lenis.animatedScroll);
+      // Lenis' velocity is px per frame; the last frame's length makes it px per second, at any
+      // refresh rate (60, 120, 144 Hz).
+      const frame = gsap.ticker.deltaRatio(60) / 60;
+      const speed = Math.abs(lenis.velocity) / Math.max(frame, 1 / 240);
+      const fit = speed > 1 ? (carry.slope * distance) / speed : carry.range[1];
+      duration = Math.min(carry.range[1], Math.max(carry.range[0], fit));
+    }
     lenis.scrollTo(y, {
       duration,
       easing,
@@ -79,6 +98,8 @@ export function SmoothScroll() {
       lerp: 0,
       duration: 0.6,
       easing: (t) => 1 - (1 - t) ** 3,
+      // While a section holds the page (holdPage), its wheel and touch are not Lenis' to scroll.
+      virtualScroll: () => holder === null,
     });
     lenis = instance;
     instance.on("scroll", ScrollTrigger.update);
@@ -98,14 +119,16 @@ export function SmoothScroll() {
 
 /**
  * A section takes the wheel: the page stands still until `releasePage`, or until code scrolls it
- * (scrollPageTo), which calls `release` first so the section lets go.
+ * (scrollPageTo), which calls `release` first so the section lets go. The section itself must
+ * prevent the native scroll of the input it takes (the services ride's Observer does).
  */
+// Not lenis.stop(): that sets overflow: clip on <html>, the scrollbar goes, and the whole page
+// shifts sideways by its width, and back on release. Lenis runs on and only ignores the wheel;
+// the holder takes it (and prevents the native scroll) itself.
 export function holdPage(release: () => void) {
   holder = release;
-  lenis?.stop();
 }
 
 export function releasePage() {
   holder = null;
-  lenis?.start();
 }
