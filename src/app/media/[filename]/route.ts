@@ -11,13 +11,13 @@ const TYPES: Record<string, string> = {
   webp: "image/webp",
   avif: "image/avif",
   gif: "image/gif",
-  svg: "image/svg+xml",
   mp4: "video/mp4",
   webm: "video/webm",
   pdf: "application/pdf",
 };
 
 // Serves an upload from /media. Filenames carry a content hash, so they may be cached for a year.
+// Its Content-Security-Policy (`sandbox`) comes from next.config.ts, which would override one set here.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ filename: string }> },

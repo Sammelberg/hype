@@ -55,7 +55,20 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "25mb" },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Uploads are data, never documents: opened directly, a file runs no script and cannot
+      // reach this origin's cookies, whatever it turns out to contain. Listed last, so it wins.
+      {
+        source: "/media/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "sandbox; default-src 'none'; img-src 'self'; media-src 'self'",
+          },
+        ],
+      },
+    ];
   },
 };
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { deleteSubmission, markSubmissionRead, saveForm } from "@/cms/content/forms";
@@ -20,6 +21,8 @@ export const markSubmissionAction = authActionClient
   .inputSchema(id.extend({ read: z.boolean() }))
   .action(async ({ parsedInput }) => {
     await markSubmissionRead(parsedInput.id, parsedInput.read);
+    // The sidebar counts unread messages: the page comes back refreshed with the action's answer.
+    revalidatePath("/admin", "layout");
   });
 
 export const deleteSubmissionAction = authActionClient

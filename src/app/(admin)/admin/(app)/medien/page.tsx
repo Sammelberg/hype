@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requireUser } from "@/cms/auth/guard";
 import { listMedia } from "@/cms/content/media";
 import { PageShell } from "../../_components/page-shell";
 import { MediaLibrary } from "./_components/media-library";
@@ -7,6 +8,7 @@ import { MediaLibrary } from "./_components/media-library";
 export const metadata: Metadata = { title: "Medien" };
 
 export default async function MediaPage() {
+  await requireUser();
   const media = await listMedia();
   return (
     <PageShell

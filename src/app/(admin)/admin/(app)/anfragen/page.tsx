@@ -1,6 +1,7 @@
 import { InboxIcon } from "lucide-react";
 import type { Metadata } from "next";
 
+import { requireUser } from "@/cms/auth/guard";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -29,6 +30,7 @@ export const metadata: Metadata = { title: "Anfragen" };
 const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
 export default async function InboxPage() {
+  await requireUser();
   const [submissions, form] = await Promise.all([listSubmissions(), getContactForm()]);
   const unread = submissions.filter((s) => !s.readAt).length;
   return (

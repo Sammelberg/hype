@@ -518,9 +518,8 @@ export const E2E_EMAIL = "erika@example.com";
 
 export const SEED_REDIRECT = { from: "/about", toPage: "ueber-uns", toPath: "/ueber-uns" };
 
-// The admin account the e2e tests sign in with. The seed creates it only when E2E_ADMIN_PASSWORD
-// is set (CI does); otherwise the tests create it through the setup page on an empty database.
-// e2e/teardown.ts deletes it after every run.
+// The admin account the e2e tests sign in with. scripts/prepare-e2e.ts creates it before every
+// run (the seed too, when E2E_ADMIN_PASSWORD is set, as in CI); scripts/clean-e2e.ts deletes it.
 export const E2E_ADMIN = {
   email: "e2e-admin@example.com",
   fallbackPassword: "e2e-passwort-schwarzwald",

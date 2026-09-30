@@ -282,5 +282,6 @@ Weiter:
   pnpm db:up        Postgres auf Port ${dbPort} (Container ${name}-postgres-1)
   pnpm migrate      Tabellen der CMS anlegen
   pnpm seed         Beispielinhalte
-  pnpm dev          http://localhost:${appPort}, erstes Admin-Konto unter /admin/einrichtung anlegen
+  pnpm cms:passwort <e-mail> --anlegen   erstes Admin-Konto (vorläufiges Passwort erscheint einmal)
+  pnpm dev          http://localhost:${appPort}/admin
 `);

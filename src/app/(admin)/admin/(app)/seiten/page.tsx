@@ -2,6 +2,7 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { requireUser } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +27,7 @@ const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: 
 // tiles, in the order they were created — the order the navigation shows them in. Columns
 // rather than a grid, so a long section does not leave holes beside it.
 export default async function PagesPage() {
+  await requireUser();
   const pages = await listPages();
   const rows = flattenTree(
     pages.map((p) => ({ ...p, parentId: p.parent })),

@@ -14,8 +14,11 @@ export const getSessionUser = cache(async (): Promise<User | null> => {
   return userForToken(jar.get(SESSION_COOKIE)?.value);
 });
 
-// For admin pages and actions: the user, or a redirect to the login (pages) / an error (actions).
-export async function requireUser(options: { next?: string } = {}): Promise<User> {
+// For admin pages: the user, or a redirect to the login. An account with a temporary password
+// reaches nothing but the password page until it has chosen its own.
+export async function requireUser(
+  options: { next?: string; passwordPage?: boolean } = {},
+): Promise<User> {
   const user = await getSessionUser();
   if (!user) {
     // src/proxy.ts writes the request path into this header for every /admin request.
@@ -23,6 +26,7 @@ export async function requireUser(options: { next?: string } = {}): Promise<User
     const next = path && path !== "/admin" ? `?weiter=${encodeURIComponent(path)}` : "";
     redirect(`/admin/login${next}` as never);
   }
+  if (user.mustChangePassword && !options.passwordPage) redirect("/admin/passwort" as never);
   return user;
 }
 
@@ -32,8 +36,16 @@ export class NotSignedIn extends Error {
   }
 }
 
+export class PasswordChangeRequired extends Error {
+  constructor() {
+    super("Bitte ersetzen Sie zuerst Ihr vorläufiges Passwort.");
+  }
+}
+
+// For actions and route handlers: the user, or an error the action client turns into German.
 export async function requireUserForAction(): Promise<User> {
   const user = await getSessionUser();
   if (!user) throw new NotSignedIn();
+  if (user.mustChangePassword) throw new PasswordChangeRequired();
   return user;
 }

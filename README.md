@@ -57,7 +57,8 @@ Postgres (предлагает первые свободные), затем:
 pnpm db:up     # Postgres в Docker
 pnpm migrate   # таблицы CMS (схема `cms`)
 pnpm seed      # примерные страницы, форма, редирект, настройки
-pnpm dev       # http://localhost:<порт приложения>; первый аккаунт — на /admin/einrichtung
+pnpm cms:passwort ihre@adresse.de --anlegen   # первый аккаунт, временный пароль один раз
+pnpm dev       # http://localhost:<порт приложения>/admin
 ```
 
 ## После старта

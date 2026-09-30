@@ -16,7 +16,6 @@ export const ACCEPTED_TYPES = new Set([
   "image/webp",
   "image/avif",
   "image/gif",
-  "image/svg+xml",
 ]);
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const MAX_SIDE = 8192;
@@ -27,7 +26,6 @@ const EXT: Record<string, string> = {
   "image/webp": "webp",
   "image/avif": "avif",
   "image/gif": "gif",
-  "image/svg+xml": "svg",
 };
 
 export class UploadError extends Error {}
@@ -48,7 +46,9 @@ function baseName(original: string) {
   return safe || "bild";
 }
 
-// What the magic bytes say the file is; the browser's claim is not trusted.
+// What the magic bytes say the file is; the browser's claim is not trusted. SVG is not taken at
+// all: it is a document that can carry script (onload=, foreignObject, javascript: links), and
+// a sanitiser is more code than the rare logo is worth. The site's own graphics live in code.
 function sniff(bytes: Buffer): string | null {
   if (bytes.length < 12) return null;
   if (bytes[0] === 0xff && bytes[1] === 0xd8) return "image/jpeg";
@@ -59,8 +59,6 @@ function sniff(bytes: Buffer): string | null {
   if (bytes.subarray(4, 12).toString() === "ftypavif") return "image/avif";
   if (bytes.subarray(0, 6).toString() === "GIF89a" || bytes.subarray(0, 6).toString() === "GIF87a")
     return "image/gif";
-  const head = bytes.subarray(0, 512).toString("utf8");
-  if (/<svg[\s>]/i.test(head) && !/<script/i.test(bytes.toString("utf8"))) return "image/svg+xml";
   return null;
 }
 
@@ -78,36 +76,31 @@ export async function storeUpload(file: File): Promise<StoredFile> {
   const bytes = Buffer.from(await file.arrayBuffer());
   const mimeType = sniff(bytes);
   if (!mimeType || !ACCEPTED_TYPES.has(mimeType)) {
-    throw new UploadError("Bitte ein Bild hochladen: JPG, PNG, WebP, AVIF, GIF oder SVG.");
-  }
-  await mkdir(MEDIA_DIR, { recursive: true });
-  const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 10);
-  const base = `${baseName(file.name)}-${hash}`;
-  const ext = EXT[mimeType]!;
-  const filename = `${base}.${ext}`;
-
-  if (mimeType === "image/svg+xml") {
-    await writeFile(path.join(MEDIA_DIR, filename), bytes);
-    return { filename, mimeType, filesize: bytes.length, width: null, height: null, sizes: {} };
+    throw new UploadError("Bitte ein Bild hochladen: JPG, PNG, WebP, AVIF oder GIF.");
   }
 
-  // `rotate()` applies the camera's orientation tag and drops it, so the pixels are upright.
-  const image = sharp(bytes, { animated: mimeType === "image/gif" }).rotate();
-  const meta = await image.metadata();
-  const width = meta.width ?? null;
-  const height = meta.pageHeight ?? meta.height ?? null;
-  if ((width ?? 0) > MAX_SIDE || (height ?? 0) > MAX_SIDE) {
+  const raw = await sharp(bytes, { animated: mimeType === "image/gif" }).metadata();
+  if ((raw.width ?? 0) > MAX_SIDE || (raw.pageHeight ?? raw.height ?? 0) > MAX_SIDE) {
     throw new UploadError(`Bitte ein Bild mit höchstens ${MAX_SIDE} Pixeln Kantenlänge.`);
   }
-  await writeFile(path.join(MEDIA_DIR, filename), bytes);
+  const original = await withoutMetadata(bytes, mimeType);
+  // Measured after the rotation: a portrait photo stored sideways reports swapped sides before.
+  const meta = await sharp(original, { animated: mimeType === "image/gif" }).metadata();
+  const width = meta.width ?? null;
+  const height = meta.pageHeight ?? meta.height ?? null;
+
+  await mkdir(MEDIA_DIR, { recursive: true });
+  const hash = createHash("sha256").update(original).digest("hex").slice(0, 10);
+  const base = `${baseName(file.name)}-${hash}`;
+  const filename = `${base}.${EXT[mimeType]!}`;
+  await writeFile(path.join(MEDIA_DIR, filename), original);
 
   const sizes: MediaSizes = {};
   if (mimeType !== "image/gif" && width) {
     for (const [name, target] of Object.entries(MEDIA_SIZES)) {
       if (width <= target && name !== "thumbnail") continue;
       const variantName = `${base}-${target}.webp`;
-      const output = await sharp(bytes)
-        .rotate()
+      const output = await sharp(original)
         .resize({ width: target, withoutEnlargement: true })
         .webp({ quality: 82 })
         .toFile(path.join(MEDIA_DIR, variantName));
@@ -119,7 +112,28 @@ export async function storeUpload(file: File): Promise<StoredFile> {
       };
     }
   }
-  return { filename, mimeType, filesize: bytes.length, width, height, sizes };
+  return { filename, mimeType, filesize: original.length, width, height, sizes };
+}
+
+// The original as it is published: upright, in its own format, without EXIF, GPS, XMP or IPTC
+// (sharp writes no metadata unless asked). A photo from a phone tells where it was taken.
+export async function withoutMetadata(bytes: Buffer, mimeType: string): Promise<Buffer> {
+  // `rotate()` applies the camera's orientation tag, so the pixels are upright without it.
+  const image = sharp(bytes, { animated: mimeType === "image/gif" }).rotate();
+  switch (mimeType) {
+    case "image/jpeg":
+      return image.jpeg({ quality: 92, mozjpeg: true }).toBuffer();
+    case "image/png":
+      return image.png({ compressionLevel: 9 }).toBuffer();
+    case "image/webp":
+      return image.webp({ quality: 90 }).toBuffer();
+    case "image/avif":
+      return image.avif({ quality: 70 }).toBuffer();
+    case "image/gif":
+      return image.gif().toBuffer();
+    default:
+      throw new UploadError("Dieses Bildformat wird nicht angenommen.");
+  }
 }
 
 export async function removeFiles(filenames: string[]) {

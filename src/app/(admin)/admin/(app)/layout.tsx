@@ -15,7 +15,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "../_components/app-sidebar";
 import { CommandPalette, type PaletteEntry } from "../_components/command-palette";
 
-// Everything below /admin except the login and the setup: a signed-in user, the sidebar, ⌘K.
+// Everything below /admin except the login and the password page: a signed-in user, the sidebar, ⌘K.
 export default async function AdminAppLayout({ children }: { children: ReactNode }) {
   const user = await requireUser();
   const [settings, unread, pages, projekte, kunden, auftraege, rechnungen] = await Promise.all([

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requireUser } from "@/cms/auth/guard";
 import { listPages } from "@/cms/content/pages";
 import { listProjekte } from "@/cms/content/projekte";
 import { listRedirects } from "@/cms/content/redirects";
@@ -9,6 +10,7 @@ import { RedirectsManager } from "./_components/redirects-manager";
 export const metadata: Metadata = { title: "Weiterleitungen" };
 
 export default async function RedirectsPage() {
+  await requireUser();
   const [redirects, pages, projekte] = await Promise.all([
     listRedirects(),
     listPages(),

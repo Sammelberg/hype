@@ -1,31 +1,12 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
-
 import { z } from "zod";
 
+import { temporaryPassword } from "@/cms/auth/temporary-password";
 import { createUser, deleteUser, setPassword, updateUserName } from "@/cms/auth/users";
 import { authActionClient } from "./client";
 
 const id = z.object({ id: z.number().int().positive() });
-
-// A temporary password the admin passes on; the new account must replace it at first sign-in.
-const temporaryPassword = () => {
-  const words = [
-    "tanne",
-    "moos",
-    "fels",
-    "quelle",
-    "nebel",
-    "wipfel",
-    "harz",
-    "pfad",
-    "hang",
-    "bach",
-  ];
-  const pick = () => words[randomBytes(1)[0]! % words.length];
-  return `${pick()}-${pick()}-${pick()}-${randomBytes(2).toString("hex")}`;
-};
 
 export const createUserAction = authActionClient
   .inputSchema(

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { FirMark } from "@/components/site/fir-mark";
 
-// The frame around the login, the first-run setup and the password change: the mark, a title
+// The frame around the login, the note on an empty database and the password change: the mark, a title
 // and one column of form, centred on the paper.
 export function AuthCard({
   title,

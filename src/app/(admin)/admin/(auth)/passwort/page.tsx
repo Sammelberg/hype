@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Passwort" };
 
 export default async function PasswordPage() {
   const [user, settings] = await Promise.all([
-    requireUser({ next: "/admin/passwort" }),
+    requireUser({ next: "/admin/passwort", passwordPage: true }),
     getSiteSettings(),
   ]);
   return (

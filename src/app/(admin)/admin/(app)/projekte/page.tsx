@@ -2,6 +2,7 @@ import { FolderKanbanIcon, PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { requireUser } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -30,6 +31,7 @@ export const metadata: Metadata = { title: "Projekte" };
 const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
 export default async function ProjektePage() {
+  await requireUser();
   const projekte = await listProjekte();
   const newButton = (
     <Button asChild size="sm">

@@ -97,6 +97,7 @@ test("a message sent through the site lands in the inbox, is read on opening and
 
 test("a new account gets a temporary password, shown once, and can be removed", async ({
   page,
+  browser,
 }) => {
   await page.goto("/admin/benutzer");
   await page.getByRole("button", { name: "Zugang anlegen" }).click();
@@ -106,10 +107,26 @@ test("a new account gets a temporary password, shown once, and can be removed", 
   await dialog.getByRole("button", { name: "Anlegen" }).click();
   const shown = page.getByRole("dialog", { name: "Vorläufiges Passwort" });
   await expect(shown).toBeVisible();
-  await expect(shown.locator("code")).toHaveText(/^[a-z]+-[a-z]+-[a-z]+-[0-9a-f]{4}$/);
+  const code = shown.locator("code");
+  await expect(code).toHaveText(/^[a-z2-9]{4}(-[a-z2-9]{4}){4}$/);
+  const temporary = (await code.textContent())!;
   await shown.getByRole("button", { name: "Verstanden" }).click();
   await expect(page.getByText(`E2E Kollege ${STAMP}`)).toBeVisible();
   await expect(page.getByText("wartet auf eigenes Passwort")).toBeVisible();
+
+  // With the temporary password, every screen leads to the password page, and no action runs.
+  const colleague = await browser.newContext();
+  const other = await colleague.newPage();
+  await other.goto("/admin/login");
+  await other.getByLabel("E-Mail-Adresse").fill(`e2e-kollege-${STAMP}@example.com`);
+  await other.getByLabel("Passwort").fill(temporary);
+  await other.getByRole("button", { name: "Anmelden" }).click();
+  await expect(other).toHaveURL(/\/admin\/passwort$/, { timeout: 15_000 });
+  for (const path of ["/admin", "/admin/seiten", "/admin/benutzer", "/admin/rechnungen"]) {
+    await other.goto(path);
+    await expect(other).toHaveURL(/\/admin\/passwort$/);
+  }
+  await colleague.close();
 
   await page.getByRole("button", { name: `Zugang von E2E Kollege ${STAMP} löschen` }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Löschen" }).click();

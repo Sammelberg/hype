@@ -1,6 +1,6 @@
-// Before every e2e run: the admin specs sign in as the e2e account. Once a real account exists,
-// /admin/einrichtung is closed and the teardown (scripts/clean-e2e.ts) has removed the e2e
-// account of the last run, so it is created here again. Local databases and CI only.
+// Before every e2e run: the admin specs sign in as the e2e account. The teardown
+// (scripts/clean-e2e.ts) has removed the one of the last run, and there is no setup page,
+// so it is created here again. Local databases and CI only.
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { E2E_ADMIN } from "./seed-data";
 

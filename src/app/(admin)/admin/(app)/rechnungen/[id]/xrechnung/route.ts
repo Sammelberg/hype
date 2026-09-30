@@ -6,8 +6,8 @@ import { xrechnungFuer } from "@/buero/daten/rechnungen";
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireUserForAction();
-  } catch {
-    return new Response("Bitte melden Sie sich an.", { status: 401 });
+  } catch (error) {
+    return new Response((error as Error).message, { status: 401 });
   }
   const id = Number((await params).id);
   if (!Number.isInteger(id)) return new Response("Nicht gefunden.", { status: 404 });

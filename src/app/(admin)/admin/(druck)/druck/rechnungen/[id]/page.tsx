@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/cms/auth/guard";
 import { ausgabeDaten, getRechnung } from "@/buero/daten/rechnungen";
 import { RechnungsDokument } from "../../../../_components/buero/rechnungs-dokument";
 import { DruckenKnopf } from "./drucken";
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // An issued invoice, ready to print or to save as PDF from the browser's print dialog.
 export default async function DruckRechnungPage({ params }: Props) {
+  await requireUser();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await getRechnung(id);

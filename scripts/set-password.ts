@@ -1,13 +1,15 @@
 // `pnpm cms:passwort <e-mail> [passwort]` — sets an account's password from the shell, for the
-// day the only admin is locked out. Without a password argument a temporary one is generated
-// and must be changed at the next sign-in. Local databases only, unless --force.
-import { randomBytes } from "node:crypto";
-
-import { findUserByEmail, setPassword } from "../src/cms/auth/users";
+// day the only admin is locked out. `--anlegen` creates the account instead: the only way to the
+// first account (there is no setup page, so an empty database offers nobody a way in).
+// Without a password argument a temporary one is generated and must be changed at the next
+// sign-in. Local databases only, unless --force.
+import { temporaryPassword } from "../src/cms/auth/temporary-password";
+import { AuthError, createUser, findUserByEmail, setPassword } from "../src/cms/auth/users";
 
 const [email, given] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const create = process.argv.includes("--anlegen");
 if (!email) {
-  console.error("Aufruf: pnpm cms:passwort <e-mail> [passwort]");
+  console.error("Aufruf: pnpm cms:passwort <e-mail> [passwort] [--anlegen]");
   process.exit(1);
 }
 const url = new URL(process.env.DATABASE_URL ?? "");
@@ -20,16 +22,36 @@ if (
   );
 }
 
+const password = given ?? temporaryPassword();
+const mustChange = !given;
 const user = await findUserByEmail(email);
-if (!user) {
-  console.error(`Kein Zugang mit der Adresse ${email}.`);
-  process.exit(1);
+
+if (create) {
+  if (user) {
+    console.error(`Es gibt schon einen Zugang mit der Adresse ${email}.`);
+    process.exit(1);
+  }
+  try {
+    await createUser({ email, password, mustChangePassword: mustChange });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+} else {
+  if (!user) {
+    console.error(`Kein Zugang mit der Adresse ${email}. Neu anlegen mit --anlegen.`);
+    process.exit(1);
+  }
+  await setPassword(user.id, password, { mustChange });
 }
-const password = given ?? `neu-${randomBytes(6).toString("base64url")}`;
-await setPassword(user.id, password, { mustChange: !given });
+
+const done = create ? `Zugang ${email} angelegt.` : `Passwort für ${email} gesetzt.`;
 console.log(
-  given
-    ? `Passwort für ${email} gesetzt.`
-    : `Vorläufiges Passwort für ${email}: ${password}\nBeim nächsten Anmelden muss es ersetzt werden.`,
+  mustChange
+    ? `${done}\nVorläufiges Passwort: ${password}\nBeim nächsten Anmelden muss es ersetzt werden.`
+    : done,
 );
 process.exit(0);

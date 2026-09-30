@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/cms/auth/guard";
 import { getKunde, kundenName } from "@/buero/daten/kunden";
 import { KundenEditor } from "../_components/kunden-editor";
 import { KundenUebersicht } from "../_components/kunden-uebersicht";
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function KundePage({ params }: Props) {
+  await requireUser();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await getKunde(id);

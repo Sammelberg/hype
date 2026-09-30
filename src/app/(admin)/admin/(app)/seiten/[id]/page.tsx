@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/cms/auth/guard";
 import { getContactForm } from "@/cms/content/forms";
 import { listMedia } from "@/cms/content/media";
 import { getPage, listPages } from "@/cms/content/pages";
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EditPagePage({ params }: Props) {
+  await requireUser();
   const { id } = await params;
   const pageId = Number(id);
   if (!Number.isInteger(pageId)) notFound();

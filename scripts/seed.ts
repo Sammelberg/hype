@@ -2,7 +2,8 @@
 // Idempotent: re-running overwrites pages, the form, the redirect and the settings by their slug
 // or title, so on a database with real content update single pages in /admin instead.
 // Refuses to run against a non-local database unless CI=true or --force is given.
-// Creates no users: the first admin signs up at /admin/einrichtung.
+// Creates no users (except the e2e account in CI): the first admin comes from
+// `pnpm cms:passwort <e-mail> --anlegen`.
 import { randomBytes } from "node:crypto";
 
 import { createUser, findUserByEmail } from "../src/cms/auth/users";

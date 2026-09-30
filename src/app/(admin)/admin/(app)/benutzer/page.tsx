@@ -8,7 +8,8 @@ import { UsersManager } from "./_components/users-manager";
 export const metadata: Metadata = { title: "Benutzer" };
 
 export default async function UsersPage() {
-  const [user, users] = await Promise.all([requireUser(), listUsers()]);
+  const user = await requireUser();
+  const users = await listUsers();
   return (
     <PageShell
       title="Benutzer"

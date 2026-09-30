@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requireUser } from "@/cms/auth/guard";
 import { listMedia } from "@/cms/content/media";
 import { listPages } from "@/cms/content/pages";
 import { emptyDocument } from "@/cms/rich-text/schema";
@@ -12,6 +13,7 @@ export default async function NewPagePage({
 }: {
   searchParams: Promise<{ unter?: string }>;
 }) {
+  await requireUser();
   const [{ unter }, pages, media] = await Promise.all([searchParams, listPages(), listMedia()]);
   const parentId = unter && pages.some((p) => p.id === Number(unter)) ? Number(unter) : null;
   return (

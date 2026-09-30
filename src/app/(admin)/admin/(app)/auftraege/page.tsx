@@ -2,6 +2,7 @@ import { BriefcaseIcon, PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { requireUser } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -54,6 +55,7 @@ function AuftragKarte({ a, index }: { a: Zeile; index: number }) {
 
 // The orders as a board: one column per stage of the pipeline, finished ones below.
 export default async function AuftraegePage() {
+  await requireUser();
   const auftraege = await listAuftraege();
   const neu = (
     <Button asChild size="sm">

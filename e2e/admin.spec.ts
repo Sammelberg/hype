@@ -11,10 +11,6 @@ test.beforeEach(async ({ page }) => {
 
 test("a wrong password and an unknown address get the same answer", async ({ page }) => {
   await page.goto("/admin/login");
-  test.skip(
-    page.url().includes("/admin/einrichtung"),
-    "no account yet: the setup page comes first",
-  );
   await page.getByLabel("E-Mail-Adresse").fill("niemand@example.com");
   await page.getByLabel("Passwort").fill("falsches-passwort-123");
   await page.getByRole("button", { name: "Anmelden" }).click();
@@ -67,7 +63,7 @@ test("the admin signs in, reaches every section and signs out", async ({ page })
   await expect(page).toHaveURL(/\/admin\/login\?weiter=/);
 });
 
-test("the setup page is closed once an account exists", async ({ page }) => {
+test("there is no setup page: the first account comes from the shell", async ({ page }) => {
   await signIn(page);
   const response = await page.goto("/admin/einrichtung");
   expect(response?.status()).toBe(404);

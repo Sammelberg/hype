@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/cms/auth/guard";
 import { listMedia } from "@/cms/content/media";
 import { getProjekt } from "@/cms/content/projekte";
 import { listVersions } from "@/cms/content/versions";
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EditProjektPage({ params }: Props) {
+  await requireUser();
   const { id } = await params;
   const projektId = Number(id);
   if (!Number.isInteger(projektId)) notFound();

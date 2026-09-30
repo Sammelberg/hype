@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requireUser } from "@/cms/auth/guard";
 import { getAuftrag, listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { getFirma } from "@/buero/daten/firma";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
@@ -19,6 +20,7 @@ export default async function NeueRechnungPage({
 }: {
   searchParams: Promise<{ kunde?: string; auftrag?: string; vertrag?: string }>;
 }) {
+  await requireUser();
   const q = await searchParams;
   const [{ firma }, auftraege, vertraege, vonAuftrag, vonVertrag] = await Promise.all([
     getFirma(),

@@ -1,6 +1,6 @@
 import { createSafeActionClient } from "next-safe-action";
 
-import { requireUserForAction } from "@/cms/auth/guard";
+import { NotSignedIn, PasswordChangeRequired, requireUserForAction } from "@/cms/auth/guard";
 import { AuthError } from "@/cms/auth/users";
 import { PageError } from "@/cms/content/pages";
 import { ProjektError } from "@/cms/content/projekte";
@@ -23,7 +23,7 @@ const known = (error: unknown): ActionFailure | null => {
     return { message: error.message, field: error.field };
   }
   if (error instanceof UploadError) return { message: error.message };
-  if (error instanceof Error && error.message === "Bitte melden Sie sich an.")
+  if (error instanceof NotSignedIn || error instanceof PasswordChangeRequired)
     return { message: error.message };
   return null;
 };

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/cms/auth/cookie";
 import { getSessionUser } from "@/cms/auth/guard";
 import { createSession, destroySession, purgeExpiredSessions } from "@/cms/auth/session";
-import { AuthError, checkCredentials, countUsers, createUser, setPassword } from "@/cms/auth/users";
+import { AuthError, checkCredentials, setPassword } from "@/cms/auth/users";
 import { verifyPassword } from "@/cms/auth/password";
 import { findUserByEmail } from "@/cms/auth/users";
 
@@ -45,26 +45,6 @@ export async function logout() {
   await destroySession(jar.get(SESSION_COOKIE)?.value);
   jar.delete(SESSION_COOKIE);
   redirect("/admin/login" as never);
-}
-
-// The first account, only while there is none.
-export async function setup(_: AuthState, formData: FormData): Promise<AuthState> {
-  if ((await countUsers()) > 0) redirect("/admin/login" as never);
-  const name = String(formData.get("name") ?? "");
-  const email = String(formData.get("email") ?? "");
-  const password = String(formData.get("password") ?? "");
-  const confirm = String(formData.get("confirm") ?? "");
-  const values = { name, email };
-  if (password !== confirm)
-    return { error: "Die Passwörter stimmen nicht überein.", field: "confirm", values };
-  try {
-    const user = await createUser({ name, email, password });
-    await signIn(user.id);
-  } catch (error) {
-    if (error instanceof AuthError) return { error: error.message, field: error.field, values };
-    throw error;
-  }
-  redirect("/admin" as never);
 }
 
 // Own password: the current one is required unless the account was told to change it.
