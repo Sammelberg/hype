@@ -341,6 +341,14 @@ export function ServicesStrata({
         // free: the page scrolls; docking/leaving: the page glides onto the stage or away;
         // docked: the stage holds the page and every gesture moves one card.
         let mode: "free" | "docking" | "docked" | "leaving" = "free";
+        // The mode on the section too (data-ride-state), for the tests and nothing else.
+        const setMode = (next: typeof mode) => {
+          mode = next;
+          section.setAttribute("data-ride-state", next);
+        };
+        setMode("free");
+        // A card moved on while the page still glided in: one, not more.
+        let movedWhileDocking = false;
         let index = 0;
         let slide: gsap.core.Tween | null = null;
         let lastInput = Number.NEGATIVE_INFINITY;
@@ -389,40 +397,48 @@ export function ServicesStrata({
         const place = () => (watcher.start + watcher.end) / 2;
 
         const release = () => {
-          mode = "free";
+          setMode("free");
           section.removeAttribute("data-held");
           observer.disable();
         };
         const hold = () => {
-          mode = "docked";
-          // The gesture that brought the page here still runs out (a trackpad's glide): it must
-          // not also move the first card on.
-          lastInput = performance.now();
-          lastSize = 0;
-          floor = Number.POSITIVE_INFINITY;
+          setMode("docked");
           holdPage(release);
           section.setAttribute("data-held", "");
           observer.enable();
         };
+        // The stage listens from the first moment of the glide: a turn of the wheel while the page
+        // still glides in already moves the first card on, none is lost. The gesture that brought
+        // the page here runs on without a pause (a trackpad's glide) and so does not count.
         const dock = () => {
-          mode = "docking";
+          setMode("docking");
+          movedWhileDocking = false;
+          lastInput = performance.now();
+          lastSize = 0;
+          floor = Number.POSITIVE_INFINITY;
+          observer.enable();
           glidePageTo(place(), { ...DOCK, onComplete: hold });
         };
         const leave = (dir: 1 | -1) => {
           release();
           releasePage();
-          mode = "leaving";
+          setMode("leaving");
           glidePageTo(place() + dir * window.innerHeight * ONWARD, {
             ...LEAVE,
             onComplete: () => {
-              mode = "free";
+              setMode("free");
             },
           });
         };
         const move = (dir: 1 | -1) => {
-          if (mode !== "docked") return;
+          if (mode !== "docked" && mode !== "docking") return;
           const next = index + dir;
-          if (next < 0 || next > last) leave(dir);
+          // Leaving waits until the page has arrived; one card may already move on its way in.
+          if (mode === "docking") {
+            if (movedWhileDocking || next < 0 || next > last) return;
+            movedWhileDocking = true;
+            slideTo(next);
+          } else if (next < 0 || next > last) leave(dir);
           else slideTo(next);
         };
         // One gesture, one card. A gesture starts after a pause (QUIET_MS), unless what comes is
@@ -436,7 +452,8 @@ export function ServicesStrata({
           const gap = now - lastInput;
           const pause = gap > QUIET_MS;
           // A wheel notch repeats the same size exactly; a trackpad never quite does.
-          const notch = size >= 40 && Math.abs(size - lastSize) < 0.5;
+          // (The first input on the stage has nothing to compare with yet.)
+          const notch = size >= 40 && (lastSize === 0 || Math.abs(size - lastSize) < 0.5);
           const go = pause
             ? !(gap < TAIL_MS && size < lastSize)
             : (notch && gap > NOTCH_MS && now - lastMove > NOTCH_MS) ||

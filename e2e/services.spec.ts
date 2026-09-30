@@ -25,6 +25,7 @@ const section = (page: Page) => page.locator("#leistungen");
 const rail = (page: Page) => page.getByRole("navigation", { name: "Leistungen" });
 const card = (page: Page, index: number) => section(page).locator("[data-card]").nth(index);
 const current = (page: Page) => section(page).getAttribute("data-current");
+const rideState = (page: Page) => section(page).getAttribute("data-ride-state");
 
 // How far the ride has moved the track (px, negative to the left).
 const trackX = (page: Page) =>
@@ -69,7 +70,8 @@ async function rideIn(page: Page) {
   await expect(section(page)).toHaveAttribute("data-ride", "");
   await expect(page.locator("html")).toHaveClass(/\blenis\b/);
   await page.mouse.move(700, 450);
-  for (let i = 0; i < 40 && (await section(page).getAttribute("data-held")) === null; i++) {
+  // Until the stage catches the page; then the glide finishes on its own.
+  for (let i = 0; i < 40 && (await rideState(page)) === "free"; i++) {
     await page.mouse.wheel(0, NOTCH);
     await page.waitForTimeout(250);
   }
@@ -99,6 +101,32 @@ test("the page glides onto the stage, and each wheel turn brings exactly one car
     expect(await page.evaluate(() => Math.round(scrollY))).toBe(y);
     await page.waitForTimeout(300);
   }
+});
+
+test("no turn of the wheel is lost while the page glides onto the stage", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+  await page.mouse.move(700, 450);
+  // Steady turns, as a hand scrolls down to the section and on: the first turn after the stage
+  // has caught the page moves the first card on (not a turn later), and only one card moves
+  // while the page still glides in.
+  let caught = -1;
+  let moved = -1;
+  for (let i = 0; i < 40 && moved < 0; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await page.waitForTimeout(300);
+    if (caught < 0 && (await rideState(page)) !== "free") caught = i;
+    if ((await current(page)) !== "0") moved = i;
+  }
+  expect(caught).toBeGreaterThanOrEqual(0);
+  expect(moved).toBe(caught + 1);
+  await expect(section(page)).toHaveAttribute("data-held", "");
+  expect(await current(page)).toBe("1");
 });
 
 test("a fast spin of the wheel counts every notch", async ({ page, isMobile }) => {
@@ -165,12 +193,13 @@ test("after the last card the page moves on, and from below the stage takes it b
   expect(await current(page)).toBe("4");
 
   // Back up: the stage takes the page again, at the last card, and the next turn up goes back.
-  for (let i = 0; i < 20 && (await section(page).getAttribute("data-held")) === null; i++) {
+  for (let i = 0; i < 20 && (await rideState(page)) === "free"; i++) {
     await page.mouse.wheel(0, -NOTCH);
     await page.waitForTimeout(250);
   }
   await expect(section(page)).toHaveAttribute("data-held", "");
   expect(await stageTop(page)).toBe(docked);
+  expect(await current(page)).toBe("4");
   await page.waitForTimeout(400);
   await page.mouse.wheel(0, -NOTCH);
   await expect.poll(() => current(page)).toBe("3");
