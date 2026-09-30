@@ -12,13 +12,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { mayOpen, type Role } from "@/cms/auth/roles";
 import { NAV_BUERO, NAV_CONTENT, NAV_MORE, NAV_SITE } from "./nav";
 
 export type PaletteEntry = { label: string; href: string; group: string; keywords?: string };
 
 // ⌘K / Ctrl+K: every section and every document by name. Opened by keyboard many times a day,
 // so it appears without animation.
-export function CommandPalette({ entries }: { entries: PaletteEntry[] }) {
+export function CommandPalette({ entries, role }: { entries: PaletteEntry[]; role: Role }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -54,16 +55,18 @@ export function CommandPalette({ entries }: { entries: PaletteEntry[] }) {
         <CommandList>
           <CommandEmpty>Nichts gefunden.</CommandEmpty>
           <CommandGroup heading="Bereiche">
-            {[...NAV_CONTENT, ...NAV_BUERO, ...NAV_SITE, ...NAV_MORE].map((item) => (
-              <CommandItem
-                key={item.href}
-                value={`${item.label} ${item.keywords ?? ""}`}
-                onSelect={() => go(item.href)}
-              >
-                <item.icon />
-                {item.label}
-              </CommandItem>
-            ))}
+            {[...NAV_CONTENT, ...NAV_BUERO, ...NAV_SITE, ...NAV_MORE]
+              .filter((item) => mayOpen(role, item.href))
+              .map((item) => (
+                <CommandItem
+                  key={item.href}
+                  value={`${item.label} ${item.keywords ?? ""}`}
+                  onSelect={() => go(item.href)}
+                >
+                  <item.icon />
+                  {item.label}
+                </CommandItem>
+              ))}
           </CommandGroup>
           {[...groups.entries()].map(([group, items]) => (
             <CommandGroup key={group} heading={group}>

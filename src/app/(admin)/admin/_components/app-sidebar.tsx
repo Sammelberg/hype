@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { mayOpen, type Role } from "@/cms/auth/roles";
 import { FirMark } from "@/components/site/fir-mark";
 import {
   Sidebar,
@@ -48,9 +49,12 @@ export function AppSidebar({
   unread,
 }: {
   siteName: string;
-  user: { name: string | null; email: string };
+  user: { name: string | null; email: string; role: Role };
   unread: number;
 }) {
+  // What the role may not open is not shown; the pages refuse it on their own as well.
+  const visible = (items: NavItem[]) => items.filter((item) => mayOpen(user.role, item.href));
+  const buero = visible(NAV_BUERO);
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -75,19 +79,21 @@ export function AppSidebar({
           <SidebarGroup>
             <SidebarGroupLabel>Inhalte</SidebarGroupLabel>
             <SidebarGroupContent>
-              <Items items={NAV_CONTENT} unread={unread} />
+              <Items items={visible(NAV_CONTENT)} unread={unread} />
             </SidebarGroupContent>
           </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>Büro</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <Items items={NAV_BUERO} unread={0} />
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {buero.length ? (
+            <SidebarGroup>
+              <SidebarGroupLabel>Büro</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <Items items={buero} unread={0} />
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
           <SidebarGroup>
             <SidebarGroupLabel>Betrieb</SidebarGroupLabel>
             <SidebarGroupContent>
-              <Items items={NAV_SITE} unread={0} />
+              <Items items={visible(NAV_SITE)} unread={0} />
             </SidebarGroupContent>
           </SidebarGroup>
         </nav>

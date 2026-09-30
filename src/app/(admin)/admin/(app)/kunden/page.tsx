@@ -2,7 +2,7 @@ import { ContactIcon, PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,7 +33,7 @@ export default async function KundenPage({
 }: {
   searchParams: Promise<{ archiv?: string }>;
 }) {
-  await requireUser();
+  await requireRole("admin");
   const archiv = (await searchParams).archiv === "1";
   const kunden = await listKunden({ archiviert: archiv });
   const neu = (

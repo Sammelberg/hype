@@ -139,6 +139,7 @@ async function main() {
       email: E2E_ADMIN.email,
       name: "E2E Admin",
       password: process.env.E2E_ADMIN_PASSWORD,
+      role: "admin",
     });
   }
 

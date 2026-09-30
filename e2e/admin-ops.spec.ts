@@ -111,8 +111,17 @@ test("a new account gets a temporary password, shown once, and can be removed", 
   await expect(code).toHaveText(/^[a-z2-9]{4}(-[a-z2-9]{4}){4}$/);
   const temporary = (await code.textContent())!;
   await shown.getByRole("button", { name: "Verstanden" }).click();
-  await expect(page.getByText(`E2E Kollege ${STAMP}`)).toBeVisible();
-  await expect(page.getByText("wartet auf eigenes Passwort")).toBeVisible();
+  const card = page.getByRole("listitem").filter({ hasText: `E2E Kollege ${STAMP}` });
+  await expect(card).toBeVisible();
+  await expect(card.getByText("wartet auf eigenes Passwort")).toBeVisible();
+
+  // New accounts start as editors; an admin can raise them.
+  const role = card.getByRole("combobox", { name: "Rolle" });
+  await expect(role).toHaveText("Redaktion");
+  await role.click();
+  await page.getByRole("option", { name: "Admin" }).click();
+  await expect(page.getByText(`E2E Kollege ${STAMP}: Admin.`)).toBeVisible();
+  await expect(role).toHaveText("Admin");
 
   // With the temporary password, every screen leads to the password page, and no action runs.
   const colleague = await browser.newContext();

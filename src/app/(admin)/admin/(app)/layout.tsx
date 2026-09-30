@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { requireUser } from "@/cms/auth/guard";
+import { isAdmin } from "@/cms/auth/roles";
 import { countUnreadSubmissions } from "@/cms/content/forms";
 import { listPages } from "@/cms/content/pages";
 import { listProjekte } from "@/cms/content/projekte";
@@ -18,14 +19,16 @@ import { CommandPalette, type PaletteEntry } from "../_components/command-palett
 // Everything below /admin except the login and the password page: a signed-in user, the sidebar, ⌘K.
 export default async function AdminAppLayout({ children }: { children: ReactNode }) {
   const user = await requireUser();
+  const admin = isAdmin(user);
   const [settings, unread, pages, projekte, kunden, auftraege, rechnungen] = await Promise.all([
     getSiteSettings(),
     countUnreadSubmissions(),
     listPages(),
     listProjekte(),
-    listKundenAuswahl(),
-    listAuftraegeAuswahl(),
-    listRechnungen(),
+    // The office only for those who may open it (src/cms/auth/roles.ts).
+    admin ? listKundenAuswahl() : [],
+    admin ? listAuftraegeAuswahl() : [],
+    admin ? listRechnungen() : [],
   ]);
   const entries: PaletteEntry[] = [
     ...kunden.map((k) => ({
@@ -80,7 +83,7 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 pt-2 sm:p-6 sm:pt-2">{children}</div>
         </SidebarInset>
-        <CommandPalette entries={entries} />
+        <CommandPalette entries={entries} role={user.role} />
       </SidebarProvider>
     </TooltipProvider>
   );

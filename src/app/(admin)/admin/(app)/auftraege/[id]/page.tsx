@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AuftragPage({ params }: Props) {
-  await requireUser();
+  await requireRole("admin");
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await getAuftrag(id);

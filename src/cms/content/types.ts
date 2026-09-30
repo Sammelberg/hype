@@ -2,6 +2,7 @@
 // field names the pages already use, so replacing Payload changed the data layer, not the routes.
 import { z } from "zod";
 
+import type { Role } from "../auth/roles";
 import { type LexicalDocument, LexicalDocumentSchema } from "../rich-text/schema";
 
 export type DocStatus = "draft" | "published";
@@ -312,6 +313,7 @@ export type User = {
   id: number;
   email: string;
   name: string | null;
+  role: Role;
   mustChangePassword: boolean;
   lockedUntil: Date | null;
   lastLoginAt: Date | null;

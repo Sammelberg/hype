@@ -1,11 +1,11 @@
-import { requireUserForAction } from "@/cms/auth/guard";
+import { requireRoleForAction } from "@/cms/auth/guard";
 import { BueroError } from "@/buero/daten/basis";
 import { xrechnungFuer } from "@/buero/daten/rechnungen";
 
-// The issued invoice as XRechnung 3.0 (UBL), for download. Signed-in users only.
+// The issued invoice as XRechnung 3.0 (UBL), for download. Admins only.
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireUserForAction();
+    await requireRoleForAction("admin");
   } catch (error) {
     return new Response((error as Error).message, { status: 401 });
   }

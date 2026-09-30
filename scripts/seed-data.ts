@@ -525,6 +525,9 @@ export const E2E_ADMIN = {
   fallbackPassword: "e2e-passwort-schwarzwald",
 };
 
+// An editor next to it, for the role checks (e2e/admin-rollen.spec.ts); same password.
+export const E2E_REDAKTEUR = { email: "e2e-redaktion@example.com" };
+
 export type SeedProject = {
   slug: string;
   title: string;

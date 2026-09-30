@@ -2,7 +2,7 @@ import { BuildingIcon, PlusIcon, ReceiptIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,7 +35,7 @@ const betrag = (r: Zeile) =>
   r.summeBrutto ? centAusBetrag(r.summeBrutto) : rechnungsSummen(r.positionen, false).brutto;
 
 export default async function RechnungenPage() {
-  await requireUser();
+  await requireRole("admin");
   const rechnungen = await listRechnungen();
   const tag = heute();
   const ueber = (r: Zeile) =>

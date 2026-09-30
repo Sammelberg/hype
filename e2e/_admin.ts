@@ -1,13 +1,16 @@
 import { expect, type Page } from "@playwright/test";
 
-import { E2E_ADMIN } from "../scripts/seed-data";
+import { E2E_ADMIN, E2E_REDAKTEUR } from "../scripts/seed-data";
 
 export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? E2E_ADMIN.fallbackPassword;
 
-// Signs in as the e2e admin (created before the run by scripts/prepare-e2e.ts).
-export async function signIn(page: Page) {
+// Signs in as the e2e admin, or the e2e editor (both created before the run by
+// scripts/prepare-e2e.ts, with the same password).
+export async function signIn(page: Page, as: "admin" | "redakteur" = "admin") {
   await page.goto("/admin/login");
-  await page.getByLabel("E-Mail-Adresse").fill(E2E_ADMIN.email);
+  await page
+    .getByLabel("E-Mail-Adresse")
+    .fill(as === "admin" ? E2E_ADMIN.email : E2E_REDAKTEUR.email);
   await page.getByLabel("Passwort").fill(ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Anmelden" }).click();
   // argon2id is slow on purpose; with every worker signing in at once it takes a moment.

@@ -1,6 +1,11 @@
 import { createSafeActionClient } from "next-safe-action";
 
-import { NotSignedIn, PasswordChangeRequired, requireUserForAction } from "@/cms/auth/guard";
+import {
+  NotAllowed,
+  NotSignedIn,
+  PasswordChangeRequired,
+  requireUserForAction,
+} from "@/cms/auth/guard";
 import { AuthError } from "@/cms/auth/users";
 import { PageError } from "@/cms/content/pages";
 import { ProjektError } from "@/cms/content/projekte";
@@ -23,7 +28,11 @@ const known = (error: unknown): ActionFailure | null => {
     return { message: error.message, field: error.field };
   }
   if (error instanceof UploadError) return { message: error.message };
-  if (error instanceof NotSignedIn || error instanceof PasswordChangeRequired)
+  if (
+    error instanceof NotSignedIn ||
+    error instanceof PasswordChangeRequired ||
+    error instanceof NotAllowed
+  )
     return { message: error.message };
   return null;
 };
@@ -40,4 +49,10 @@ export const actionClient = createSafeActionClient({
 export const authActionClient = actionClient.use(async ({ next }) => {
   const user = await requireUserForAction();
   return next({ ctx: { user } });
+});
+
+// Accounts, the office, the log: admins only (src/cms/auth/roles.ts).
+export const adminActionClient = authActionClient.use(async ({ next, ctx }) => {
+  if (ctx.user.role !== "admin") throw new NotAllowed();
+  return next({ ctx });
 });

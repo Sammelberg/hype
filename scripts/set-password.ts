@@ -32,7 +32,8 @@ if (create) {
     process.exit(1);
   }
   try {
-    await createUser({ email, password, mustChangePassword: mustChange });
+    // The first account runs everything, accounts included.
+    await createUser({ email, password, role: "admin", mustChangePassword: mustChange });
   } catch (error) {
     if (error instanceof AuthError) {
       console.error(error.message);

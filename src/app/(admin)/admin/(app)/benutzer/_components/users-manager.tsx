@@ -1,6 +1,14 @@
 "use client";
 
-import { CopyIcon, KeyRoundIcon, PlusIcon, Trash2Icon, UserIcon } from "lucide-react";
+import {
+  CopyIcon,
+  KeyRoundIcon,
+  LockOpenIcon,
+  LogOutIcon,
+  PlusIcon,
+  Trash2Icon,
+  UserIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -36,14 +44,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { ROLE_LABELS, ROLES, type Role } from "@/cms/auth/roles";
 import type { User } from "@/cms/content/types";
 import {
   createUserAction,
   deleteUserAction,
   resetUserPasswordAction,
+  setUserRoleAction,
+  signOutEverywhereAction,
+  unlockUserAction,
 } from "../../../_actions/users";
 
 const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
@@ -88,19 +118,22 @@ function NewUserDialog({ onCreated }: { onCreated: (password: string) => void })
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  // New accounts start with the smaller role; an admin can raise it.
+  const [role, setRole] = useState<Role>("redakteur");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const result = await createUserAction({ name: name || null, email });
+    const result = await createUserAction({ name: name || null, email, role });
     setBusy(false);
     if (result.serverError) return setError(result.serverError.message);
     if (!result.data) return setError("Das hat nicht geklappt.");
     setOpen(false);
     setName("");
     setEmail("");
+    setRole("redakteur");
     onCreated(result.data.password);
     router.refresh();
   };
@@ -146,6 +179,22 @@ function NewUserDialog({ onCreated }: { onCreated: (password: string) => void })
               </FieldDescription>
               {error ? <FieldError>{error}</FieldError> : null}
             </Field>
+            <FieldSet>
+              <FieldLegend variant="label">Rolle</FieldLegend>
+              <RadioGroup value={role} onValueChange={(value) => setRole(value as Role)}>
+                {ROLES.map((r) => (
+                  <FieldLabel key={r} htmlFor={`new-user-role-${r}`}>
+                    <Field orientation="horizontal">
+                      <RadioGroupItem value={r} id={`new-user-role-${r}`} />
+                      <FieldContent>
+                        <FieldTitle>{ROLE_LABELS[r].name}</FieldTitle>
+                        <FieldDescription>{ROLE_LABELS[r].hint}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                ))}
+              </RadioGroup>
+            </FieldSet>
           </FieldGroup>
           <DialogFooter>
             <Button type="submit" disabled={busy}>
@@ -167,6 +216,15 @@ export function UsersManager({ users, currentUserId }: { users: User[]; currentU
     const result = await resetUserPasswordAction({ id });
     if (result.serverError) return void toast.error(result.serverError.message);
     if (result.data) setShown(result.data.password);
+    router.refresh();
+  };
+  const run = async (
+    action: Promise<{ serverError?: { message: string } } | undefined>,
+    done: string,
+  ) => {
+    const result = await action;
+    if (result?.serverError) return void toast.error(result.serverError.message);
+    toast.success(done);
     router.refresh();
   };
   const remove = async (id: number) => {
@@ -204,22 +262,97 @@ export function UsersManager({ users, currentUserId }: { users: User[]; currentU
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-3">
-                    {user.id === currentUserId || user.mustChangePassword || locked ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {user.id === currentUserId ? <Badge variant="secondary">Sie</Badge> : null}
-                        {user.mustChangePassword ? (
-                          <Badge variant="outline">wartet auf eigenes Passwort</Badge>
-                        ) : null}
-                        {locked ? <Badge variant="destructive">gesperrt</Badge> : null}
-                      </div>
-                    ) : null}
+                    {/* Others show their role in the select below; the own one is fixed. */}
+                    <div className="flex flex-wrap gap-1.5 empty:hidden">
+                      {user.id === currentUserId ? (
+                        <>
+                          <Badge>{ROLE_LABELS[user.role].name}</Badge>
+                          <Badge variant="secondary">Sie</Badge>
+                        </>
+                      ) : null}
+                      {user.mustChangePassword ? (
+                        <Badge variant="outline">wartet auf eigenes Passwort</Badge>
+                      ) : null}
+                      {locked ? <Badge variant="destructive">gesperrt</Badge> : null}
+                    </div>
                     <p className="text-muted-foreground">
                       {user.lastLoginAt
                         ? `Zuletzt angemeldet ${when.format(user.lastLoginAt)}`
                         : "Noch nie angemeldet"}
                     </p>
+                    {user.id === currentUserId ? null : (
+                      <Field orientation="horizontal" className="items-center">
+                        <FieldLabel htmlFor={`role-${user.id}`} className="w-auto">
+                          Rolle
+                        </FieldLabel>
+                        <Select
+                          value={user.role}
+                          onValueChange={(value) =>
+                            void run(
+                              setUserRoleAction({ id: user.id, role: value as Role }),
+                              `${user.name ?? user.email}: ${ROLE_LABELS[value as Role].name}.`,
+                            )
+                          }
+                        >
+                          <SelectTrigger id={`role-${user.id}`} className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ROLES.map((r) => (
+                              <SelectItem key={r} value={r}>
+                                {ROLE_LABELS[r].name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                   </CardContent>
-                  <CardFooter className="justify-end gap-1">
+                  <CardFooter className="flex-wrap justify-end gap-1">
+                    {locked ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void run(unlockUserAction({ id: user.id }), "Entsperrt.")}
+                      >
+                        <LockOpenIcon data-icon="inline-start" /> Entsperren
+                      </Button>
+                    ) : null}
+                    {user.id === currentUserId ? null : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`${user.name ?? user.email} überall abmelden`}
+                          >
+                            <LogOutIcon data-icon="inline-start" /> Überall abmelden
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Überall abmelden?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Alle Sitzungen von {user.email} enden sofort, auf jedem Gerät. Das
+                              Passwort bleibt; zum Weiterarbeiten meldet sich die Person neu an.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                void run(
+                                  signOutEverywhereAction({ id: user.id }),
+                                  "Überall abgemeldet.",
+                                )
+                              }
+                            >
+                              Abmelden
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm">

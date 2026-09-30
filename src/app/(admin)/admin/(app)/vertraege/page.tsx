@@ -2,7 +2,7 @@ import { FileSignatureIcon, PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,7 +33,7 @@ export const metadata: Metadata = { title: "Verträge" };
 type Zeile = Awaited<ReturnType<typeof listVertraege>>[number];
 
 export default async function VertraegePage() {
-  await requireUser();
+  await requireRole("admin");
   const vertraege = await listVertraege();
   const tag = heute();
   const bald = tagePlus(tag, 60);

@@ -46,6 +46,10 @@ export const users = cms.table(
     email: varchar({ length: 320 }).notNull(),
     name: varchar({ length: 200 }),
     passwordHash: text().notNull(),
+    // What the account may do (src/cms/auth/roles.ts). Accounts from before roles are admins.
+    role: text({ enum: ["admin", "redakteur"] })
+      .notNull()
+      .default("admin"),
     failedAttempts: integer().notNull().default(0),
     lockedUntil: timestamp({ withTimezone: true, mode: "date" }),
     mustChangePassword: boolean().notNull().default(false),
@@ -54,7 +58,10 @@ export const users = cms.table(
     lastLoginAt: timestamp({ withTimezone: true, mode: "date" }),
     ...timestamps,
   },
-  (t) => [uniqueIndex("users_email_lower_idx").on(sql`lower(${t.email})`)],
+  (t) => [
+    uniqueIndex("users_email_lower_idx").on(sql`lower(${t.email})`),
+    check("users_role_check", sql`${t.role} in ('admin', 'redakteur')`),
+  ],
 );
 
 export const sessions = cms.table(

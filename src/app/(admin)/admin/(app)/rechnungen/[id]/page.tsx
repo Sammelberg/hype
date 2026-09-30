@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { getFirma } from "@/buero/daten/firma";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RechnungPage({ params }: Props) {
-  await requireUser();
+  await requireRole("admin");
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await getRechnung(id);

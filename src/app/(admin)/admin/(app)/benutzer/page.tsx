@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { listUsers } from "@/cms/auth/users";
 import { PageShell } from "../../_components/page-shell";
 import { UsersManager } from "./_components/users-manager";
@@ -8,7 +8,7 @@ import { UsersManager } from "./_components/users-manager";
 export const metadata: Metadata = { title: "Benutzer" };
 
 export default async function UsersPage() {
-  const user = await requireUser();
+  const user = await requireRole("admin");
   const users = await listUsers();
   return (
     <PageShell

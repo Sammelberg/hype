@@ -8,10 +8,10 @@ import { deletePage, listPages } from "../src/cms/content/pages";
 import { deleteProjekt } from "../src/cms/content/projekte";
 import { deleteRedirect, listRedirects } from "../src/cms/content/redirects";
 import { db } from "../src/cms/db/client";
-import { projekte } from "../src/cms/db/schema";
+import { projekte, users } from "../src/cms/db/schema";
 import { removeFiles } from "../src/cms/media/store";
 import { getContactForm, purgeSubmissionsByValue, saveForm } from "../src/cms/content/forms";
-import { E2E_ADMIN, E2E_EMAIL } from "./seed-data";
+import { E2E_ADMIN, E2E_EMAIL, E2E_REDAKTEUR } from "./seed-data";
 
 const url = new URL(process.env.DATABASE_URL ?? "");
 if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname) && process.env.CI !== "true") {
@@ -70,9 +70,17 @@ if (form?.fields.some((field) => "name" in field && field.name.startsWith("probe
   });
 }
 
-const admin = await findUserByEmail(E2E_ADMIN.email);
-if (admin) {
-  await deleteUser(admin.id, { evenTheLast: true });
-  console.log("Testzugang gelöscht.");
+// Colleagues the account test creates, if a failed run left one behind.
+const colleagues = await db
+  .delete(users)
+  .where(like(users.email, "e2e-kollege-%@example.com"))
+  .returning({ id: users.id });
+if (colleagues.length) console.log(`Testkollegen gelöscht: ${colleagues.length}`);
+
+for (const email of [E2E_ADMIN.email, E2E_REDAKTEUR.email]) {
+  const account = await findUserByEmail(email);
+  if (!account) continue;
+  await deleteUser(account.id, { evenTheLast: true });
+  console.log(`Testzugang ${email} gelöscht.`);
 }
 process.exit(0);

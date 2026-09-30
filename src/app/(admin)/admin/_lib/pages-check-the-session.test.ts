@@ -6,6 +6,8 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { ADMIN_ONLY } from "@/cms/auth/roles";
+
 const admin = path.resolve(__dirname, "..");
 const signedInGroups = ["(app)", "(druck)"];
 
@@ -23,5 +25,25 @@ describe("admin pages", () => {
   it.each(pages)("%s checks the session itself", (file) => {
     const source = readFileSync(path.join(admin, file), "utf8");
     expect(source).toMatch(/await require(User|Role)\(/);
+  });
+
+  // The URL of a page: its folders without the route groups, `page.tsx` dropped.
+  const url = (file: string) =>
+    `/admin/${file
+      .split(path.sep)
+      .filter((part) => !part.startsWith("("))
+      .slice(0, -1)
+      .join("/")}`.replace(/\/$/, "");
+  const adminOnly = pages.filter((file) =>
+    ADMIN_ONLY.some((prefix) => url(file) === prefix || url(file).startsWith(`${prefix}/`)),
+  );
+
+  it("include the admin-only ones", () => {
+    expect(adminOnly.length).toBeGreaterThan(10);
+  });
+
+  it.each(adminOnly)("%s is for admins only", (file) => {
+    const source = readFileSync(path.join(admin, file), "utf8");
+    expect(source).toMatch(/await requireRole\("admin"\)/);
   });
 });

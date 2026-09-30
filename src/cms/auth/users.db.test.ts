@@ -9,7 +9,11 @@ import { afterFailure, MAX_ATTEMPTS } from "./lockout";
 import { createUser, registerFailure } from "./users";
 
 const account = async (name: string) =>
-  createUser({ email: `test-${name}-${Date.now()}@example.com`, password: "test-passwort-lang" });
+  createUser({
+    email: `test-${name}-${Date.now()}@example.com`,
+    password: "test-passwort-lang",
+    role: "redakteur",
+  });
 
 describe.skipIf(!process.env.DATABASE_URL)("registerFailure", () => {
   afterAll(async () => {

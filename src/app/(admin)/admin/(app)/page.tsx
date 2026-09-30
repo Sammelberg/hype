@@ -19,6 +19,7 @@ import { listVertraege, vertragsende } from "@/buero/daten/vertraege";
 import { datumDe, heute, tagePlus } from "@/buero/logik/ablauf";
 import { centAusBetrag, euro } from "@/buero/logik/geld";
 import { requireUser } from "@/cms/auth/guard";
+import { isAdmin } from "@/cms/auth/roles";
 import { getContactForm, listSubmissions, submissionsPerWeek } from "@/cms/content/forms";
 import { listMedia } from "@/cms/content/media";
 import { listPages } from "@/cms/content/pages";
@@ -47,6 +48,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ passwort?: string }>;
 }) {
   const user = await requireUser();
+  const admin = isAdmin(user);
   const [
     { passwort },
     pages,
@@ -70,9 +72,10 @@ export default async function DashboardPage({
     submissionsPerWeek(12),
     publicationsPerWeek(12),
     recentPublications(6),
-    listRechnungen(),
-    listAuftraege(),
-    listVertraege(),
+    // The office only for admins (src/cms/auth/roles.ts).
+    admin ? listRechnungen() : [],
+    admin ? listAuftraege() : [],
+    admin ? listVertraege() : [],
   ]);
   // The office at a glance: what is owed, what is late, what runs, which notice dates come up.
   const tag = heute();
@@ -144,66 +147,68 @@ export default async function DashboardPage({
         />
       </div>
 
-      <section aria-label="Büro" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          index={4}
-          label="Rechnungen offen"
-          value={offen.length}
-          hint={euro(offen.reduce((sum, r) => sum + centAusBetrag(r.summeBrutto), 0))}
-          href="/admin/rechnungen"
-          icon={<ReceiptIcon />}
-        />
-        <StatCard
-          index={5}
-          label="Überfällig"
-          value={ueberfaellig.length}
-          hint={ueberfaellig.length ? "Zahlungsziel verstrichen" : "Keine"}
-          href="/admin/rechnungen"
-          icon={<ClockAlertIcon />}
-        />
-        <StatCard
-          index={6}
-          label="Aufträge laufend"
-          value={laufend.length}
-          hint={`${auftraege.filter((a) => a.status === "angebot").length} Angebote offen`}
-          href="/admin/auftraege"
-          icon={<BriefcaseIcon />}
-        />
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Fristen</CardTitle>
-            <CardDescription>
-              {ueberfaellig.length + fristen.length === 0
-                ? "Nichts wird in den nächsten 60 Tagen fällig."
-                : "Überfällige Rechnungen und Kündigungstermine der nächsten 60 Tage."}
-            </CardDescription>
-          </CardHeader>
-          {ueberfaellig.length + fristen.length > 0 ? (
-            <CardContent>
-              <ul role="list" className="flex flex-col gap-2">
-                {ueberfaellig.slice(0, 4).map((r) => (
-                  <DokumentKachel
-                    key={`r-${r.id}`}
-                    href={`/admin/rechnungen/${r.id}`}
-                    titel={r.nummer ?? "Rechnung"}
-                    unter={`${r.kundeName}, fällig ${datumDe(r.faelligAm!)}`}
-                    status={<RechnungStatus status={r.status} ueberfaellig typ={r.typ} />}
-                  />
-                ))}
-                {fristen.slice(0, 4).map(({ v, ende }) => (
-                  <DokumentKachel
-                    key={`v-${v.id}`}
-                    href={`/admin/vertraege/${v.id}`}
-                    titel={v.titel}
-                    unter={`Kündbar bis ${datumDe(ende!.kuendigenBis!)}`}
-                    status={<VertragStatus status={v.status} />}
-                  />
-                ))}
-              </ul>
-            </CardContent>
-          ) : null}
-        </Card>
-      </section>
+      {admin ? (
+        <section aria-label="Büro" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            index={4}
+            label="Rechnungen offen"
+            value={offen.length}
+            hint={euro(offen.reduce((sum, r) => sum + centAusBetrag(r.summeBrutto), 0))}
+            href="/admin/rechnungen"
+            icon={<ReceiptIcon />}
+          />
+          <StatCard
+            index={5}
+            label="Überfällig"
+            value={ueberfaellig.length}
+            hint={ueberfaellig.length ? "Zahlungsziel verstrichen" : "Keine"}
+            href="/admin/rechnungen"
+            icon={<ClockAlertIcon />}
+          />
+          <StatCard
+            index={6}
+            label="Aufträge laufend"
+            value={laufend.length}
+            hint={`${auftraege.filter((a) => a.status === "angebot").length} Angebote offen`}
+            href="/admin/auftraege"
+            icon={<BriefcaseIcon />}
+          />
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Fristen</CardTitle>
+              <CardDescription>
+                {ueberfaellig.length + fristen.length === 0
+                  ? "Nichts wird in den nächsten 60 Tagen fällig."
+                  : "Überfällige Rechnungen und Kündigungstermine der nächsten 60 Tage."}
+              </CardDescription>
+            </CardHeader>
+            {ueberfaellig.length + fristen.length > 0 ? (
+              <CardContent>
+                <ul role="list" className="flex flex-col gap-2">
+                  {ueberfaellig.slice(0, 4).map((r) => (
+                    <DokumentKachel
+                      key={`r-${r.id}`}
+                      href={`/admin/rechnungen/${r.id}`}
+                      titel={r.nummer ?? "Rechnung"}
+                      unter={`${r.kundeName}, fällig ${datumDe(r.faelligAm!)}`}
+                      status={<RechnungStatus status={r.status} ueberfaellig typ={r.typ} />}
+                    />
+                  ))}
+                  {fristen.slice(0, 4).map(({ v, ende }) => (
+                    <DokumentKachel
+                      key={`v-${v.id}`}
+                      href={`/admin/vertraege/${v.id}`}
+                      titel={v.titel}
+                      unter={`Kündbar bis ${datumDe(ende!.kuendigenBis!)}`}
+                      status={<VertragStatus status={v.status} />}
+                    />
+                  ))}
+                </ul>
+              </CardContent>
+            ) : null}
+          </Card>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Reveal>

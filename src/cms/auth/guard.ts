@@ -1,10 +1,11 @@
 import "server-only";
 
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import type { User } from "../content/types";
+import type { Role } from "./roles";
 import { SESSION_COOKIE } from "./cookie";
 import { userForToken } from "./session";
 
@@ -30,6 +31,14 @@ export async function requireUser(
   return user;
 }
 
+// For pages of one role: the user, or the login / the password page as above; an account
+// without the role gets a 404, as if the page did not exist (its navigation hides it anyway).
+export async function requireRole(role: Role): Promise<User> {
+  const user = await requireUser();
+  if (user.role !== role) notFound();
+  return user;
+}
+
 export class NotSignedIn extends Error {
   constructor() {
     super("Bitte melden Sie sich an.");
@@ -42,10 +51,22 @@ export class PasswordChangeRequired extends Error {
   }
 }
 
+export class NotAllowed extends Error {
+  constructor() {
+    super("Dafür fehlt Ihrem Zugang die Berechtigung.");
+  }
+}
+
 // For actions and route handlers: the user, or an error the action client turns into German.
 export async function requireUserForAction(): Promise<User> {
   const user = await getSessionUser();
   if (!user) throw new NotSignedIn();
   if (user.mustChangePassword) throw new PasswordChangeRequired();
+  return user;
+}
+
+export async function requireRoleForAction(role: Role): Promise<User> {
+  const user = await requireUserForAction();
+  if (user.role !== role) throw new NotAllowed();
   return user;
 }

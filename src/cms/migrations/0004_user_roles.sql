@@ -1,0 +1,2 @@
+ALTER TABLE "cms"."users" ADD COLUMN "role" text DEFAULT 'admin' NOT NULL;--> statement-breakpoint
+ALTER TABLE "cms"."users" ADD CONSTRAINT "users_role_check" CHECK ("cms"."users"."role" in ('admin', 'redakteur'));

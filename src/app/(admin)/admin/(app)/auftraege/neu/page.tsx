@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { requireUser } from "@/cms/auth/guard";
+import { requireRole } from "@/cms/auth/guard";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
 import { AuftragEditor } from "../_components/auftrag-editor";
 
@@ -11,7 +11,7 @@ export default async function NeuerAuftragPage({
 }: {
   searchParams: Promise<{ kunde?: string }>;
 }) {
-  await requireUser();
+  await requireRole("admin");
   const [{ kunde }, kunden] = await Promise.all([searchParams, listKundenAuswahl()]);
   const kundeId = kunden.find((k) => k.id === Number(kunde))?.id;
   return (

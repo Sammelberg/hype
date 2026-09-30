@@ -41,6 +41,7 @@ export async function userForToken(token: string | undefined): Promise<User | nu
     id: row.user.id,
     email: row.user.email,
     name: row.user.name,
+    role: row.user.role,
     mustChangePassword: row.user.mustChangePassword,
     lockedUntil: row.user.lockedUntil,
     lastLoginAt: row.user.lastLoginAt,

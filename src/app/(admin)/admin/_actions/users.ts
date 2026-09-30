@@ -2,15 +2,29 @@
 
 import { z } from "zod";
 
+import { ROLES } from "@/cms/auth/roles";
+import { destroyAllSessions } from "@/cms/auth/session";
 import { temporaryPassword } from "@/cms/auth/temporary-password";
-import { createUser, deleteUser, setPassword, updateUserName } from "@/cms/auth/users";
-import { authActionClient } from "./client";
+import {
+  AuthError,
+  createUser,
+  deleteUser,
+  setPassword,
+  setUserRole,
+  unlockUser,
+} from "@/cms/auth/users";
+import { adminActionClient } from "./client";
 
 const id = z.object({ id: z.number().int().positive() });
+const role = z.enum(ROLES);
 
-export const createUserAction = authActionClient
+export const createUserAction = adminActionClient
   .inputSchema(
-    z.object({ name: z.string().trim().max(200).nullable(), email: z.string().trim().min(1) }),
+    z.object({
+      name: z.string().trim().max(200).nullable(),
+      email: z.string().trim().min(1),
+      role,
+    }),
   )
   .action(async ({ parsedInput }) => {
     const password = temporaryPassword();
@@ -18,7 +32,7 @@ export const createUserAction = authActionClient
     return { id: user.id, password };
   });
 
-export const resetUserPasswordAction = authActionClient
+export const resetUserPasswordAction = adminActionClient
   .inputSchema(id)
   .action(async ({ parsedInput }) => {
     const password = temporaryPassword();
@@ -26,16 +40,32 @@ export const resetUserPasswordAction = authActionClient
     return { password };
   });
 
-export const renameUserAction = authActionClient
-  .inputSchema(id.extend({ name: z.string().trim().max(200).nullable() }))
-  .action(async ({ parsedInput }) => {
-    await updateUserName(parsedInput.id, parsedInput.name);
+// Not the own role: an admin who made themselves an editor could not undo it.
+export const setUserRoleAction = adminActionClient
+  .inputSchema(id.extend({ role }))
+  .action(async ({ parsedInput, ctx }) => {
+    if (parsedInput.id === ctx.user.id)
+      throw new AuthError("Die eigene Rolle ändert ein anderer Admin.");
+    await setUserRole(parsedInput.id, parsedInput.role);
   });
 
-export const deleteUserAction = authActionClient
+export const unlockUserAction = adminActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => {
+    await unlockUser(parsedInput.id);
+  });
+
+// Ends every session of the account: a lost laptop, a colleague who left. The password stays.
+export const signOutEverywhereAction = adminActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => {
+    await destroyAllSessions(parsedInput.id);
+  });
+
+export const deleteUserAction = adminActionClient
   .inputSchema(id)
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.id === ctx.user.id)
-      throw new Error("Den eigenen Zugang löschen Sie nicht von hier aus.");
+      throw new AuthError("Den eigenen Zugang löschen Sie nicht von hier aus.");
     await deleteUser(parsedInput.id);
   });
