@@ -133,8 +133,12 @@ const db = name.replace(/-/g, "_");
 const databaseUrl = `postgres://${db}:${db}@localhost:${dbPort}/${db}`;
 
 pkg.name = name;
-for (const script of ["dev", "start"]) {
-  pkg.scripts[script] = pkg.scripts[script].replace(/\$\{PORT:-\d+\}/, `\${PORT:-${appPort}}`);
+// dev on the app port, the production preview one above it (the lane: 3002 dev, 3003 preview).
+for (const [script, port] of [
+  ["dev", appPort],
+  ["start", Number(appPort) + 1],
+]) {
+  pkg.scripts[script] = pkg.scripts[script].replace(/\$\{PORT:-\d+\}/, `\${PORT:-${port}}`);
 }
 pkg.version = "0.1.0";
 writeFileSync(file("package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
@@ -184,7 +188,11 @@ if (existsSync(file(".env"))) {
 edit("scripts/seed-data.ts", [
   [/siteName: ".*?",/, `siteName: ${jsString(siteName)},`],
   [/ownerName: ".*?",/, `ownerName: ${jsString(owner)},`],
-  [/contactEmail: ".*?",/, `contactEmail: ${jsString(email)},`],
+  // A string once set, `null as string | null` in the template until the owner has one.
+  [
+    /contactEmail: (?:".*?"|null as string \| null),/,
+    `contactEmail: ${jsString(email)} as string | null,`,
+  ],
 ]);
 
 edit("CLAUDE.md", [
