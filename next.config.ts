@@ -49,10 +49,11 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: "/media/**" }],
   },
   turbopack: { root: dirname },
-  // Uploads arrive through server actions (src/app/(admin)/admin/_actions/media.ts).
+  // Server actions carry forms and page content, never files: uploads have their own route
+  // (admin/(app)/medien/hochladen). Small, since the public contact form is an action too.
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "motion"],
-    serverActions: { bodySizeLimit: "25mb" },
+    serverActions: { bodySizeLimit: "2mb" },
   },
   async headers() {
     return [

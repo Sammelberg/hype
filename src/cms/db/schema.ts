@@ -72,6 +72,19 @@ export const sessions = cms.table(
   (t) => [index("sessions_user_idx").on(t.userId), index("sessions_expires_idx").on(t.expiresAt)],
 );
 
+// Rate limits: one row per key (`login:<ip>`, `kontakt:<ip>`, `upload:<user>`) counting the
+// requests of the current fixed window. Postgres instead of Redis: one service less.
+export const rateLimits = cms.table(
+  "rate_limits",
+  {
+    key: text().primaryKey(),
+    windowStart: timestamp({ withTimezone: true, mode: "date" }).notNull(),
+    count: integer().notNull(),
+    expiresAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
+  },
+  (t) => [index("rate_limits_expires_idx").on(t.expiresAt)],
+);
+
 // ---------------------------------------------------------------------------------------------
 // Media: files on disk under /media, one row per upload, resized variants in `sizes`.
 

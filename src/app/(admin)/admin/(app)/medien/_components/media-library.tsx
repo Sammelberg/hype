@@ -38,7 +38,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import type { MediaDoc } from "@/cms/content/types";
-import { deleteMediaAction, updateMediaAction, uploadMediaAction } from "../../../_actions/media";
+import { deleteMediaAction, updateMediaAction } from "../../../_actions/media";
 
 const size = (bytes: number) =>
   bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
@@ -55,9 +55,17 @@ function UploadForm() {
     setBusy(true);
     const data = new FormData();
     for (const file of list) data.append("files", file);
-    const result = await uploadMediaAction(data);
+    // A route of its own, not an action: see medien/hochladen/route.ts.
+    const response = await fetch("/admin/medien/hochladen", { method: "POST", body: data }).catch(
+      () => null,
+    );
     setBusy(false);
-    if (result.serverError) return void toast.error(result.serverError.message);
+    if (!response?.ok) {
+      const body = (await response?.json().catch(() => null)) as { message?: string } | null;
+      return void toast.error(
+        body?.message ?? "Das Hochladen hat nicht geklappt. Bitte versuchen Sie es noch einmal.",
+      );
+    }
     toast.success(
       list.length === 1
         ? "Bild hochgeladen. Bitte beschreiben Sie es."

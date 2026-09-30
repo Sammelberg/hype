@@ -21,24 +21,22 @@ export function ContactForm({
   submitLabel,
   confirmation,
   contactEmail,
-  renderedAt,
+  startToken,
 }: {
   fields: ContactFormField[];
   submitLabel: string;
   confirmation: ReactNode;
   contactEmail?: string | null;
-  /** Server render time; replaced by the mount time once JS runs (see _lib/validation.ts). */
-  renderedAt: number;
+  /** The start time the server signed for this visit (see _lib/form-token.ts). */
+  startToken: string;
 }) {
   const [state, action, pending] = useActionState<ContactState, FormData>(submitContact, {
     status: "idle",
   });
   const formRef = useRef<HTMLFormElement>(null);
-  const startedRef = useRef<HTMLInputElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (startedRef.current) startedRef.current.value = String(Date.now());
     // Start values from the link (homepage configurator); never overwrite what is already typed.
     for (const [name, value] of Object.entries(prefillValues(window.location.search, fields))) {
       const input = formRef.current?.elements.namedItem(name);
@@ -51,7 +49,8 @@ export function ContactForm({
   }, []);
 
   useEffect(() => {
-    if (state.status === "success" || state.status === "error") statusRef.current?.focus();
+    if (state.status === "success" || state.status === "error" || state.status === "limited")
+      statusRef.current?.focus();
     if (state.status === "invalid") {
       const first = Object.keys(state.errors)[0];
       formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
@@ -67,7 +66,7 @@ export function ContactForm({
   }
 
   const errors = state.status === "invalid" ? state.errors : {};
-  const values = state.status === "invalid" ? state.values : {};
+  const values = state.status === "invalid" || state.status === "limited" ? state.values : {};
   const visible = fields.filter((field) => SUPPORTED.has(field.blockType));
 
   return (
@@ -178,16 +177,18 @@ export function ContactForm({
         <label htmlFor={HONEYPOT}>Website (bitte leer lassen)</label>
         <input id={HONEYPOT} name={HONEYPOT} type="text" tabIndex={-1} autoComplete="off" />
       </div>
-      <input ref={startedRef} type="hidden" name={STARTED_AT} defaultValue={renderedAt} />
+      <input type="hidden" name={STARTED_AT} defaultValue={startToken} />
 
-      {state.status === "error" ? (
+      {state.status === "error" || state.status === "limited" ? (
         <div
           ref={statusRef}
           tabIndex={-1}
           role="alert"
           className="text-sm text-destructive outline-none sm:col-span-2"
         >
-          Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut
+          {state.status === "limited"
+            ? `Von Ihrem Anschluss kamen gerade mehrere Nachrichten. Bitte versuchen Sie es in ${state.minutes} ${state.minutes === 1 ? "Minute" : "Minuten"} noch einmal`
+            : "Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut"}
           {contactEmail ? (
             <>
               {" "}

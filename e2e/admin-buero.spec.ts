@@ -82,6 +82,8 @@ test("a customer, an order, a contract and an invoice draft hang together", asyn
   await page.getByRole("button", { name: "Stornieren" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Stornieren" }).click();
   await expect(page.getByText("Storniert.", { exact: true }).first()).toBeVisible();
+  // The toast comes before the refreshed page; a dialog opened in between is torn down by it.
+  await expect(page.getByRole("button", { name: "Stornieren" })).toHaveCount(0);
   await page.getByRole("button", { name: "Auftrag löschen" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Auftrag löschen" }).click();
   await expect(page).toHaveURL(/\/admin\/auftraege$/);

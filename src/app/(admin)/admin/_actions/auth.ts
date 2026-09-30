@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { SESSION_COOKIE, sessionCookieOptions } from "@/cms/auth/cookie";
@@ -9,6 +9,9 @@ import { createSession, destroySession, purgeExpiredSessions } from "@/cms/auth/
 import { AuthError, checkCredentials, setPassword } from "@/cms/auth/users";
 import { verifyPassword } from "@/cms/auth/password";
 import { findUserByEmail } from "@/cms/auth/users";
+import { clientIp } from "@/cms/security/client-ip";
+import { hitRateLimit, LIMITS, resetRateLimit } from "@/cms/security/rate-limit";
+import { retryMessage } from "@/cms/security/window";
 
 export type AuthState = { error?: string; field?: string; values?: Record<string, string> };
 
@@ -29,8 +32,13 @@ export async function login(_: AuthState, formData: FormData): Promise<AuthState
   if (!email || !password) {
     return { error: "Bitte E-Mail-Adresse und Passwort eingeben.", values: { email } };
   }
+  // Per address before the password check (argon2 costs 64 MiB each); per account the lock.
+  const ipKey = `login:${clientIp(await headers())}`;
+  const limit = await hitRateLimit(ipKey, LIMITS.login);
+  if (!limit.ok) return { error: retryMessage(limit.retryAfterSeconds), values: { email } };
   const result = await checkCredentials(email, password);
   if (!result.ok) return { error: result.message, values: { email } };
+  await resetRateLimit(ipKey);
   await signIn(result.user.id);
   void purgeExpiredSessions().catch(() => undefined);
   redirect(

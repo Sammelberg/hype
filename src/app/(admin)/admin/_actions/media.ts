@@ -2,26 +2,9 @@
 
 import { z } from "zod";
 
-import { createMedia, deleteMedia, updateMedia } from "@/cms/content/media";
-import { removeFiles, storeUpload } from "@/cms/media/store";
+import { deleteMedia, updateMedia } from "@/cms/content/media";
+import { removeFiles } from "@/cms/media/store";
 import { authActionClient } from "./client";
-
-// Uploads arrive as FormData: one or more files under `files`, the alt text under `alt`.
-export const uploadMediaAction = authActionClient
-  .inputSchema(z.instanceof(FormData))
-  .action(async ({ parsedInput }) => {
-    const files = parsedInput
-      .getAll("files")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-    const alt = String(parsedInput.get("alt") ?? "").trim();
-    if (files.length === 0) throw new Error("Bitte wählen Sie mindestens eine Datei.");
-    const created = [];
-    for (const file of files) {
-      const stored = await storeUpload(file);
-      created.push(await createMedia({ ...stored, alt: alt || file.name.replace(/\.[^.]+$/, "") }));
-    }
-    return { ids: created.map((m) => m.id) };
-  });
 
 export const updateMediaAction = authActionClient
   .inputSchema(

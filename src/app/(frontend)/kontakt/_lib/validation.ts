@@ -1,5 +1,7 @@
 // Server-side validation for form-builder forms, with spam protection that needs no third party:
-// a honeypot field (hidden from people, filled by bots) and a minimum fill time.
+// a honeypot field (hidden from people, filled by bots) and a minimum fill time, measured from a
+// start time the server signed when it rendered the form (form-token.ts).
+import { verifyStart } from "./form-token";
 
 export const HONEYPOT = "website";
 export const STARTED_AT = "_started";
@@ -23,15 +25,15 @@ export type SubmissionResult =
 
 const REQUIRED = "Bitte füllen Sie dieses Feld aus.";
 
-function tooFast(formData: FormData, now: number) {
-  const startedAt = Number(formData.get(STARTED_AT));
-  if (!Number.isFinite(startedAt) || startedAt > now) return true;
-  return now - startedAt < MIN_FILL_MS;
+function tooFast(formData: FormData, now: number, secret: string) {
+  const startedAt = verifyStart(String(formData.get(STARTED_AT) ?? ""), now, secret);
+  return startedAt === null || now - startedAt < MIN_FILL_MS;
 }
 
 export function validateSubmission(
   fields: ContactField[],
   formData: FormData,
+  secret: string,
   now = Date.now(),
 ): SubmissionResult {
   // Honeypot first; the time check comes after validation, so a person who submits an empty form
@@ -72,5 +74,5 @@ export function validateSubmission(
   }
 
   if (Object.keys(errors).length) return { status: "invalid", errors };
-  return tooFast(formData, now) ? { status: "spam" } : { status: "ok", data };
+  return tooFast(formData, now, secret) ? { status: "spam" } : { status: "ok", data };
 }

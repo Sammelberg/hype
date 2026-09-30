@@ -23,4 +23,6 @@ export function proxy(request: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
-export const config = { matcher: ["/admin/:path*"] };
+// Not the upload route: the proxy would buffer its body (10 MB at most, cut off beyond); the
+// route checks the session itself.
+export const config = { matcher: ["/admin", "/admin/((?!medien/hochladen).*)"] };

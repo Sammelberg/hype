@@ -1,10 +1,10 @@
 // Admin accounts. Emails compare case-insensitively; passwords never leave password.ts.
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, lte, or, sql } from "drizzle-orm";
 
 import { db } from "../db/client";
 import { sessions, users } from "../db/schema";
 import type { User } from "../content/types";
-import { afterFailure, afterSuccess, isLocked, lockMessage } from "./lockout";
+import { afterSuccess, isLocked, LOCK_MINUTES, lockMessage, MAX_ATTEMPTS } from "./lockout";
 import { hashPassword, passwordProblem, verifyPassword } from "./password";
 
 type Row = typeof users.$inferSelect;
@@ -129,6 +129,31 @@ export async function deleteUser(id: number, options: { evenTheLast?: boolean } 
   await db.delete(users).where(eq(users.id, id));
 }
 
+// One wrong password, counted in one statement: parallel attempts each see the row as the one
+// before left it (the row lock serialises them), so none of them is lost. Mirrors afterFailure
+// in lockout.ts: a failure after an expired lock starts a fresh count; the fifth one locks.
+// A row locked in the meantime is left alone and reported as it is.
+export async function registerFailure(id: number, now = new Date()) {
+  const attempts = sql`(case when ${users.lockedUntil} is not null and ${users.lockedUntil} <= ${now}::timestamptz
+    then 1 else ${users.failedAttempts} + 1 end)`;
+  const lockUntil = new Date(now.getTime() + LOCK_MINUTES * 60_000);
+  const [row] = await db
+    .update(users)
+    .set({
+      failedAttempts: sql`case when ${attempts} >= ${MAX_ATTEMPTS} then 0 else ${attempts} end`,
+      lockedUntil: sql`case when ${attempts} >= ${MAX_ATTEMPTS} then ${lockUntil}::timestamptz else null end`,
+      updatedAt: now,
+    })
+    .where(and(eq(users.id, id), or(isNull(users.lockedUntil), lte(users.lockedUntil, now))))
+    .returning({ failedAttempts: users.failedAttempts, lockedUntil: users.lockedUntil });
+  if (row) return row;
+  const [current] = await db
+    .select({ failedAttempts: users.failedAttempts, lockedUntil: users.lockedUntil })
+    .from(users)
+    .where(eq(users.id, id));
+  return current ?? { failedAttempts: 0, lockedUntil: null };
+}
+
 export type LoginResult = { ok: true; user: User } | { ok: false; message: string };
 
 const WRONG = "E-Mail-Adresse oder Passwort ist falsch.";
@@ -146,11 +171,7 @@ export async function checkCredentials(
   const state = { failedAttempts: row.failedAttempts, lockedUntil: row.lockedUntil };
   if (isLocked(state, now)) return { ok: false, message: lockMessage(state, now)! };
   if (!valid) {
-    const next = afterFailure(state, now);
-    await db
-      .update(users)
-      .set({ ...next, updatedAt: now })
-      .where(eq(users.id, row.id));
+    const next = await registerFailure(row.id, now);
     return { ok: false, message: lockMessage(next, now) ?? WRONG };
   }
   await db

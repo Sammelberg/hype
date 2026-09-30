@@ -1,3 +1,4 @@
+import { signStart } from "./form-token";
 import {
   HONEYPOT,
   MIN_FILL_MS,
@@ -22,11 +23,12 @@ const fields: ContactField[] = [
   },
 ];
 
-const now = 1_000_000;
+const now = 1_790_000_000_000;
+const secret = "test-geheimnis-mit-genug-laenge-0123456789";
 
 function form(values: Record<string, string>, startedAt = now - MIN_FILL_MS - 1) {
   const data = new FormData();
-  data.set(STARTED_AT, String(startedAt));
+  data.set(STARTED_AT, signStart(startedAt, secret));
   for (const [key, value] of Object.entries(values)) data.set(key, value);
   return data;
 }
@@ -35,7 +37,12 @@ const valid = { name: "Erika Beispiel", email: "erika@example.com", nachricht: "
 
 describe("validateSubmission", () => {
   it("accepts a complete submission and returns only configured fields", () => {
-    const result = validateSubmission(fields, form({ ...valid, extra: "x", rueckruf: "on" }), now);
+    const result = validateSubmission(
+      fields,
+      form({ ...valid, extra: "x", rueckruf: "on" }),
+      secret,
+      now,
+    );
     expect(result).toEqual({
       status: "ok",
       data: [
@@ -48,7 +55,7 @@ describe("validateSubmission", () => {
   });
 
   it("reports every missing required field in German", () => {
-    const result = validateSubmission(fields, form({ name: "  " }), now);
+    const result = validateSubmission(fields, form({ name: "  " }), secret, now);
     expect(result).toEqual({
       status: "invalid",
       errors: {
@@ -60,7 +67,7 @@ describe("validateSubmission", () => {
   });
 
   it("rejects a malformed email address", () => {
-    const result = validateSubmission(fields, form({ ...valid, email: "erika@" }), now);
+    const result = validateSubmission(fields, form({ ...valid, email: "erika@" }), secret, now);
     expect(result).toMatchObject({
       status: "invalid",
       errors: { email: "Bitte geben Sie eine gültige E-Mail-Adresse ein." },
@@ -68,33 +75,51 @@ describe("validateSubmission", () => {
   });
 
   it("rejects a select value that is not an option", () => {
-    const result = validateSubmission(fields, form({ ...valid, anliegen: "hack" }), now);
+    const result = validateSubmission(fields, form({ ...valid, anliegen: "hack" }), secret, now);
     expect(result).toMatchObject({ status: "invalid", errors: { anliegen: expect.any(String) } });
   });
 
   it("rejects overly long input", () => {
-    const result = validateSubmission(fields, form({ ...valid, nachricht: "a".repeat(5001) }), now);
+    const result = validateSubmission(
+      fields,
+      form({ ...valid, nachricht: "a".repeat(5001) }),
+      secret,
+      now,
+    );
     expect(result).toMatchObject({ status: "invalid", errors: { nachricht: expect.any(String) } });
   });
 
   it("flags a filled honeypot as spam", () => {
-    const result = validateSubmission(fields, form({ ...valid, [HONEYPOT]: "https://spam" }), now);
+    const result = validateSubmission(
+      fields,
+      form({ ...valid, [HONEYPOT]: "https://spam" }),
+      secret,
+      now,
+    );
     expect(result).toEqual({ status: "spam" });
   });
 
   it("flags submissions faster than a human as spam", () => {
-    expect(validateSubmission(fields, form(valid, now - 500), now)).toEqual({ status: "spam" });
+    expect(validateSubmission(fields, form(valid, now - 500), secret, now)).toEqual({
+      status: "spam",
+    });
   });
 
   it("shows validation errors to a fast but incomplete submission instead of treating it as spam", () => {
-    const result = validateSubmission(fields, form({ name: "" }, now - 500), now);
+    const result = validateSubmission(fields, form({ name: "" }, now - 500), secret, now);
     expect(result).toMatchObject({ status: "invalid" });
   });
 
-  it("flags a missing or forged start time as spam", () => {
+  it("flags a missing, unsigned or forged start time as spam", () => {
     const data = form(valid);
     data.set(STARTED_AT, "abc");
-    expect(validateSubmission(fields, data, now)).toEqual({ status: "spam" });
-    expect(validateSubmission(fields, form(valid, now + 10_000), now)).toEqual({ status: "spam" });
+    expect(validateSubmission(fields, data, secret, now)).toEqual({ status: "spam" });
+    data.set(STARTED_AT, String(now - 60_000));
+    expect(validateSubmission(fields, data, secret, now)).toEqual({ status: "spam" });
+    data.delete(STARTED_AT);
+    expect(validateSubmission(fields, data, secret, now)).toEqual({ status: "spam" });
+    expect(validateSubmission(fields, form(valid, now + 10_000), secret, now)).toEqual({
+      status: "spam",
+    });
   });
 });

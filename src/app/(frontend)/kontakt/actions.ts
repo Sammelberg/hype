@@ -1,13 +1,19 @@
 "use server";
 
+import { headers } from "next/headers";
+
 import { validateSubmission, type ContactField } from "./_lib/validation";
 import { createSubmission } from "@/cms/content/forms";
+import { clientIp } from "@/cms/security/client-ip";
+import { hitRateLimit, LIMITS } from "@/cms/security/rate-limit";
 import { getContactForm } from "@/data/queries";
+import { env } from "@/env";
 
 export type ContactState =
   | { status: "idle" }
   | { status: "success" }
   | { status: "invalid"; errors: Record<string, string>; values: Record<string, string> }
+  | { status: "limited"; minutes: number; values: Record<string, string> }
   | { status: "error" };
 
 export async function submitContact(_: ContactState, formData: FormData): Promise<ContactState> {
@@ -17,15 +23,23 @@ export async function submitContact(_: ContactState, formData: FormData): Promis
   const fields = form.fields.filter(
     (field): field is ContactField & typeof field => "name" in field,
   );
-  const result = validateSubmission(fields, formData);
+  const result = validateSubmission(fields, formData, env.FORM_SECRET);
+  const values = () =>
+    Object.fromEntries(fields.map((field) => [field.name, String(formData.get(field.name) ?? "")]));
 
   // Bots get the same answer as people, so they learn nothing about the filter.
   if (result.status === "spam") return { status: "success" };
-  if (result.status === "invalid") {
-    const values = Object.fromEntries(
-      fields.map((field) => [field.name, String(formData.get(field.name) ?? "")]),
-    );
-    return { status: "invalid", errors: result.errors, values };
+  if (result.status === "invalid")
+    return { status: "invalid", errors: result.errors, values: values() };
+
+  // A few messages per address and ten minutes: enough for people, a wall for a flood.
+  const limit = await hitRateLimit(`kontakt:${clientIp(await headers())}`, LIMITS.contact);
+  if (!limit.ok) {
+    return {
+      status: "limited",
+      minutes: Math.max(1, Math.ceil(limit.retryAfterSeconds / 60)),
+      values: values(),
+    };
   }
 
   try {

@@ -6,6 +6,7 @@ import { getContactForm, getKontaktContent, getSiteSettings } from "@/data/queri
 import { buildMetadata } from "@/lib/seo";
 
 import { ContactForm, type ContactFormField } from "./_components/contact-form";
+import { freshStartToken } from "./_lib/start-token";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { page } = await getKontaktContent();
@@ -17,17 +18,14 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-// Fallback start time for visitors without JavaScript (the page is static, so this is build time;
-// the form replaces it with the mount time). Without it their messages would count as spam.
-const RENDERED_AT = Date.now();
-
 // The page „kontakt“ (/admin → Seiten → Kontakt): lead, SEO and the column beside the form. The
 // form's fields are edited from there too (/admin/formular); saving them rebuilds this page.
 export default async function ContactPage() {
-  const [form, settings, { page, sections }] = await Promise.all([
+  const [form, settings, { page, sections }, startToken] = await Promise.all([
     getContactForm(),
     getSiteSettings(),
     getKontaktContent(),
+    freshStartToken(),
   ]);
   const fields = (form?.fields ?? []).filter((field) => "name" in field) as ContactFormField[];
 
@@ -53,7 +51,7 @@ export default async function ContactPage() {
               submitLabel={form.submitButtonLabel || "Absenden"}
               confirmation={<RichText data={form.confirmationMessage} className="prose-lg" />}
               contactEmail={email}
-              renderedAt={RENDERED_AT}
+              startToken={startToken}
             />
           ) : (
             <p className="text-lg text-pretty text-muted-foreground">

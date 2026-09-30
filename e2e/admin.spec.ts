@@ -19,6 +19,34 @@ test("a wrong password and an unknown address get the same answer", async ({ pag
   );
 });
 
+test("one address gets twenty sign-in attempts in ten minutes, then waits", async ({ browser }) => {
+  // Twenty password checks, argon2id each: slow on purpose.
+  test.setTimeout(120_000);
+  // Its own address (TEST-NET-3), so the limit it reaches blocks nobody else.
+  const address = `203.0.113.${1 + Math.floor(Math.random() * 254)}`;
+  const context = await browser.newContext({ extraHTTPHeaders: { "x-forwarded-for": address } });
+  const page = await context.newPage();
+  await hideDevOverlays(page);
+  await page.goto("/admin/login");
+  // The form clears the password after every answer; fill it again only once that has happened,
+  // or the reset lands after the fill and the empty required field blocks the next submit.
+  const password = page.getByLabel("Passwort");
+  const attempt = async () => {
+    await page.getByLabel("E-Mail-Adresse").fill("niemand@example.com");
+    await password.fill("falsches-passwort-123");
+    await Promise.all([
+      page.waitForResponse((r) => r.request().method() === "POST"),
+      page.getByRole("button", { name: "Anmelden" }).click(),
+    ]);
+    await expect(password).toHaveValue("");
+  };
+  for (let i = 0; i < 20; i++) await attempt();
+  await expect(page.getByRole("alert").filter({ hasText: /Passwort/ })).toBeVisible();
+  await attempt();
+  await expect(page.getByRole("alert").filter({ hasText: /Zu viele Versuche/ })).toBeVisible();
+  await context.close();
+});
+
 test("the admin signs in, reaches every section and signs out", async ({ page }) => {
   await signIn(page);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Guten (Morgen|Tag|Abend)/);
