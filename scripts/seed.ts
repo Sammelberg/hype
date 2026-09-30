@@ -10,7 +10,7 @@ import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { upsertForm } from "../src/cms/content/forms";
 import { defaultSections, HOME_DEFAULTS, ROUTED_LEADS } from "../src/cms/content/page-sections";
 import { kindOf } from "../src/cms/content/page-tree";
-import { listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
+import { listPages, listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
 import { upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
@@ -83,8 +83,34 @@ function routed(slug: string): { lead: string | null; sections: PageSections | n
   return { lead: null, sections: null };
 }
 
+// `pnpm seed --nur <slug>`: that one page from the seed, nothing else — for a database with real
+// content, where a full seed would overwrite what was edited in /admin (the Datenschutzerklärung
+// after a change to what the site does, for instance). Its parent must exist already.
+async function onlyPage(slug: string) {
+  const page = seedPages.find((p) => p.slug === slug);
+  if (!page) throw new Error(`Keine Seite „${slug}“ im Seed.`);
+  const existing = await listPages();
+  const parentId = page.parent ? (existing.find((p) => p.slug === page.parent)?.id ?? null) : null;
+  if (page.parent && parentId === null) throw new Error(`Die Elternseite „${page.parent}“ fehlt.`);
+  await upsertPublishedPage({
+    title: page.title,
+    slug: page.slug,
+    parentId,
+    content: page.content.length > 0 ? lexical(page.content) : null,
+    meta: {},
+    ...routed(page.slug),
+  });
+  console.log(`Seite „${slug}“ aus dem Seed übernommen und veröffentlicht.`);
+}
+
 async function main() {
   assertSafeTarget();
+
+  const only = process.argv[process.argv.indexOf("--nur") + 1];
+  if (process.argv.includes("--nur")) {
+    if (!only) throw new Error("Aufruf: pnpm seed --nur <slug>");
+    return onlyPage(only);
+  }
 
   await upsertSiteSettings(settings());
 

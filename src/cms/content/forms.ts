@@ -1,7 +1,7 @@
 // The contact form's definition and the messages it received.
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 
-import { db } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { forms, formSubmissions } from "../db/schema";
 import { type FormDoc, type FormInput, FormInputSchema, type Submission } from "./types";
 
@@ -132,6 +132,15 @@ export async function purgeSubmissionsByValue(value: string) {
   const rows = await db
     .delete(formSubmissions)
     .where(and(sql`${formSubmissions.data} @> ${JSON.stringify([{ value }])}::jsonb`))
+    .returning({ id: formSubmissions.id });
+  return rows.length;
+}
+
+// Messages older than the retention period (src/cms/retention/grenze.ts), read or not.
+export async function purgeSubmissionsBefore(boundary: Date, client: Db | Tx = db) {
+  const rows = await client
+    .delete(formSubmissions)
+    .where(lt(formSubmissions.createdAt, boundary))
     .returning({ id: formSubmissions.id });
   return rows.length;
 }

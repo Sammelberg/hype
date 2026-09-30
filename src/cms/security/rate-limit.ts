@@ -3,7 +3,7 @@
 // requests of one key, so no count is lost.
 import { lt, eq, sql } from "drizzle-orm";
 
-import { db } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { rateLimits } from "../db/schema";
 import { type RateLimit, windowOf } from "./window";
 
@@ -49,8 +49,8 @@ export async function resetRateLimit(key: string) {
 }
 
 // Expired windows; `pnpm cms:aufbewahrung` calls it.
-export async function purgeRateLimits(now = new Date()) {
-  const rows = await db
+export async function purgeRateLimits(now = new Date(), client: Db | Tx = db) {
+  const rows = await client
     .delete(rateLimits)
     .where(lt(rateLimits.expiresAt, now))
     .returning({ key: rateLimits.key });

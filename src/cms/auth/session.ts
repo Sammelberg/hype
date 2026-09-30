@@ -58,6 +58,10 @@ export async function destroyAllSessions(userId: number, client: Db | Tx = db) {
 }
 
 // Housekeeping, called now and then from the login action.
-export async function purgeExpiredSessions() {
-  await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
+export async function purgeExpiredSessions(client: Db | Tx = db) {
+  const rows = await client
+    .delete(sessions)
+    .where(lt(sessions.expiresAt, new Date()))
+    .returning({ id: sessions.id });
+  return rows.length;
 }

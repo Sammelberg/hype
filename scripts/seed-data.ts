@@ -246,7 +246,7 @@ export const seedPages: SeedPage[] = [
       },
       {
         kind: "p",
-        text: "Wir löschen Ihre Nachricht, sobald Ihr Anliegen erledigt ist. Wird aus der Anfrage ein Auftrag, bewahren wir sie so lange auf, wie es handels- und steuerrechtliche Fristen verlangen.",
+        text: "Wir löschen Ihre Nachricht, sobald Ihr Anliegen erledigt ist, spätestens sechs Monate nach ihrem Eingang; das geschieht automatisch. In unseren Datensicherungen bleibt sie danach noch höchstens zwei Wochen erhalten. Wird aus der Anfrage ein Auftrag, übernehmen wir die nötigen Angaben in unsere Kundenunterlagen und bewahren sie so lange auf, wie es handels- und steuerrechtliche Fristen verlangen.",
       },
       { kind: "h2", text: "Verschlüsselung" },
       {
