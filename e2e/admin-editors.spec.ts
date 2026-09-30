@@ -3,8 +3,9 @@ import sharp from "sharp";
 
 import { hideDevOverlays, signIn } from "./_admin";
 
-// The editors end to end: a page is written, published and appears on the site; the settings
-// change the home page; a project gets its own address; an image is uploaded and described.
+// The editors end to end: a page is written, published and appears on the site; the home page's
+// sections change the home page and the preview shows which part is edited; the shared texts
+// (Website) change every page; a project gets its own address; an image is uploaded and described.
 // Everything created here starts with „E2E“ and is removed at the end of the run.
 test.describe.configure({ mode: "serial" });
 
@@ -23,10 +24,8 @@ test("a new page is written, previewed as a draft and published to the site", as
   request,
 }) => {
   await page.goto("/admin/seiten/neu");
-  await page.getByLabel("Titel").fill(PAGE_TITLE);
-  await page.getByRole("tab", { name: "Adresse und Ordnung" }).click();
-  await expect(page.getByRole("textbox", { name: "Adresse" })).toHaveValue(PAGE_SLUG);
-  await page.getByRole("tab", { name: "Inhalt" }).click();
+  await page.getByLabel("Titel", { exact: true }).fill(PAGE_TITLE);
+  await expect(page.getByRole("textbox", { name: "Adresse", exact: true })).toHaveValue(PAGE_SLUG);
   await page
     .getByLabel("Text der Seite")
     .fill("Ein Absatz, den nur diese Probe kennt: Zwetschgenkuchen.");
@@ -70,32 +69,71 @@ test("an edit is saved as a draft on its own and goes live only when published",
     "Eine Einleitung aus der Probe.",
   );
 
+  // Both publications are recorded: read the list from a fresh load of the editor (the refresh
+  // after publishing would otherwise close a sheet opened too early).
+  await page.reload();
   await page.getByRole("button", { name: "Versionen" }).click();
   await expect(
     page.getByRole("dialog").getByRole("button", { name: "Wiederherstellen" }),
   ).toHaveCount(2);
 });
 
-test("the settings change the home page after publishing", async ({ page, request }) => {
-  await page.goto("/admin/einstellungen");
-  await page.getByRole("tab", { name: "Startseite" }).click();
-  const lead = page.getByLabel("Zeile darunter");
+test("the home page is edited section by section, with the part shown in the preview", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/admin/seiten");
+  await page.getByRole("link", { name: "Startseite", exact: true }).click();
+  const hero = page.getByRole("region", { name: "Kopfbereich" });
+  const lead = hero.getByLabel("Zeile darunter");
   const original = await lead.inputValue();
   await lead.fill(`Individuelle Software aus dem Schwarzwald. (${STAMP})`);
+  // The preview outlines the part being edited, named like its card.
+  const preview = page.frameLocator('iframe[title^="Vorschau"]');
+  // The preview compiles the home page on first use in dev: give it time once.
+  await expect(preview.getByText("Kopfbereich", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("region", { name: "Vorgehen" }).getByLabel("Überschrift").focus();
+  await expect(preview.getByText("Vorgehen", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Veröffentlichen" }).click();
+  await expect(page.getByText("Veröffentlicht. Die Seite ist jetzt online.")).toBeVisible();
+  expect(await (await request.get("/")).text()).toContain(`(${STAMP})`);
+  // Publishing rebuilds the editor from the server; edit again on a fresh load.
+  await page.reload();
+
+  await page
+    .getByRole("region", { name: "Kopfbereich" })
+    .getByLabel("Zeile darunter")
+    .fill(original);
+  await page.getByRole("button", { name: "Veröffentlichen" }).click();
+  await expect(page.getByText("Veröffentlicht. Die Seite ist jetzt online.")).toBeVisible();
+});
+
+test("the shared texts under Website change every page after publishing", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/admin/einstellungen");
+  const closing = page.getByRole("region", { name: "Abschluss „Anfrage“" });
+  const title = closing.getByLabel("Überschrift");
+  const original = await title.inputValue();
+  await title.fill(`Erzählen Sie uns von Ihrem Vorhaben. (${STAMP})`);
   await page.getByRole("button", { name: "Veröffentlichen" }).click();
   await expect(page.getByText("Veröffentlicht. Die Website zeigt die neuen Texte.")).toBeVisible();
-  expect(await (await request.get("/")).text()).toContain(`(${STAMP})`);
+  expect(await (await request.get("/ueber-uns")).text()).toContain(`(${STAMP})`);
+  await page.reload();
 
-  await page.goto("/admin/einstellungen");
-  await page.getByRole("tab", { name: "Startseite" }).click();
-  await page.getByLabel("Zeile darunter").fill(original);
+  await page
+    .getByRole("region", { name: "Abschluss „Anfrage“" })
+    .getByLabel("Überschrift")
+    .fill(original);
   await page.getByRole("button", { name: "Veröffentlichen" }).click();
   await expect(page.getByText("Veröffentlicht. Die Website zeigt die neuen Texte.")).toBeVisible();
 });
 
 test("a project gets its own address under /projekte", async ({ page, request }) => {
   await page.goto("/admin/projekte/neu");
-  await page.getByLabel("Titel").fill(PROJECT_TITLE);
+  await page.getByLabel("Titel", { exact: true }).fill(PROJECT_TITLE);
   await page.getByLabel("Kunde").fill("Probekunde");
   await page.getByLabel("Kurzbeschreibung").fill("Zwei Sätze für die Übersicht.");
   await page.getByLabel("Text des Projekts").fill("Der Text des Projekts.");
@@ -126,13 +164,13 @@ test("an image is uploaded, described and offered as share image", async ({ page
 
   await page.goto("/admin/seiten");
   await page.getByRole("link", { name: PAGE_TITLE }).click();
-  await page.getByRole("tab", { name: "Suchmaschinen" }).click();
-  await page.getByRole("button", { name: "Bild wählen" }).click();
+  const seo = page.getByRole("region", { name: "Suchmaschinen und Teilen" });
+  await seo.getByRole("button", { name: "Bild wählen" }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: `Grünes Probebild ${STAMP}` })
     .click();
-  await expect(page.getByRole("tabpanel").getByText(`Grünes Probebild ${STAMP}`)).toBeVisible();
+  await expect(seo.getByText(`Grünes Probebild ${STAMP}`)).toBeVisible();
 });
 
 test("cleanup: the probe's page, project and image are deleted", async ({ page, request }) => {

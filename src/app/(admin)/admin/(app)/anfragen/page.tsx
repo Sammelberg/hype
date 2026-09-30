@@ -1,8 +1,16 @@
 import { InboxIcon } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -12,6 +20,7 @@ import {
 } from "@/components/ui/empty";
 import { getContactForm, listSubmissions } from "@/cms/content/forms";
 import { cn } from "@/lib/utils";
+import { CardLink, cardLinkSurface } from "../../_components/card-link";
 import { PageShell } from "../../_components/page-shell";
 import { summarize } from "./_lib/summary";
 
@@ -44,49 +53,45 @@ export default async function InboxPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ol className="divide-y rounded-lg border">
-          {submissions.map((s, index) => {
-            const { name, email, message } = summarize(s, form);
-            const unreadItem = !s.readAt;
-            return (
-              <li
-                key={s.id}
-                className="rise-in"
-                style={{ "--rise-index": index } as React.CSSProperties}
-              >
-                <Link
-                  href={`/admin/anfragen/${s.id}` as never}
-                  className="grid gap-1 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] sm:items-baseline sm:gap-4"
+        <div className="@container">
+          <ol role="list" className="grid items-start gap-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
+            {submissions.map((s, index) => {
+              const { name, email, message } = summarize(s, form);
+              const unreadItem = !s.readAt;
+              return (
+                <li
+                  key={s.id}
+                  className="rise-in"
+                  style={{ "--rise-index": index } as React.CSSProperties}
                 >
-                  <span
-                    className={cn(
-                      "flex items-center gap-2 truncate",
-                      unreadItem && "font-semibold",
-                    )}
-                  >
-                    {unreadItem ? (
-                      <span
-                        aria-hidden="true"
-                        className="size-2 shrink-0 rounded-full bg-primary"
-                      />
-                    ) : null}
-                    <span className="truncate">{name}</span>
-                    {unreadItem ? (
-                      <Badge variant="secondary" className="sr-only">
-                        ungelesen
-                      </Badge>
-                    ) : null}
-                  </span>
-                  <span className="truncate text-muted-foreground">{message}</span>
-                  <span className="text-xs text-muted-foreground tabular-nums sm:text-right">
-                    {when.format(s.createdAt)}
-                  </span>
-                  {email ? <span className="sr-only">{email}</span> : null}
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
+                  <Card className={cn(cardLinkSurface, unreadItem && "ring-primary/40")}>
+                    <CardHeader>
+                      <CardTitle className={cn("truncate text-lg", unreadItem && "font-semibold")}>
+                        <CardLink href={`/admin/anfragen/${s.id}`}>{name}</CardLink>
+                      </CardTitle>
+                      {email && email !== name ? (
+                        <CardDescription className="truncate">{email}</CardDescription>
+                      ) : null}
+                      {unreadItem ? (
+                        <CardAction>
+                          <Badge>Neu</Badge>
+                        </CardAction>
+                      ) : null}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="line-clamp-4 text-pretty whitespace-pre-line text-muted-foreground">
+                        {message}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="text-xs text-muted-foreground tabular-nums">
+                      Eingegangen {when.format(s.createdAt)}
+                    </CardFooter>
+                  </Card>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       )}
     </PageShell>
   );

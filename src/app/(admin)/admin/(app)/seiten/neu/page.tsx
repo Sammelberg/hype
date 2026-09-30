@@ -17,7 +17,15 @@ export default async function NewPagePage({
   return (
     <PageEditor
       page={null}
-      editing={{ title: "", slug: "", parentId, lead: null, content: emptyDocument(), meta: {} }}
+      editing={{
+        title: "",
+        slug: "",
+        parentId,
+        lead: null,
+        content: emptyDocument(),
+        meta: {},
+        sections: null,
+      }}
       pages={pages}
       media={media}
       versions={[]}

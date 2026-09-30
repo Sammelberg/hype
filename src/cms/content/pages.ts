@@ -3,7 +3,7 @@
 import { and, asc, eq, ne, sql } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../db/client";
-import { pages } from "../db/schema";
+import { pages, versions } from "../db/schema";
 import { plainText } from "../rich-text/text";
 import { mediaByIds } from "./media";
 import {
@@ -11,9 +11,11 @@ import {
   canMove,
   descendantsOf,
   HOME_SLUG,
+  kindOf,
   pathOf,
   pathsOf,
   PROTECTED_SLUGS,
+  sectionsProblem,
   type TreeNode,
 } from "./page-tree";
 import type { MediaDoc, Page, PageInput } from "./types";
@@ -38,6 +40,7 @@ const inputOf = (row: Row): PageInput => ({
   lead: row.lead,
   content: row.content,
   meta: { title: row.metaTitle, description: row.metaDescription, imageId: row.metaImageId },
+  sections: row.sections,
 });
 
 const draftOf = (row: Row): PageInput | null => {
@@ -46,9 +49,13 @@ const draftOf = (row: Row): PageInput | null => {
   return parsed.success ? parsed.data : null;
 };
 
-// The document as the editor (draft mode) or the site (published) sees it.
-const effective = (row: Row, draft: boolean): PageInput =>
-  draft ? (draftOf(row) ?? inputOf(row)) : inputOf(row);
+// The document as the editor (draft mode) or the site (published) sees it. A draft without
+// sections (written before pages had them, or a restored old version) keeps the live ones.
+const effective = (row: Row, draft: boolean): PageInput => {
+  const working = draft ? draftOf(row) : null;
+  if (!working) return inputOf(row);
+  return working.sections === undefined ? { ...working, sections: row.sections } : working;
+};
 
 function treeOf(rows: Row[], draft: boolean): TreeNode[] {
   return rows.map((row) => {
@@ -73,6 +80,8 @@ function toPage(row: Row, tree: TreeNode[], images: Map<number, MediaDoc>, draft
       description: doc.meta.description ?? null,
       image: doc.meta.imageId ? (images.get(doc.meta.imageId) ?? null) : null,
     },
+    kind: kindOf(doc.slug),
+    sections: doc.sections ?? null,
     breadcrumbs: breadcrumbsOf(row.id, tree),
     status: row.status,
     hasDraft: row.draft !== null,
@@ -185,6 +194,17 @@ async function assertSlugFree(client: Db | Tx, slug: string, exceptId: number | 
     throw new PageError("Dieser Pfad wird schon von einer anderen Seite verwendet.", "slug");
 }
 
+// Sections must fit the page's kind; a fixed page keeps its slug and its place.
+function assertShape(input: PageInput, row: Row | null) {
+  const problem = sectionsProblem(input.slug, input.sections);
+  if (problem) throw new PageError(problem, "sections");
+  if (row && PROTECTED_SLUGS.has(row.slug)) {
+    if (input.slug !== row.slug) throw new PageError("Die Adresse dieser Seite ist fest.", "slug");
+    if (input.parentId !== row.parentId)
+      throw new PageError("Diese Seite bleibt, wo sie ist.", "parentId");
+  }
+}
+
 function assertTreeMove(id: number | null, parentId: number | null, tree: TreeNode[]) {
   if (parentId !== null && !tree.some((n) => n.id === parentId)) {
     throw new PageError("Die übergeordnete Seite gibt es nicht.", "parentId");
@@ -222,6 +242,7 @@ export async function createPage(
   options: { publish?: boolean; userId?: number | null } = {},
 ) {
   const input = PageInputSchema.parse(raw);
+  assertShape(input, null);
   return db.transaction(async (tx) => {
     await assertSlugFree(tx, input.slug, null);
     const rows = await allRows(tx);
@@ -259,6 +280,7 @@ const columnsOf = (input: PageInput) => ({
   metaTitle: input.meta.title ?? null,
   metaDescription: input.meta.description ?? null,
   metaImageId: input.meta.imageId ?? null,
+  sections: input.sections ?? null,
   updatedAt: new Date(),
 });
 
@@ -268,6 +290,9 @@ export async function saveDraft(id: number, raw: PageInput) {
   return db.transaction(async (tx) => {
     await assertSlugFree(tx, input.slug, id);
     const rows = await allRows(tx);
+    const current = rows.find((r) => r.id === id);
+    if (!current) throw new PageError("Die Seite gibt es nicht mehr.");
+    assertShape(input, current);
     assertTreeMove(id, input.parentId, treeOf(rows, false));
     const [row] = await tx
       .update(pages)
@@ -288,6 +313,7 @@ export async function publishPage(id: number, userId: number | null): Promise<Pu
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
     const input = effective(row, true);
     PageInputSchema.parse(input);
+    assertShape(input, row);
     await assertSlugFree(tx, input.slug, id);
     assertTreeMove(id, input.parentId, treeOf(rows, false));
     const before = subtreePaths(rows, id);
@@ -344,6 +370,8 @@ export async function deletePage(id: number): Promise<string[]> {
       throw new PageError("Bitte verschieben oder löschen Sie zuerst die Seiten darunter.");
     }
     await tx.delete(pages).where(eq(pages.id, id));
+    // A deleted page cannot be restored from its versions; they go with it.
+    await tx.delete(versions).where(and(eq(versions.collection, "pages"), eq(versions.docId, id)));
     return [row.path];
   });
 }
@@ -369,6 +397,7 @@ export async function upsertPublishedPage(
   userId: number | null = null,
 ) {
   const input = PageInputSchema.parse(raw);
+  assertShape(input, null);
   return db.transaction(async (tx) => {
     const [existing] = await tx.select().from(pages).where(eq(pages.slug, input.slug)).limit(1);
     if (existing) {

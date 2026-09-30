@@ -20,6 +20,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -30,15 +38,6 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 import type { User } from "@/cms/content/types";
 import {
@@ -182,95 +181,105 @@ export function UsersManager({ users, currentUserId }: { users: User[]; currentU
       <div className="flex justify-end">
         <NewUserDialog onCreated={setShown} />
       </div>
-      <ItemGroup>
-        {users.map((user, index) => (
-          <Item
-            role="listitem"
-            key={user.id}
-            variant="outline"
-            className="rise-in"
-            style={{ "--rise-index": index } as React.CSSProperties}
-          >
-            <ItemMedia>
-              <Avatar>
-                <AvatarFallback>
-                  {(user.name ?? user.email).slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle className="flex items-center gap-2">
-                {user.name ?? user.email}
-                {user.id === currentUserId ? <Badge variant="secondary">Sie</Badge> : null}
-                {user.mustChangePassword ? (
-                  <Badge variant="outline">wartet auf eigenes Passwort</Badge>
-                ) : null}
-                {user.lockedUntil && user.lockedUntil > new Date() ? (
-                  <Badge variant="destructive">gesperrt</Badge>
-                ) : null}
-              </ItemTitle>
-              <ItemDescription>
-                {user.name ? `${user.email} · ` : ""}
-                {user.lastLoginAt
-                  ? `zuletzt angemeldet ${when.format(user.lastLoginAt)}`
-                  : "noch nie angemeldet"}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <KeyRoundIcon data-icon="inline-start" /> Neues Passwort
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Vorläufiges Passwort vergeben?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Das alte Passwort gilt sofort nicht mehr, alle Sitzungen dieser Person enden.
-                      Sie sehen das neue Passwort einmal.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => void reset(user.id)}>
-                      Passwort vergeben
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              {user.id === currentUserId ? null : (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Zugang von ${user.name ?? user.email} löschen`}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Zugang löschen?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {user.email} kann sich danach nicht mehr anmelden. Veröffentlichungen
-                        bleiben erhalten.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                      <AlertDialogAction variant="destructive" onClick={() => void remove(user.id)}>
-                        Löschen
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </ItemActions>
-          </Item>
-        ))}
-      </ItemGroup>
+      <div className="@container">
+        <ul role="list" className="grid items-start gap-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
+          {users.map((user, index) => {
+            const locked = user.lockedUntil !== null && user.lockedUntil > new Date();
+            return (
+              <li
+                key={user.id}
+                className="rise-in"
+                style={{ "--rise-index": index } as React.CSSProperties}
+              >
+                <Card>
+                  <CardHeader className="grid-cols-[auto_minmax(0,1fr)] gap-x-3">
+                    <Avatar size="lg" className="row-span-2">
+                      <AvatarFallback>
+                        {(user.name ?? user.email).slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <CardTitle className="truncate text-lg">{user.name ?? user.email}</CardTitle>
+                    <CardDescription className="truncate">
+                      {user.name ? user.email : "ohne Namen"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    {user.id === currentUserId || user.mustChangePassword || locked ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {user.id === currentUserId ? <Badge variant="secondary">Sie</Badge> : null}
+                        {user.mustChangePassword ? (
+                          <Badge variant="outline">wartet auf eigenes Passwort</Badge>
+                        ) : null}
+                        {locked ? <Badge variant="destructive">gesperrt</Badge> : null}
+                      </div>
+                    ) : null}
+                    <p className="text-muted-foreground">
+                      {user.lastLoginAt
+                        ? `Zuletzt angemeldet ${when.format(user.lastLoginAt)}`
+                        : "Noch nie angemeldet"}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="justify-end gap-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <KeyRoundIcon data-icon="inline-start" /> Neues Passwort
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Vorläufiges Passwort vergeben?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Das alte Passwort gilt sofort nicht mehr, alle Sitzungen dieser Person
+                            enden. Sie sehen das neue Passwort einmal.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => void reset(user.id)}>
+                            Passwort vergeben
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    {user.id === currentUserId ? null : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Zugang von ${user.name ?? user.email} löschen`}
+                          >
+                            <Trash2Icon data-icon="inline-start" /> Löschen
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Zugang löschen?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {user.email} kann sich danach nicht mehr anmelden. Veröffentlichungen
+                              bleiben erhalten.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              onClick={() => void remove(user.id)}
+                            >
+                              Löschen
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </CardFooter>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
       {users.length === 0 ? (
         <p className="flex items-center gap-2 text-muted-foreground">
           <UserIcon aria-hidden="true" /> Keine Zugänge.

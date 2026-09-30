@@ -1,11 +1,42 @@
 // Pure functions over the page tree: public paths, breadcrumbs, moves. The repository
 // (content/pages.ts) applies them inside a transaction; the admin uses them for previews.
-import type { Breadcrumb } from "./types";
+import type { Breadcrumb, PageKind, PageSections } from "./types";
 
 export const HOME_SLUG = "startseite";
 
-// Pages that must always exist: the footer links them and the Datenschutzerklärung describes the site.
-export const PROTECTED_SLUGS = new Set([HOME_SLUG, "impressum", "datenschutz"]);
+// Pages with a route of their own (`/`, /leistungen, /projekte, /kontakt): the route shows the
+// page's sections, so the page's kind follows from its fixed slug.
+const KINDS: Readonly<Record<string, Exclude<PageKind, "content">>> = {
+  [HOME_SLUG]: "home",
+  leistungen: "leistungen",
+  projekte: "projekte",
+  kontakt: "kontakt",
+};
+
+export const kindOf = (slug: string): PageKind => KINDS[slug] ?? "content";
+
+/** Slugs of the pages rendered by a route of their own, not by the catch-all. */
+export const ROUTED_SLUGS: ReadonlySet<string> = new Set(Object.keys(KINDS));
+/** Their public paths: top-level pages, the home page at `/`. */
+export const ROUTED_PATHS: ReadonlySet<string> = new Set(
+  Object.keys(KINDS).map((slug) => (slug === HOME_SLUG ? "/" : `/${slug}`)),
+);
+
+// Pages that must always exist: routes render them, the footer links them and the
+// Datenschutzerklärung describes the site. Not deletable, not unpublishable, slug and place fixed.
+export const PROTECTED_SLUGS: ReadonlySet<string> = new Set([
+  ...ROUTED_SLUGS,
+  "impressum",
+  "datenschutz",
+]);
+
+// Sections must match the page's kind; content pages have none.
+export function sectionsProblem(slug: string, sections: PageSections | null | undefined) {
+  const kind = kindOf(slug);
+  if (kind === "content") return sections ? "Diese Seite hat keine festen Abschnitte." : null;
+  if (!sections) return null;
+  return sections.kind === kind ? null : "Die Abschnitte passen nicht zu dieser Seite.";
+}
 
 export type TreeNode = { id: number; slug: string; title: string; parentId: number | null };
 

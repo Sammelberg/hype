@@ -4,15 +4,17 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { flattenTree } from "@/cms/content/page-tree";
 import { listPages } from "@/cms/content/pages";
+import { CardLink, cardLinkSurface, tileLinkSurface } from "../../_components/card-link";
 import { PageShell } from "../../_components/page-shell";
 import { StatusBadge } from "../../_components/status-badge";
 
@@ -20,14 +22,22 @@ export const metadata: Metadata = { title: "Seiten" };
 
 const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
-// The tree as a list: children indented under their parent, in the order they were created —
-// the order the navigation shows them in.
+// One card per section of the site: a top-level page, and inside it the pages below it as
+// tiles, in the order they were created — the order the navigation shows them in. Columns
+// rather than a grid, so a long section does not leave holes beside it.
 export default async function PagesPage() {
   const pages = await listPages();
   const rows = flattenTree(
     pages.map((p) => ({ ...p, parentId: p.parent })),
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id,
   );
+  const sections: { page: (typeof rows)[number]; children: typeof rows }[] = [];
+  for (const row of rows) {
+    const current = sections.at(-1);
+    if (row.depth === 0 || !current) sections.push({ page: row, children: [] });
+    else current.children.push(row);
+  }
+
   return (
     <PageShell
       title="Seiten"
@@ -41,52 +51,70 @@ export default async function PagesPage() {
       }
       wide
     >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Titel</TableHead>
-            <TableHead className="hidden md:table-cell">Adresse</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="hidden text-right sm:table-cell">Geändert</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row, index) => (
-            <TableRow
-              key={row.id}
-              className="rise-in"
+      <div className="@container">
+        <ul role="list" className="gap-4 @2xl:columns-2 @6xl:columns-3">
+          {sections.map(({ page, children }, index) => (
+            <li
+              key={page.id}
+              className="rise-in mb-4 break-inside-avoid"
               style={{ "--rise-index": index } as React.CSSProperties}
             >
-              <TableCell className="font-medium">
-                <Link
-                  href={`/admin/seiten/${row.id}` as never}
-                  className="flex items-center gap-2 hover:underline"
-                >
-                  {row.depth > 0 ? (
-                    <span
-                      aria-hidden="true"
-                      className="text-muted-foreground"
-                      style={{ marginLeft: `${(row.depth - 1) * 1.25}rem` }}
+              <Card className={cardLinkSurface}>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    <CardLink href={`/admin/seiten/${page.id}`}>{page.title}</CardLink>
+                  </CardTitle>
+                  <CardDescription className="truncate font-mono text-xs">
+                    {page.path}
+                  </CardDescription>
+                  <CardAction>
+                    <StatusBadge status={page.status} hasDraft={page.hasDraft} />
+                  </CardAction>
+                </CardHeader>
+                {children.length > 0 ? (
+                  <CardContent>
+                    <ul
+                      role="list"
+                      aria-label={`Seiten unter ${page.title}`}
+                      className="flex flex-col gap-2"
                     >
-                      └
+                      {children.map((child) => (
+                        <li
+                          key={child.id}
+                          className={`${tileLinkSurface} flex items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2.5`}
+                          style={{ marginLeft: `${(child.depth - 1) * 1.25}rem` }}
+                        >
+                          <div className="flex min-w-0 flex-col">
+                            <CardLink
+                              tile
+                              href={`/admin/seiten/${child.id}`}
+                              className="truncate font-medium"
+                            >
+                              {child.title}
+                            </CardLink>
+                            <span className="truncate font-mono text-xs text-muted-foreground">
+                              {child.path}
+                            </span>
+                          </div>
+                          <StatusBadge status={child.status} hasDraft={child.hasDraft} />
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                ) : null}
+                <CardFooter className="justify-between gap-3 text-xs text-muted-foreground">
+                  <span>Geändert {when.format(page.updatedAt)}</span>
+                  {children.length > 0 ? (
+                    <span>
+                      {children.length} {children.length === 1 ? "Unterseite" : "Unterseiten"}
                     </span>
                   ) : null}
-                  <span className="truncate">{row.title}</span>
-                </Link>
-              </TableCell>
-              <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
-                {row.path}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={row.status} hasDraft={row.hasDraft} />
-              </TableCell>
-              <TableCell className="hidden text-right text-muted-foreground sm:table-cell">
-                {when.format(row.updatedAt)}
-              </TableCell>
-            </TableRow>
+                </CardFooter>
+              </Card>
+            </li>
           ))}
-        </TableBody>
-      </Table>
+        </ul>
+      </div>
     </PageShell>
   );
 }

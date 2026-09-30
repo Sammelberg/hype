@@ -12,14 +12,16 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { listProjekte } from "@/cms/content/projekte";
+import { CardLink, cardLinkSurface } from "../../_components/card-link";
 import { PageShell } from "../../_components/page-shell";
 import { StatusBadge } from "../../_components/status-badge";
 
@@ -57,40 +59,38 @@ export default async function ProjektePage() {
           <EmptyContent>{newButton}</EmptyContent>
         </Empty>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Titel</TableHead>
-              <TableHead className="hidden md:table-cell">Kunde</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="hidden text-right sm:table-cell">Geändert</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <div className="@container">
+          <ul role="list" className="grid items-start gap-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
             {projekte.map((projekt, index) => (
-              <TableRow
+              <li
                 key={projekt.id}
                 className="rise-in"
                 style={{ "--rise-index": index } as React.CSSProperties}
               >
-                <TableCell className="font-medium">
-                  <Link href={`/admin/projekte/${projekt.id}` as never} className="hover:underline">
-                    {projekt.title}
-                  </Link>
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground md:table-cell">
-                  {projekt.kunde}
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={projekt.status} hasDraft={projekt.hasDraft} />
-                </TableCell>
-                <TableCell className="hidden text-right text-muted-foreground sm:table-cell">
-                  {when.format(projekt.updatedAt)}
-                </TableCell>
-              </TableRow>
+                <Card className={cardLinkSurface}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      <CardLink href={`/admin/projekte/${projekt.id}`}>{projekt.title}</CardLink>
+                    </CardTitle>
+                    <CardDescription>{projekt.kunde}</CardDescription>
+                    <CardAction>
+                      <StatusBadge status={projekt.status} hasDraft={projekt.hasDraft} />
+                    </CardAction>
+                  </CardHeader>
+                  {projekt.summary ? (
+                    <CardContent>
+                      <p className="line-clamp-3 text-pretty">{projekt.summary}</p>
+                    </CardContent>
+                  ) : null}
+                  <CardFooter className="justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="truncate font-mono">{projekt.path}</span>
+                    <span className="shrink-0">Geändert {when.format(projekt.updatedAt)}</span>
+                  </CardFooter>
+                </Card>
+              </li>
             ))}
-          </TableBody>
-        </Table>
+          </ul>
+        </div>
       )}
     </PageShell>
   );

@@ -9,12 +9,13 @@ import { RichText } from "@/components/site/rich-text";
 import { ServiceGlyph } from "@/components/site/service-glyphs";
 import {
   getChildPages,
+  getLeistungenContent,
   getPageByPath,
   getPublishedPagePaths,
-  getSiteSettings,
 } from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
 import { pageTrail } from "@/lib/breadcrumbs";
+import { ROUTED_PATHS } from "@/cms/content/page-tree";
 import { firstParagraph } from "@/cms/rich-text/text";
 import { buildMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -25,9 +26,8 @@ export async function generateStaticParams() {
   const paths = await getPublishedPagePaths();
   return (
     paths
-      // `/` is rendered by app/(frontend)/page.tsx; `/leistungen` by its own route (the Pages doc
-      // there only anchors the 5 child pages) — not by this catch-all.
-      .filter((path) => path !== "/" && path !== "/leistungen")
+      // `/`, /leistungen, /projekte and /kontakt have routes of their own that render their page.
+      .filter((path) => !ROUTED_PATHS.has(path))
       .map((path) => ({ slug: path.split("/").filter(Boolean) }))
   );
 }
@@ -53,10 +53,13 @@ export default async function CmsPage({ params }: Props) {
   if (!page) return redirectOrNotFound(`/${slug.join("/")}`);
   const trail = pageTrail(page.breadcrumbs);
   const path = `/${slug.join("/")}`;
-  const [children, settings] = await Promise.all([getChildPages(page.id), getSiteSettings()]);
+  const [children, leistungen] = await Promise.all([
+    getChildPages(page.id),
+    getLeistungenContent(),
+  ]);
   // A service's page lists the other services beside its text.
   const otherServices = path.startsWith("/leistungen/")
-    ? (settings.services ?? []).filter((service) => `/leistungen/${service.slug}` !== path)
+    ? leistungen.sections.services.filter((service) => `/leistungen/${service.slug}` !== path)
     : [];
 
   return (
@@ -76,7 +79,9 @@ export default async function CmsPage({ params }: Props) {
             "lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]",
         )}
       >
-        <RichText data={page.content} className="prose-lg max-w-prose 3xl:prose-xl" />
+        <div data-cms-zone="text">
+          <RichText data={page.content} className="prose-lg max-w-prose 3xl:prose-xl" />
+        </div>
         {otherServices.length > 0 ? (
           <nav aria-labelledby="weitere-leistungen" className="lg:border-l lg:pl-12">
             <h2 id="weitere-leistungen" className="text-sm font-medium text-primary-soft">

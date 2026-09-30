@@ -13,7 +13,10 @@ export async function SiteHeader({ siteName }: { siteName: string }) {
   const sections = await getSiteNav();
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
+    <header
+      className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md"
+      data-cms-zone="kopfleiste"
+    >
       <div className="flex h-header w-full items-center justify-between gap-5 px-gutter">
         <Link
           href="/"

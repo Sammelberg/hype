@@ -33,8 +33,12 @@ test("the admin signs in, reaches every section and signs out", async ({ page })
     "Projekte",
     "Anfragen",
     "Medien",
+    "Kunden",
+    "Aufträge",
+    "Verträge",
+    "Rechnungen",
+    "Firmendaten",
     "Website",
-    "Kontaktformular",
     "Weiterleitungen",
     "Benutzer",
   ]) {
@@ -71,16 +75,25 @@ test("the setup page is closed once an account exists", async ({ page }) => {
 
 // WCAG 2 AA on the admin's own screens, signed in; the login page without a session.
 test("the admin's screens have no accessibility violations", async ({ page }) => {
-  // Eleven screens, each compiled on first visit in dev and scanned by axe.
-  test.setTimeout(120_000);
+  // Every screen, and the section editors of each kind of page, each compiled on first visit in
+  // dev and scanned by axe.
+  test.setTimeout(180_000);
   const check = async (path: string) => {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    // Entrances fade in; axe measures the settled colours.
+    // Entrances fade in, some only once scrolled into view (the overview's charts): scroll
+    // through the page first, so axe measures the settled colours everywhere.
+    await page.evaluate(async () => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      await new Promise((r) => setTimeout(r, 400));
+      window.scrollTo(0, 0);
+    });
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
     const { violations } = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
       .exclude('[class*="reticle-"]')
+      // Reticle's dev overlays inside the preview frame (the site itself is scanned by smoke).
+      .exclude(['iframe[title^="Vorschau"]', '[class*="reticle-"]'])
       .analyze();
     expect(
       violations.map(
@@ -100,8 +113,28 @@ test("the admin's screens have no accessibility violations", async ({ page }) =>
     "/admin/formular",
     "/admin/anfragen",
     "/admin/benutzer",
+    "/admin/kunden",
+    "/admin/kunden/neu",
+    "/admin/auftraege",
+    "/admin/auftraege/neu",
+    "/admin/vertraege",
+    "/admin/vertraege/neu",
+    "/admin/rechnungen",
+    "/admin/rechnungen/neu",
+    "/admin/firma",
   ]) {
     await check(path);
+  }
+  // One editor per kind of page: home, Leistungen, Projekte, Kontakt, a content page.
+  await page.goto("/admin/seiten");
+  for (const title of ["Startseite", "Leistungen", "Projekte", "Kontakt", "Über uns"]) {
+    const href = await page
+      .getByRole("main")
+      .getByRole("link", { name: title, exact: true })
+      .first()
+      .getAttribute("href");
+    await check(href!);
+    await page.goto("/admin/seiten");
   }
   await page.getByRole("button", { name: "Konto und Darstellung" }).click();
   await page.getByRole("menuitem", { name: "Abmelden" }).click();

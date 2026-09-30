@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
-import { getHomePage, getSiteSettings } from "@/data/queries";
+import { getHomeContent, getLeistungenContent, getSiteSettings } from "@/data/queries";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
 import { HeroCta } from "./_components/hero-cta";
@@ -22,16 +22,17 @@ const fraktur = localFont({
   fallback: ["serif"],
 });
 
-// Home page of Schwarzwald Systems. Its texts come from /admin → Website-Einstellungen (tab
-// „Startseite“); the Payload page with the slug „startseite“ supplies the SEO tab (title,
-// description, share image).
+// Home page of Schwarzwald Systems: the page „startseite“ (/admin → Seiten → Startseite) with its
+// sections and SEO; the five services and their lead come from the page „leistungen“, the button
+// label from the site's closing invitation (/admin → Website). `data-cms-zone` marks each part
+// for the admin's preview.
 
 // „A, B, C und D“: what a screen reader hears instead of the changing word.
 const listOf = (words: string[]) =>
   words.length > 1 ? `${words.slice(0, -1).join(", ")} und ${words.at(-1)}` : (words[0] ?? "");
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [home, settings] = await Promise.all([getHomePage(), getSiteSettings()]);
+  const [{ page: home }, settings] = await Promise.all([getHomeContent(), getSiteSettings()]);
   const image = mediaUrl(home?.meta?.image ?? null, "hero");
   return {
     ...(home?.meta?.title ? { title: { absolute: home.meta.title } } : {}),
@@ -41,10 +42,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Services, steps and principles are edited under /admin → Website-Einstellungen; this maps the
-// CMS shape onto services-strata.tsx's Service type.
-function toServices(settings: Awaited<ReturnType<typeof getSiteSettings>>): readonly Service[] {
-  return (settings.services ?? []).map((s) => ({
+// The services of the page „leistungen“, mapped onto services-strata.tsx's Service type.
+function toServices(
+  services: Awaited<ReturnType<typeof getLeistungenContent>>["sections"]["services"],
+): readonly Service[] {
+  return services.map((s) => ({
     title: s.title,
     short: s.short,
     glyph: s.glyph,
@@ -55,11 +57,13 @@ function toServices(settings: Awaited<ReturnType<typeof getSiteSettings>>): read
 }
 
 export default async function HomePage() {
-  const settings = await getSiteSettings();
-  const services = toServices(settings);
-  const steps = settings.steps ?? [];
-  const principles = settings.principles ?? [];
-  const { hero } = settings;
+  const [settings, { sections }, leistungen] = await Promise.all([
+    getSiteSettings(),
+    getHomeContent(),
+    getLeistungenContent(),
+  ]);
+  const services = toServices(leistungen.sections.services);
+  const { hero, steps, principles } = sections;
   const words = (hero?.words ?? []).map((w) => w.word);
   const headline = hero?.headline ?? "";
 
@@ -113,8 +117,8 @@ export default async function HomePage() {
         <>
           <ServicesStrata
             id="leistungen"
-            title={settings.servicesTitle}
-            intro={settings.servicesIntro ?? undefined}
+            title={sections.servicesTitle}
+            intro={leistungen.page?.lead ?? undefined}
             services={services}
           />
           <div className="page-container py-8 text-right text-sm">
@@ -126,13 +130,18 @@ export default async function HomePage() {
       ) : null}
 
       {steps.length > 0 ? (
-        <section id="vorgehen" aria-labelledby="vorgehen-titel" className="border-t bg-card">
+        <section
+          id="vorgehen"
+          aria-labelledby="vorgehen-titel"
+          className="border-t bg-card"
+          data-cms-zone="vorgehen"
+        >
           <div className="page-container py-20 sm:py-28">
             <h2
               id="vorgehen-titel"
               className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
-              {settings.stepsTitle}
+              {sections.stepsTitle}
             </h2>
             <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
               {steps.map((step, index) => (
@@ -152,13 +161,17 @@ export default async function HomePage() {
       ) : null}
 
       {principles.length > 0 ? (
-        <section aria-labelledby="grundsaetze-titel" className="border-t">
+        <section
+          aria-labelledby="grundsaetze-titel"
+          className="border-t"
+          data-cms-zone="grundsaetze"
+        >
           <div className="page-container py-20 sm:py-28">
             <h2
               id="grundsaetze-titel"
               className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
-              {settings.principlesTitle}
+              {sections.principlesTitle}
             </h2>
             <dl className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
               {principles.map((principle) => (

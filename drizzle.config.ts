@@ -5,9 +5,10 @@ import { defineConfig } from "drizzle-kit";
 // (src/cms/db/migrate.ts). DATABASE_URL is only needed for the introspection commands.
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/cms/db/schema.ts",
+  // The CMS and, in its own schema, the office (customers, orders, contracts, invoices).
+  schema: ["./src/cms/db/schema.ts", "./src/buero/db/schema.ts"],
   out: "./src/cms/migrations",
-  schemaFilter: ["cms"],
+  schemaFilter: ["cms", "buero"],
   dbCredentials: { url: process.env.DATABASE_URL ?? "" },
   casing: "snake_case",
   strict: true,

@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 
 import { getContactForm } from "@/cms/content/forms";
+import { listPages } from "@/cms/content/pages";
 import { PageShell } from "../../_components/page-shell";
 import { FormEditor } from "./_components/form-editor";
 
 export const metadata: Metadata = { title: "Kontaktformular" };
 
 export default async function FormPage() {
-  const form = await getContactForm();
+  const [form, pages] = await Promise.all([getContactForm(), listPages()]);
+  const kontaktId = pages.find((page) => page.slug === "kontakt")?.id ?? null;
   if (!form) {
     return (
       <PageShell
@@ -20,5 +22,5 @@ export default async function FormPage() {
       </PageShell>
     );
   }
-  return <FormEditor key={form.updatedAt.getTime()} form={form} />;
+  return <FormEditor key={form.updatedAt.getTime()} form={form} kontaktId={kontaktId} />;
 }

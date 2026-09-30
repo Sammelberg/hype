@@ -8,8 +8,8 @@ import { type Block, lexical } from "../src/cms/rich-text/build";
 
 export { lexical };
 
-// The examples/steps/principles/FAQ describe kinds of work, not references; the principles' claims
-// are confirmed by the owner (2026-09-29). Edited under /admin → Website-Einstellungen.
+// What every page shares: /admin → Website. The closing invitation starts from
+// SITE_TEXT_DEFAULTS in src/cms/content/site-settings.ts.
 export const seedSettings = {
   siteName: "Schwarzwald Systems",
   ownerName: "Schwarzwald Systems",
@@ -19,8 +19,13 @@ export const seedSettings = {
   // Shown in the footer, on /kontakt and in the legal pages once set (the owner's address follows).
   contactEmail: null as string | null,
   socialLinks: [] as { label: string; url: string }[],
-  // The other home and page texts (headings, leads, the closing invitation) are SITE_TEXT_DEFAULTS
-  // in src/cms/content/site-settings.ts; the seed fills them in from there.
+};
+
+// The sections of the pages with a route of their own (/admin → Seiten → Startseite, Leistungen,
+// Kontakt); headings and leads start from src/cms/content/page-sections.ts. The examples, steps,
+// principles and FAQ describe kinds of work, not references; the principles' claims are
+// confirmed by the owner (2026-09-29).
+export const seedSections = {
   hero: {
     // What we build, from the services below.
     words: ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"].map((word) => ({
@@ -165,8 +170,8 @@ export type SeedPage = { slug: string; title: string; parent?: string; content: 
 
 export const seedPages: SeedPage[] = [
   {
-    // HOME_SLUG (src/cms/collections/Pages.ts): rendered at `/` by code; this doc carries the SEO
-    // tab and what the site search shows for the home page.
+    // HOME_SLUG: rendered at `/` from its sections (seedSections); the text below is what the
+    // site search shows for the home page.
     slug: "startseite",
     title: "Startseite",
     content: [
@@ -339,11 +344,16 @@ export const seedPages: SeedPage[] = [
     ],
   },
   {
-    // Exists only as the nested-docs anchor for the 5 children below — /leistungen itself is
-    // rendered by its own route (src/app/(frontend)/leistungen/page.tsx), not by this content.
+    // Rendered by its own route from its sections (the five services, the FAQ); the five pages
+    // below it hold each service's text. The text below is what the site search shows.
     slug: "leistungen",
     title: "Leistungen",
-    content: [{ kind: "p", text: "Anker für die einzelnen Leistungsseiten. Kein eigener Inhalt." }],
+    content: [
+      {
+        kind: "p",
+        text: "Web-Anwendungen, mobile Apps, Schnittstellen, Modernisierung sowie Betrieb und Weiterentwicklung: was wir für den Mittelstand entwickeln.",
+      },
+    ],
   },
   {
     slug: "web-anwendungen",
@@ -479,6 +489,9 @@ export const seedPages: SeedPage[] = [
       },
     ],
   },
+  // Rendered by their own routes; the pages carry the lead, the SEO fields and their sections.
+  { slug: "projekte", title: "Projekte", content: [] },
+  { slug: "kontakt", title: "Kontakt", content: [] },
 ];
 
 // Rendered at /kontakt (looked up by title). Anrede: Sie.

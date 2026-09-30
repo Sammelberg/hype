@@ -6,6 +6,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/setup.ts",
   globalTeardown: "./e2e/teardown.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

@@ -6,6 +6,7 @@ import { PageError } from "@/cms/content/pages";
 import { ProjektError } from "@/cms/content/projekte";
 import { RedirectError } from "@/cms/content/redirects";
 import { UploadError } from "@/cms/media/store";
+import { BueroError } from "@/buero/daten/basis";
 
 // Every admin action: a signed-in user, zod-validated input, known errors as German messages
 // (a `field` when one input is to blame), anything else as one generic line.
@@ -16,7 +17,8 @@ const known = (error: unknown): ActionFailure | null => {
     error instanceof PageError ||
     error instanceof ProjektError ||
     error instanceof RedirectError ||
-    error instanceof AuthError
+    error instanceof AuthError ||
+    error instanceof BueroError
   ) {
     return { message: error.message, field: error.field };
   }

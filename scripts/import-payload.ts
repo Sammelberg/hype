@@ -9,6 +9,10 @@ import type { LexicalDocument } from "../src/cms/rich-text/schema";
 import { pathsOf, type TreeNode } from "../src/cms/content/page-tree";
 import {
   FormFieldSchema,
+  HomeSectionsSchema,
+  KontaktSectionsSchema,
+  LeistungenSectionsSchema,
+  ProjekteSectionsSchema,
   SiteSettingsSchema,
   type FormField,
   type SiteSettings,
@@ -171,6 +175,7 @@ try {
   const list = <T extends Row>(table: string, parent: unknown = 1) =>
     q<T>(`select * from public.${table} where _parent_id = $1 order by _order`, [parent]);
   const services = await list("site_settings_services");
+  // What every page shares goes into the settings; what one page shows goes onto that page.
   const settings: SiteSettings = {
     siteName: String(s.site_name),
     ownerName: String(s.owner_name),
@@ -183,6 +188,19 @@ try {
       url: String(r.url),
     })),
     cta: { title: String(s.cta_title), text: str(s.cta_text), label: String(s.cta_label) },
+  };
+  const parsedSettings = SiteSettingsSchema.parse(settings);
+  await client.query(`insert into cms.site_settings (id, data, updated_at) values (1, $1, $2)`, [
+    JSON.stringify(parsedSettings),
+    s.updated_at ?? new Date(),
+  ]);
+  await client.query(
+    `insert into cms.versions (collection, doc_id, snapshot, kind) values ('site_settings', 1, $1, 'published')`,
+    [JSON.stringify(parsedSettings)],
+  );
+
+  const home = HomeSectionsSchema.parse({
+    kind: "home",
     hero: {
       headline: String(s.hero_headline),
       words: (await list("site_settings_hero_words")).map((r) => ({
@@ -193,21 +211,6 @@ try {
       lead: str(s.hero_lead),
     },
     servicesTitle: String(s.services_title),
-    servicesIntro: str(s.services_intro),
-    services: await Promise.all(
-      services.map(async (r) => ({
-        id: String(r.id),
-        title: String(r.title),
-        short: String(r.short),
-        slug: String(r.slug),
-        glyph: r.glyph as SiteSettings["services"][number]["glyph"],
-        text: String(r.text),
-        examples: (await list("site_settings_services_examples", r.id)).map((e) => ({
-          id: String(e.id),
-          text: String(e.text),
-        })),
-      })),
-    ),
     stepsTitle: String(s.steps_title),
     steps: (await list("site_settings_steps")).map((r) => ({
       id: String(r.id),
@@ -220,25 +223,62 @@ try {
       title: String(r.title),
       text: String(r.text),
     })),
+  });
+  const leistungen = LeistungenSectionsSchema.parse({
+    kind: "leistungen",
+    services: await Promise.all(
+      services.map(async (r) => ({
+        id: String(r.id),
+        title: String(r.title),
+        short: String(r.short),
+        slug: String(r.slug),
+        glyph: String(r.glyph),
+        text: String(r.text),
+        examples: (await list("site_settings_services_examples", r.id)).map((e) => ({
+          id: String(e.id),
+          text: String(e.text),
+        })),
+      })),
+    ),
     faq: (await list("site_settings_faq")).map((r) => ({
       id: String(r.id),
       question: String(r.question),
       answer: String(r.answer),
     })),
-    projekteLead: str(s.projekte_lead),
-    projekteEmpty: str(s.projekte_empty),
-    kontaktLead: str(s.kontakt_lead),
-    kontaktNext: { title: str(s.kontakt_next_title), text: json(s.kontakt_next_text) },
-  };
-  const parsedSettings = SiteSettingsSchema.parse(settings);
-  await client.query(`insert into cms.site_settings (id, data, updated_at) values (1, $1, $2)`, [
-    JSON.stringify(parsedSettings),
-    s.updated_at ?? new Date(),
+  });
+  await client.query(`update cms.pages set sections = $1 where slug = 'startseite'`, [
+    JSON.stringify(home),
   ]);
   await client.query(
-    `insert into cms.versions (collection, doc_id, snapshot, kind) values ('site_settings', 1, $1, 'published')`,
-    [JSON.stringify(parsedSettings)],
+    `update cms.pages set sections = $1, lead = coalesce(lead, $2) where slug = 'leistungen'`,
+    [JSON.stringify(leistungen), str(s.services_intro)],
   );
+  // /projekte and /kontakt had no page in Payload: they get one now.
+  const routedPages = [
+    {
+      slug: "projekte",
+      title: "Projekte",
+      lead: str(s.projekte_lead),
+      sections: ProjekteSectionsSchema.parse({ kind: "projekte", empty: str(s.projekte_empty) }),
+    },
+    {
+      slug: "kontakt",
+      title: "Kontakt",
+      lead: str(s.kontakt_lead),
+      sections: KontaktSectionsSchema.parse({
+        kind: "kontakt",
+        nextTitle: str(s.kontakt_next_title),
+        nextText: json(s.kontakt_next_text),
+      }),
+    },
+  ];
+  for (const page of routedPages) {
+    await client.query(
+      `insert into cms.pages (slug, path, title, lead, sections, status, published_at)
+       values ($1, $2, $3, $4, $5, 'published', now()) on conflict (slug) do nothing`,
+      [page.slug, `/${page.slug}`, page.title, page.lead, JSON.stringify(page.sections)],
+    );
+  }
   counts.site_settings = 1;
 
   // ---- Forms: fields from the block tables, in order ----------------------------------------

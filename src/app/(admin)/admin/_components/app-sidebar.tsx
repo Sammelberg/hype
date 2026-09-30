@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { isActive, NAV_CONTENT, NAV_SITE, type NavItem } from "./nav";
+import { isActive, NAV_BUERO, NAV_CONTENT, NAV_SITE, type NavItem } from "./nav";
 import { UserMenu } from "./user-menu";
 
 function Items({ items, unread }: { items: NavItem[]; unread: number }) {
@@ -76,6 +76,12 @@ export function AppSidebar({
             <SidebarGroupLabel>Inhalte</SidebarGroupLabel>
             <SidebarGroupContent>
               <Items items={NAV_CONTENT} unread={unread} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Büro</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <Items items={NAV_BUERO} unread={0} />
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>

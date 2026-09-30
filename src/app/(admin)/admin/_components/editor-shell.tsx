@@ -36,6 +36,8 @@ export function EditorShell({
   deleteDescription,
   children,
   aside,
+  asideAlways = false,
+  nav,
 }: {
   backHref: string;
   backLabel: string;
@@ -49,6 +51,10 @@ export function EditorShell({
   deleteDescription?: string;
   children: ReactNode;
   aside?: ReactNode;
+  /** The aside also on narrow screens, below the form (overviews, not the preview). */
+  asideAlways?: boolean;
+  /** A second row of the sticky bar, such as the index of the document's sections. */
+  nav?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -58,7 +64,7 @@ export function EditorShell({
             <ArrowLeftIcon data-icon="inline-start" /> {backLabel}
           </Link>
         </Button>
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-40 flex-1 items-center gap-3">
           <h1 className="truncate text-lg font-semibold tracking-tight">{title || "Ohne Titel"}</h1>
           {status ? <StatusBadge status={status} hasDraft={hasDraft ?? false} /> : null}
         </div>
@@ -89,6 +95,7 @@ export function EditorShell({
             </AlertDialog>
           ) : null}
         </div>
+        {nav ? <div className="w-full min-w-0">{nav}</div> : null}
       </div>
       <div
         className={
@@ -98,7 +105,9 @@ export function EditorShell({
         }
       >
         <div className="flex min-w-0 flex-col gap-6">{children}</div>
-        {aside ? <div className="hidden min-w-0 xl:block">{aside}</div> : null}
+        {aside ? (
+          <div className={asideAlways ? "min-w-0" : "hidden min-w-0 xl:block"}>{aside}</div>
+        ) : null}
       </div>
     </div>
   );

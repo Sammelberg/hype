@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { getSiteSettings } from "@/data/queries";
 
 // The invitation that ends the home page and the content pages: one sentence, one action.
-// Its text is edited under /admin → Website-Einstellungen → Allgemein → Anfrage.
+// Its text is edited under /admin → Website → Abschluss „Anfrage“.
 export async function ClosingCta() {
   const { cta } = await getSiteSettings();
   if (!cta?.title) return null;
 
   return (
-    <section aria-labelledby="anfrage-titel" className="border-t">
+    <section aria-labelledby="anfrage-titel" className="border-t" data-cms-zone="anfrage">
       <div className="page-container flex flex-col items-start gap-8 py-20 sm:py-28 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <h2

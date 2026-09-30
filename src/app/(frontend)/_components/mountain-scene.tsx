@@ -344,6 +344,7 @@ export function MountainHero({
     <section
       ref={hero}
       aria-labelledby={labelledBy}
+      data-cms-zone="kopf"
       className={cn(
         styles.hero,
         "relative isolate flex min-h-[calc(100svh-var(--spacing-header))] flex-col text-foreground",

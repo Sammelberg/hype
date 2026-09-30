@@ -52,7 +52,9 @@ export default async function ProjektPage({ params }: Props) {
         horizonKey={path}
       />
       <div className="page-container py-16 sm:py-24">
-        <RichText data={projekt.content} className="prose-lg max-w-prose 3xl:prose-xl" />
+        <div data-cms-zone="text">
+          <RichText data={projekt.content} className="prose-lg max-w-prose 3xl:prose-xl" />
+        </div>
       </div>
       <ClosingCta />
     </main>

@@ -58,4 +58,20 @@ describe("siteNav", () => {
       { label: "Meistrum für Krone Parkett", href: "/projekte/meistrum" },
     ]);
   });
+
+  it("takes Projekte and Kontakt from their pages once they exist, each once", () => {
+    const withPages = siteNav(
+      [...PAGES, page(11, "projekte", "Arbeiten"), page(12, "kontakt", "Anfrage")],
+      [{ title: "Meistrum für Krone Parkett", slug: "meistrum" }],
+    );
+    expect(withPages.map((s) => s.label)).toEqual([
+      "Leistungen",
+      "Branchen",
+      "Arbeiten",
+      "Über uns",
+      "Presse",
+      "Anfrage",
+    ]);
+    expect(withPages.find((s) => s.href === "/projekte")?.children).toHaveLength(1);
+  });
 });

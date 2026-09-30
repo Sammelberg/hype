@@ -34,7 +34,7 @@ export function PageHeader({
   const h = horizon(horizonKey);
 
   return (
-    <div className="border-b">
+    <div className="border-b" data-cms-zone="kopf">
       <div className="page-container pt-12 sm:pt-20 3xl:pt-28">
         {breadcrumbs}
         <div

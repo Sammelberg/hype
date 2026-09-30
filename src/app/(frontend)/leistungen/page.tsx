@@ -4,29 +4,31 @@ import Link from "next/link";
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
 import { ServiceGlyph } from "@/components/site/service-glyphs";
-import { getSiteSettings } from "@/data/queries";
+import { getLeistungenContent } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
 
+// The page „leistungen“ (/admin → Seiten → Leistungen): its lead and SEO, the five services and
+// the FAQ from its sections. The pages below it hold each service's own text.
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  const { page } = await getLeistungenContent();
   return buildMetadata({
-    fallbackTitle: "Leistungen",
-    fallbackDescription: settings.servicesIntro,
+    meta: page?.meta,
+    fallbackTitle: page?.title || "Leistungen",
+    fallbackDescription: page?.lead,
     path: "/leistungen",
   });
 }
 
 export default async function LeistungenIndex() {
-  const settings = await getSiteSettings();
-  const services = settings.services ?? [];
-  const faq = settings.faq ?? [];
+  const { page, sections } = await getLeistungenContent();
+  const { services, faq } = sections;
 
   return (
     <main>
-      <PageHeader title="Leistungen" lead={settings.servicesIntro} horizonKey="/leistungen" />
+      <PageHeader title={page?.title || "Leistungen"} lead={page?.lead} horizonKey="/leistungen" />
 
       {services.length > 0 ? (
-        <ul aria-label="Leistungen" className="page-container">
+        <ul aria-label="Leistungen" className="page-container" data-cms-zone="leistungen">
           {services.map((service) => (
             <li
               key={service.id ?? service.slug}
@@ -71,7 +73,7 @@ export default async function LeistungenIndex() {
       ) : null}
 
       {faq.length > 0 ? (
-        <section aria-labelledby="faq-titel" className="bg-card">
+        <section aria-labelledby="faq-titel" className="bg-card" data-cms-zone="fragen">
           <div className="page-container grid gap-10 py-20 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
             <h2
               id="faq-titel"

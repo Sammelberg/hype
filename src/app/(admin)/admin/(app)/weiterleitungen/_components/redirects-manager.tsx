@@ -1,7 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRightLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowRightLeftIcon,
+  CornerDownRightIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -18,7 +24,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -46,14 +61,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Page, Projekt, Redirect, RedirectInput } from "@/cms/content/types";
 import { RedirectInputSchema } from "@/cms/content/types";
@@ -308,69 +315,77 @@ export function RedirectsManager({
           <EmptyContent>{newButton}</EmptyContent>
         </Empty>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Alter Pfad</TableHead>
-              <TableHead>Ziel</TableHead>
-              <TableHead className="hidden sm:table-cell">Art</TableHead>
-              <TableHead className="w-24 text-right">
-                <span className="sr-only">Aktionen</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <div className="@container">
+          <ul role="list" className="grid items-start gap-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
             {redirects.map((r, index) => (
-              <TableRow
+              <li
                 key={r.id}
                 className="rise-in"
                 style={{ "--rise-index": index } as React.CSSProperties}
               >
-                <TableCell className="font-mono text-sm">{r.from}</TableCell>
-                <TableCell>
-                  <span className="block truncate">{r.targetLabel ?? "—"}</span>
-                  <span className="block truncate font-mono text-xs text-muted-foreground">
-                    {r.destination ?? "kein Ziel mehr"}
-                  </span>
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground sm:table-cell">
-                  {r.type === 301 ? "dauerhaft" : "vorübergehend"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`${r.from} bearbeiten`}
-                    onClick={() => (setEditing(r), setOpen(true))}
-                  >
-                    <PencilIcon />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon-sm" aria-label={`${r.from} löschen`}>
-                        <Trash2Icon />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Weiterleitung löschen?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {r.from} führt danach ins Leere (404).
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={() => void remove(r.id)}>
-                          Löschen
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="truncate font-mono text-base">{r.from}</CardTitle>
+                    <CardAction>
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {r.type === 301 ? "dauerhaft · 301" : "vorübergehend · 302"}
+                      </Badge>
+                    </CardAction>
+                  </CardHeader>
+                  <CardContent className="flex gap-2">
+                    <CornerDownRightIcon
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-primary-soft"
+                    />
+                    <div className="flex min-w-0 flex-col">
+                      <span className="sr-only">führt zu</span>
+                      <span className="truncate font-medium">
+                        {r.targetLabel ?? "Kein Ziel mehr"}
+                      </span>
+                      <span className="truncate font-mono text-xs text-muted-foreground">
+                        {r.destination ?? "Das Ziel wurde gelöscht."}
+                      </span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`${r.from} bearbeiten`}
+                      onClick={() => (setEditing(r), setOpen(true))}
+                    >
+                      <PencilIcon data-icon="inline-start" /> Bearbeiten
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" aria-label={`${r.from} löschen`}>
+                          <Trash2Icon data-icon="inline-start" /> Löschen
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Weiterleitung löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {r.from} führt danach ins Leere (404).
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={() => void remove(r.id)}
+                          >
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardFooter>
+                </Card>
+              </li>
             ))}
-          </TableBody>
-        </Table>
+          </ul>
+        </div>
       )}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="overflow-y-auto sm:max-w-md">

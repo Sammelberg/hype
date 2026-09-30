@@ -1,0 +1,117 @@
+"use server";
+
+import { z } from "zod";
+
+import {
+  createAuftrag,
+  deleteAuftrag,
+  setAuftragStatus,
+  updateAuftrag,
+} from "@/buero/daten/auftraege";
+import { saveFirma } from "@/buero/daten/firma";
+import {
+  archiveKunde,
+  createKunde,
+  deleteKunde,
+  getKundeOption,
+  updateKunde,
+} from "@/buero/daten/kunden";
+import {
+  createRechnung,
+  deleteRechnung,
+  markiereBezahlt,
+  saveRechnung,
+  stelleRechnung,
+  storniereRechnung,
+} from "@/buero/daten/rechnungen";
+import {
+  createVertrag,
+  deleteVertrag,
+  setVertragStatus,
+  updateVertrag,
+} from "@/buero/daten/vertraege";
+import { STATUS } from "@/buero/logik/ablauf";
+import {
+  AuftragSchema,
+  FirmaSchema,
+  KundeSchema,
+  RechnungSchema,
+  VertragSchema,
+} from "@/buero/logik/typen";
+import { authActionClient } from "./client";
+
+// The office: customers, orders, contracts, invoices and the issuer's details. The repositories
+// in src/buero/daten enforce the rules (status steps, GoBD); these only validate and delegate.
+const id = z.object({ id: z.number().int().positive() });
+const tag = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const saveFirmaAction = authActionClient
+  .inputSchema(FirmaSchema)
+  .action(async ({ parsedInput }) => saveFirma(parsedInput));
+
+export const createKundeAction = authActionClient
+  .inputSchema(KundeSchema)
+  .action(async ({ parsedInput }) => ({ id: await createKunde(parsedInput) }));
+// From a picker („Neuen Kunden anlegen“): creates the customer and hands back what the picker
+// shows, so the order, contract or invoice goes on with it selected.
+export const schnellKundeAction = authActionClient
+  .inputSchema(KundeSchema)
+  .action(async ({ parsedInput }) => getKundeOption(await createKunde(parsedInput)));
+export const updateKundeAction = authActionClient
+  .inputSchema(id.extend({ input: KundeSchema }))
+  .action(async ({ parsedInput }) => updateKunde(parsedInput.id, parsedInput.input));
+export const archiveKundeAction = authActionClient
+  .inputSchema(id.extend({ archivieren: z.boolean() }))
+  .action(async ({ parsedInput }) => archiveKunde(parsedInput.id, parsedInput.archivieren));
+export const deleteKundeAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => deleteKunde(parsedInput.id));
+
+export const createAuftragAction = authActionClient
+  .inputSchema(AuftragSchema)
+  .action(async ({ parsedInput }) => ({ id: await createAuftrag(parsedInput) }));
+export const updateAuftragAction = authActionClient
+  .inputSchema(id.extend({ input: AuftragSchema }))
+  .action(async ({ parsedInput }) => updateAuftrag(parsedInput.id, parsedInput.input));
+export const setAuftragStatusAction = authActionClient
+  .inputSchema(id.extend({ status: z.enum(STATUS.auftrag) }))
+  .action(async ({ parsedInput }) => setAuftragStatus(parsedInput.id, parsedInput.status));
+export const deleteAuftragAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => deleteAuftrag(parsedInput.id));
+
+export const createVertragAction = authActionClient
+  .inputSchema(VertragSchema)
+  .action(async ({ parsedInput }) => ({ id: await createVertrag(parsedInput) }));
+export const updateVertragAction = authActionClient
+  .inputSchema(id.extend({ input: VertragSchema }))
+  .action(async ({ parsedInput }) => updateVertrag(parsedInput.id, parsedInput.input));
+export const setVertragStatusAction = authActionClient
+  .inputSchema(id.extend({ status: z.enum(STATUS.vertrag) }))
+  .action(async ({ parsedInput }) => setVertragStatus(parsedInput.id, parsedInput.status));
+export const deleteVertragAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => deleteVertrag(parsedInput.id));
+
+export const createRechnungAction = authActionClient
+  .inputSchema(RechnungSchema)
+  .action(async ({ parsedInput }) => ({ id: await createRechnung(parsedInput) }));
+export const saveRechnungAction = authActionClient
+  .inputSchema(id.extend({ input: RechnungSchema }))
+  .action(async ({ parsedInput }) => saveRechnung(parsedInput.id, parsedInput.input));
+export const deleteRechnungAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => deleteRechnung(parsedInput.id));
+// Saves the draft as it is on screen, then issues it: what the owner sees is what is frozen.
+export const stelleRechnungAction = authActionClient
+  .inputSchema(id.extend({ input: RechnungSchema }))
+  .action(async ({ parsedInput }) => {
+    await saveRechnung(parsedInput.id, parsedInput.input);
+    return { nummer: await stelleRechnung(parsedInput.id) };
+  });
+export const bezahltAction = authActionClient
+  .inputSchema(id.extend({ am: tag }))
+  .action(async ({ parsedInput }) => markiereBezahlt(parsedInput.id, parsedInput.am));
+export const stornoAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput }) => ({ id: await storniereRechnung(parsedInput.id) }));

@@ -3,26 +3,29 @@ import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
-import { getProjekte, getSiteSettings } from "@/data/queries";
+import { getProjekte, getProjekteContent } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
 
+// The page „projekte“ (/admin → Seiten → Projekte): its lead, SEO and the text shown while no
+// project is published; the list itself is every published project (/admin → Projekte).
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  const { page } = await getProjekteContent();
   return buildMetadata({
-    fallbackTitle: "Projekte",
-    fallbackDescription: settings.projekteLead,
+    meta: page?.meta,
+    fallbackTitle: page?.title || "Projekte",
+    fallbackDescription: page?.lead,
     path: "/projekte",
   });
 }
 
 export default async function ProjekteIndex() {
-  const [projekte, settings] = await Promise.all([getProjekte(), getSiteSettings()]);
+  const [projekte, { page, sections }] = await Promise.all([getProjekte(), getProjekteContent()]);
 
   return (
     <main>
-      <PageHeader title="Projekte" lead={settings.projekteLead} horizonKey="/projekte" />
+      <PageHeader title={page?.title || "Projekte"} lead={page?.lead} horizonKey="/projekte" />
       {projekte.length > 0 ? (
-        <ul aria-label="Projekte" className="page-container">
+        <ul aria-label="Projekte" className="page-container" data-cms-zone="projekte">
           {projekte.map((projekt) => (
             <li
               key={projekt.id}
@@ -47,9 +50,9 @@ export default async function ProjekteIndex() {
             </li>
           ))}
         </ul>
-      ) : settings.projekteEmpty ? (
-        <p className="page-container py-16 text-lg text-muted-foreground">
-          {settings.projekteEmpty}
+      ) : sections.empty ? (
+        <p className="page-container py-16 text-lg text-muted-foreground" data-cms-zone="projekte">
+          {sections.empty}
         </p>
       ) : null}
       <ClosingCta />

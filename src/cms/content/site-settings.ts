@@ -1,4 +1,5 @@
-// The site settings: one document in one row. `data` is live, `draft` the working copy.
+// The site settings: what every page shares, one document in one row. `data` is live, `draft`
+// the working copy.
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/client";
@@ -95,33 +96,17 @@ export async function upsertSiteSettings(raw: SiteSettings) {
     });
 }
 
-// The texts a fresh site starts with (the seed fills the rest); also what the site shows
-// while the settings row does not exist yet.
+// The texts a fresh site starts with; also what the site shows while the settings row does not
+// exist yet. Texts of a single page live on that page (page-sections.ts).
 export const SITE_TEXT_DEFAULTS = {
   cta: {
     title: "Erzählen Sie uns von Ihrem Vorhaben.",
     text: "Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen.",
     label: "Projekt anfragen",
   },
-  hero: {
-    headline: "Wir entwickeln",
-    headlineEnd: "für den Mittelstand.",
-    lead: "Individuelle Software aus dem Schwarzwald.",
-  },
-  servicesTitle: "Was wir entwickeln",
-  servicesIntro:
-    "Von der einzelnen Schnittstelle bis zur kompletten Plattform – geplant für Ihre Abläufe, nicht für einen Standardfall.",
-  stepsTitle: "So arbeiten wir",
-  principlesTitle: "Unsere Grundsätze",
-  projekteLead: "Ausgewählte Projekte, die wir für unsere Kundinnen und Kunden gebaut haben.",
-  projekteEmpty: "Hier stellen wir bald unsere ersten Projekte vor.",
-  kontaktLead:
-    "Erzählen Sie uns von Ihrem Vorhaben. Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen.",
-  kontaktNextTitle: "Was danach passiert",
 } as const;
 
 export function emptySiteSettings(siteName = "Website"): SiteSettings {
-  const d = SITE_TEXT_DEFAULTS;
   return {
     siteName,
     ownerName: siteName,
@@ -129,19 +114,6 @@ export function emptySiteSettings(siteName = "Website"): SiteSettings {
     description: null,
     contactEmail: null,
     socialLinks: [],
-    cta: { ...d.cta },
-    hero: { ...d.hero, words: [] },
-    servicesTitle: d.servicesTitle,
-    servicesIntro: d.servicesIntro,
-    services: [],
-    stepsTitle: d.stepsTitle,
-    steps: [],
-    principlesTitle: d.principlesTitle,
-    principles: [],
-    faq: [],
-    projekteLead: d.projekteLead,
-    projekteEmpty: d.projekteEmpty,
-    kontaktLead: d.kontaktLead,
-    kontaktNext: { title: d.kontaktNextTitle, text: null },
+    cta: { ...SITE_TEXT_DEFAULTS.cta },
   };
 }

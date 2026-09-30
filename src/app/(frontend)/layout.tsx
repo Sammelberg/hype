@@ -5,7 +5,7 @@ import { draftMode } from "next/headers";
 import type { ReactNode } from "react";
 
 import { ReticleDev } from "@/components/dev/reticle-dev";
-import { RefreshOnSave } from "@/components/site/refresh-on-save";
+import { PreviewBridge } from "@/components/site/preview-bridge";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SmoothScroll } from "@/components/site/smooth-scroll";
@@ -62,7 +62,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         />
         {draft.isEnabled ? (
           <>
-            <RefreshOnSave />
+            <PreviewBridge />
             {/* Route handler that clears the draft-mode cookie: needs a full navigation, not <Link>. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a

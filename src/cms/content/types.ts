@@ -48,6 +48,13 @@ export type Seo = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// Shared field helpers; `id` on list items keeps React keys stable.
+
+const item = <T extends z.ZodRawShape>(shape: T) => z.object({ id: z.string().min(1), ...shape });
+const required = (what: string) => z.string().trim().min(1, `Bitte füllen Sie ${what} aus.`);
+const optionalText = z.string().trim().nullish();
+
+// ---------------------------------------------------------------------------------------------
 // Pages
 
 export const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -59,6 +66,66 @@ const slugField = z
   .max(200)
   .regex(SLUG_REGEX, SLUG_MESSAGE);
 
+// Pages with a route of their own carry the sections that route shows, typed by the kind of
+// page (src/cms/content/page-tree.ts: kindOf). Content pages have none: title, lead and text.
+export const GLYPHS = ["web", "mobile", "integration", "modernisation", "operations"] as const;
+export type Glyph = (typeof GLYPHS)[number];
+
+export const HomeSectionsSchema = z.object({
+  kind: z.literal("home"),
+  hero: z.object({
+    headline: required("den Anfang der Überschrift"),
+    words: z.array(item({ word: required("das Wort") })).min(1, "Mindestens ein Wort."),
+    headlineEnd: required("das Ende der Überschrift"),
+    lead: optionalText,
+  }),
+  servicesTitle: required("die Überschrift"),
+  stepsTitle: required("die Überschrift"),
+  steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
+  principlesTitle: required("die Überschrift"),
+  principles: z.array(item({ title: required("den Titel"), text: required("den Text") })),
+});
+
+export const ServiceSchema = item({
+  title: required("den Titel"),
+  short: required("die Kurzform"),
+  slug: slugField,
+  glyph: z.enum(GLYPHS),
+  text: required("den Text"),
+  examples: z.array(item({ text: required("das Beispiel") })),
+});
+export type Service = z.infer<typeof ServiceSchema>;
+
+export const LeistungenSectionsSchema = z.object({
+  kind: z.literal("leistungen"),
+  services: z.array(ServiceSchema).length(5, "Es gibt genau fünf Leistungen."),
+  faq: z.array(item({ question: required("die Frage"), answer: required("die Antwort") })),
+});
+
+export const ProjekteSectionsSchema = z.object({
+  kind: z.literal("projekte"),
+  empty: optionalText,
+});
+
+export const KontaktSectionsSchema = z.object({
+  kind: z.literal("kontakt"),
+  nextTitle: optionalText,
+  nextText: LexicalDocumentSchema.nullish(),
+});
+
+export const PageSectionsSchema = z.discriminatedUnion("kind", [
+  HomeSectionsSchema,
+  LeistungenSectionsSchema,
+  ProjekteSectionsSchema,
+  KontaktSectionsSchema,
+]);
+export type PageSections = z.infer<typeof PageSectionsSchema>;
+export type HomeSections = z.infer<typeof HomeSectionsSchema>;
+export type LeistungenSections = z.infer<typeof LeistungenSectionsSchema>;
+export type ProjekteSections = z.infer<typeof ProjekteSectionsSchema>;
+export type KontaktSections = z.infer<typeof KontaktSectionsSchema>;
+export type PageKind = PageSections["kind"] | "content";
+
 export const PageInputSchema = z.object({
   title: z.string().trim().min(1, "Bitte geben Sie einen Titel an.").max(300),
   slug: slugField,
@@ -66,6 +133,8 @@ export const PageInputSchema = z.object({
   lead: z.string().trim().max(2000).nullable(),
   content: LexicalDocumentSchema.nullable(),
   meta: SeoSchema,
+  // Older drafts and versions have no sections: undefined there means „unchanged“.
+  sections: PageSectionsSchema.nullish(),
 });
 export type PageInput = z.infer<typeof PageInputSchema>;
 
@@ -80,6 +149,8 @@ export type Page = {
   lead: string | null;
   content: LexicalDocument | null;
   meta: Seo;
+  kind: PageKind;
+  sections: PageSections | null;
   breadcrumbs: Breadcrumb[];
   status: DocStatus;
   hasDraft: boolean;
@@ -118,14 +189,8 @@ export type Projekt = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// Site settings: one document, edited in tabs; `id` on list items keeps React keys stable.
-
-export const GLYPHS = ["web", "mobile", "integration", "modernisation", "operations"] as const;
-export type Glyph = (typeof GLYPHS)[number];
-
-const item = <T extends z.ZodRawShape>(shape: T) => z.object({ id: z.string().min(1), ...shape });
-const required = (what: string) => z.string().trim().min(1, `Bitte füllen Sie ${what} aus.`);
-const optionalText = z.string().trim().nullish();
+// Site settings: what every page shares — the name, the owner, the footer, the closing
+// invitation. Everything a single page shows lives on that page (sections above).
 
 export const SiteSettingsSchema = z.object({
   siteName: required("den Namen der Website"),
@@ -140,38 +205,6 @@ export const SiteSettingsSchema = z.object({
     title: required("die Überschrift"),
     text: optionalText,
     label: required("die Beschriftung"),
-  }),
-  hero: z.object({
-    headline: required("den Anfang der Überschrift"),
-    words: z.array(item({ word: required("das Wort") })).min(1, "Mindestens ein Wort."),
-    headlineEnd: required("das Ende der Überschrift"),
-    lead: optionalText,
-  }),
-  servicesTitle: required("die Überschrift"),
-  servicesIntro: optionalText,
-  services: z
-    .array(
-      item({
-        title: required("den Titel"),
-        short: required("die Kurzform"),
-        slug: slugField,
-        glyph: z.enum(GLYPHS),
-        text: required("den Text"),
-        examples: z.array(item({ text: required("das Beispiel") })),
-      }),
-    )
-    .length(5, "Es gibt genau fünf Leistungen."),
-  stepsTitle: required("die Überschrift"),
-  steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-  principlesTitle: required("die Überschrift"),
-  principles: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-  faq: z.array(item({ question: required("die Frage"), answer: required("die Antwort") })),
-  projekteLead: optionalText,
-  projekteEmpty: optionalText,
-  kontaktLead: optionalText,
-  kontaktNext: z.object({
-    title: optionalText,
-    text: LexicalDocumentSchema.nullish(),
   }),
 });
 export type SiteSettings = z.infer<typeof SiteSettingsSchema>;

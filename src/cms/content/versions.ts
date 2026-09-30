@@ -91,7 +91,7 @@ export async function recentPublications(limit = 8) {
     user_name: string | null;
   }>(sql`
     select v.id, v.collection, v.doc_id, v.created_at,
-           coalesce(p.title, r.title, case when v.collection = 'site_settings' then 'Website-Einstellungen' end) as title,
+           coalesce(p.title, r.title, v.snapshot->>'title', case when v.collection = 'site_settings' then 'Website' end) as title,
            coalesce(p.path, case when r.slug is not null then '/projekte/' || r.slug end) as path,
            coalesce(u.name, u.email) as user_name
     from cms.versions v

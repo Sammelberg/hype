@@ -7,17 +7,20 @@ import { randomBytes } from "node:crypto";
 
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { upsertForm } from "../src/cms/content/forms";
+import { defaultSections, HOME_DEFAULTS, ROUTED_LEADS } from "../src/cms/content/page-sections";
+import { kindOf } from "../src/cms/content/page-tree";
 import { listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
 import { upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
-import type { SiteSettings } from "../src/cms/content/types";
+import type { PageSections, SiteSettings } from "../src/cms/content/types";
 import {
   lexical,
   SEED_REDIRECT,
   seedContactForm,
   seedPages,
   seedProjects,
+  seedSections,
   seedSettings,
   E2E_ADMIN,
 } from "./seed-data";
@@ -36,7 +39,6 @@ const withIds = <T extends object>(items: readonly T[]) =>
   items.map((item) => ({ id: id(), ...item }));
 
 function settings(): SiteSettings {
-  const d = SITE_TEXT_DEFAULTS;
   return {
     siteName: seedSettings.siteName,
     ownerName: seedSettings.ownerName,
@@ -44,21 +46,40 @@ function settings(): SiteSettings {
     description: seedSettings.description,
     contactEmail: seedSettings.contactEmail,
     socialLinks: withIds(seedSettings.socialLinks),
-    cta: { ...d.cta },
-    hero: { ...d.hero, words: withIds(seedSettings.hero.words) },
-    servicesTitle: d.servicesTitle,
-    servicesIntro: d.servicesIntro,
-    services: seedSettings.services.map((s) => ({ id: id(), ...s, examples: withIds(s.examples) })),
-    stepsTitle: d.stepsTitle,
-    steps: withIds(seedSettings.steps),
-    principlesTitle: d.principlesTitle,
-    principles: withIds(seedSettings.principles),
-    faq: withIds(seedSettings.faq),
-    projekteLead: d.projekteLead,
-    projekteEmpty: d.projekteEmpty,
-    kontaktLead: d.kontaktLead,
-    kontaktNext: { title: d.kontaktNextTitle, text: seedSettings.kontaktNext.text },
+    cta: { ...SITE_TEXT_DEFAULTS.cta },
   };
+}
+
+// The sections and the lead of the pages with a route of their own; content pages have neither.
+function routed(slug: string): { lead: string | null; sections: PageSections | null } {
+  const kind = kindOf(slug);
+  const s = seedSections;
+  if (kind === "home")
+    return {
+      lead: null,
+      sections: {
+        ...HOME_DEFAULTS,
+        hero: { ...HOME_DEFAULTS.hero, words: withIds(s.hero.words) },
+        steps: withIds(s.steps),
+        principles: withIds(s.principles),
+      },
+    };
+  if (kind === "leistungen")
+    return {
+      lead: ROUTED_LEADS.leistungen,
+      sections: {
+        kind,
+        services: s.services.map((x) => ({ id: id(), ...x, examples: withIds(x.examples) })),
+        faq: withIds(s.faq),
+      },
+    };
+  if (kind === "projekte") return { lead: ROUTED_LEADS.projekte, sections: defaultSections(kind) };
+  if (kind === "kontakt")
+    return {
+      lead: ROUTED_LEADS.kontakt,
+      sections: { ...defaultSections(kind), nextText: s.kontaktNext.text },
+    };
+  return { lead: null, sections: null };
 }
 
 async function main() {
@@ -74,9 +95,9 @@ async function main() {
       title: page.title,
       slug: page.slug,
       parentId,
-      lead: null,
-      content: lexical(page.content),
+      content: page.content.length > 0 ? lexical(page.content) : null,
       meta: {},
+      ...routed(page.slug),
     });
     ids.set(page.slug, pageId);
   }

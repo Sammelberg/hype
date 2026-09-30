@@ -109,6 +109,33 @@ describe.skipIf(!process.env.DATABASE_URL)("pages repository", () => {
     expect((await searchSite("Holunderbluetensirup")).map((r) => r.url)).toEqual(["/test-suche"]);
   });
 
+  it("refuses sections on a content page and keeps a fixed page's slug", async () => {
+    await expect(
+      createPage(input("test-abschnitte", { sections: { kind: "projekte", empty: null } })),
+    ).rejects.toThrow(/keine festen Abschnitte/);
+    const kontakt = await getPageByPath("/kontakt", true);
+    if (!kontakt) return; // a database without the page (before the seed)
+    const found = await getPage(kontakt.id);
+    await expect(
+      saveDraft(kontakt.id, { ...found!.editing, slug: "test-kontakt-anders" }),
+    ).rejects.toThrow(PageError);
+  });
+
+  it("a draft without sections (an old version) keeps the live sections", async () => {
+    const home = await getPageByPath("/", true);
+    // Never touches a home page someone is editing: its draft would be lost below.
+    if (!home?.sections || home.hasDraft) return;
+    const found = await getPage(home.id);
+    const withoutSections: Partial<PageInput> = { ...found!.editing };
+    delete withoutSections.sections;
+    await saveDraft(home.id, withoutSections as PageInput);
+    try {
+      expect((await getPage(home.id))!.page.sections).toEqual(home.sections);
+    } finally {
+      await db.update(pages).set({ draft: null }).where(like(pages.slug, "startseite"));
+    }
+  });
+
   it("a redirect is found case-insensitively and points at the page's current path", async () => {
     const id = await createPage(input("test-ziel"), { publish: true });
     await createRedirect({

@@ -11,6 +11,8 @@ import {
   listPublishedPages,
   listPublishedPaths,
 } from "@/cms/content/pages";
+import { sectionsOf } from "@/cms/content/page-sections";
+import type { PageSections } from "@/cms/content/types";
 import { getProjektBySlug as projektBySlug, listPublishedProjekte } from "@/cms/content/projekte";
 import { findRedirect as redirectFor } from "@/cms/content/redirects";
 import { searchSite as search } from "@/cms/content/search";
@@ -29,6 +31,18 @@ export const getSiteSettings = cache(async () => {
 
 // The page with the slug „startseite“ fills `/`; null until it exists.
 export const getHomePage = cache(async () => homePage(await isDraft()));
+
+// The pages with a route of their own: the page (title, lead, SEO) and its sections, or the
+// defaults while the page has none. Draft-aware, so the admin's preview shows the working copy.
+async function routed<K extends PageSections["kind"]>(path: string, kind: K) {
+  const page = await pageByPath(path, await isDraft());
+  return { page, sections: sectionsOf(page?.sections, kind) };
+}
+
+export const getHomeContent = cache(() => routed("/", "home"));
+export const getLeistungenContent = cache(() => routed("/leistungen", "leistungen"));
+export const getProjekteContent = cache(() => routed("/projekte", "projekte"));
+export const getKontaktContent = cache(() => routed("/kontakt", "kontakt"));
 
 export const getPageByPath = cache(async (segments: string[]) => {
   if (segments.length === 0) return null;

@@ -369,6 +369,7 @@ export function ServicesStrata({
       ref={root}
       aria-labelledby={`${id}-titel`}
       data-current={current}
+      data-cms-zone="leistungen"
       className={`${styles.section} border-t`}
     >
       <div

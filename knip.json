@@ -3,6 +3,8 @@
   "entry": [
     "scripts/seed.ts",
     "scripts/clean-e2e.ts",
+    "scripts/prepare-e2e.ts",
+    "scripts/e-rechnung-proben.ts",
     "scripts/import-payload.ts",
     "src/cms/db/migrate.ts",
     "drizzle.config.ts",

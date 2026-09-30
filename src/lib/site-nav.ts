@@ -1,6 +1,7 @@
 // The site's pages as navigation: every top-level page of the CMS as a section with the pages
-// below it, plus the sections written in code (Projekte with its projects, Kontakt). The header,
-// the phone menu and the footer all show this, so a page published in /admin appears everywhere.
+// below it; Projekte lists its projects, Kontakt comes last. Both exist without their page too
+// (a fresh database). The header, the phone menu and the footer all show this, so a page
+// published in /admin appears everywhere.
 
 export type NavLink = { label: string; href: string };
 export type NavSection = NavLink & { children: NavLink[] };
@@ -16,7 +17,7 @@ type Projekt = { title: string; slug?: string | null };
 
 /** Pages that live in the footer only (Impressum, Datenschutz). */
 export const LEGAL_SLUGS: ReadonlySet<string> = new Set(["impressum", "datenschutz"]);
-const HIDDEN = new Set(["startseite", ...LEGAL_SLUGS]);
+const HIDDEN = new Set(["startseite", "kontakt", ...LEGAL_SLUGS]);
 /** Known sections first, in this order; any other top-level page follows them. */
 const ORDER = ["leistungen", "branchen", "projekte", "ueber-uns"];
 
@@ -37,7 +38,7 @@ export function siteNav(pages: readonly Page[], projekte: readonly Projekt[]): N
     });
   }
   sections.set("projekte", {
-    label: "Projekte",
+    label: sections.get("projekte")?.label ?? "Projekte",
     href: "/projekte",
     children: projekte
       .filter((p) => p.slug)
@@ -48,5 +49,6 @@ export function siteNav(pages: readonly Page[], projekte: readonly Projekt[]): N
   const ordered = [...sections.entries()]
     .sort(([a], [b]) => rank(a) - rank(b))
     .map(([, section]) => section);
-  return [...ordered, { label: "Kontakt", href: "/kontakt", children: [] }];
+  const kontakt = pages.find((page) => page.slug === "kontakt" && parentOf(page) === null);
+  return [...ordered, { label: kontakt?.title ?? "Kontakt", href: "/kontakt", children: [] }];
 }

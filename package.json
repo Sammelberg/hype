@@ -28,6 +28,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "prepare": "husky",
     "test:e2e": "playwright test",
+    "erechnung:proben": "tsx scripts/e-rechnung-proben.ts",
+    "erechnung:pruefen": "bash scripts/pruefe-e-rechnung.sh .e-rechnung-proben",
     "knip": "knip",
     "analyze": "ANALYZE=true next build",
     "db:up": "docker compose up -d --wait postgres",

@@ -20,7 +20,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { LexicalDocument } from "../rich-text/schema";
-import type { FormField, MediaSizes, SiteSettings } from "../content/types";
+import type { FormField, MediaSizes, PageSections, SiteSettings } from "../content/types";
 
 export const cms = pgSchema("cms");
 
@@ -120,6 +120,8 @@ export const pages = cms.table(
     title: varchar({ length: 300 }).notNull(),
     lead: text(),
     content: jsonb().$type<LexicalDocument>(),
+    // The sections of a page with its own route (home, Leistungen, Projekte, Kontakt).
+    sections: jsonb().$type<PageSections>(),
     ...seoColumns,
     ...documentColumns,
     search: tsvector().generatedAlwaysAs((): SQL =>

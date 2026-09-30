@@ -1,5 +1,8 @@
 import {
+  BriefcaseIcon,
   CircleDashedIcon,
+  ClockAlertIcon,
+  ReceiptIcon,
   FileTextIcon,
   FolderKanbanIcon,
   ImageIcon,
@@ -10,13 +13,21 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { listAuftraege } from "@/buero/daten/auftraege";
+import { listRechnungen } from "@/buero/daten/rechnungen";
+import { listVertraege, vertragsende } from "@/buero/daten/vertraege";
+import { datumDe, heute, tagePlus } from "@/buero/logik/ablauf";
+import { centAusBetrag, euro } from "@/buero/logik/geld";
 import { requireUser } from "@/cms/auth/guard";
 import { getContactForm, listSubmissions, submissionsPerWeek } from "@/cms/content/forms";
 import { listMedia } from "@/cms/content/media";
 import { listPages } from "@/cms/content/pages";
 import { listProjekte } from "@/cms/content/projekte";
 import { publicationsPerWeek, recentPublications } from "@/cms/content/versions";
+import { CardLink, tileLinkSurface } from "../_components/card-link";
 import { PageShell } from "../_components/page-shell";
+import { DokumentKachel } from "../_components/buero/kachel";
+import { RechnungStatus, VertragStatus } from "../_components/buero/status";
 import { StatusBadge } from "../_components/status-badge";
 import { summarize } from "./anfragen/_lib/summary";
 import { Reveal } from "./_components/reveal";
@@ -36,18 +47,45 @@ export default async function DashboardPage({
   searchParams: Promise<{ passwort?: string }>;
 }) {
   const user = await requireUser();
-  const [{ passwort }, pages, projekte, media, submissions, form, perWeek, published, recent] =
-    await Promise.all([
-      searchParams,
-      listPages(),
-      listProjekte(),
-      listMedia(),
-      listSubmissions({ limit: 6 }),
-      getContactForm(),
-      submissionsPerWeek(12),
-      publicationsPerWeek(12),
-      recentPublications(6),
-    ]);
+  const [
+    { passwort },
+    pages,
+    projekte,
+    media,
+    submissions,
+    form,
+    perWeek,
+    published,
+    recent,
+    rechnungen,
+    auftraege,
+    vertraege,
+  ] = await Promise.all([
+    searchParams,
+    listPages(),
+    listProjekte(),
+    listMedia(),
+    listSubmissions({ limit: 6 }),
+    getContactForm(),
+    submissionsPerWeek(12),
+    publicationsPerWeek(12),
+    recentPublications(6),
+    listRechnungen(),
+    listAuftraege(),
+    listVertraege(),
+  ]);
+  // The office at a glance: what is owed, what is late, what runs, which notice dates come up.
+  const tag = heute();
+  const offen = rechnungen.filter((r) => r.typ === "rechnung" && r.status === "gestellt");
+  const ueberfaellig = offen.filter((r) => r.faelligAm && r.faelligAm < tag);
+  const laufend = auftraege.filter((a) =>
+    ["beauftragt", "in_arbeit", "abgenommen"].includes(a.status),
+  );
+  const bald = tagePlus(tag, 60);
+  const fristen = vertraege
+    .map((v) => ({ v, ende: vertragsende(v, tag) }))
+    .filter((x) => x.ende?.kuendigenBis && x.ende.kuendigenBis <= bald)
+    .sort((a, b) => a.ende!.kuendigenBis!.localeCompare(b.ende!.kuendigenBis!));
   const unread = submissions.filter((s) => !s.readAt).length;
   const drafts = [...pages, ...projekte]
     .filter((d) => d.status === "draft" || d.hasDraft)
@@ -106,6 +144,67 @@ export default async function DashboardPage({
         />
       </div>
 
+      <section aria-label="Büro" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          index={4}
+          label="Rechnungen offen"
+          value={offen.length}
+          hint={euro(offen.reduce((sum, r) => sum + centAusBetrag(r.summeBrutto), 0))}
+          href="/admin/rechnungen"
+          icon={<ReceiptIcon />}
+        />
+        <StatCard
+          index={5}
+          label="Überfällig"
+          value={ueberfaellig.length}
+          hint={ueberfaellig.length ? "Zahlungsziel verstrichen" : "Keine"}
+          href="/admin/rechnungen"
+          icon={<ClockAlertIcon />}
+        />
+        <StatCard
+          index={6}
+          label="Aufträge laufend"
+          value={laufend.length}
+          hint={`${auftraege.filter((a) => a.status === "angebot").length} Angebote offen`}
+          href="/admin/auftraege"
+          icon={<BriefcaseIcon />}
+        />
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Fristen</CardTitle>
+            <CardDescription>
+              {ueberfaellig.length + fristen.length === 0
+                ? "Nichts wird in den nächsten 60 Tagen fällig."
+                : "Überfällige Rechnungen und Kündigungstermine der nächsten 60 Tage."}
+            </CardDescription>
+          </CardHeader>
+          {ueberfaellig.length + fristen.length > 0 ? (
+            <CardContent>
+              <ul role="list" className="flex flex-col gap-2">
+                {ueberfaellig.slice(0, 4).map((r) => (
+                  <DokumentKachel
+                    key={`r-${r.id}`}
+                    href={`/admin/rechnungen/${r.id}`}
+                    titel={r.nummer ?? "Rechnung"}
+                    unter={`${r.kundeName}, fällig ${datumDe(r.faelligAm!)}`}
+                    status={<RechnungStatus status={r.status} ueberfaellig typ={r.typ} />}
+                  />
+                ))}
+                {fristen.slice(0, 4).map(({ v, ende }) => (
+                  <DokumentKachel
+                    key={`v-${v.id}`}
+                    href={`/admin/vertraege/${v.id}`}
+                    titel={v.titel}
+                    unter={`Kündbar bis ${datumDe(ende!.kuendigenBis!)}`}
+                    status={<VertragStatus status={v.status} />}
+                  />
+                ))}
+              </ul>
+            </CardContent>
+          ) : null}
+        </Card>
+      </section>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Reveal>
           <Card>
@@ -148,22 +247,19 @@ export default async function DashboardPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="flex flex-col divide-y">
+              <ul role="list" className="flex flex-col gap-2">
                 {drafts.slice(0, 6).map((d) => (
                   <li
                     key={`${"kunde" in d ? "p" : "s"}-${d.id}`}
-                    className="flex items-center justify-between gap-3 py-2"
+                    className={`${tileLinkSurface} flex items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2`}
                   >
-                    <Link
-                      href={
-                        ("kunde" in d
-                          ? `/admin/projekte/${d.id}`
-                          : `/admin/seiten/${d.id}`) as never
-                      }
-                      className="truncate hover:underline"
+                    <CardLink
+                      tile
+                      href={"kunde" in d ? `/admin/projekte/${d.id}` : `/admin/seiten/${d.id}`}
+                      className="truncate"
                     >
                       {d.title}
-                    </Link>
+                    </CardLink>
                     <StatusBadge status={d.status} hasDraft={d.hasDraft} />
                   </li>
                 ))}
@@ -180,18 +276,26 @@ export default async function DashboardPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="flex flex-col divide-y">
+              <ul role="list" className="flex flex-col gap-2">
                 {submissions.map((s) => {
                   const { name, message } = summarize(s, form);
                   return (
-                    <li key={s.id} className="py-2">
-                      <Link
-                        href={`/admin/anfragen/${s.id}` as never}
-                        className="block hover:underline"
-                      >
-                        <span className={s.readAt ? "" : "font-semibold"}>{name}</span>
-                        <span className="text-muted-foreground"> · {when.format(s.createdAt)}</span>
-                      </Link>
+                    <li
+                      key={s.id}
+                      className={`${tileLinkSurface} rounded-lg border bg-muted/40 px-3 py-2`}
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <CardLink
+                          tile
+                          href={`/admin/anfragen/${s.id}`}
+                          className={s.readAt ? "truncate" : "truncate font-semibold"}
+                        >
+                          {name}
+                        </CardLink>
+                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                          {when.format(s.createdAt)}
+                        </span>
+                      </div>
                       <p className="truncate text-sm text-muted-foreground">{message}</p>
                     </li>
                   );

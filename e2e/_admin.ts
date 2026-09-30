@@ -30,7 +30,8 @@ export async function signIn(page: Page) {
     await page.getByLabel("Passwort").fill(ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Anmelden" }).click();
   }
-  await expect(page).toHaveURL(/\/admin$/);
+  // argon2id is slow on purpose; with every worker signing in at once it takes a moment.
+  await expect(page).toHaveURL(/\/admin$/, { timeout: 15_000 });
 }
 
 // Reticle's dev overlays can swallow clicks; hide them as e2e/features.spec.ts does.

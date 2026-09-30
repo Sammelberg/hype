@@ -5,8 +5,12 @@ import {
   canMove,
   descendantsOf,
   flattenTree,
+  kindOf,
   pathOf,
   pathsOf,
+  PROTECTED_SLUGS,
+  ROUTED_PATHS,
+  sectionsProblem,
   slugify,
   type TreeNode,
 } from "./page-tree";
@@ -97,5 +101,31 @@ describe("slugify", () => {
     expect(slugify("Über uns – Arbeitsweise")).toBe("ueber-uns-arbeitsweise");
     expect(slugify("  Größe & Maß  ")).toBe("groesse-mass");
     expect(slugify("Café Déjà")).toBe("cafe-deja");
+  });
+});
+
+describe("page kinds", () => {
+  it("gives the pages with a route of their own their kind, every other page none", () => {
+    expect(kindOf("startseite")).toBe("home");
+    expect(kindOf("leistungen")).toBe("leistungen");
+    expect(kindOf("projekte")).toBe("projekte");
+    expect(kindOf("kontakt")).toBe("kontakt");
+    expect(kindOf("ueber-uns")).toBe("content");
+    expect([...ROUTED_PATHS].sort()).toEqual(["/", "/kontakt", "/leistungen", "/projekte"]);
+  });
+
+  it("keeps the routed and the legal pages", () => {
+    for (const slug of ["startseite", "leistungen", "projekte", "kontakt", "impressum"])
+      expect(PROTECTED_SLUGS.has(slug)).toBe(true);
+    expect(PROTECTED_SLUGS.has("ueber-uns")).toBe(false);
+  });
+
+  it("accepts sections only of the page's own kind", () => {
+    const projekte = { kind: "projekte" as const, empty: null };
+    expect(sectionsProblem("projekte", projekte)).toBeNull();
+    expect(sectionsProblem("projekte", null)).toBeNull();
+    expect(sectionsProblem("kontakt", projekte)).toMatch(/passen nicht/);
+    expect(sectionsProblem("ueber-uns", projekte)).toMatch(/keine festen Abschnitte/);
+    expect(sectionsProblem("ueber-uns", undefined)).toBeNull();
   });
 });

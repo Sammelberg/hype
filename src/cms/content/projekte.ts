@@ -3,7 +3,7 @@ import { and, desc, eq, ne, sql } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../db/client";
 import { projektPathOf as projektPath } from "../paths";
-import { projekte } from "../db/schema";
+import { projekte, versions } from "../db/schema";
 import { plainText } from "../rich-text/text";
 import { mediaByIds } from "./media";
 import type { MediaDoc, Projekt, ProjektInput } from "./types";
@@ -222,12 +222,18 @@ export async function discardProjektDraft(id: number) {
 }
 
 export async function deleteProjekt(id: number): Promise<string[]> {
-  const [row] = await db
-    .delete(projekte)
-    .where(eq(projekte.id, id))
-    .returning({ slug: projekte.slug });
-  if (!row) throw new ProjektError("Das Projekt gibt es nicht mehr.");
-  return [projektPath(row.slug)];
+  return db.transaction(async (tx) => {
+    const [row] = await tx
+      .delete(projekte)
+      .where(eq(projekte.id, id))
+      .returning({ slug: projekte.slug });
+    if (!row) throw new ProjektError("Das Projekt gibt es nicht mehr.");
+    // A deleted project cannot be restored from its versions; they go with it.
+    await tx
+      .delete(versions)
+      .where(and(eq(versions.collection, "projekte"), eq(versions.docId, id)));
+    return [projektPath(row.slug)];
+  });
 }
 
 export async function restoreProjektVersion(id: number, snapshot: unknown, userId: number | null) {

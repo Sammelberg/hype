@@ -194,3 +194,19 @@
     }
   }
 }
+
+/* Print views (/admin/druck/…): one A4 sheet, no chrome. */
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  [data-druck-leiste] {
+    display: none;
+  }
+  [data-rechnungsblatt] {
+    max-width: none;
+    min-height: 297mm;
+    padding: 18mm 20mm 14mm 25mm;
+  }
+}

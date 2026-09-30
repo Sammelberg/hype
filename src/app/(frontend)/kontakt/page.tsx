@@ -2,16 +2,17 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/site/page-header";
 import { RichText } from "@/components/site/rich-text";
-import { getContactForm, getSiteSettings } from "@/data/queries";
+import { getContactForm, getKontaktContent, getSiteSettings } from "@/data/queries";
 import { buildMetadata } from "@/lib/seo";
 
 import { ContactForm, type ContactFormField } from "./_components/contact-form";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  const { page } = await getKontaktContent();
   return buildMetadata({
-    fallbackTitle: "Kontakt",
-    fallbackDescription: settings.kontaktLead || "Nehmen Sie über das Kontaktformular Kontakt auf.",
+    meta: page?.meta,
+    fallbackTitle: page?.title || "Kontakt",
+    fallbackDescription: page?.lead || "Nehmen Sie über das Kontaktformular Kontakt auf.",
     path: "/kontakt",
   });
 }
@@ -20,13 +21,18 @@ export async function generateMetadata(): Promise<Metadata> {
 // the form replaces it with the mount time). Without it their messages would count as spam.
 const RENDERED_AT = Date.now();
 
-// The form itself is edited in the admin (Formulare → „Kontakt“); publishing it rebuilds this page.
+// The page „kontakt“ (/admin → Seiten → Kontakt): lead, SEO and the column beside the form. The
+// form's fields are edited from there too (/admin/formular); saving them rebuilds this page.
 export default async function ContactPage() {
-  const [form, settings] = await Promise.all([getContactForm(), getSiteSettings()]);
+  const [form, settings, { page, sections }] = await Promise.all([
+    getContactForm(),
+    getSiteSettings(),
+    getKontaktContent(),
+  ]);
   const fields = (form?.fields ?? []).filter((field) => "name" in field) as ContactFormField[];
 
   const email = settings.contactEmail;
-  const next = settings.kontaktNext;
+  const next = { title: sections.nextTitle, text: sections.nextText ?? null };
   const mail = email ? (
     <a
       href={`mailto:${email}`}
@@ -38,9 +44,9 @@ export default async function ContactPage() {
 
   return (
     <main>
-      <PageHeader title="Kontakt" lead={settings.kontaktLead} horizonKey="/kontakt" />
+      <PageHeader title={page?.title || "Kontakt"} lead={page?.lead} horizonKey="/kontakt" />
       <div className="page-container grid gap-16 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl" data-cms-zone="formular">
           {form && fields.length ? (
             <ContactForm
               fields={fields}
@@ -56,7 +62,11 @@ export default async function ContactPage() {
             </p>
           )}
         </div>
-        <aside aria-label="Weitere Wege" className="space-y-10 lg:border-l lg:pl-12">
+        <aside
+          aria-label="Weitere Wege"
+          className="space-y-10 lg:border-l lg:pl-12"
+          data-cms-zone="danach"
+        >
           {mail ? (
             <div>
               <h2 className="text-xl font-medium tracking-tight">Lieber per E-Mail?</h2>

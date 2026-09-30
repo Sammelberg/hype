@@ -12,7 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { NAV_CONTENT, NAV_SITE } from "./nav";
+import { NAV_BUERO, NAV_CONTENT, NAV_MORE, NAV_SITE } from "./nav";
 
 export type PaletteEntry = { label: string; href: string; group: string; keywords?: string };
 
@@ -54,7 +54,7 @@ export function CommandPalette({ entries }: { entries: PaletteEntry[] }) {
         <CommandList>
           <CommandEmpty>Nichts gefunden.</CommandEmpty>
           <CommandGroup heading="Bereiche">
-            {[...NAV_CONTENT, ...NAV_SITE].map((item) => (
+            {[...NAV_CONTENT, ...NAV_BUERO, ...NAV_SITE, ...NAV_MORE].map((item) => (
               <CommandItem
                 key={item.href}
                 value={`${item.label} ${item.keywords ?? ""}`}

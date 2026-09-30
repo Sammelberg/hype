@@ -8,10 +8,9 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { slugify } from "@/cms/content/page-tree";
 import { projektPathOf as projektPath } from "@/cms/paths";
@@ -34,6 +33,12 @@ import {
 import { EditorShell } from "../../../_components/editor-shell";
 import { LexicalEditor } from "../../../_components/lexical-editor/editor";
 import { PreviewPane, type PreviewHandle } from "../../../_components/preview-pane";
+import {
+  SectionCard,
+  SectionFocusProvider,
+  SectionIndex,
+  type SectionInfo,
+} from "../../../_components/sections";
 import { SeoFields } from "../../../_components/seo-fields";
 import { useAutosave } from "../../../_components/use-autosave";
 import { VersionsSheet } from "../../../_components/versions-sheet";
@@ -51,6 +56,13 @@ const failure = (result: {
 }) =>
   result.serverError?.message ??
   (result.validationErrors ? "Bitte prüfen Sie die markierten Felder." : null);
+
+const SECTIONS: SectionInfo[] = [
+  { id: "kopf", title: "Kopfbereich", zone: "kopf" },
+  { id: "text", title: "Text", zone: "text" },
+  { id: "suchmaschinen", title: "Suchmaschinen und Teilen" },
+  { id: "adresse", title: "Adresse" },
+];
 
 export function ProjektEditor({ projekt, editing, media, versions }: Props) {
   const router = useRouter();
@@ -152,200 +164,221 @@ export function ProjektEditor({ projekt, editing, media, versions }: Props) {
 
   const hasDraft = projekt?.hasDraft || formState.isDirty;
 
+  const invalid = [
+    ...new Set(
+      Object.keys(formState.errors).map((key) =>
+        key === "content"
+          ? "text"
+          : key === "meta"
+            ? "suchmaschinen"
+            : key === "slug"
+              ? "adresse"
+              : "kopf",
+      ),
+    ),
+  ];
+
   return (
-    <form onSubmit={projekt ? onPublish : onCreate} noValidate>
-      <EditorShell
-        backHref="/admin/projekte"
-        backLabel="Projekte"
-        title={values.title || (projekt ? projekt.title : "Neues Projekt")}
-        status={projekt?.status}
-        hasDraft={hasDraft}
-        saveState={projekt ? autosave.state : undefined}
-        onDelete={projekt ? onDelete : undefined}
-        deleteLabel="Projekt löschen"
-        deleteDescription="Das Projekt verschwindet von der Website und aus der Navigation."
-        actions={
-          projekt ? (
-            <>
-              <VersionsSheet versions={versions} onRestore={onRestore} />
-              {projekt.hasDraft ? (
+    <SectionFocusProvider preview={preview}>
+      <form onSubmit={projekt ? onPublish : onCreate} noValidate>
+        <EditorShell
+          backHref="/admin/projekte"
+          nav={<SectionIndex sections={SECTIONS} invalid={invalid} />}
+          backLabel="Projekte"
+          title={values.title || (projekt ? projekt.title : "Neues Projekt")}
+          status={projekt?.status}
+          hasDraft={hasDraft}
+          saveState={projekt ? autosave.state : undefined}
+          onDelete={projekt ? onDelete : undefined}
+          deleteLabel="Projekt löschen"
+          deleteDescription="Das Projekt verschwindet von der Website und aus der Navigation."
+          actions={
+            projekt ? (
+              <>
+                <VersionsSheet versions={versions} onRestore={onRestore} />
+                {projekt.hasDraft ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy !== null}
+                    onClick={() => run("discard", "Änderungen verworfen.")}
+                  >
+                    <Undo2Icon data-icon="inline-start" /> Verwerfen
+                  </Button>
+                ) : null}
+                {projekt.status === "published" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy !== null}
+                    onClick={() => run("unpublish", "Zurückgezogen.")}
+                  >
+                    {busy === "unpublish" ? (
+                      <Spinner data-icon="inline-start" />
+                    ) : (
+                      <EyeOffIcon data-icon="inline-start" />
+                    )}
+                    Zurückziehen
+                  </Button>
+                ) : null}
                 <Button
-                  type="button"
-                  variant="ghost"
+                  type="submit"
                   size="sm"
-                  disabled={busy !== null}
-                  onClick={() => run("discard", "Änderungen verworfen.")}
+                  disabled={busy !== null || (projekt.status === "published" && !hasDraft)}
                 >
-                  <Undo2Icon data-icon="inline-start" /> Verwerfen
-                </Button>
-              ) : null}
-              {projekt.status === "published" ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={busy !== null}
-                  onClick={() => run("unpublish", "Zurückgezogen.")}
-                >
-                  {busy === "unpublish" ? (
+                  {busy === "publish" ? (
                     <Spinner data-icon="inline-start" />
                   ) : (
-                    <EyeOffIcon data-icon="inline-start" />
+                    <SendIcon data-icon="inline-start" />
                   )}
-                  Zurückziehen
+                  Veröffentlichen
                 </Button>
-              ) : null}
-              <Button
-                type="submit"
-                size="sm"
-                disabled={busy !== null || (projekt.status === "published" && !hasDraft)}
-              >
-                {busy === "publish" ? (
-                  <Spinner data-icon="inline-start" />
-                ) : (
-                  <SendIcon data-icon="inline-start" />
-                )}
-                Veröffentlichen
+              </>
+            ) : (
+              <Button type="submit" size="sm" disabled={busy !== null}>
+                {busy === "create" ? <Spinner data-icon="inline-start" /> : null}
+                Projekt anlegen
               </Button>
-            </>
-          ) : (
-            <Button type="submit" size="sm" disabled={busy !== null}>
-              {busy === "create" ? <Spinner data-icon="inline-start" /> : null}
-              Projekt anlegen
-            </Button>
-          )
-        }
-        aside={
-          projekt ? (
-            <PreviewPane
-              ref={preview}
-              path={previewPath}
-              className="sticky top-20 h-[calc(100vh-6.5rem)]"
-            />
-          ) : undefined
-        }
-      >
-        <Tabs defaultValue="inhalt">
-          <TabsList>
-            <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
-            <TabsTrigger value="seo">Suchmaschinen</TabsTrigger>
-          </TabsList>
-          <TabsContent value="inhalt" className="pt-4">
-            <FieldGroup>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Controller
-                  control={control}
-                  name="title"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldLabel htmlFor="projekt-title">Titel</FieldLabel>
-                      <Input
-                        id="projekt-title"
-                        {...field}
-                        className="h-10 text-lg font-medium"
-                        aria-invalid={fieldState.invalid || undefined}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          if (!slugTouched)
-                            setValue("slug", slugify(e.target.value), { shouldDirty: true });
-                        }}
-                      />
-                      {fieldState.error ? (
-                        <FieldError>{fieldState.error.message}</FieldError>
-                      ) : null}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="kunde"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldLabel htmlFor="projekt-kunde">Kunde</FieldLabel>
-                      <Input
-                        id="projekt-kunde"
-                        {...field}
-                        className="h-10"
-                        aria-invalid={fieldState.invalid || undefined}
-                      />
-                      <FieldDescription>Steht als Zeile über dem Titel.</FieldDescription>
-                      {fieldState.error ? (
-                        <FieldError>{fieldState.error.message}</FieldError>
-                      ) : null}
-                    </Field>
-                  )}
-                />
-              </div>
-              <Controller
-                control={control}
-                name="summary"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="projekt-summary">Kurzbeschreibung</FieldLabel>
-                    <Textarea
-                      id="projekt-summary"
-                      {...field}
-                      rows={3}
-                      aria-invalid={fieldState.invalid || undefined}
-                    />
-                    <FieldDescription>
-                      Zwei Sätze für die Projektübersicht und neben der Überschrift.
-                    </FieldDescription>
-                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
-                  </Field>
-                )}
+            )
+          }
+          aside={
+            projekt ? (
+              <PreviewPane
+                ref={preview}
+                path={previewPath}
+                className="sticky top-20 h-[calc(100vh-6.5rem)]"
               />
+            ) : undefined
+          }
+        >
+          <SectionCard
+            section={SECTIONS[0]!}
+            description="Kunde, Titel und Kurzbeschreibung oben auf der Projektseite; Titel und Kurzbeschreibung auch in der Übersicht unter /projekte."
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
               <Controller
                 control={control}
-                name="content"
+                name="title"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="projekt-content">Text</FieldLabel>
-                    <LexicalEditor
-                      key={editorKey}
-                      id="projekt-content"
-                      label="Text des Projekts"
-                      value={field.value}
-                      onChange={field.onChange}
-                      invalid={fieldState.invalid}
-                    />
-                  </Field>
-                )}
-              />
-              <Controller
-                control={control}
-                name="slug"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="projekt-slug">Adresse</FieldLabel>
+                    <FieldLabel htmlFor="projekt-title">Titel</FieldLabel>
                     <Input
-                      id="projekt-slug"
+                      id="projekt-title"
                       {...field}
-                      className="max-w-md font-mono"
+                      className="h-10 text-lg font-medium"
                       aria-invalid={fieldState.invalid || undefined}
                       onChange={(e) => {
-                        setSlugTouched(true);
                         field.onChange(e);
+                        if (!slugTouched)
+                          setValue("slug", slugify(e.target.value), { shouldDirty: true });
                       }}
                     />
-                    <FieldDescription>
-                      Wird zu <code className="rounded bg-muted px-1">{previewPath}</code>.
-                    </FieldDescription>
                     {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
                   </Field>
                 )}
               />
-            </FieldGroup>
-          </TabsContent>
-          <TabsContent value="seo" className="pt-4">
+              <Controller
+                control={control}
+                name="kunde"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid || undefined}>
+                    <FieldLabel htmlFor="projekt-kunde">Kunde</FieldLabel>
+                    <Input
+                      id="projekt-kunde"
+                      {...field}
+                      className="h-10"
+                      aria-invalid={fieldState.invalid || undefined}
+                    />
+                    <FieldDescription>Steht als Zeile über dem Titel.</FieldDescription>
+                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
+                  </Field>
+                )}
+              />
+            </div>
+            <Controller
+              control={control}
+              name="summary"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel htmlFor="projekt-summary">Kurzbeschreibung</FieldLabel>
+                  <Textarea
+                    id="projekt-summary"
+                    {...field}
+                    rows={3}
+                    aria-invalid={fieldState.invalid || undefined}
+                  />
+                  <FieldDescription>
+                    Zwei Sätze für die Projektübersicht und neben der Überschrift.
+                  </FieldDescription>
+                  {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
+                </Field>
+              )}
+            />
+          </SectionCard>
+          <SectionCard
+            section={SECTIONS[1]!}
+            description="Der Bericht über das Projekt: Ausgangslage, Lösung, Ergebnis."
+          >
+            <Controller
+              control={control}
+              name="content"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel htmlFor="projekt-content">Text</FieldLabel>
+                  <LexicalEditor
+                    key={editorKey}
+                    id="projekt-content"
+                    label="Text des Projekts"
+                    value={field.value}
+                    onChange={field.onChange}
+                    invalid={fieldState.invalid}
+                  />
+                </Field>
+              )}
+            />
+          </SectionCard>
+          <SectionCard
+            section={SECTIONS[2]!}
+            description="Nicht auf der Seite selbst: was Google und Messenger zeigen. Leer gilt der Titel und die Kurzbeschreibung."
+          >
             <SeoFields
               control={control}
               media={media}
               fallbackTitle={values.title || "Titel des Projekts"}
             />
-          </TabsContent>
-        </Tabs>
-      </EditorShell>
-    </form>
+          </SectionCard>
+          <SectionCard
+            section={SECTIONS[3]!}
+            description="Unter welcher Adresse das Projekt steht."
+          >
+            <Controller
+              control={control}
+              name="slug"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel htmlFor="projekt-slug">Adresse</FieldLabel>
+                  <Input
+                    id="projekt-slug"
+                    {...field}
+                    className="max-w-md font-mono"
+                    aria-invalid={fieldState.invalid || undefined}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      field.onChange(e);
+                    }}
+                  />
+                  <FieldDescription>
+                    Wird zu <code className="rounded bg-muted px-1">{previewPath}</code>.
+                  </FieldDescription>
+                  {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
+                </Field>
+              )}
+            />
+          </SectionCard>
+        </EditorShell>
+      </form>
+    </SectionFocusProvider>
   );
 }

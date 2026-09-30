@@ -4,36 +4,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeOffIcon, SendIcon, Undo2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { kindOf, pathOf, PROTECTED_SLUGS } from "@/cms/content/page-tree";
 import {
-  canMove,
-  flattenTree,
-  HOME_SLUG,
-  pathOf,
-  PROTECTED_SLUGS,
-  slugify,
-} from "@/cms/content/page-tree";
-import {
+  type FormDoc,
   type MediaDoc,
   type Page,
   type PageInput,
   PageInputSchema,
+  type Projekt,
+  type SiteSettings,
   type Version,
 } from "@/cms/content/types";
 import {
@@ -46,11 +30,33 @@ import {
   unpublishPageAction,
 } from "../../../_actions/pages";
 import { EditorShell } from "../../../_components/editor-shell";
-import { LexicalEditor } from "../../../_components/lexical-editor/editor";
 import { PreviewPane, type PreviewHandle } from "../../../_components/preview-pane";
-import { SeoFields } from "../../../_components/seo-fields";
+import {
+  SectionFocusProvider,
+  SectionIndex,
+  type SectionInfo,
+} from "../../../_components/sections";
 import { useAutosave } from "../../../_components/use-autosave";
 import { VersionsSheet } from "../../../_components/versions-sheet";
+import {
+  AddressSection,
+  ChildrenSection,
+  ClosingSection,
+  HeadSection,
+  SeoSection,
+  TextSection,
+} from "./common-sections";
+import type { EditorContext } from "./editor-context";
+import {
+  HOME_SECTIONS,
+  HomeSections,
+  KONTAKT_SECTIONS,
+  KontaktSections,
+  LEISTUNGEN_SECTIONS,
+  LeistungenSections,
+  PROJEKTE_SECTIONS,
+  ProjekteSections,
+} from "./routed-sections";
 
 type Props = {
   page: Page | null;
@@ -58,7 +64,51 @@ type Props = {
   pages: Page[];
   media: MediaDoc[];
   versions: Version[];
+  projekte?: Projekt[];
+  form?: FormDoc | null;
+  cta?: SiteSettings["cta"] | null;
 };
+
+const LEGAL = new Set(["impressum", "datenschutz"]);
+
+// The cards of a content page, in the order the page shows them; legal pages end with their text.
+function contentSections(page: Page | null): SectionInfo[] {
+  const legal = page ? LEGAL.has(page.slug) : false;
+  return [
+    { id: "kopf", title: "Kopfbereich", zone: "kopf" },
+    { id: "text", title: "Text", zone: "text" },
+    ...(page && !legal ? [{ id: "unterseiten", title: "Seiten darunter" }] : []),
+    ...(legal ? [] : [{ id: "anfrage", title: "Abschluss „Anfrage“", zone: "anfrage" }]),
+    { id: "suchmaschinen", title: "Suchmaschinen und Teilen" },
+    ...(page && PROTECTED_SLUGS.has(page.slug)
+      ? []
+      : [{ id: "adresse", title: "Adresse und Ordnung" }]),
+  ];
+}
+
+// Which card holds a field, for the marks in the index.
+function sectionOf(path: string): string {
+  if (path.startsWith("sections.hero")) return "kopf";
+  if (/^sections\.(servicesTitle|services)/.test(path)) return "leistungen";
+  if (/^sections\.steps/.test(path)) return "vorgehen";
+  if (/^sections\.principles/.test(path)) return "grundsaetze";
+  if (path.startsWith("sections.faq")) return "fragen";
+  if (path.startsWith("sections.empty")) return "projekte";
+  if (path.startsWith("sections.next")) return "danach";
+  if (path === "content") return "text";
+  if (path === "meta") return "suchmaschinen";
+  if (path === "slug" || path === "parentId") return "adresse";
+  return "kopf";
+}
+
+function errorPaths(errors: object, prefix = ""): string[] {
+  return Object.entries(errors).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (!value || typeof value !== "object") return [];
+    if ("message" in value && typeof value.message === "string") return [path];
+    return errorPaths(value, path);
+  });
+}
 
 const failure = (result: {
   serverError?: { message: string } | undefined;
@@ -67,7 +117,16 @@ const failure = (result: {
   result.serverError?.message ??
   (result.validationErrors ? "Bitte prüfen Sie die markierten Felder." : null);
 
-export function PageEditor({ page, editing, pages, media, versions }: Props) {
+export function PageEditor({
+  page,
+  editing,
+  pages,
+  media,
+  versions,
+  projekte = [],
+  form: contactForm = null,
+  cta = null,
+}: Props) {
   const router = useRouter();
   const preview = useRef<PreviewHandle>(null);
   const [busy, setBusy] = useState<"publish" | "unpublish" | "discard" | "create" | null>(null);
@@ -83,15 +142,12 @@ export function PageEditor({ page, editing, pages, media, versions }: Props) {
   const values = useWatch({ control });
   const protectedSlug = page ? PROTECTED_SLUGS.has(page.slug) : false;
 
-  // Parent choices: every other page, in tree order, minus the page's own subtree.
-  const tree = pages.map((p) => ({ id: p.id, slug: p.slug, title: p.title, parentId: p.parent }));
-  const parentOptions = flattenTree(tree, (a, b) => a.id - b.id).filter(
-    (n) => !page || (n.id !== page.id && canMove(page.id, n.id, tree)),
-  );
+  const kind = page ? kindOf(page.slug) : "content";
   const parentPath = values.parentId
     ? (pages.find((p) => p.id === values.parentId)?.path ?? null)
     : null;
-  const previewPath = pathOf(values.slug || "seite", parentPath);
+  const previewPath =
+    page && protectedSlug ? page.path : pathOf(values.slug || "seite", parentPath);
 
   const save = useCallback(
     async (input: PageInput) => {
@@ -185,227 +241,125 @@ export function PageEditor({ page, editing, pages, media, versions }: Props) {
   }, [editing, reset]);
 
   const hasDraft = page?.hasDraft || formState.isDirty;
+  const sectionList: SectionInfo[] =
+    kind === "home"
+      ? HOME_SECTIONS
+      : kind === "leistungen"
+        ? LEISTUNGEN_SECTIONS
+        : kind === "projekte"
+          ? PROJEKTE_SECTIONS
+          : kind === "kontakt"
+            ? KONTAKT_SECTIONS
+            : contentSections(page);
+  const invalid = [...new Set(errorPaths(formState.errors).map(sectionOf))];
+  const ctx: EditorContext = {
+    control,
+    setValue,
+    values: values as Partial<PageInput>,
+    page,
+    pages,
+    media,
+    projekte,
+    form: contactForm,
+    cta,
+    editorKey,
+    slugTouched,
+    touchSlug: () => setSlugTouched(true),
+  };
 
   return (
-    <form onSubmit={page ? onPublish : onCreate} noValidate>
-      <EditorShell
-        backHref="/admin/seiten"
-        backLabel="Seiten"
-        title={values.title || (page ? page.title : "Neue Seite")}
-        status={page?.status}
-        hasDraft={hasDraft}
-        saveState={page ? autosave.state : undefined}
-        onDelete={page && !protectedSlug ? onDelete : undefined}
-        deleteLabel="Seite löschen"
-        deleteDescription="Die Seite verschwindet von der Website und aus der Navigation. Seiten darunter müssen vorher verschoben werden."
-        actions={
-          page ? (
-            <>
-              <VersionsSheet versions={versions} onRestore={onRestore} />
-              {page.hasDraft ? (
+    <SectionFocusProvider preview={preview}>
+      <form onSubmit={page ? onPublish : onCreate} noValidate>
+        <EditorShell
+          backHref="/admin/seiten"
+          nav={<SectionIndex sections={sectionList} invalid={invalid} />}
+          backLabel="Seiten"
+          title={values.title || (page ? page.title : "Neue Seite")}
+          status={page?.status}
+          hasDraft={hasDraft}
+          saveState={page ? autosave.state : undefined}
+          onDelete={page && !protectedSlug ? onDelete : undefined}
+          deleteLabel="Seite löschen"
+          deleteDescription="Die Seite verschwindet von der Website und aus der Navigation. Seiten darunter müssen vorher verschoben werden."
+          actions={
+            page ? (
+              <>
+                <VersionsSheet versions={versions} onRestore={onRestore} />
+                {page.hasDraft ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy !== null}
+                    onClick={onDiscard}
+                  >
+                    <Undo2Icon data-icon="inline-start" /> Verwerfen
+                  </Button>
+                ) : null}
+                {page.status === "published" && !protectedSlug ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy !== null}
+                    onClick={onUnpublish}
+                  >
+                    {busy === "unpublish" ? (
+                      <Spinner data-icon="inline-start" />
+                    ) : (
+                      <EyeOffIcon data-icon="inline-start" />
+                    )}
+                    Zurückziehen
+                  </Button>
+                ) : null}
                 <Button
-                  type="button"
-                  variant="ghost"
+                  type="submit"
                   size="sm"
-                  disabled={busy !== null}
-                  onClick={onDiscard}
+                  disabled={busy !== null || (page.status === "published" && !hasDraft)}
                 >
-                  <Undo2Icon data-icon="inline-start" /> Verwerfen
-                </Button>
-              ) : null}
-              {page.status === "published" && !protectedSlug ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={busy !== null}
-                  onClick={onUnpublish}
-                >
-                  {busy === "unpublish" ? (
+                  {busy === "publish" ? (
                     <Spinner data-icon="inline-start" />
                   ) : (
-                    <EyeOffIcon data-icon="inline-start" />
+                    <SendIcon data-icon="inline-start" />
                   )}
-                  Zurückziehen
+                  Veröffentlichen
                 </Button>
-              ) : null}
-              <Button
-                type="submit"
-                size="sm"
-                disabled={busy !== null || (page.status === "published" && !hasDraft)}
-              >
-                {busy === "publish" ? (
-                  <Spinner data-icon="inline-start" />
-                ) : (
-                  <SendIcon data-icon="inline-start" />
-                )}
-                Veröffentlichen
+              </>
+            ) : (
+              <Button type="submit" size="sm" disabled={busy !== null}>
+                {busy === "create" ? <Spinner data-icon="inline-start" /> : null}
+                Seite anlegen
               </Button>
+            )
+          }
+          aside={
+            page ? (
+              <PreviewPane
+                ref={preview}
+                path={previewPath}
+                className="sticky top-20 h-[calc(100vh-6.5rem)]"
+              />
+            ) : undefined
+          }
+        >
+          {kind === "home" ? <HomeSections ctx={ctx} /> : null}
+          {kind === "leistungen" ? <LeistungenSections ctx={ctx} /> : null}
+          {kind === "projekte" ? <ProjekteSections ctx={ctx} /> : null}
+          {kind === "kontakt" ? <KontaktSections ctx={ctx} /> : null}
+          {kind === "content" ? (
+            <>
+              <HeadSection ctx={ctx} />
+              <TextSection ctx={ctx} />
+              {sectionList.some((x) => x.id === "unterseiten") ? (
+                <ChildrenSection ctx={ctx} />
+              ) : null}
+              {sectionList.some((x) => x.id === "anfrage") ? <ClosingSection ctx={ctx} /> : null}
+              <SeoSection ctx={ctx} />
+              {sectionList.some((x) => x.id === "adresse") ? <AddressSection ctx={ctx} /> : null}
             </>
-          ) : (
-            <Button type="submit" size="sm" disabled={busy !== null}>
-              {busy === "create" ? <Spinner data-icon="inline-start" /> : null}
-              Seite anlegen
-            </Button>
-          )
-        }
-        aside={
-          page ? (
-            <PreviewPane
-              ref={preview}
-              path={previewPath}
-              className="sticky top-20 h-[calc(100vh-6.5rem)]"
-            />
-          ) : undefined
-        }
-      >
-        <Tabs defaultValue="inhalt">
-          <TabsList>
-            <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
-            <TabsTrigger value="seo">Suchmaschinen</TabsTrigger>
-            <TabsTrigger value="einstellungen">Adresse und Ordnung</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="inhalt" className="pt-4">
-            <FieldGroup>
-              <Controller
-                control={control}
-                name="title"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="page-title">Titel</FieldLabel>
-                    <Input
-                      id="page-title"
-                      {...field}
-                      className="h-10 text-lg font-medium"
-                      aria-invalid={fieldState.invalid || undefined}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        if (!slugTouched)
-                          setValue("slug", slugify(e.target.value), { shouldDirty: true });
-                      }}
-                    />
-                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
-                  </Field>
-                )}
-              />
-              <Controller
-                control={control}
-                name="lead"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="page-lead">Einleitung</FieldLabel>
-                    <Textarea
-                      id="page-lead"
-                      {...field}
-                      value={field.value ?? ""}
-                      rows={3}
-                      aria-invalid={fieldState.invalid || undefined}
-                    />
-                    <FieldDescription>
-                      Steht neben der Überschrift und in Listen, die auf diese Seite verweisen.
-                    </FieldDescription>
-                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
-                  </Field>
-                )}
-              />
-              <Controller
-                control={control}
-                name="content"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="page-content">Text</FieldLabel>
-                    <LexicalEditor
-                      key={editorKey}
-                      id="page-content"
-                      label="Text der Seite"
-                      value={field.value}
-                      onChange={field.onChange}
-                      invalid={fieldState.invalid}
-                    />
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </TabsContent>
-
-          <TabsContent value="seo" className="pt-4">
-            <SeoFields
-              control={control}
-              media={media}
-              fallbackTitle={values.title || "Titel der Seite"}
-            />
-          </TabsContent>
-
-          <TabsContent value="einstellungen" className="pt-4">
-            <FieldGroup>
-              <Controller
-                control={control}
-                name="parentId"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="page-parent">Liegt unter</FieldLabel>
-                    <Select
-                      value={field.value ? String(field.value) : "none"}
-                      onValueChange={(v) => field.onChange(v === "none" ? null : Number(v))}
-                      disabled={protectedSlug}
-                    >
-                      <SelectTrigger id="page-parent" className="w-full max-w-md">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="none">Oberste Ebene</SelectItem>
-                          {parentOptions.map((n) => (
-                            <SelectItem key={n.id} value={String(n.id)}>
-                              {"  ".repeat(n.depth)}
-                              {n.title}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <FieldDescription>
-                      Eine Seite unter „Leistungen“ erscheint in dessen Menü und bekommt dessen
-                      Adresse vorangestellt.
-                    </FieldDescription>
-                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
-                  </Field>
-                )}
-              />
-              <Controller
-                control={control}
-                name="slug"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel htmlFor="page-slug">Adresse</FieldLabel>
-                    <Input
-                      id="page-slug"
-                      {...field}
-                      className="max-w-md font-mono"
-                      disabled={protectedSlug}
-                      aria-invalid={fieldState.invalid || undefined}
-                      onChange={(e) => {
-                        setSlugTouched(true);
-                        field.onChange(e);
-                      }}
-                    />
-                    <FieldDescription>
-                      Wird zu <code className="rounded bg-muted px-1">{previewPath}</code>.{" "}
-                      {protectedSlug
-                        ? values.slug === HOME_SLUG
-                          ? "Die Startseite bleibt unter /."
-                          : "Diese Adresse ist fest: der Fußbereich verweist darauf."
-                        : "Kleinbuchstaben, Ziffern und Bindestriche."}
-                    </FieldDescription>
-                    {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </TabsContent>
-        </Tabs>
-      </EditorShell>
-    </form>
+          ) : null}
+        </EditorShell>
+      </form>
+    </SectionFocusProvider>
   );
 }

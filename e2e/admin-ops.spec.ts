@@ -21,7 +21,7 @@ test("a redirect made in the admin leads visitors to its target", async ({ page,
   await sheet.getByLabel("Alter Pfad").fill(`/E2E-Alt-${STAMP}/`);
   await sheet.getByRole("button", { name: "Anlegen" }).click();
   await expect(page.getByText("Weiterleitung angelegt.")).toBeVisible();
-  await expect(page.getByRole("cell", { name: `/e2e-alt-${STAMP}`, exact: true })).toBeVisible();
+  await expect(page.getByText(`/e2e-alt-${STAMP}`, { exact: true })).toBeVisible();
 
   const response = await request.get(`/e2e-alt-${STAMP}`, { maxRedirects: 0 });
   expect(response.status()).toBe(308);
@@ -38,20 +38,26 @@ test("a field added to the contact form appears on /kontakt and can be removed a
   request,
 }) => {
   await page.goto("/admin/formular");
-  const before = await page.getByRole("button", { name: "Entfernen" }).count();
   await page.getByRole("button", { name: "Feld hinzufügen" }).click();
-  const fields = page.getByRole("group", { name: "Felder" });
-  const labels = fields.getByLabel("Beschriftung");
-  await labels.last().fill(`Probefeld ${STAMP}`);
+  // Existing fields come folded; the new one opens with its fields.
+  const fields = page.getByRole("region", { name: "Felder" });
+  await fields.getByLabel("Beschriftung").last().fill(`Probefeld ${STAMP}`);
   await fields.getByLabel("Feldname").last().fill(`probe-${STAMP}`);
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByText("Gespeichert. /kontakt zeigt das Formular so.")).toBeVisible();
   expect(await (await request.get("/kontakt")).text()).toContain(`Probefeld ${STAMP}`);
+  // Saving reloads the editor from the server, which folds every field again: wait for that.
+  await expect(
+    fields.getByRole("button", { name: new RegExp(`Probefeld ${STAMP}`), expanded: false }),
+  ).toBeVisible();
 
-  await page.getByRole("button", { name: "Entfernen" }).nth(before).click();
+  await page.getByRole("button", { name: `Probefeld ${STAMP} entfernen` }).click();
   await page.getByRole("button", { name: "Speichern" }).click();
-  await expect(page.getByText("Gespeichert. /kontakt zeigt das Formular so.")).toBeVisible();
-  expect(await (await request.get("/kontakt")).text()).not.toContain(`Probefeld ${STAMP}`);
+  await expect(page.getByRole("button", { name: `Probefeld ${STAMP} entfernen` })).toHaveCount(0);
+  // Saving and rebuilding /kontakt takes a moment while dev compiles for every worker.
+  await expect
+    .poll(async () => (await request.get("/kontakt")).text(), { timeout: 20_000 })
+    .not.toContain(`Probefeld ${STAMP}`);
 });
 
 test("a message sent through the site lands in the inbox, is read on opening and can be deleted", async ({

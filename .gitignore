@@ -31,3 +31,6 @@ __pycache__/
 
 # Working memory of the planning-with-files skill (per session, not for the repo)
 .planning/
+
+# E-Rechnung samples and their validator reports (pnpm erechnung:proben)
+/.e-rechnung-proben/
