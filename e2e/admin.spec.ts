@@ -137,6 +137,7 @@ test("the admin's screens have no accessibility violations", async ({ page }) =>
     "/admin/formular",
     "/admin/anfragen",
     "/admin/benutzer",
+    "/admin/protokoll",
     "/admin/kunden",
     "/admin/kunden/neu",
     "/admin/auftraege",

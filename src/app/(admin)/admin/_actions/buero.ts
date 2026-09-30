@@ -38,6 +38,7 @@ import {
   RechnungSchema,
   VertragSchema,
 } from "@/buero/logik/typen";
+import { audited } from "@/cms/audit/log";
 import { adminActionClient } from "./client";
 
 // The office: customers, orders, contracts, invoices and the issuer's details. The repositories
@@ -105,13 +106,32 @@ export const deleteRechnungAction = adminActionClient
 // Saves the draft as it is on screen, then issues it: what the owner sees is what is frozen.
 export const stelleRechnungAction = adminActionClient
   .inputSchema(id.extend({ input: RechnungSchema }))
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     await saveRechnung(parsedInput.id, parsedInput.input);
-    return { nummer: await stelleRechnung(parsedInput.id) };
+    const nummer = await audited(
+      (tx) => stelleRechnung(parsedInput.id, tx),
+      (n) => ({
+        actor: ctx.user,
+        action: "rechnung.gestellt",
+        target: { type: "rechnung", id: parsedInput.id },
+        details: { nummer: n },
+      }),
+    );
+    return { nummer };
   });
 export const bezahltAction = adminActionClient
   .inputSchema(id.extend({ am: tag }))
   .action(async ({ parsedInput }) => markiereBezahlt(parsedInput.id, parsedInput.am));
 export const stornoAction = adminActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => ({ id: await storniereRechnung(parsedInput.id) }));
+  .action(async ({ parsedInput, ctx }) => ({
+    id: await audited(
+      (tx) => storniereRechnung(parsedInput.id, tx),
+      (stornoId) => ({
+        actor: ctx.user,
+        action: "rechnung.storniert",
+        target: { type: "rechnung", id: parsedInput.id },
+        details: { storno: stornoId },
+      }),
+    ),
+  }));

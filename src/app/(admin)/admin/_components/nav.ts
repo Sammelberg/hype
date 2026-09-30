@@ -5,6 +5,7 @@ import {
   ContactIcon,
   FileSignatureIcon,
   ReceiptIcon,
+  ScrollTextIcon,
   FileTextIcon,
   FolderKanbanIcon,
   ImageIcon,
@@ -85,6 +86,12 @@ export const NAV_SITE: NavItem[] = [
     label: "Benutzer",
     icon: UsersIcon,
     keywords: "zugänge konten passwort",
+  },
+  {
+    href: "/admin/protokoll",
+    label: "Protokoll",
+    icon: ScrollTextIcon,
+    keywords: "audit log anmeldungen änderungen verlauf",
   },
 ];
 

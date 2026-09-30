@@ -24,7 +24,13 @@ test("an editor works on the site, but the office and the accounts stay closed",
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seiten");
 
   // Typed in by hand, the admin's pages do not exist for this account.
-  for (const path of ["/admin/rechnungen", "/admin/kunden", "/admin/benutzer", "/admin/firma"]) {
+  for (const path of [
+    "/admin/rechnungen",
+    "/admin/kunden",
+    "/admin/benutzer",
+    "/admin/firma",
+    "/admin/protokoll",
+  ]) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(404);
   }
@@ -34,9 +40,20 @@ test("an editor works on the site, but the office and the accounts stay closed",
   expect(await xml.text()).toBe("Dafür fehlt Ihrem Zugang die Berechtigung.");
 });
 
-test("an admin sees the office and the accounts", async ({ page }) => {
+test("an admin sees the office, the accounts and the log", async ({ page }) => {
   await signIn(page);
   const nav = page.getByRole("navigation", { name: "Bereiche" });
-  for (const label of ["Kunden", "Rechnungen", "Benutzer"])
+  for (const label of ["Kunden", "Rechnungen", "Benutzer", "Protokoll"])
     await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
+
+  // The sign-in a moment ago is in the log, and the chain holds.
+  await nav.getByRole("link", { name: "Protokoll", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Protokoll");
+  await expect(page.getByText("Lückenlos")).toBeVisible();
+  await page.getByLabel("Zeigen").click();
+  await page.getByRole("option", { name: "Angemeldet" }).click();
+  await expect(page).toHaveURL(/aktion=anmeldung$/);
+  await expect(
+    page.getByRole("row").filter({ hasText: "e2e-admin@example.com" }).first(),
+  ).toBeVisible();
 });

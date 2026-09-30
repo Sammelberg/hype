@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { audited } from "@/cms/audit/log";
 import { ROLES } from "@/cms/auth/roles";
 import { destroyAllSessions } from "@/cms/auth/session";
 import { temporaryPassword } from "@/cms/auth/temporary-password";
@@ -26,17 +27,29 @@ export const createUserAction = adminActionClient
       role,
     }),
   )
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const password = temporaryPassword();
-    const user = await createUser({ ...parsedInput, password, mustChangePassword: true });
+    const user = await audited(
+      (tx) => createUser({ ...parsedInput, password, mustChangePassword: true }, tx),
+      (u) => ({
+        actor: ctx.user,
+        action: "zugang.angelegt",
+        target: { type: "zugang", id: u.id },
+        details: { email: u.email, rolle: u.role },
+      }),
+    );
     return { id: user.id, password };
   });
 
 export const resetUserPasswordAction = adminActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const password = temporaryPassword();
-    await setPassword(parsedInput.id, password, { mustChange: true });
+    await audited((tx) => setPassword(parsedInput.id, password, { mustChange: true }, tx), {
+      actor: ctx.user,
+      action: "zugang.passwort-vergeben",
+      target: { type: "zugang", id: parsedInput.id },
+    });
     return { password };
   });
 
@@ -46,20 +59,33 @@ export const setUserRoleAction = adminActionClient
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.id === ctx.user.id)
       throw new AuthError("Die eigene Rolle ändert ein anderer Admin.");
-    await setUserRole(parsedInput.id, parsedInput.role);
+    await audited((tx) => setUserRole(parsedInput.id, parsedInput.role, tx), {
+      actor: ctx.user,
+      action: "zugang.rolle",
+      target: { type: "zugang", id: parsedInput.id },
+      details: { rolle: parsedInput.role },
+    });
   });
 
 export const unlockUserAction = adminActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
-    await unlockUser(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    await audited((tx) => unlockUser(parsedInput.id, tx), {
+      actor: ctx.user,
+      action: "zugang.entsperrt",
+      target: { type: "zugang", id: parsedInput.id },
+    });
   });
 
 // Ends every session of the account: a lost laptop, a colleague who left. The password stays.
 export const signOutEverywhereAction = adminActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
-    await destroyAllSessions(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    await audited((tx) => destroyAllSessions(parsedInput.id, tx), {
+      actor: ctx.user,
+      action: "zugang.abgemeldet",
+      target: { type: "zugang", id: parsedInput.id },
+    });
   });
 
 export const deleteUserAction = adminActionClient
@@ -67,5 +93,9 @@ export const deleteUserAction = adminActionClient
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.id === ctx.user.id)
       throw new AuthError("Den eigenen Zugang löschen Sie nicht von hier aus.");
-    await deleteUser(parsedInput.id);
+    await audited((tx) => deleteUser(parsedInput.id, {}, tx), {
+      actor: ctx.user,
+      action: "zugang.geloescht",
+      target: { type: "zugang", id: parsedInput.id },
+    });
   });

@@ -11,6 +11,7 @@ import {
   saveDraft,
   unpublishPage,
 } from "@/cms/content/pages";
+import { audited } from "@/cms/audit/log";
 import { PageInputSchema } from "@/cms/content/types";
 import { getVersion } from "@/cms/content/versions";
 import { revalidateDocument } from "@/cms/revalidate";
@@ -33,15 +34,31 @@ export const publishPageAction = authActionClient
   .inputSchema(id.extend({ input: PageInputSchema.optional() }))
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.input) await saveDraft(parsedInput.id, parsedInput.input);
-    const result = await publishPage(parsedInput.id, ctx.user.id);
+    const result = await audited(
+      (tx) => publishPage(parsedInput.id, ctx.user.id, tx),
+      (r) => ({
+        actor: ctx.user,
+        action: "seite.veroeffentlicht",
+        target: { type: "seite", id: parsedInput.id },
+        details: { pfad: r.pathsAfter[0] },
+      }),
+    );
     revalidateDocument([...result.pathsBefore, ...result.pathsAfter]);
     return result;
   });
 
 export const unpublishPageAction = authActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
-    const result = await unpublishPage(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    const result = await audited(
+      (tx) => unpublishPage(parsedInput.id, tx),
+      (r) => ({
+        actor: ctx.user,
+        action: "seite.zurueckgezogen",
+        target: { type: "seite", id: parsedInput.id },
+        details: { pfad: r.pathsBefore[0] },
+      }),
+    );
     revalidateDocument(result.pathsBefore);
     return result;
   });
@@ -52,10 +69,20 @@ export const discardPageDraftAction = authActionClient
     await discardDraft(parsedInput.id);
   });
 
-export const deletePageAction = authActionClient.inputSchema(id).action(async ({ parsedInput }) => {
-  const paths = await deletePage(parsedInput.id);
-  revalidateDocument(paths);
-});
+export const deletePageAction = authActionClient
+  .inputSchema(id)
+  .action(async ({ parsedInput, ctx }) => {
+    const paths = await audited(
+      (tx) => deletePage(parsedInput.id, tx),
+      (p) => ({
+        actor: ctx.user,
+        action: "seite.geloescht",
+        target: { type: "seite", id: parsedInput.id },
+        details: { pfad: p[0] },
+      }),
+    );
+    revalidateDocument(paths);
+  });
 
 export const restorePageVersionAction = authActionClient
   .inputSchema(id.extend({ versionId: z.number().int().positive() }))

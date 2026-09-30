@@ -2,7 +2,7 @@
 // the working copy.
 import { eq } from "drizzle-orm";
 
-import { db } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { siteSettings } from "../db/schema";
 import { type SiteSettings, SiteSettingsSchema } from "./types";
 import { addVersion } from "./versions";
@@ -41,8 +41,8 @@ export async function saveSiteSettingsDraft(raw: SiteSettings) {
     .where(eq(siteSettings.id, ID));
 }
 
-export async function publishSiteSettings(userId: number | null) {
-  await db.transaction(async (tx) => {
+export async function publishSiteSettings(userId: number | null, client: Db | Tx = db) {
+  await client.transaction(async (tx) => {
     const [row] = await tx.select().from(siteSettings).where(eq(siteSettings.id, ID)).limit(1);
     if (!row) throw new Error("Die Website-Einstellungen fehlen.");
     const data = SiteSettingsSchema.parse(row.draft ?? row.data);

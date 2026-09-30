@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { and, eq, gt, lt } from "drizzle-orm";
 
-import { db } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { sessions, users } from "../db/schema";
 import type { User } from "../content/types";
 import { SESSION_DAYS } from "./cookie";
@@ -53,8 +53,8 @@ export async function destroySession(token: string | undefined) {
   if (token) await db.delete(sessions).where(eq(sessions.id, digest(token)));
 }
 
-export async function destroyAllSessions(userId: number) {
-  await db.delete(sessions).where(eq(sessions.userId, userId));
+export async function destroyAllSessions(userId: number, client: Db | Tx = db) {
+  await client.delete(sessions).where(eq(sessions.userId, userId));
 }
 
 // Housekeeping, called now and then from the login action.

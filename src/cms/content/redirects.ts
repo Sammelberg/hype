@@ -2,7 +2,7 @@
 import { desc, eq } from "drizzle-orm";
 
 import { normalizePath } from "../../lib/redirects";
-import { db } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { pages, projekte, redirects } from "../db/schema";
 import { projektPathOf as projektPath } from "../paths";
 import { type Redirect, type RedirectInput, RedirectInputSchema } from "./types";
@@ -92,22 +92,25 @@ const columnsOf = (input: RedirectInput) => ({
   updatedAt: new Date(),
 });
 
-export async function createRedirect(raw: RedirectInput) {
+export async function createRedirect(raw: RedirectInput, client: Db | Tx = db) {
   const input = RedirectInputSchema.parse(raw);
-  const [existing] = await db
+  const [existing] = await client
     .select({ id: redirects.id })
     .from(redirects)
     .where(eq(redirects.from, normalizePath(input.from)))
     .limit(1);
   if (existing)
     throw new RedirectError("Für diesen Pfad gibt es schon eine Weiterleitung.", "from");
-  const [row] = await db.insert(redirects).values(columnsOf(input)).returning({ id: redirects.id });
+  const [row] = await client
+    .insert(redirects)
+    .values(columnsOf(input))
+    .returning({ id: redirects.id });
   return row!.id;
 }
 
-export async function updateRedirect(id: number, raw: RedirectInput) {
+export async function updateRedirect(id: number, raw: RedirectInput, client: Db | Tx = db) {
   const input = RedirectInputSchema.parse(raw);
-  const [row] = await db
+  const [row] = await client
     .update(redirects)
     .set(columnsOf(input))
     .where(eq(redirects.id, id))
@@ -115,8 +118,8 @@ export async function updateRedirect(id: number, raw: RedirectInput) {
   if (!row) throw new RedirectError("Die Weiterleitung gibt es nicht mehr.");
 }
 
-export async function deleteRedirect(id: number) {
-  const [row] = await db
+export async function deleteRedirect(id: number, client: Db | Tx = db) {
+  const [row] = await client
     .delete(redirects)
     .where(eq(redirects.id, id))
     .returning({ from: redirects.from });

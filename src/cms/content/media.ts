@@ -35,8 +35,8 @@ export async function mediaByIds(ids: (number | null)[], client: Db | Tx = db) {
   return new Map(rows.map((row) => [row.id, toMediaDoc(row)]));
 }
 
-export async function createMedia(record: MediaRecord): Promise<MediaDoc> {
-  const [row] = await db.insert(media).values(record).returning();
+export async function createMedia(record: MediaRecord, client: Db | Tx = db): Promise<MediaDoc> {
+  const [row] = await client.insert(media).values(record).returning();
   return toMediaDoc(row!);
 }
 
@@ -53,7 +53,7 @@ export async function updateMedia(
 }
 
 // Removes the row; the caller deletes the files (media/store.ts) once this succeeded.
-export async function deleteMedia(id: number): Promise<MediaDoc | null> {
-  const [row] = await db.delete(media).where(eq(media.id, id)).returning();
+export async function deleteMedia(id: number, client: Db | Tx = db): Promise<MediaDoc | null> {
+  const [row] = await client.delete(media).where(eq(media.id, id)).returning();
   return row ? toMediaDoc(row) : null;
 }

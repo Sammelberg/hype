@@ -1,7 +1,7 @@
 // Admin accounts. Emails compare case-insensitively; passwords never leave password.ts.
 import { and, asc, eq, isNull, lte, or, sql } from "drizzle-orm";
 
-import { db, type Tx } from "../db/client";
+import { db, type Db, type Tx } from "../db/client";
 import { sessions, users } from "../db/schema";
 import type { User } from "../content/types";
 import type { Role } from "./roles";
@@ -61,13 +61,16 @@ export async function findUserByEmail(email: string) {
   return row ?? null;
 }
 
-export async function createUser(input: {
-  email: string;
-  name?: string | null;
-  password: string;
-  role: Role;
-  mustChangePassword?: boolean;
-}) {
+export async function createUser(
+  input: {
+    email: string;
+    name?: string | null;
+    password: string;
+    role: Role;
+    mustChangePassword?: boolean;
+  },
+  client: Db | Tx = db,
+) {
   const email = normalizeEmail(input.email);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new AuthError("Bitte eine gültige E-Mail-Adresse.", "email");
@@ -76,7 +79,7 @@ export async function createUser(input: {
   if (await findUserByEmail(email))
     throw new AuthError("Diese E-Mail-Adresse ist schon vergeben.", "email");
   try {
-    const [row] = await db
+    const [row] = await client
       .insert(users)
       .values({
         email,
@@ -100,11 +103,12 @@ export async function setPassword(
   id: number,
   password: string,
   options: { mustChange?: boolean } = {},
+  client: Db | Tx = db,
 ) {
   const problem = passwordProblem(password);
   if (problem) throw new AuthError(problem, "password");
   const now = new Date();
-  await db
+  await client
     .update(users)
     .set({
       passwordHash: await hashPassword(password),
@@ -115,7 +119,7 @@ export async function setPassword(
       updatedAt: now,
     })
     .where(eq(users.id, id));
-  await db.delete(sessions).where(eq(sessions.userId, id));
+  await client.delete(sessions).where(eq(sessions.userId, id));
 }
 
 // Someone must be able to manage accounts: the last admin can neither go nor become an editor.
@@ -130,8 +134,8 @@ async function keepAnAdmin(tx: Tx, id: number, message: string) {
   if (admins.length === 1 && admins[0]!.id === id) throw new AuthError(message);
 }
 
-export async function setUserRole(id: number, role: Role) {
-  await db.transaction(async (tx) => {
+export async function setUserRole(id: number, role: Role, client: Db | Tx = db) {
+  await client.transaction(async (tx) => {
     if (role !== "admin") {
       await keepAnAdmin(
         tx,
@@ -144,16 +148,20 @@ export async function setUserRole(id: number, role: Role) {
 }
 
 // Lifts a lock after too many wrong passwords.
-export async function unlockUser(id: number) {
-  await db
+export async function unlockUser(id: number, client: Db | Tx = db) {
+  await client
     .update(users)
     .set({ failedAttempts: 0, lockedUntil: null, updatedAt: new Date() })
     .where(eq(users.id, id));
 }
 
 // The last admin stays, unless a script (the e2e cleanup) insists.
-export async function deleteUser(id: number, options: { evenTheLast?: boolean } = {}) {
-  await db.transaction(async (tx) => {
+export async function deleteUser(
+  id: number,
+  options: { evenTheLast?: boolean } = {},
+  client: Db | Tx = db,
+) {
+  await client.transaction(async (tx) => {
     if (!options.evenTheLast) {
       await keepAnAdmin(tx, id, "Der letzte Admin kann nicht gelöscht werden.");
     }

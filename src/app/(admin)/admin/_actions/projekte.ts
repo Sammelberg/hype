@@ -11,6 +11,7 @@ import {
   saveProjektDraft,
   unpublishProjekt,
 } from "@/cms/content/projekte";
+import { audited } from "@/cms/audit/log";
 import { ProjektInputSchema } from "@/cms/content/types";
 import { getVersion } from "@/cms/content/versions";
 import { revalidateDocument } from "@/cms/revalidate";
@@ -33,15 +34,31 @@ export const publishProjektAction = authActionClient
   .inputSchema(id.extend({ input: ProjektInputSchema.optional() }))
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.input) await saveProjektDraft(parsedInput.id, parsedInput.input);
-    const result = await publishProjekt(parsedInput.id, ctx.user.id);
+    const result = await audited(
+      (tx) => publishProjekt(parsedInput.id, ctx.user.id, tx),
+      (r) => ({
+        actor: ctx.user,
+        action: "projekt.veroeffentlicht",
+        target: { type: "projekt", id: parsedInput.id },
+        details: { pfad: r.pathsAfter[0] },
+      }),
+    );
     revalidateDocument([...result.pathsBefore, ...result.pathsAfter, "/projekte"]);
     return result;
   });
 
 export const unpublishProjektAction = authActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
-    const result = await unpublishProjekt(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    const result = await audited(
+      (tx) => unpublishProjekt(parsedInput.id, tx),
+      (r) => ({
+        actor: ctx.user,
+        action: "projekt.zurueckgezogen",
+        target: { type: "projekt", id: parsedInput.id },
+        details: { pfad: r.pathsBefore[0] },
+      }),
+    );
     revalidateDocument([...result.pathsBefore, "/projekte"]);
     return result;
   });
@@ -54,8 +71,16 @@ export const discardProjektDraftAction = authActionClient
 
 export const deleteProjektAction = authActionClient
   .inputSchema(id)
-  .action(async ({ parsedInput }) => {
-    const paths = await deleteProjekt(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    const paths = await audited(
+      (tx) => deleteProjekt(parsedInput.id, tx),
+      (p) => ({
+        actor: ctx.user,
+        action: "projekt.geloescht",
+        target: { type: "projekt", id: parsedInput.id },
+        details: { pfad: p[0] },
+      }),
+    );
     revalidateDocument([...paths, "/projekte"]);
   });
 

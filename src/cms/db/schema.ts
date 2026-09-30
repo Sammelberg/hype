@@ -3,6 +3,7 @@
 import { sql, type SQL } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  bigserial,
   boolean,
   check,
   customType,
@@ -77,6 +78,27 @@ export const sessions = cms.table(
     lastSeenAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
   },
   (t) => [index("sessions_user_idx").on(t.userId), index("sessions_expires_idx").on(t.expiresAt)],
+);
+
+// The audit log: who did what, when. Append-only and chained: a trigger (migration 0005) numbers
+// each row under a lock, links it to the one before (prev_hash) and hashes it; UPDATE, DELETE and
+// TRUNCATE are refused. user_id has no foreign key, and the e-mail is copied: the entry outlives
+// the account.
+export const auditLog = cms.table(
+  "audit_log",
+  {
+    id: bigserial({ mode: "number" }).primaryKey(),
+    at: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    userId: integer(),
+    userEmail: text(),
+    action: text().notNull(),
+    targetType: text(),
+    targetId: text(),
+    details: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+    prevHash: text().notNull().default(""),
+    hash: text().notNull().default(""),
+  },
+  (t) => [index("audit_log_action_idx").on(t.action, t.id)],
 );
 
 // Rate limits: one row per key (`login:<ip>`, `kontakt:<ip>`, `upload:<user>`) counting the

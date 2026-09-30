@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { audited } from "@/cms/audit/log";
 import { deleteMedia, updateMedia } from "@/cms/content/media";
 import { removeFiles } from "@/cms/media/store";
 import { authActionClient } from "./client";
@@ -22,7 +23,15 @@ export const updateMediaAction = authActionClient
 
 export const deleteMediaAction = authActionClient
   .inputSchema(z.object({ id: z.number().int().positive() }))
-  .action(async ({ parsedInput }) => {
-    const doc = await deleteMedia(parsedInput.id);
+  .action(async ({ parsedInput, ctx }) => {
+    const doc = await audited(
+      (tx) => deleteMedia(parsedInput.id, tx),
+      (d) => ({
+        actor: ctx.user,
+        action: "medien.geloescht",
+        target: { type: "medien", id: parsedInput.id },
+        details: { datei: d?.filename ?? null },
+      }),
+    );
     if (doc) await removeFiles([doc.filename, ...Object.values(doc.sizes).map((s) => s.filename)]);
   });

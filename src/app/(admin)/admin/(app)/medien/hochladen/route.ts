@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserForAction } from "@/cms/auth/guard";
+import { audited } from "@/cms/audit/log";
 import { createMedia } from "@/cms/content/media";
 import { clientIp } from "@/cms/security/client-ip";
 import { hitRateLimit, LIMITS } from "@/cms/security/rate-limit";
@@ -15,9 +16,9 @@ const MAX_REQUEST_BYTES = 60 * 1024 * 1024;
 const refuse = (message: string, status: number) => NextResponse.json({ message }, { status });
 
 export async function POST(request: Request) {
-  let userId: number;
+  let user: Awaited<ReturnType<typeof requireUserForAction>>;
   try {
-    userId = (await requireUserForAction()).id;
+    user = await requireUserForAction();
   } catch (error) {
     return refuse((error as Error).message, 401);
   }
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin || origin !== new URL(request.url).origin) return refuse("Nicht erlaubt.", 403);
 
-  const limit = await hitRateLimit(`upload:${userId}`, LIMITS.upload);
+  const limit = await hitRateLimit(`upload:${user.id}`, LIMITS.upload);
   if (!limit.ok) return refuse(retryMessage(limit.retryAfterSeconds), 429);
 
   const length = Number(request.headers.get("content-length"));
@@ -48,7 +49,16 @@ export async function POST(request: Request) {
   try {
     for (const file of files) {
       const stored = await storeUpload(file);
-      const doc = await createMedia({ ...stored, alt: alt || file.name.replace(/\.[^.]+$/, "") });
+      const record = { ...stored, alt: alt || file.name.replace(/\.[^.]+$/, "") };
+      const doc = await audited(
+        (tx) => createMedia(record, tx),
+        (d) => ({
+          actor: user,
+          action: "medien.hochgeladen",
+          target: { type: "medien", id: d.id },
+          details: { datei: d.filename },
+        }),
+      );
       ids.push(doc.id);
     }
   } catch (error) {

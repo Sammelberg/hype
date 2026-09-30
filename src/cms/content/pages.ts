@@ -306,8 +306,12 @@ export async function saveDraft(id: number, raw: PageInput) {
 export type PublishResult = { pathsBefore: string[]; pathsAfter: string[] };
 
 // Moves the draft (or, without one, the live fields) into the live columns and publishes.
-export async function publishPage(id: number, userId: number | null): Promise<PublishResult> {
-  return db.transaction(async (tx) => {
+export async function publishPage(
+  id: number,
+  userId: number | null,
+  client: Db | Tx = db,
+): Promise<PublishResult> {
+  return client.transaction(async (tx) => {
     const rows = await allRows(tx);
     const row = rows.find((r) => r.id === id);
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
@@ -342,8 +346,8 @@ const subtreePaths = (rows: Row[], id: number) => {
     .filter(Boolean);
 };
 
-export async function unpublishPage(id: number): Promise<PublishResult> {
-  return db.transaction(async (tx) => {
+export async function unpublishPage(id: number, client: Db | Tx = db): Promise<PublishResult> {
+  return client.transaction(async (tx) => {
     const rows = await allRows(tx);
     const row = rows.find((r) => r.id === id);
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
@@ -359,8 +363,8 @@ export async function discardDraft(id: number) {
   await db.update(pages).set({ draft: null, updatedAt: new Date() }).where(eq(pages.id, id));
 }
 
-export async function deletePage(id: number): Promise<string[]> {
-  return db.transaction(async (tx) => {
+export async function deletePage(id: number, client: Db | Tx = db): Promise<string[]> {
+  return client.transaction(async (tx) => {
     const rows = await allRows(tx);
     const row = rows.find((r) => r.id === id);
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");

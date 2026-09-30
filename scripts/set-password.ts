@@ -3,6 +3,8 @@
 // first account (there is no setup page, so an empty database offers nobody a way in).
 // Without a password argument a temporary one is generated and must be changed at the next
 // sign-in. Local databases only, unless --force.
+import { audited } from "../src/cms/audit/log";
+import { SHELL } from "../src/cms/audit/types";
 import { temporaryPassword } from "../src/cms/auth/temporary-password";
 import { AuthError, createUser, findUserByEmail, setPassword } from "../src/cms/auth/users";
 
@@ -33,7 +35,15 @@ if (create) {
   }
   try {
     // The first account runs everything, accounts included.
-    await createUser({ email, password, role: "admin", mustChangePassword: mustChange });
+    await audited(
+      (tx) => createUser({ email, password, role: "admin", mustChangePassword: mustChange }, tx),
+      (created) => ({
+        actor: SHELL,
+        action: "zugang.angelegt",
+        target: { type: "zugang", id: created.id },
+        details: { email: created.email, rolle: created.role },
+      }),
+    );
   } catch (error) {
     if (error instanceof AuthError) {
       console.error(error.message);
@@ -46,7 +56,11 @@ if (create) {
     console.error(`Kein Zugang mit der Adresse ${email}. Neu anlegen mit --anlegen.`);
     process.exit(1);
   }
-  await setPassword(user.id, password, { mustChange });
+  await audited((tx) => setPassword(user.id, password, { mustChange }, tx), {
+    actor: SHELL,
+    action: "zugang.passwort-vergeben",
+    target: { type: "zugang", id: user.id },
+  });
 }
 
 const done = create ? `Zugang ${email} angelegt.` : `Passwort für ${email} gesetzt.`;

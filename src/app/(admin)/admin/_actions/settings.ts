@@ -8,6 +8,7 @@ import {
   restoreSiteSettingsVersion,
   saveSiteSettingsDraft,
 } from "@/cms/content/site-settings";
+import { audited } from "@/cms/audit/log";
 import { SiteSettingsSchema } from "@/cms/content/types";
 import { getVersion } from "@/cms/content/versions";
 import { revalidateSite } from "@/cms/revalidate";
@@ -24,7 +25,10 @@ export const publishSettingsAction = authActionClient
   .inputSchema(z.object({ input: SiteSettingsSchema.optional() }))
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.input) await saveSiteSettingsDraft(parsedInput.input);
-    await publishSiteSettings(ctx.user.id);
+    await audited((tx) => publishSiteSettings(ctx.user.id, tx), {
+      actor: ctx.user,
+      action: "website.veroeffentlicht",
+    });
     revalidateSite();
   });
 

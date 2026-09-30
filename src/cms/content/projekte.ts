@@ -185,8 +185,9 @@ export type ProjektPublishResult = { pathsBefore: string[]; pathsAfter: string[]
 export async function publishProjekt(
   id: number,
   userId: number | null,
+  client: Db | Tx = db,
 ): Promise<ProjektPublishResult> {
-  return db.transaction(async (tx) => {
+  return client.transaction(async (tx) => {
     const [row] = await tx.select().from(projekte).where(eq(projekte.id, id)).limit(1);
     if (!row) throw new ProjektError("Das Projekt gibt es nicht mehr.");
     const input = effective(row, true);
@@ -207,8 +208,11 @@ export async function publishProjekt(
   });
 }
 
-export async function unpublishProjekt(id: number): Promise<ProjektPublishResult> {
-  const [row] = await db
+export async function unpublishProjekt(
+  id: number,
+  client: Db | Tx = db,
+): Promise<ProjektPublishResult> {
+  const [row] = await client
     .update(projekte)
     .set({ status: "draft", updatedAt: new Date() })
     .where(eq(projekte.id, id))
@@ -221,8 +225,8 @@ export async function discardProjektDraft(id: number) {
   await db.update(projekte).set({ draft: null, updatedAt: new Date() }).where(eq(projekte.id, id));
 }
 
-export async function deleteProjekt(id: number): Promise<string[]> {
-  return db.transaction(async (tx) => {
+export async function deleteProjekt(id: number, client: Db | Tx = db): Promise<string[]> {
+  return client.transaction(async (tx) => {
     const [row] = await tx
       .delete(projekte)
       .where(eq(projekte.id, id))
