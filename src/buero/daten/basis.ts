@@ -4,14 +4,12 @@ import { sql } from "drizzle-orm";
 import type { Db, Tx } from "../../cms/db/client";
 import { dokumentNummer } from "../logik/ablauf";
 import { nummernkreise } from "../db/schema";
+import { CmsError } from "../../cms/errors";
 
 /** An error the admin shows as it is; `field` names the input to blame. */
-export class BueroError extends Error {
-  constructor(
-    message: string,
-    public readonly field?: string,
-  ) {
-    super(message);
+export class BueroError extends CmsError {
+  constructor(message: string, field?: string) {
+    super(message, field);
   }
 }
 

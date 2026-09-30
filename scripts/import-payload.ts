@@ -398,7 +398,7 @@ try {
     }
     await client.query(
       `insert into cms.redirects ("from", type, to_page_id, to_projekt_id, to_url, created_at, updated_at) values ($1,$2,$3,$4,$5,$6,$7)`,
-      [r.from, r.type === "302" ? 302 : 301, toPage, toProjekt, toUrl, r.created_at, r.updated_at],
+      [r.from, r.type === "302" ? 307 : 308, toPage, toProjekt, toUrl, r.created_at, r.updated_at],
     );
     counts.redirects = (counts.redirects ?? 0) + 1;
   }

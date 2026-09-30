@@ -1,8 +1,9 @@
 // Pure functions over the page tree: public paths, breadcrumbs, moves. The repository
 // (content/pages.ts) applies them inside a transaction; the admin uses them for previews.
+import { HOME_SLUG } from "../paths";
 import type { Breadcrumb, PageKind, PageSections } from "./types";
 
-export const HOME_SLUG = "startseite";
+export { HOME_SLUG };
 
 // Pages with a route of their own (`/`, /leistungen, /projekte, /kontakt): the route shows the
 // page's sections, so the page's kind follows from its fixed slug.
@@ -100,10 +101,6 @@ export function canMove(id: number, newParentId: number | null, nodes: readonly 
   if (newParentId === null) return true;
   if (newParentId === id) return false;
   return !descendantsOf(id, nodes).some((n) => n.id === newParentId);
-}
-
-export function depthOf(id: number, nodes: readonly TreeNode[]) {
-  return breadcrumbsOf(id, nodes).length - 1;
 }
 
 // Depth-first order for a tree view: each page followed by its children, siblings by `order`.

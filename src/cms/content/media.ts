@@ -22,11 +22,6 @@ export async function listMedia(): Promise<MediaDoc[]> {
   return rows.map(toMediaDoc);
 }
 
-export async function getMedia(id: number): Promise<MediaDoc | null> {
-  const [row] = await db.select().from(media).where(eq(media.id, id)).limit(1);
-  return row ? toMediaDoc(row) : null;
-}
-
 // id → doc for the images a set of documents references (one query for a whole list).
 export async function mediaByIds(ids: (number | null)[], client: Db | Tx = db) {
   const wanted = [...new Set(ids.filter((id): id is number => id !== null))];

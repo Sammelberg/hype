@@ -152,7 +152,7 @@ async function main() {
   if (target) {
     await upsertRedirect({
       from: SEED_REDIRECT.from,
-      type: 301,
+      type: 308,
       toPageId: target,
       toProjektId: null,
       toUrl: null,

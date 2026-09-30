@@ -1,7 +1,7 @@
 import { defineConfig } from "drizzle-kit";
 
 // The own CMS lives in the Postgres schema `cms`, apart from anything else in the database.
-// `pnpm cms:generate <name>` writes a migration from schema.ts; `pnpm cms:migrate` applies them
+// `pnpm migrate:create <name>` writes a migration from schema.ts; `pnpm migrate` applies them
 // (src/cms/db/migrate.ts). DATABASE_URL is only needed for the introspection commands.
 export default defineConfig({
   dialect: "postgresql",

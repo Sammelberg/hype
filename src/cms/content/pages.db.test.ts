@@ -140,11 +140,72 @@ describe.skipIf(!process.env.DATABASE_URL)("pages repository", () => {
     const id = await createPage(input("test-ziel"), { publish: true });
     await createRedirect({
       from: "/Test-Alt/",
-      type: 301,
+      type: 308,
       toPageId: id,
       toProjektId: null,
       toUrl: null,
     });
     expect(await findRedirect("/test-alt")).toEqual({ destination: "/test-ziel", permanent: true });
+  });
+
+  it("refuses to withdraw a page while pages below it are published", async () => {
+    const parent = await createPage(input("test-rueckzug"), { publish: true });
+    await createPage(input("test-rueckzug-kind", { parentId: parent }), { publish: true });
+    await expect(unpublishPage(parent)).rejects.toThrow(/test-rueckzug-kind/);
+    expect((await getPageByPath("/test-rueckzug"))?.status).toBe("published");
+  });
+
+  it("a new address leaves a redirect from the old one, for the page and every page below", async () => {
+    const parent = await createPage(input("test-umzug"), { publish: true });
+    await createPage(input("test-umzug-kind", { parentId: parent }), { publish: true });
+    await saveDraft(parent, input("test-umzug-neu"));
+    await publishPage(parent, null);
+    expect(await findRedirect("/test-umzug")).toEqual({
+      destination: "/test-umzug-neu",
+      permanent: true,
+    });
+    expect(await findRedirect("/test-umzug/test-umzug-kind")).toEqual({
+      destination: "/test-umzug-neu/test-umzug-kind",
+      permanent: true,
+    });
+
+    // Back to the old address: the page is there again, its redirect goes, the other one stays.
+    await saveDraft(parent, input("test-umzug"));
+    await publishPage(parent, null);
+    expect(await findRedirect("/test-umzug")).toBeNull();
+    expect(await findRedirect("/test-umzug-neu")).toEqual({
+      destination: "/test-umzug",
+      permanent: true,
+    });
+  });
+
+  it("a page that has never been public leaves no redirect behind", async () => {
+    const id = await createPage(input("test-entwurf-alt"));
+    await saveDraft(id, input("test-entwurf-neu"));
+    await publishPage(id, null);
+    expect(await findRedirect("/test-entwurf-alt")).toBeNull();
+  });
+
+  it("refuses to delete a page redirects point at, and names them", async () => {
+    const id = await createPage(input("test-redirect-ziel"), { publish: true });
+    await createRedirect({
+      from: "/test-redirect-quelle",
+      type: 308,
+      toPageId: id,
+      toProjektId: null,
+      toUrl: null,
+    });
+    await expect(deletePage(id)).rejects.toThrow(/test-redirect-quelle/);
+  });
+
+  it("refuses a redirect onto itself, into a loop, or to an address that is not a web page", async () => {
+    const redirect = (from: string, toUrl: string) =>
+      createRedirect({ from, type: 308, toPageId: null, toProjektId: null, toUrl });
+    await expect(redirect("/test-kreis", "/test-kreis")).rejects.toThrow(/sich selbst/);
+    await redirect("/test-kreis-a", "/test-kreis-b");
+    await expect(redirect("/test-kreis-b", "/test-kreis-a")).rejects.toThrow(/Kreis/);
+    await expect(redirect("/test-schema", "javascript:alert(1)")).rejects.toThrow(/https/);
+    await expect(redirect("/test-schema", "//evil.example")).rejects.toThrow(/https/);
+    await redirect("/test-extern", "https://example.com/seite");
   });
 });

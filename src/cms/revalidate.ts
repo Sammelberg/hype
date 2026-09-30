@@ -15,7 +15,8 @@ export function revalidateDocument(paths: string[]) {
   revalidatePath("/", "layout");
 }
 
-// The settings feed every page's header, footer and the home sections.
+// Everything at once: the settings feed every page's header, footer and home sections, and an
+// image may appear on any page.
 export function revalidateSite() {
   revalidatePath("/", "layout");
 }

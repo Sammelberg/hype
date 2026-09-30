@@ -26,7 +26,9 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DATABASE_URL: postgres://starter:starter@localhost:5432/starter
-      NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      # One port for the build, `pnpm start` and Playwright (playwright.config.ts waits on PORT).
+      PORT: "3002"
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3002
       NEXT_TELEMETRY_DISABLED: "1"
       E2E_ADMIN_PASSWORD: ci-only-e2e-admin-passwort
       FORM_SECRET: ci-only-form-secret-0123456789abcdef
@@ -41,9 +43,10 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm lint
-      - run: pnpm test
+      # The repository tests (*.db.test.ts) need the schema and the seeded pages.
       - run: pnpm migrate
       - run: pnpm seed
+      - run: pnpm test
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e --project=chromium

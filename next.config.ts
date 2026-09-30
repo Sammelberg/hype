@@ -8,6 +8,9 @@ import type { NextConfig } from "next";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isDev = process.env.NODE_ENV !== "production";
+// Served over https (production): http subresources are upgraded. Not on a production build
+// served over http://localhost (CI, the local preview), where the upgrade would break every frame.
+const isHttps = (process.env.NEXT_PUBLIC_SERVER_URL ?? "").startsWith("https://");
 
 // Data sovereignty: the browser may only talk to this origin. Every third-party origin must be an
 // explicit, reviewed addition here (and should be self-hosted or EU-hosted where possible).
@@ -25,7 +28,7 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(isHttps ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [

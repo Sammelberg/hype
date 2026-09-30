@@ -9,15 +9,14 @@ import { mediaByIds } from "./media";
 import type { MediaDoc, Projekt, ProjektInput } from "./types";
 import { ProjektInputSchema } from "./types";
 import { addVersion } from "./versions";
+import { CmsError } from "../errors";
+import { redirectMoves, redirectsOnto } from "./redirects";
 
 type Row = typeof projekte.$inferSelect;
 
-export class ProjektError extends Error {
-  constructor(
-    message: string,
-    public readonly field?: keyof ProjektInput,
-  ) {
-    super(message);
+export class ProjektError extends CmsError {
+  constructor(message: string, field?: keyof ProjektInput) {
+    super(message, field);
   }
 }
 
@@ -204,6 +203,11 @@ export async function publishProjekt(
       kind: "published",
       userId,
     });
+    // A published project under a new slug: its old address leads to the new one.
+    const moved = row.status === "published" && row.slug !== input.slug;
+    await redirectMoves(tx, moved ? [{ from: projektPath(row.slug), to: { projektId: id } }] : [], [
+      projektPath(input.slug),
+    ]);
     return { pathsBefore: [projektPath(row.slug)], pathsAfter: [projektPath(input.slug)] };
   });
 }
@@ -227,6 +231,11 @@ export async function discardProjektDraft(id: number) {
 
 export async function deleteProjekt(id: number, client: Db | Tx = db): Promise<string[]> {
   return client.transaction(async (tx) => {
+    const onto = await redirectsOnto(tx, { projektId: id });
+    if (onto.length)
+      throw new ProjektError(
+        `Auf dieses Projekt leiten noch Weiterleitungen: ${onto.join(", ")}. Ändern oder löschen Sie sie zuerst unter Weiterleitungen.`,
+      );
     const [row] = await tx
       .delete(projekte)
       .where(eq(projekte.id, id))

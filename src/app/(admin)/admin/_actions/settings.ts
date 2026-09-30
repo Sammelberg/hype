@@ -12,6 +12,7 @@ import { audited } from "@/cms/audit/log";
 import { SiteSettingsSchema } from "@/cms/content/types";
 import { getVersion } from "@/cms/content/versions";
 import { revalidateSite } from "@/cms/revalidate";
+import { CmsError } from "@/cms/errors";
 import { authActionClient } from "./client";
 
 export const saveSettingsDraftAction = authActionClient
@@ -41,6 +42,6 @@ export const restoreSettingsVersionAction = authActionClient
   .action(async ({ parsedInput, ctx }) => {
     const version = await getVersion(parsedInput.versionId);
     if (!version || version.collection !== "site_settings")
-      throw new Error("Diese Version gehört nicht zu den Einstellungen.");
+      throw new CmsError("Diese Version gehört nicht zu den Einstellungen.");
     await restoreSiteSettingsVersion(version.snapshot, ctx.user.id);
   });

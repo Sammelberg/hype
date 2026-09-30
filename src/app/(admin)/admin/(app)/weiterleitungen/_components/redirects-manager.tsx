@@ -99,7 +99,7 @@ function RedirectForm({
           toProjektId: redirect.toProjektId,
           toUrl: redirect.toUrl,
         }
-      : { from: "", type: 301, toPageId: pages[0]?.id ?? null, toProjektId: null, toUrl: null },
+      : { from: "", type: 308, toPageId: pages[0]?.id ?? null, toProjektId: null, toUrl: null },
   });
   const { control, handleSubmit, setValue, setError } = form;
   const type = useWatch({ control, name: "type" });
@@ -251,14 +251,14 @@ function RedirectForm({
             type="single"
             variant="outline"
             value={String(type)}
-            onValueChange={(v) => v && setValue("type", Number(v) as 301 | 302)}
+            onValueChange={(v) => v && setValue("type", Number(v) as 308 | 307)}
             aria-label="Art der Weiterleitung"
           >
-            <ToggleGroupItem value="301">Dauerhaft (301)</ToggleGroupItem>
-            <ToggleGroupItem value="302">Vorübergehend (302)</ToggleGroupItem>
+            <ToggleGroupItem value="308">Dauerhaft (308)</ToggleGroupItem>
+            <ToggleGroupItem value="307">Vorübergehend (307)</ToggleGroupItem>
           </ToggleGroup>
           <FieldDescription>
-            Dauerhaft sagt Suchmaschinen, dass die alte Adresse ersetzt ist.
+            Dauerhaft sagt Suchmaschinen, dass die alte Adresse ersetzt ist (308 wirkt wie 301).
           </FieldDescription>
         </Field>
       </FieldGroup>
@@ -328,7 +328,7 @@ export function RedirectsManager({
                     <CardTitle className="truncate font-mono text-base">{r.from}</CardTitle>
                     <CardAction>
                       <Badge variant="outline" className="text-muted-foreground">
-                        {r.type === 301 ? "dauerhaft · 301" : "vorübergehend · 302"}
+                        {r.type === 308 ? "dauerhaft · 308" : "vorübergehend · 307"}
                       </Badge>
                     </CardAction>
                   </CardHeader>

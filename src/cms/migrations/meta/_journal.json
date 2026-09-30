@@ -50,6 +50,13 @@
       "when": 1790767705841,
       "tag": "0006_gobd_haertung",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790768947224,
+      "tag": "0007_redirects_308",
+      "breakpoints": true
     }
   ]
 }

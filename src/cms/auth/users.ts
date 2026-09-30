@@ -7,6 +7,7 @@ import type { User } from "../content/types";
 import type { Role } from "./roles";
 import { afterSuccess, isLocked, LOCK_MINUTES, lockMessage, MAX_ATTEMPTS } from "./lockout";
 import { hashPassword, passwordProblem, verifyPassword } from "./password";
+import { CmsError } from "../errors";
 
 type Row = typeof users.$inferSelect;
 
@@ -21,12 +22,9 @@ const toUser = (row: Row): User => ({
   createdAt: row.createdAt,
 });
 
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public readonly field?: "email" | "password" | "name",
-  ) {
-    super(message);
+export class AuthError extends CmsError {
+  constructor(message: string, field?: "email" | "password" | "name") {
+    super(message, field);
   }
 }
 

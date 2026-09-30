@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import type { User } from "../content/types";
+import { CmsError } from "../errors";
 import type { Role } from "./roles";
 import { SESSION_COOKIE } from "./cookie";
 import { userForToken } from "./session";
@@ -39,19 +40,19 @@ export async function requireRole(role: Role): Promise<User> {
   return user;
 }
 
-export class NotSignedIn extends Error {
+export class NotSignedIn extends CmsError {
   constructor() {
     super("Bitte melden Sie sich an.");
   }
 }
 
-export class PasswordChangeRequired extends Error {
+export class PasswordChangeRequired extends CmsError {
   constructor() {
     super("Bitte ersetzen Sie zuerst Ihr vorläufiges Passwort.");
   }
 }
 
-export class NotAllowed extends Error {
+export class NotAllowed extends CmsError {
   constructor() {
     super("Dafür fehlt Ihrem Zugang die Berechtigung.");
   }

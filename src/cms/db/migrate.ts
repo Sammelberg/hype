@@ -1,4 +1,4 @@
-// `pnpm cms:migrate` — applies the SQL migrations in src/cms/migrations to DATABASE_URL.
+// `pnpm migrate` — applies the SQL migrations in src/cms/migrations to DATABASE_URL.
 // Drizzle keeps its own ledger in cms.__drizzle_migrations; runs are idempotent.
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";

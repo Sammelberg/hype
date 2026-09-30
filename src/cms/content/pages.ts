@@ -20,16 +20,15 @@ import {
 } from "./page-tree";
 import type { MediaDoc, Page, PageInput } from "./types";
 import { PageInputSchema } from "./types";
+import { CmsError } from "../errors";
+import { redirectMoves, redirectsOnto } from "./redirects";
 import { addVersion } from "./versions";
 
 type Row = typeof pages.$inferSelect;
 
-export class PageError extends Error {
-  constructor(
-    message: string,
-    public readonly field?: keyof PageInput,
-  ) {
-    super(message);
+export class PageError extends CmsError {
+  constructor(message: string, field?: keyof PageInput) {
+    super(message, field);
   }
 }
 
@@ -321,11 +320,23 @@ export async function publishPage(
     await assertSlugFree(tx, input.slug, id);
     assertTreeMove(id, input.parentId, treeOf(rows, false));
     const before = subtreePaths(rows, id);
+    const beforeById = subtreePathMap(rows, id);
     await tx
       .update(pages)
       .set({ ...columnsOf(input), draft: null, status: "published", publishedAt: new Date() })
       .where(eq(pages.id, id));
     await rewritePaths(tx, id);
+    // The old public addresses of the page and every published page below lead to the new ones.
+    const afterRows = await allRows(tx);
+    const afterById = subtreePathMap(afterRows, id);
+    const wasPublic = new Map(rows.map((r) => [r.id, r.status === "published"]));
+    await redirectMoves(
+      tx,
+      [...beforeById]
+        .filter(([pageId, path]) => wasPublic.get(pageId) && afterById.get(pageId) !== path)
+        .map(([pageId, path]) => ({ from: path, to: { pageId } })),
+      [...afterById.values()],
+    );
     await addVersion(tx, {
       collection: "pages",
       docId: id,
@@ -333,10 +344,21 @@ export async function publishPage(
       kind: "published",
       userId,
     });
-    const after = subtreePaths(await allRows(tx), id);
+    const after = subtreePaths(afterRows, id);
     return { pathsBefore: before, pathsAfter: after };
   });
 }
+
+// id → public path of the page and everything below it, in the live tree.
+const subtreePathMap = (rows: Row[], id: number) => {
+  const tree = treeOf(rows, false);
+  const paths = pathsOf(tree);
+  return new Map(
+    [id, ...descendantsOf(id, tree).map((n) => n.id)].flatMap((i) =>
+      paths.get(i) ? [[i, paths.get(i)!] as const] : [],
+    ),
+  );
+};
 
 const subtreePaths = (rows: Row[], id: number) => {
   const tree = treeOf(rows, false);
@@ -353,6 +375,15 @@ export async function unpublishPage(id: number, client: Db | Tx = db): Promise<P
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
     if (PROTECTED_SLUGS.has(row.slug))
       throw new PageError("Diese Seite muss veröffentlicht bleiben.");
+    // A published page below would stay listed and linked, but lead nowhere.
+    const tree = treeOf(rows, false);
+    const publicBelow = descendantsOf(id, tree)
+      .map((n) => rows.find((r) => r.id === n.id)!)
+      .filter((r) => r.status === "published");
+    if (publicBelow.length)
+      throw new PageError(
+        `Darunter sind noch veröffentlichte Seiten: ${publicBelow.map((r) => r.path).join(", ")}. Ziehen Sie zuerst diese zurück.`,
+      );
     await tx.update(pages).set({ status: "draft", updatedAt: new Date() }).where(eq(pages.id, id));
     const paths = subtreePaths(rows, id);
     return { pathsBefore: paths, pathsAfter: paths };
@@ -373,6 +404,11 @@ export async function deletePage(id: number, client: Db | Tx = db): Promise<stri
     if (rows.some((r) => r.parentId === id)) {
       throw new PageError("Bitte verschieben oder löschen Sie zuerst die Seiten darunter.");
     }
+    const onto = await redirectsOnto(tx, { pageId: id });
+    if (onto.length)
+      throw new PageError(
+        `Auf diese Seite leiten noch Weiterleitungen: ${onto.join(", ")}. Ändern oder löschen Sie sie zuerst unter Weiterleitungen.`,
+      );
     await tx.delete(pages).where(eq(pages.id, id));
     // A deleted page cannot be restored from its versions; they go with it.
     await tx.delete(versions).where(and(eq(versions.collection, "pages"), eq(versions.docId, id)));

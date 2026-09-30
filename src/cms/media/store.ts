@@ -8,6 +8,7 @@ import path from "node:path";
 import sharp from "sharp";
 
 import { MEDIA_SIZES, type MediaSizes } from "../content/types";
+import { CmsError } from "../errors";
 import { MEDIA_DIR } from "./paths";
 
 export const ACCEPTED_TYPES = new Set([
@@ -28,7 +29,7 @@ const EXT: Record<string, string> = {
   "image/gif": "gif",
 };
 
-export class UploadError extends Error {}
+export class UploadError extends CmsError {}
 
 // A safe base name from the original: umlauts written out, everything else hyphens.
 function baseName(original: string) {

@@ -273,10 +273,20 @@ export type Submission = {
 export const RedirectInputSchema = z
   .object({
     from: z.string().trim().min(1, "Bitte geben Sie den alten Pfad an.").max(500),
-    type: z.union([z.literal(301), z.literal(302)]),
+    // What Next sends: 308 permanent, 307 temporary.
+    type: z.union([z.literal(308), z.literal(307)]),
     toPageId: z.number().int().positive().nullable(),
     toProjektId: z.number().int().positive().nullable(),
-    toUrl: z.string().trim().max(2000).nullable(),
+    // A web address (https://…) or a path on this site (/…); never `//host`, `/\host` or a scheme
+    // like javascript: that a browser would follow somewhere else.
+    toUrl: z
+      .string()
+      .trim()
+      .max(2000)
+      .regex(/^(https?:\/\/[^\s/]+[^\s]*|\/(?![/\\])[^\s\\]*)$/, {
+        message: "Bitte eine Adresse mit https:// oder einen Pfad dieser Website mit / angeben.",
+      })
+      .nullable(),
   })
   .refine((r) => [r.toPageId, r.toProjektId, r.toUrl].filter(Boolean).length === 1, {
     message: "Bitte genau ein Ziel wählen: eine Seite, ein Projekt oder eine Adresse.",

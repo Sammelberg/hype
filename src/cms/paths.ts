@@ -23,8 +23,6 @@ const routedCollections = {
 
 export type RoutedCollection = keyof typeof routedCollections;
 
-export const ROUTED_COLLECTIONS = Object.keys(routedCollections) as RoutedCollection[];
-
 export function docPath(collection: string | undefined, doc: Record<string, unknown>) {
   const pathFor: PathFor | undefined = routedCollections[collection as RoutedCollection];
   return pathFor ? pathFor(doc) : null;

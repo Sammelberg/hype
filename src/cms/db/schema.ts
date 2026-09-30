@@ -252,14 +252,17 @@ export const redirects = cms.table(
   {
     id: serial().primaryKey(),
     from: varchar({ length: 500 }).notNull().unique(),
-    type: smallint().notNull().default(301),
-    toPageId: integer().references(() => pages.id, { onDelete: "cascade" }),
-    toProjektId: integer().references(() => projekte.id, { onDelete: "cascade" }),
+    // The status Next sends: 308 permanent, 307 temporary (migration 0007; it had 301/302).
+    type: smallint().notNull().default(308),
+    // A page or project with redirects onto it is not deleted from under them (the repository
+    // names them); a cascade used to take them along unseen.
+    toPageId: integer().references(() => pages.id, { onDelete: "restrict" }),
+    toProjektId: integer().references(() => projekte.id, { onDelete: "restrict" }),
     toUrl: text(),
     ...timestamps,
   },
   (t) => [
-    check("redirects_type_check", sql`${t.type} in (301, 302)`),
+    check("redirects_type_check", sql`${t.type} in (307, 308)`),
     check(
       "redirects_one_target",
       sql`num_nonnulls(${t.toPageId}, ${t.toProjektId}, ${t.toUrl}) = 1`,

@@ -15,6 +15,7 @@ import { audited } from "@/cms/audit/log";
 import { ProjektInputSchema } from "@/cms/content/types";
 import { getVersion } from "@/cms/content/versions";
 import { revalidateDocument } from "@/cms/revalidate";
+import { CmsError } from "@/cms/errors";
 import { authActionClient } from "./client";
 
 const id = z.object({ id: z.number().int().positive() });
@@ -89,7 +90,7 @@ export const restoreProjektVersionAction = authActionClient
   .action(async ({ parsedInput, ctx }) => {
     const version = await getVersion(parsedInput.versionId);
     if (!version || version.collection !== "projekte" || version.docId !== parsedInput.id) {
-      throw new Error("Diese Version gehört nicht zu diesem Projekt.");
+      throw new CmsError("Diese Version gehört nicht zu diesem Projekt.");
     }
     await restoreProjektVersion(parsedInput.id, version.snapshot, ctx.user.id);
   });

@@ -4,6 +4,7 @@ import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 import { db, type Db, type Tx } from "../db/client";
 import { forms, formSubmissions } from "../db/schema";
 import { type FormDoc, type FormInput, FormInputSchema, type Submission } from "./types";
+import { CmsError } from "../errors";
 
 export const CONTACT_FORM_TITLE = "Kontakt";
 
@@ -24,21 +25,11 @@ export async function getContactForm(): Promise<FormDoc | null> {
   return row ? toForm(row) : null;
 }
 
-export async function getForm(id: number): Promise<FormDoc | null> {
-  const [row] = await db.select().from(forms).where(eq(forms.id, id)).limit(1);
-  return row ? toForm(row) : null;
-}
-
-export async function listForms(): Promise<FormDoc[]> {
-  const rows = await db.select().from(forms).orderBy(forms.id);
-  return rows.map(toForm);
-}
-
 export async function saveForm(id: number, raw: FormInput) {
   const input = FormInputSchema.parse(raw);
   const names = input.fields.flatMap((f) => ("name" in f ? [f.name] : []));
   if (new Set(names).size !== names.length)
-    throw new Error("Jeder Feldname darf nur einmal vorkommen.");
+    throw new CmsError("Jeder Feldname darf nur einmal vorkommen.");
   await db
     .update(forms)
     .set({ ...input, updatedAt: new Date() })

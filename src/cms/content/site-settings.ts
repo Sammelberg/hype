@@ -6,6 +6,7 @@ import { db, type Db, type Tx } from "../db/client";
 import { siteSettings } from "../db/schema";
 import { type SiteSettings, SiteSettingsSchema } from "./types";
 import { addVersion } from "./versions";
+import { CmsError } from "../errors";
 
 const ID = 1;
 
@@ -44,7 +45,7 @@ export async function saveSiteSettingsDraft(raw: SiteSettings) {
 export async function publishSiteSettings(userId: number | null, client: Db | Tx = db) {
   await client.transaction(async (tx) => {
     const [row] = await tx.select().from(siteSettings).where(eq(siteSettings.id, ID)).limit(1);
-    if (!row) throw new Error("Die Website-Einstellungen fehlen.");
+    if (!row) throw new CmsError("Die Website-Einstellungen fehlen.");
     const data = SiteSettingsSchema.parse(row.draft ?? row.data);
     await tx
       .update(siteSettings)

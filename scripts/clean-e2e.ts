@@ -20,7 +20,13 @@ if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname) && process.env.CI 
 
 const deleted = await purgeSubmissionsByValue(E2E_EMAIL);
 console.log(`Testnachrichten gelöscht: ${deleted}`);
-// Whatever an aborted run left behind: pages, projects, images and redirects named „e2e-…“.
+// Whatever an aborted run left behind: redirects, pages, projects and images named „e2e-…“.
+// Redirects first: a page or project with redirects onto it is not deleted.
+for (const redirect of (await listRedirects()).filter(
+  (r) => r.from.startsWith("/e2e-") || r.from.startsWith("/projekte/e2e-"),
+)) {
+  await deleteRedirect(redirect.id).catch(() => undefined);
+}
 for (const page of (await listPages()).filter((p) => p.slug.startsWith("e2e-"))) {
   await deletePage(page.id).catch(() => undefined);
 }
@@ -33,9 +39,6 @@ for (const row of await db
 for (const item of (await listMedia()).filter((m) => m.filename.startsWith("e2e-bild-"))) {
   const doc = await deleteMedia(item.id);
   if (doc) await removeFiles([doc.filename, ...Object.values(doc.sizes).map((s) => s.filename)]);
-}
-for (const redirect of (await listRedirects()).filter((r) => r.from.startsWith("/e2e-"))) {
-  await deleteRedirect(redirect.id).catch(() => undefined);
 }
 
 // Versions of pages and projects that no longer exist (deleted before versions went with them).

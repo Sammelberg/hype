@@ -25,7 +25,11 @@ test("a redirect made in the admin leads visitors to its target", async ({ page,
 
   const response = await request.get(`/e2e-alt-${STAMP}`, { maxRedirects: 0 });
   expect(response.status()).toBe(308);
-  expect(response.headers()["location"]).toMatch(/^\/[a-z0-9-]*$|localhost:\d+\/[a-z0-9-]*$/);
+  // A first, uncached render in a production build sends the Location header twice with the same
+  // value (Next); browsers take it, so the test does too.
+  const locations = [...new Set(response.headers()["location"]!.split(/,\s*/))];
+  expect(locations).toHaveLength(1);
+  expect(locations[0]).toMatch(/^\/[a-z0-9-]*$|localhost:\d+\/[a-z0-9-]*$/);
 
   await page.getByRole("button", { name: `/e2e-alt-${STAMP} löschen` }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Löschen" }).click();
