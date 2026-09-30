@@ -151,12 +151,14 @@ const LEAVE = {
   duration: 0.9,
   easing: (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2),
 };
-/** Input within this long of the one before is the same gesture: a trackpad's glide runs on. */
-const QUIET_MS = 220;
+/**
+ * Input within this long of the one before is the same gesture: the notches of one turn of the
+ * wheel (a hand spins several at once), a trackpad's glide. A new card needs a pause.
+ */
+const QUIET_MS = 300;
 /** A glide may pause this long and still be the same gesture, if its steps keep shrinking. */
 const TAIL_MS = 700;
-/** Wheel notches this far apart are separate turns, even when a busy page delivers them close. */
-const NOTCH_MS = 90;
+
 /** How near the stage comes to its place (share of the screen height) before the page docks. */
 const APPROACH = 0.3;
 /** How far the page moves on when it leaves the stage (share of the screen height). */
@@ -437,7 +439,8 @@ export function ServicesStrata({
           } else if (next < 0 || next > last) leave(dir);
           else slideTo(next);
         };
-        // One gesture, one card. A gesture starts after a pause (QUIET_MS), unless what comes is
+        // One gesture, one card: one turn of the wheel of however many notches, one swipe. A
+        // gesture starts after a pause (QUIET_MS), unless what comes is
         // a smaller step after a lull (a trackpad's glide tapering off on a busy machine), or
         // inside a running glide as a clear new push (a swipe while the last one still glides on).
         let lastSize = 0;
@@ -447,13 +450,9 @@ export function ServicesStrata({
           const now = performance.now();
           const gap = now - lastInput;
           const pause = gap > QUIET_MS;
-          // A wheel notch repeats the same size exactly; a trackpad never quite does.
-          // (The first input on the stage has nothing to compare with yet.)
-          const notch = size >= 40 && (lastSize === 0 || Math.abs(size - lastSize) < 0.5);
           const go = pause
             ? !(gap < TAIL_MS && size < lastSize)
-            : (notch && gap > NOTCH_MS && now - lastMove > NOTCH_MS) ||
-              (size > floor * 2 + 4 && now - lastMove > QUIET_MS);
+            : size > floor * 2 + 4 && now - lastMove > QUIET_MS;
           floor = pause || go ? size : Math.min(floor, size);
           lastInput = now;
           lastSize = size;

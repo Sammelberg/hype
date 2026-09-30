@@ -119,7 +119,7 @@ test("no turn of the wheel is lost while the page glides onto the stage", async 
   let moved = -1;
   for (let i = 0; i < 40 && moved < 0; i++) {
     await page.mouse.wheel(0, NOTCH);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(450);
     if (caught < 0 && (await rideState(page)) !== "free") caught = i;
     if ((await current(page)) !== "0") moved = i;
   }
@@ -129,16 +129,23 @@ test("no turn of the wheel is lost while the page glides onto the stage", async 
   expect(await current(page)).toBe("1");
 });
 
-test("a fast spin of the wheel counts every notch", async ({ page, isMobile }) => {
+test("one turn of the wheel, several notches at once, moves one card", async ({
+  page,
+  isMobile,
+}) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
-  for (let i = 0; i < 3; i++) {
+  // A hand spinning the wheel: five notches in quick succession are one scroll.
+  for (let i = 0; i < 5; i++) {
     await page.mouse.wheel(0, NOTCH);
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(60);
   }
-  await expect.poll(() => current(page)).toBe("3");
   await settle(() => trackX(page));
-  expect(Math.abs(await offCentre(page, 3))).toBeLessThanOrEqual(2);
+  expect(await current(page)).toBe("1");
+  // After a pause the next turn moves the next card.
+  await page.waitForTimeout(500);
+  await page.mouse.wheel(0, NOTCH);
+  await expect.poll(() => current(page)).toBe("2");
 });
 
 test("a trackpad swipe, gliding on for a second, moves one card, not several", async ({
@@ -178,9 +185,10 @@ test("after the last card the page moves on, and from below the stage takes it b
 }) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
+  // Four turns, each after a pause: four cards.
   for (let i = 0; i < 4; i++) {
     await page.mouse.wheel(0, NOTCH);
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(500);
   }
   await expect.poll(() => current(page)).toBe("4");
   await page.waitForTimeout(600);
