@@ -9,6 +9,9 @@ import { hideDevOverlays, signIn } from "./_admin";
 // Everything created here starts with „E2E“ and is removed at the end of the run.
 test.describe.configure({ mode: "serial" });
 
+// A text as it was before a test run appended its stamp ` (xxxxxxxx)` to it.
+const unstamped = (text: string) => text.replace(/ \([0-9a-z]{8}\)$/, "");
+
 const STAMP = Date.now().toString(36);
 const PAGE_TITLE = `E2E Seite ${STAMP}`;
 const PAGE_SLUG = `e2e-seite-${STAMP}`;
@@ -86,7 +89,8 @@ test("the home page is edited section by section, with the part shown in the pre
   await page.getByRole("link", { name: "Startseite", exact: true }).click();
   const hero = page.getByRole("region", { name: "Kopfbereich" });
   const lead = hero.getByLabel("Zeile darunter");
-  const original = await lead.inputValue();
+  // Without the stamp an aborted earlier run may have left behind, or it would stay for good.
+  const original = unstamped(await lead.inputValue());
   await lead.fill(`Individuelle Software aus dem Schwarzwald. (${STAMP})`);
   // The preview outlines the part being edited, named like its card.
   const preview = page.frameLocator('iframe[title^="Vorschau"]');
@@ -116,7 +120,7 @@ test("the shared texts under Website change every page after publishing", async 
   await page.goto("/admin/einstellungen");
   const closing = page.getByRole("region", { name: "Abschluss „Anfrage“" });
   const title = closing.getByLabel("Überschrift");
-  const original = await title.inputValue();
+  const original = unstamped(await title.inputValue());
   await title.fill(`Erzählen Sie uns von Ihrem Vorhaben. (${STAMP})`);
   await page.getByRole("button", { name: "Veröffentlichen" }).click();
   await expect(page.getByText("Veröffentlicht. Die Website zeigt die neuen Texte.")).toBeVisible();

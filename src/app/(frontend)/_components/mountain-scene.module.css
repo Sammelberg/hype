@@ -15,14 +15,14 @@
   --glow-rgb: 72 124 214; /* sapphire between primary and primary-soft, as RGB channels */
   /* Copper gold #d68a4d, the owner's pick for the ridge's highlight arc. */
   --accent-line: oklch(0.7 0.12 58);
-  /* The firs are drawings, not silhouettes (fir-shapes.ts), so depth is in the brightness of the
-     line instead of in the fill: the nearest fir catches the most moonlight, the farthest sinks
-     into the haze. Ice blue throughout, the ridge's own colour.
-     Before the drawn firs they were filled masses: back oklch(0.4 0.07 258), mid
-     oklch(0.26 0.055 260), fore oklch(0.06 0.015 262), each with a thin ice rim. */
-  --tree-back: oklch(0.52 0.05 258);
-  --tree-mid: oklch(0.68 0.08 258);
-  --tree-fore: oklch(0.82 0.09 258);
+  /* Firs by depth: haze-light at the back, darkest in front. No single shade separates a fir from
+     both the near-black sky and the lighter ridges, so mid and front firs carry a thin moonlit rim
+     in ice blue (--rim-rgb = primary-soft) that outlines them against any backdrop. The tiered
+     firs are back by the owner's request (2026-09-30); the drawn ones stay in fir-shapes.ts for
+     the page headers and the service valleys. */
+  --tree-back: oklch(0.4 0.07 258);
+  --tree-mid: oklch(0.26 0.055 260);
+  --tree-fore: oklch(0.06 0.015 262);
   --rim-rgb: 147 191 240; /* primary-soft as RGB channels */
 }
 
@@ -199,11 +199,20 @@
   height: 100%;
 }
 
+.tree svg g {
+  stroke: rgb(var(--rim-rgb) / var(--rim, 0));
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .fore {
+  --rim: 0.5;
   color: var(--tree-fore);
 }
 
 .midTree {
+  --rim: 0.3;
   color: var(--tree-mid);
 }
 

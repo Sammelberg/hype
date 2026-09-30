@@ -8,18 +8,32 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { FIR_DESIGNS, type FirDesign } from "@/components/site/fir-shapes";
 import styles from "./mountain-scene.module.css";
 import { bindLights } from "./lights";
 import { bindNightSky } from "./night-sky";
 import { bindStarfield } from "./starfield";
 
+// Tiers of the fir, bottom to top (viewBox 0 0 200 560). The hero's own firs, back by the owner's
+// request (2026-09-30); the drawn ones of fir-shapes.ts serve the page headers and the valleys.
+const FIR_TIERS = [
+  "100,382 178,490 22,490",
+  "100,334 166,434 34,434",
+  "100,290 154,382 46,382",
+  "100,250 143,332 57,332",
+  "100,214 133,284 67,284",
+  "100,182 124,240 76,240",
+  "100,152 116,198 84,198",
+  "100,126 110,158 90,158",
+  "100,104 107,132 93,132",
+  "100,82 105,110 95,110",
+  "100,62 104,90 96,90",
+  "100,44 102,70 98,70",
+];
+
 type Tree = {
   layer: "back" | "mid" | "fore";
   /** Placement from the block: height and lift in % of the forest, gaps in vw. */
   style: CSSProperties;
-  /** Which of the three drawn firs this tree wears (fir-shapes.ts); the placement stays as it is. */
-  design: FirDesign;
   sway: number;
   duration: number;
   delay: number;
@@ -30,7 +44,6 @@ const TREES: Tree[] = [
   {
     layer: "fore",
     style: { height: "100%", bottom: "12%" },
-    design: "dicht",
     sway: 2,
     duration: 5.6,
     delay: -2.1,
@@ -38,7 +51,6 @@ const TREES: Tree[] = [
   {
     layer: "fore",
     style: { height: "82%", bottom: "9%", marginLeft: "9vw" },
-    design: "schlank",
     sway: 1.6,
     duration: 6.2,
     delay: -3.4,
@@ -46,7 +58,6 @@ const TREES: Tree[] = [
   {
     layer: "mid",
     style: { height: "56%", bottom: "19%" },
-    design: "konkav",
     sway: 1,
     duration: 7.5,
     delay: -1.2,
@@ -54,7 +65,6 @@ const TREES: Tree[] = [
   {
     layer: "back",
     style: { height: "74%", bottom: "10%", marginLeft: "auto", left: "-6vw" },
-    design: "schlank",
     sway: 1.4,
     duration: 6.5,
     delay: -4.3,
@@ -62,7 +72,6 @@ const TREES: Tree[] = [
   {
     layer: "mid",
     style: { height: "68%", bottom: "22%", marginLeft: "8vw" },
-    design: "dicht",
     sway: 1.3,
     duration: 6.8,
     delay: -0.5,
@@ -70,7 +79,6 @@ const TREES: Tree[] = [
   {
     layer: "fore",
     style: { height: "90%", bottom: "8%", marginLeft: "7vw", left: "-6vw" },
-    design: "konkav",
     sway: 1.8,
     duration: 5.9,
     delay: -1.8,
@@ -78,7 +86,6 @@ const TREES: Tree[] = [
   {
     layer: "back",
     style: { height: "62%", bottom: "21%", marginLeft: "3vw" },
-    design: "dicht",
     sway: 1.1,
     duration: 7.1,
     delay: -3,
@@ -392,8 +399,13 @@ export function MountainHero({
                 } as CSSProperties
               }
             >
-              <svg viewBox={FIR_DESIGNS[tree.design].viewBox}>
-                <path fill="currentColor" d={FIR_DESIGNS[tree.design].d} />
+              <svg viewBox="0 0 200 560">
+                <g fill="currentColor">
+                  <rect x="93" y="472" width="14" height="72" />
+                  {FIR_TIERS.map((points) => (
+                    <polygon key={points} points={points} />
+                  ))}
+                </g>
               </svg>
             </div>
           ))}
