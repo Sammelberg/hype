@@ -6,6 +6,7 @@ import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type CSSProperties, type ReactNode, useRef } from "react";
 
+import { glidePageTo } from "@/components/site/smooth-scroll";
 import { cn } from "@/lib/utils";
 
 import styles from "./mountain-scene.module.css";
@@ -100,6 +101,9 @@ const ACCENT_REST = 0.75;
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
+/** How near the top (share of the screen height) the page, scrolling up, is pulled onto the hero. */
+const PULL = 0.45;
+
 // Front ridge of the block: a closed ribbon, filled from the start; its outline is drawn.
 const MAIN_RIDGE =
   "M 50 550 L 350 470 L 600 550 L 800 360 L 900 480 L 1000 400 L 1200 550 L 1450 550 Q 1200 440 1100 480 Q 1000 520 900 480 Q 800 440 800 360 Q 700 480 600 550 Q 500 470 350 470 Q 200 520 50 550 Z";
@@ -147,6 +151,32 @@ export function MountainHero({
           onToggle: pause,
         }),
       );
+
+      // Coming back up from below, the hero pulls itself into place: once the page, still moving
+      // up, is within PULL of the top, it glides the rest at the speed it already has (as the
+      // services stage does on the way down). Wheel and trackpad only; touch scrolls as it does.
+      mm.add("(prefers-reduced-motion: no-preference) and (pointer: fine)", () => {
+        let gliding = false;
+        const pull = ScrollTrigger.create({
+          trigger: hero.current,
+          start: "top top",
+          end: () => `+=${window.innerHeight * PULL}`,
+          onUpdate: (self) => {
+            const y = self.scroll();
+            if (gliding || self.direction >= 0 || y <= 0 || y > self.end) return;
+            gliding = true;
+            glidePageTo(0, {
+              duration: 0.8,
+              easing: (t) => 1 - (1 - t) ** 3,
+              carry: { slope: 3, range: [0.4, 1] },
+              onComplete: () => {
+                gliding = false;
+              },
+            });
+          },
+        });
+        return () => pull.kill();
+      });
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         // DrawSVG measures in SVG units, so drawn strokes scale with the SVG; widths are divided by
