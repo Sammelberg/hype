@@ -145,11 +145,7 @@ const SLIDE = { duration: 0.95, ease: "power3.inOut" };
  * The page's glide onto the stage: it takes over at the speed the page already has (so the hand
  * feels no push and no brake) and settles softly under the header.
  */
-const DOCK = {
-  duration: 0.85,
-  easing: (t: number) => 1 - (1 - t) ** 3,
-  carry: { slope: 3, range: [0.45, 1.1] as [number, number] },
-};
+const DOCK = { duration: 0.8, carry: true };
 /** And away from it after the last card (or back up before the first). */
 const LEAVE = {
   duration: 0.9,

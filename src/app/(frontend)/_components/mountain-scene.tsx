@@ -167,8 +167,7 @@ export function MountainHero({
             gliding = true;
             glidePageTo(0, {
               duration: 0.8,
-              easing: (t) => 1 - (1 - t) ** 3,
-              carry: { slope: 3, range: [0.4, 1] },
+              carry: true,
               onComplete: () => {
                 gliding = false;
               },
