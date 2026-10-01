@@ -3,13 +3,25 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
-import styles from "./hero-cta.module.css";
-import { bindPolarStar } from "./polar-star";
+import { cn } from "@/lib/utils";
 
-// The hero's call to action: large type, no frame. A mouse hover or keyboard focus raises the
-// twinkling pole star under the label (polar-star.ts); a tap on touch simply follows the link.
-// The label is the site settings' CTA label; its first letter is set in blackletter.
-export function HeroCta({ label }: { label: string }) {
+import { fraktur } from "./fraktur";
+import { bindPolarStar } from "./polar-star";
+import styles from "./star-cta.module.css";
+
+// The site's call to action, first in the home hero and again where a page invites an inquiry:
+// large type, no frame. A mouse hover or keyboard focus raises the twinkling pole star under the
+// label (polar-star.ts); a tap on touch simply follows the link. The label is the site settings'
+// CTA label; its first letter is set in blackletter. `hero` marks the hero's own (e2e/hero.spec.ts).
+export function StarCta({
+  label,
+  hero = false,
+  className,
+}: {
+  label: string;
+  hero?: boolean;
+  className?: string;
+}) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -41,7 +53,12 @@ export function HeroCta({ label }: { label: string }) {
   }, []);
 
   return (
-    <Link ref={linkRef} href="/kontakt" className={styles.cta} data-hero-cta>
+    <Link
+      ref={linkRef}
+      href="/kontakt"
+      className={cn(styles.cta, fraktur.variable, className)}
+      data-hero-cta={hero ? "" : undefined}
+    >
       <canvas ref={canvasRef} className={styles.sky} aria-hidden="true" />
       {/* One flex item, so the link is named „Projekt anfragen“, not „P rojekt …“. */}
       <span className={styles.label}>

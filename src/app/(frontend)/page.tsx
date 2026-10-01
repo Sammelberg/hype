@@ -1,26 +1,17 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
+import { fraktur } from "@/components/site/fraktur";
+import { StarCta } from "@/components/site/star-cta";
 import { getHomeContent, getLeistungenContent, getSiteSettings } from "@/data/queries";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
-import { HeroCta } from "./_components/hero-cta";
 import { MountainHero } from "./_components/mountain-scene";
 import { RotatingWord } from "./_components/rotating-word";
 import { type Service, ServicesStrata } from "./_components/services-strata";
 import { TriangleMotif } from "./_components/triangle-motif";
 import styles from "./page.module.css";
-
-// Blackletter initials of the hero headline and its call to action: Kanzleyrath, Peter Wiegel's
-// Kanzlei face (OFL, licence beside the file), the owner's pick from the board (2026-09-29).
-const fraktur = localFont({
-  src: "./_fonts/kanzleyrath.ttf",
-  variable: "--font-fraktur",
-  display: "swap",
-  fallback: ["serif"],
-});
 
 // Home page of Schwarzwald Systems: the page „startseite“ (/admin → Seiten → Startseite) with its
 // sections and SEO; the five services and their lead come from the page „leistungen“, the button
@@ -106,7 +97,7 @@ export default async function HomePage() {
             ) : null}
             {settings.cta?.label ? (
               <div className="mt-10">
-                <HeroCta label={settings.cta.label} />
+                <StarCta label={settings.cta.label} hero />
               </div>
             ) : null}
           </div>

@@ -76,3 +76,27 @@ export function horizon(key: string): Horizon {
   }
   return { ridge, ground, arc, firs: firs.sort((a, b) => a.x - b.x) };
 }
+
+export const SKY_W = 1600;
+export const SKY_H = 640;
+
+export type Star = { x: number; y: number; r: number; o: number; twinkle: boolean };
+
+/**
+ * A sparse sky over a page heading, seeded by the same key as its horizon: few, small stars,
+ * fewer towards the ground, one in four of them twinkling.
+ */
+export function sky(key: string, count = 34): Star[] {
+  const rnd = random(seedOf(key) ^ 0x51ed270b);
+  return Array.from({ length: count }, (_, i) => {
+    // Squared: most stars high up, thinning out towards the horizon.
+    const y = r1(SKY_H * rnd() ** 1.6);
+    return {
+      x: r1(rnd() * SKY_W),
+      y,
+      r: r1(0.6 + rnd() * (rnd() < 0.12 ? 1.4 : 0.7)),
+      o: Math.round((0.25 + rnd() * 0.55 * (1 - y / SKY_H / 2)) * 100) / 100,
+      twinkle: i % 4 === 0,
+    };
+  });
+}

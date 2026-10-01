@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { HORIZON_H, HORIZON_W, horizon, ridgeY } from "./horizon";
+import { HORIZON_H, HORIZON_W, horizon, ridgeY, SKY_H, SKY_W, sky } from "./horizon";
 
 const KEYS = ["/leistungen", "/projekte", "/kontakt", "/suche", "/ueber-uns/team", "404", "x"];
 
@@ -45,5 +45,28 @@ describe("horizon", () => {
       const xs = firs.map((f) => f.x).sort((a, b) => a - b);
       xs.slice(1).forEach((x, i) => expect(x - xs[i]!).toBeGreaterThanOrEqual(70));
     }
+  });
+});
+
+describe("sky", () => {
+  it("is the same for the same page and inside its picture", () => {
+    expect(sky("/kontakt")).toEqual(sky("/kontakt"));
+    expect(sky("/kontakt")).not.toEqual(sky("/suche"));
+    for (const key of KEYS) {
+      for (const star of sky(key)) {
+        expect(star.x).toBeGreaterThanOrEqual(0);
+        expect(star.x).toBeLessThanOrEqual(SKY_W);
+        expect(star.y).toBeGreaterThanOrEqual(0);
+        expect(star.y).toBeLessThanOrEqual(SKY_H);
+        expect(star.o).toBeGreaterThan(0);
+        expect(star.o).toBeLessThanOrEqual(0.8);
+      }
+    }
+  });
+
+  it("keeps most stars in the upper half", () => {
+    const stars = KEYS.flatMap((key) => sky(key));
+    const high = stars.filter((s) => s.y < SKY_H / 2).length;
+    expect(high / stars.length).toBeGreaterThan(0.6);
   });
 });

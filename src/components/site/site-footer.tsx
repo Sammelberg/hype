@@ -23,7 +23,10 @@ export function SiteFooter({
   socialLinks?: Social[] | null;
 }) {
   return (
-    <footer className="border-t text-muted-foreground" data-cms-zone="fuss">
+    <footer
+      className="border-t bg-card text-muted-foreground [body:has([data-cms-zone=anfrage])_&]:border-transparent"
+      data-cms-zone="fuss"
+    >
       <div className="page-container grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 xl:grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))]">
         <div className="max-w-sm">
           <Link

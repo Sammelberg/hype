@@ -1,0 +1,226 @@
+/*
+ * The site's scroll motion, in CSS: scroll-driven animations (animation-timeline view()/scroll())
+ * run on the compositor, need no script and follow Lenis, which moves the real page. Each device
+ * answers its content — a line draws along what it measures, words light up as they are read, a
+ * heading's words rise once when the page opens. Only with motion allowed; browsers without
+ * scroll timelines (Firefox for now) and reduced motion show everything finished and still.
+ *
+ * Utilities, so Tailwind (and its lint) know them. The `animation` shorthand resets
+ * animation-timeline, so the timeline always comes after it.
+ */
+
+/* A page heading's words rise from below their line, one after another, once on load (words.tsx). */
+@utility rise-words {
+  @media (prefers-reduced-motion: no-preference) {
+    & [data-rw] {
+      display: inline-block;
+      overflow: clip;
+      overflow-clip-margin: 0.12em;
+      vertical-align: top;
+    }
+    & [data-rw] > span {
+      display: inline-block;
+      translate: 0 108%;
+      animation: rw-in 0.95s cubic-bezier(0.2, 0.75, 0.15, 1) forwards;
+      animation-delay: calc(0.08s + var(--i, 0) * 0.07s);
+    }
+  }
+}
+
+/* Comes in a moment after the heading (--delay). */
+@utility rise-later {
+  @media (prefers-reduced-motion: no-preference) {
+    opacity: 0;
+    translate: 0 0.75rem;
+    animation: rise-later 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    animation-delay: var(--delay, 0.45s);
+  }
+}
+
+/* Rises as it comes into view; done before it reaches the middle of the screen. */
+@utility sd-rise {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: sd-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 35%;
+    }
+  }
+}
+
+/* Children of a list, one after another by their --i. */
+@utility sd-stagger {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      & > * {
+        animation: sd-rise linear both;
+        animation-timeline: view();
+        animation-range: entry calc(5% + var(--i, 0) * 6%) cover calc(32% + var(--i, 0) * 6%);
+      }
+    }
+  }
+}
+
+/* A rule drawn left to right as it enters. */
+@utility sd-draw-x {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      transform-origin: left center;
+      animation: sd-draw-x linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 45%;
+    }
+  }
+}
+
+/* Words that light up in reading order while the block crosses the screen (words.tsx). */
+@utility sd-words {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      view-timeline: --words block;
+      & [data-sw] {
+        animation: sd-word linear both;
+        animation-timeline: --words;
+        animation-range: cover calc(12% + var(--f, 0) * 32%) cover calc(18% + var(--f, 0) * 32%);
+      }
+    }
+  }
+}
+
+/* The page head drifts up and dims as the page leaves it; its horizon sinks a little slower. */
+@utility sd-away {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      animation: sd-away linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 85vh;
+    }
+  }
+}
+@utility sd-sink {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      animation: sd-sink linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 85vh;
+    }
+  }
+}
+
+/* Reading progress of a section: the section names the timeline, a hairline in it fills. */
+@utility sd-part {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      view-timeline: --part block;
+    }
+  }
+}
+@utility sd-read {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      transform-origin: center top;
+      animation: sd-read linear both;
+      animation-timeline: --part;
+      animation-range: entry 60% exit 40%;
+    }
+  }
+}
+
+/* Reading progress of the whole page, as a hairline under the header. */
+@utility sd-progress {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      transform-origin: left center;
+      animation: sd-draw-x linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+/* A drawn line (pathLength 1) that draws itself as it crosses the screen. */
+@utility sd-stroke {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      stroke-dasharray: 1;
+      animation: sd-stroke linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 55%;
+    }
+  }
+}
+
+/* Slight zoom into place: for large framed pictures. */
+@utility sd-settle {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: sd-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 50%;
+    }
+  }
+}
+
+/* Looping motion pauses off screen (in-view.tsx sets data-active on an ancestor). */
+@utility loop {
+  [data-active="false"] & {
+    animation-play-state: paused !important;
+  }
+}
+
+@keyframes rw-in {
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes rise-later {
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes sd-rise {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+}
+@keyframes sd-draw-x {
+  from {
+    scale: 0 1;
+  }
+}
+@keyframes sd-read {
+  from {
+    scale: 1 0;
+  }
+}
+@keyframes sd-word {
+  from {
+    opacity: 0.22;
+  }
+}
+@keyframes sd-away {
+  to {
+    opacity: 0.3;
+    translate: 0 -2.5rem;
+  }
+}
+@keyframes sd-sink {
+  to {
+    translate: 0 2.5rem;
+  }
+}
+@keyframes sd-stroke {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes sd-settle {
+  from {
+    opacity: 0.4;
+    scale: 0.94;
+  }
+}
