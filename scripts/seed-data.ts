@@ -296,22 +296,47 @@ export const seedPages: SeedPage[] = [
     ],
   },
   {
+    // Only what the owner confirmed (.agents/product-marketing.md): no background, team size or
+    // region until the owner names them.
     slug: "ueber-uns",
     title: "Über uns",
+    lead: "Ein Softwareunternehmen aus Freiburg im Breisgau. Wir entwickeln individuelle Software für den Mittelstand – und wer anfragt, spricht direkt mit dem Inhaber.",
     content: [
       {
         kind: "p",
-        text: "Schwarzwald Systems ist ein Softwareunternehmen aus Freiburg im Breisgau. Wir entwickeln individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps, Schnittstellen zwischen bestehenden Systemen, die Modernisierung gewachsener Software und ihren Betrieb.",
+        text: "Schwarzwald Systems entwickelt Web-Anwendungen, mobile Apps und Schnittstellen zwischen bestehenden Systemen, modernisiert gewachsene Software und betreibt sie weiter. Wir arbeiten für mittelständische Unternehmen, deren Abläufe nicht in eine Standardsoftware passen.",
       },
       { kind: "h2", text: "Wer hinter Schwarzwald Systems steht" },
       {
         kind: "p",
-        text: "Oleksandr Zamula hat Schwarzwald Systems gegründet und führt das Unternehmen als Inhaber. Wer bei uns anfragt, spricht direkt mit ihm.",
+        text: "Oleksandr Zamula hat Schwarzwald Systems gegründet und führt das Unternehmen als Inhaber. Wer bei uns anfragt, spricht direkt mit ihm – vom ersten Gespräch bis zum Betrieb, ohne wechselnde Ansprechpartner.",
+      },
+      { kind: "h2", text: "Worauf Sie sich verlassen können" },
+      {
+        kind: "ul",
+        items: [
+          "Quellcode und Dokumentation übergeben wir vollständig. Sie bleiben unabhängig von uns.",
+          "Sie haben einen festen Ansprechpartner, der Ihr Projekt kennt.",
+          "Auf Wunsch läuft Ihre Anwendung auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+        ],
       },
       { kind: "h2", text: "Wie wir arbeiten" },
       {
-        kind: "p",
-        text: "Jedes Projekt beginnt mit einem Workshop, in dem wir Ziele, Nutzer und Randbedingungen klären. Danach entsteht ein klickbarer Prototyp, dann die Software in kurzen Iterationen mit regelmäßig lauffähigen Zwischenständen. Wie das im Einzelnen abläuft, beschreibt die Seite „Unsere Arbeitsweise“.",
+        kind: "rich",
+        parts: [
+          "Jedes Projekt beginnt mit einem Workshop, in dem wir Ziele, Nutzer und Randbedingungen klären. Danach erhalten Sie eine schriftliche Einschätzung zu Umfang und Vorgehen, dann einen klickbaren Prototyp, dann die Software in kurzen Iterationen mit lauffähigen Zwischenständen. Die einzelnen Schritte beschreibt ",
+          { text: "unsere Arbeitsweise", href: "/ueber-uns/arbeitsweise" },
+          ".",
+        ],
+      },
+      { kind: "h2", text: "Ein Beispiel" },
+      {
+        kind: "rich",
+        parts: [
+          "Wie das in der Praxis aussieht, zeigt das Projekt ",
+          { text: "Meistrum für Krone Parkett", href: "/projekte/meistrum-krone-parkett" },
+          ": Kundenverwaltung, Kalkulation, Rechnungen, Werkzeuge und Einsatzplanung eines Parkettleger-Betriebs an einem Ort.",
+        ],
       },
     ],
   },
@@ -321,12 +346,8 @@ export const seedPages: SeedPage[] = [
     slug: "arbeitsweise",
     title: "Unsere Arbeitsweise",
     parent: "ueber-uns",
+    lead: "Vier Schritte vom ersten Gespräch bis zum laufenden Betrieb – und drei Zusagen, die in jedem Projekt gelten.",
     content: [
-      { kind: "h2", text: "So arbeiten wir" },
-      {
-        kind: "p",
-        text: "Vier Schritte, die sich in jedem Projekt wiederholen — vom ersten Gespräch bis zum laufenden Betrieb.",
-      },
       { kind: "h2", text: "1. Verstehen" },
       {
         kind: "p",
@@ -772,13 +793,20 @@ export const seedPages: SeedPage[] = [
     ],
   },
   {
-    // Nesting anchor + real intro content (unlike "leistungen", nothing overrides its own route).
+    // An overview: no h2 of its own, so the pages below it are its body (one row each).
     slug: "branchen",
     title: "Branchen",
+    lead: "Jede Branche hat ihre eigenen Abläufe, Begriffe und Vorschriften. Hier zeigen wir, wie unsere Software in einer Branche konkret aussieht.",
     content: [
       {
-        kind: "p",
-        text: "Wir entwickeln Software für unterschiedliche Branchen des Mittelstands. Hier zeigen wir, wie das konkret aussieht.",
+        kind: "rich",
+        parts: [
+          "Wir entwickeln Software für unterschiedliche Branchen des Mittelstands. Ihre Branche ist hier nicht dabei? Unsere ",
+          { text: "Leistungen", href: "/leistungen" },
+          " sind an keine Branche gebunden – ",
+          { text: "erzählen Sie uns von Ihrem Vorhaben", href: "/kontakt" },
+          ".",
+        ],
       },
     ],
   },
@@ -787,8 +815,8 @@ export const seedPages: SeedPage[] = [
     slug: "handwerk",
     title: "Handwerk",
     parent: "branchen",
+    lead: "Kunden, Kalkulation, Rechnungen, Werkzeuge und Einsätze an einem Ort: Software für Handwerksbetriebe, wie wir sie mit Meistrum selbst entwickeln und betreiben.",
     content: [
-      { kind: "h2", text: "Software für Handwerksbetriebe" },
       {
         kind: "p",
         text: "Bodenleger, Maler und andere Handwerksbetriebe verwalten ihren Alltag oft über mehrere getrennte Werkzeuge: eine Liste für Kunden, ein Ordner für Kalkulationen, ein weiteres System für Rechnungen. Wir entwickeln Software, die das zusammenführt.",
@@ -796,17 +824,41 @@ export const seedPages: SeedPage[] = [
       { kind: "h2", text: "Meistrum: unser eigenes Produkt für diese Branche" },
       {
         kind: "p",
-        text: "Mit Meistrum bauen und betreiben wir selbst eine Anwendung für Handwerksbetriebe: Kundenverwaltung, Kalkulation, Rechnungsstellung, Werkzeug-Inventar sowie Team- und Objektplanung an einem Ort. Jede Instanz läuft single-tenant auf eigener Infrastruktur – ohne geteilte Cloud.",
+        text: "Mit Meistrum entwickeln und betreiben wir selbst eine Anwendung für Handwerksbetriebe. Sie bündelt an einem Ort:",
+      },
+      {
+        kind: "ul",
+        items: [
+          "Kundenverwaltung",
+          "Kalkulation",
+          "Rechnungsstellung",
+          "Werkzeug-Inventar",
+          "Team- und Objektplanung",
+        ],
+      },
+      {
+        kind: "p",
+        text: "Jeder Betrieb bekommt seine eigene Instanz auf eigener Infrastruktur – ohne geteilte Cloud.",
       },
       { kind: "h2", text: "Ein Beispiel aus der Praxis" },
       {
-        kind: "p",
-        text: "Krone Parkett, ein Parkettleger-Betrieb, setzt Meistrum für die tägliche Betriebssteuerung ein. Mehr dazu im Projekt „Meistrum für Krone Parkett“ unter /projekte.",
+        kind: "rich",
+        parts: [
+          "Krone Parkett, ein Parkettleger-Betrieb, setzt Meistrum für die tägliche Betriebssteuerung ein. Wie das aussieht, zeigt das Projekt ",
+          { text: "Meistrum für Krone Parkett", href: "/projekte/meistrum-krone-parkett" },
+          ".",
+        ],
       },
       { kind: "h2", text: "Was das für Ihren Betrieb bedeuten kann" },
       {
-        kind: "p",
-        text: "Unabhängig davon, ob eine bestehende Anwendung wächst oder eine neue entsteht: Wir entwickeln Web-Anwendungen und mobile Apps, verbinden sie mit Ihren bestehenden Systemen und bleiben nach dem Start für Betrieb und Weiterentwicklung ansprechbar.",
+        kind: "rich",
+        parts: [
+          "Ob eine bestehende Anwendung wächst oder eine neue entsteht: Wir entwickeln ",
+          { text: "Web-Anwendungen", href: "/leistungen/web-anwendungen" },
+          " und ",
+          { text: "mobile Apps", href: "/leistungen/mobile-apps" },
+          ", verbinden sie mit Ihren bestehenden Systemen und bleiben nach dem Start für Betrieb und Weiterentwicklung ansprechbar.",
+        ],
       },
     ],
   },

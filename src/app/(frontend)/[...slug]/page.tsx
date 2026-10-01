@@ -18,11 +18,13 @@ import {
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
 import { pageTrail } from "@/lib/breadcrumbs";
 import { ROUTED_PATHS } from "@/cms/content/page-tree";
+import { partsOf } from "@/cms/rich-text/parts";
 import { firstParagraph } from "@/cms/rich-text/text";
 import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 import { LeistungSections } from "./_components/leistung-sections";
+import { Part } from "./_components/part";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
@@ -72,6 +74,13 @@ export default async function CmsPage({ params }: Props) {
   const otherServices = path.startsWith("/leistungen/")
     ? leistungen.sections.services.filter((service) => `/leistungen/${service.slug}` !== path)
     : [];
+  const legal = LEGAL.has(page.slug);
+  // A content page lays its text out in parts, one per h2, each heading beside its text; legal
+  // pages and service pages keep one column of prose.
+  const { intro, parts } =
+    legal || service ? { intro: page.content, parts: [] } : partsOf(page.content);
+  // A page with no parts of its own is an overview: the pages below it are its body.
+  const overview = parts.length === 0 && !legal && !service && children.length > 0;
 
   return (
     <main>
@@ -99,79 +108,110 @@ export default async function CmsPage({ params }: Props) {
         horizonKey={path}
       />
 
-      <div
-        className={cn(
-          "page-container grid gap-16 py-16 sm:py-24",
-          otherServices.length > 0 &&
-            "lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]",
-        )}
-      >
-        <div data-cms-zone="text">
-          <RichText data={page.content} className="prose-lg max-w-prose 3xl:prose-xl" />
+      {intro || otherServices.length > 0 ? (
+        <div
+          className={cn(
+            "page-container grid gap-16 py-16 sm:py-24",
+            otherServices.length > 0 &&
+              "lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]",
+          )}
+        >
+          <div data-cms-zone={parts.length > 0 ? undefined : "text"}>
+            <RichText data={intro} className="prose-lg max-w-prose 3xl:prose-xl" />
+          </div>
+          {otherServices.length > 0 ? (
+            <nav aria-labelledby="weitere-leistungen" className="lg:border-l lg:pl-12">
+              <h2 id="weitere-leistungen" className="text-sm font-medium text-primary-soft">
+                Weitere Leistungen
+              </h2>
+              <ul className="mt-4">
+                {otherServices.map((service) => (
+                  <li key={service.id ?? service.slug}>
+                    <Link
+                      href={`/leistungen/${service.slug}` as never}
+                      className="flex items-center gap-4 py-3 text-lg tracking-tight transition-colors hover:text-primary-soft"
+                    >
+                      <ServiceGlyph
+                        name={service.glyph}
+                        className="size-8 shrink-0 text-primary-soft"
+                      />
+                      {service.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
         </div>
-        {otherServices.length > 0 ? (
-          <nav aria-labelledby="weitere-leistungen" className="lg:border-l lg:pl-12">
-            <h2 id="weitere-leistungen" className="text-sm font-medium text-primary-soft">
-              Weitere Leistungen
-            </h2>
-            <ul className="mt-4">
-              {otherServices.map((service) => (
-                <li key={service.id ?? service.slug}>
-                  <Link
-                    href={`/leistungen/${service.slug}` as never}
-                    className="flex items-center gap-4 py-3 text-lg tracking-tight transition-colors hover:text-primary-soft"
-                  >
-                    <ServiceGlyph
-                      name={service.glyph}
-                      className="size-8 shrink-0 text-primary-soft"
-                    />
-                    {service.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ) : null}
-      </div>
+      ) : null}
+
+      {parts.length > 0 ? (
+        <div data-cms-zone="text">
+          {parts.map((part, i) => (
+            <Part key={`${i}-${part.title}`} id={`abschnitt-${i + 1}`} title={part.title}>
+              <RichText data={part.body} className="prose-lg max-w-prose 3xl:prose-xl" />
+            </Part>
+          ))}
+        </div>
+      ) : null}
 
       {service ? <LeistungSections sections={service} projekt={projekt} /> : null}
 
-      {children.length > 0 ? (
-        <section aria-labelledby="unterseiten-titel" className="border-t">
-          <div className="page-container py-16 sm:py-24">
-            <h2
-              id="unterseiten-titel"
-              className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
-            >
-              Mehr zu „{page.title}“
-            </h2>
-            <ul className="mt-10 grid gap-x-16 md:grid-cols-2">
-              {children.map((child) => {
-                const summary = child.lead || firstParagraph(child.content);
-                return (
-                  <li key={child.id} className="border-t py-8">
-                    <h3 className="text-2xl font-medium tracking-tight 3xl:text-3xl">
-                      <Link
-                        href={`${path}/${child.slug}` as never}
-                        className="decoration-primary-soft decoration-2 underline-offset-8 hover:underline"
-                      >
-                        {child.title}
-                      </Link>
-                    </h3>
-                    {summary ? (
-                      <p className="mt-3 line-clamp-3 max-w-prose text-lg text-pretty text-muted-foreground">
-                        {summary}
-                      </p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
+      {overview ? (
+        // An overview's pages are its body: one wide row each, its title and lead.
+        <ul aria-label={page.title} className="page-container">
+          {children.map((child) => {
+            const summary = child.lead || firstParagraph(child.content);
+            return (
+              <li
+                key={child.id}
+                className="grid gap-x-16 gap-y-4 border-t py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
+              >
+                <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl">
+                  <Link
+                    href={`${path}/${child.slug}` as never}
+                    className="decoration-primary-soft decoration-2 underline-offset-8 hover:underline"
+                  >
+                    {child.title}
+                  </Link>
+                </h2>
+                {summary ? (
+                  <p className="max-w-prose text-xl text-pretty text-muted-foreground lg:pt-2 3xl:text-2xl">
+                    {summary}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : children.length > 0 ? (
+        <Part id="unterseiten-titel" title="Weiterlesen">
+          <ul className="grid gap-x-16 md:grid-cols-2">
+            {children.map((child) => {
+              const summary = child.lead || firstParagraph(child.content);
+              return (
+                <li key={child.id} className="border-t border-primary-soft/40 pt-6 pb-8">
+                  <h3 className="text-2xl font-medium tracking-tight text-balance 3xl:text-3xl">
+                    <Link
+                      href={`${path}/${child.slug}` as never}
+                      className="decoration-primary-soft decoration-2 underline-offset-8 hover:underline"
+                    >
+                      {child.title}
+                    </Link>
+                  </h3>
+                  {summary ? (
+                    <p className="mt-3 line-clamp-3 max-w-prose text-lg text-pretty text-muted-foreground">
+                      {summary}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </Part>
       ) : null}
 
-      {LEGAL.has(page.slug) ? null : <ClosingCta />}
+      {legal ? null : <ClosingCta />}
     </main>
   );
 }

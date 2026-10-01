@@ -1,39 +1,13 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { Faq } from "@/components/site/faq";
 import type { LeistungSections as Sections, Projekt } from "@/cms/content/types";
 
-// The service's own sections, under its lead and text (/leistungen/*). One rhythm for all of
-// them, the FAQ's: the heading on the left, staying in view, the content on the right; the page
-// reads as one calm dossier, not a stack of boxes. Only the steps are numbered, because only they
-// are a sequence. Every part leaves the page when the admin has left it empty.
+import { Part } from "./part";
 
-const heading =
-  "text-3xl font-semibold tracking-tight text-balance sm:text-4xl lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:self-start 3xl:text-5xl";
-
-function Part({
-  id,
-  title,
-  zone,
-  children,
-}: {
-  id: string;
-  title: string;
-  zone: string;
-  children: ReactNode;
-}) {
-  return (
-    <section aria-labelledby={id} className="border-t" data-cms-zone={zone}>
-      <div className="page-container grid gap-10 py-20 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-        <h2 id={id} className={heading}>
-          {title}
-        </h2>
-        <div className="min-w-0">{children}</div>
-      </div>
-    </section>
-  );
-}
+// The service's own sections, under its lead and text (/leistungen/*), in the parts' rhythm. Only
+// the steps are numbered, because only they are a sequence. Every part leaves the page when the
+// admin has left it empty.
 
 export function LeistungSections({
   sections,

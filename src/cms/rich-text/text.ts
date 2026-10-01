@@ -1,7 +1,7 @@
 // Plain text out of Lexical rich text: the first paragraph for teasers, everything for search.
 import type { LexicalDocument, LexicalNode } from "./schema";
 
-function textOf(node: LexicalNode): string {
+export function textOf(node: LexicalNode): string {
   if (node.type === "linebreak") return " ";
   return node.text ?? node.children?.map(textOf).join("") ?? "";
 }
