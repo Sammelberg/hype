@@ -1,0 +1,94 @@
+/* The FAQ's questions (faq.tsx): native details, a ring with a plus that turns into a minus. */
+.item {
+  border-top: 1px solid oklch(0.79 0.085 252 / 0.2);
+}
+
+.question {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.75rem;
+  cursor: pointer;
+  list-style: none;
+  transition: color 180ms ease-out;
+}
+
+.question::-webkit-details-marker {
+  display: none;
+}
+
+.question:focus-visible {
+  border-radius: var(--radius-md);
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .question:hover {
+    color: var(--primary-soft);
+  }
+}
+
+/* A ring with two strokes: the upright one folds away when the answer is open. */
+.sign {
+  position: relative;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: -0.125rem;
+  border: 1px solid oklch(0.79 0.085 252 / 0.45);
+  border-radius: 50%;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
+}
+
+.sign::before,
+.sign::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.875rem;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--primary-soft);
+  content: "";
+  translate: -50% -50%;
+  transition: rotate 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.sign::after {
+  rotate: 90deg;
+}
+
+.item[open] .sign {
+  border-color: var(--primary-soft);
+  background: oklch(0.79 0.085 252 / 0.1);
+}
+
+.item[open] .sign::after {
+  rotate: 0deg;
+}
+
+/* The answer opens to its height where the browser can animate to auto. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (interpolate-size: allow-keywords) {
+    .item {
+      interpolate-size: allow-keywords;
+    }
+    .item::details-content {
+      height: 0;
+      overflow: clip;
+      opacity: 0;
+      transition:
+        height 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+        opacity 240ms ease-out,
+        content-visibility 320ms allow-discrete;
+    }
+    .item[open]::details-content {
+      height: auto;
+      opacity: 1;
+    }
+  }
+}
