@@ -78,7 +78,8 @@ pnpm dev       # http://localhost:<порт приложения>/admin
 ## Эксплуатация на сервере
 
 - **Переменные окружения:** `DATABASE_URL`, `NEXT_PUBLIC_SERVER_URL` (https), `FORM_SECRET`
-  (`openssl rand -base64 32`, у каждого сервера свой), `MEDIA_DIR` (постоянный том).
+  (`openssl rand -base64 32`, у каждого сервера свой), `MEDIA_DIR` (постоянный том), `CRON_SECRET`
+  (так же; без него запланированные публикации не выходят).
 - **Прокси впереди обязателен.** Next слушает только localhost, снаружи его видно лишь через
   nginx/Caddy. Прокси дописывает адрес клиента в `X-Forwarded-For`
   (`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`). Лимиты на вход и на форму
@@ -88,8 +89,12 @@ pnpm dev       # http://localhost:<порт приложения>/admin
   ```cron
   0 2 * * *   /srv/starter/scripts/backup/sicherung.sh               >> /var/log/starter-sicherung.log 2>&1
   0 3 * * *   cd /srv/starter && pnpm cms:aufbewahrung               >> /var/log/starter-aufbewahrung.log 2>&1
+  */5 * * * * cd /srv/starter && pnpm cms:geplant                    >> /var/log/starter-geplant.log 2>&1
   30 4 1 * *  /srv/starter/scripts/backup/wiederherstellung-test.sh  >> /var/log/starter-sicherung.log 2>&1
   ```
+- **Публикация по расписанию** (`pnpm cms:geplant`): спрашивает работающее приложение
+  (`POST /next/geplant` с `CRON_SECRET`), оно публикует страницы и проекты, чьё время пришло, и
+  пересобирает их. Отсюда точность — до интервала cron.
 - **Сроки хранения** (`pnpm cms:aufbewahrung`): заявки удаляются через 6 месяцев, прочитанные они или нет;
   заодно удаляются истёкшие сессии и старые счётчики лимитов. Каждый прогон пишется в журнал. Сам журнал
   и счета не удаляются.
