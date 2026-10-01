@@ -1,11 +1,13 @@
-/* Blackletter initial of the hero headline, drawn as an outline like the ridge in the hero. */
+/* Blackletter initial of the hero headline: solid ice, thickened by a stroke of its own colour
+   (Kanzleyrath has one weight; in em, so it grows with the letter), 1.5 times the bold text
+   beside it (from variant 45 of /entwurf/kanzleyrath; the owner's pick, 2026-10-01). */
 .initial {
   margin-right: 0.02em;
   font-family: var(--font-fraktur);
-  font-size: 1.25em;
+  font-size: 1.5em;
   font-weight: 400;
+  line-height: 0.8;
   letter-spacing: 0;
-  color: transparent;
-  /* The ridge outline's 2.5px. */
-  -webkit-text-stroke: 2.5px var(--primary-soft);
+  color: var(--primary-soft);
+  -webkit-text-stroke: 0.022em var(--primary-soft);
 }

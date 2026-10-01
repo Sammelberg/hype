@@ -82,9 +82,12 @@ export default async function HomePage() {
       <MountainHero labelledBy="start-titel">
         <div className="page-container grid items-center gap-10 pt-16 pb-20 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
           <div className={fraktur.variable}>
+            {/* Bold, with a 1.5× solid initial (page.module.css). From lg up the size follows the
+                width to 72px, so the longest rotating word, which never breaks, keeps clear of
+                the triangles. */}
             <h1
               id="start-titel"
-              className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl lg:text-7xl 3xl:max-w-6xl 3xl:text-8xl"
+              className="max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl lg:text-[clamp(4rem,6.2vw,4.5rem)]/none 3xl:max-w-6xl 3xl:text-8xl"
             >
               {/* A span, not ::first-letter: Chrome ignores text-stroke on ::first-letter. */}
               <span className={styles.initial}>{headline.charAt(0)}</span>

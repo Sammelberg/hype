@@ -1,18 +1,19 @@
-/* Hero call to action (hero-cta.tsx): large white type with no frame or fill; the space under the
-   label belongs to the pole star, drawn on a canvas that reaches past the link on every side
-   (BLEED in polar-star.ts). Its P is blackletter in outline, like the headline's initial. */
+/* Hero call to action (hero-cta.tsx): large bold white type with no frame or fill (variant 3 of
+   /entwurf/knopf, the owner's pick, 2026-10-01); the space under the label belongs to the pole
+   star, drawn on a canvas that reaches past the link on every side (BLEED in polar-star.ts). Its
+   P is blackletter in solid ice, like the headline's initial. */
 .cta {
   position: relative;
   isolation: isolate;
   display: inline-flex;
   align-items: center;
-  gap: 0.55em;
+  gap: 0.4em;
   /* The bottom padding is the star's band. */
   padding: 0.4em 0.27em 1.2em;
   margin-inline: -0.27em;
   color: var(--foreground);
   font-size: 1.5rem;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -21,12 +22,12 @@
 }
 @media (min-width: 40rem) {
   .cta {
-    font-size: 1.875rem;
+    font-size: 2.25rem;
   }
 }
 @media (min-width: 120rem) {
   .cta {
-    font-size: 2.25rem;
+    font-size: 2.625rem;
   }
 }
 .cta:active {
@@ -49,14 +50,14 @@
   z-index: 1;
 }
 .initial {
-  margin-right: 0.07em;
+  margin-right: 0.02em;
   font-family: var(--font-fraktur);
-  font-size: 1.4em;
+  font-size: 1.5em;
   font-weight: 400;
   letter-spacing: 0;
   line-height: 0;
-  color: transparent;
-  -webkit-text-stroke: 1.25px var(--primary-soft);
+  color: var(--primary-soft);
+  -webkit-text-stroke: 0.022em var(--primary-soft);
 }
 /* Follows the star's spring (--p, set by polar-star.ts), so arrow and star move as one. */
 .arrow {
@@ -67,7 +68,7 @@
   height: 0.93em;
   fill: none;
   stroke: var(--primary-soft);
-  stroke-width: 1.75;
+  stroke-width: 2.25;
   stroke-linecap: round;
   stroke-linejoin: round;
   transform: translateX(calc(var(--p, 0) * 0.2em));
