@@ -48,8 +48,15 @@ test("a customer, an order, a contract and an invoice draft hang together", asyn
 
   // The contract from the order states when it can be ended.
   await page.getByRole("link", { name: "Vertrag", exact: true }).click();
-  await page.getByLabel("Beginn").fill("2026-01-01");
-  await expect(page.getByText("Nächstes Ende 31.12.2026", { exact: false }).first()).toBeVisible();
+  // A contract starting on the first of next month runs its twelve months to the day before:
+  // the same sentence whatever today's date (one fixed in 2026 broke when the deadline passed).
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const end = new Date(Date.UTC(start.getUTCFullYear() + 1, start.getUTCMonth(), 0));
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const de = (d: Date) => iso(d).split("-").reverse().join(".");
+  await page.getByLabel("Beginn").fill(iso(start));
+  await expect(page.getByText(`Nächstes Ende ${de(end)}`, { exact: false }).first()).toBeVisible();
   await page.getByRole("button", { name: "Vertrag anlegen" }).click();
   await expect(page).toHaveURL(/\/admin\/vertraege\/\d+$/);
   const vertrag = page.url();
