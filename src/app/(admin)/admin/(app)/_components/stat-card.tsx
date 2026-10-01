@@ -14,6 +14,8 @@ export function StatCard({
   href,
   icon,
   index = 0,
+  euro = false,
+  ton,
 }: {
   label: string;
   value: number;
@@ -22,6 +24,10 @@ export function StatCard({
   /** Rendered by the server page: a function cannot cross into a client component. */
   icon: ReactNode;
   index?: number;
+  /** The value is an amount in cents, shown as euros. */
+  euro?: boolean;
+  /** Colours the number when it asks for attention. */
+  ton?: "warnung";
 }) {
   return (
     <Link
@@ -40,10 +46,16 @@ export function StatCard({
             </span>
             {label}
           </CardDescription>
-          <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums" data-numeric>
+          <CardTitle
+            className={`text-3xl font-semibold tracking-tight tabular-nums group-data-[size=sm]/card:text-3xl ${ton === "warnung" && value > 0 ? "text-warning" : ""}`}
+            data-numeric
+          >
             <NumberFlow
-              value={value}
+              value={euro ? value / 100 : value}
               locales="de-DE"
+              format={
+                euro ? { style: "currency", currency: "EUR", maximumFractionDigits: 0 } : undefined
+              }
               transformTiming={{ duration: 700, easing: "cubic-bezier(0.23, 1, 0.32, 1)" }}
             />
           </CardTitle>

@@ -1,23 +1,37 @@
 import {
-  BriefcaseIcon,
+  BanknoteIcon,
   CircleDashedIcon,
   ClockAlertIcon,
-  ReceiptIcon,
   FileTextIcon,
   FolderKanbanIcon,
   ImageIcon,
   InboxIcon,
+  ReceiptIcon,
+  RepeatIcon,
+  TrendingUpIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { listAuftraege } from "@/buero/daten/auftraege";
-import { listRechnungen } from "@/buero/daten/rechnungen";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { faelligeAboZeitraeume } from "@/buero/daten/abo";
+import { listAngebote } from "@/buero/daten/angebote";
+import { journal } from "@/buero/daten/export";
+import { eingaengeNachMonat, offenePosten } from "@/buero/daten/forderungen";
+import { listWiedervorlagen } from "@/buero/daten/historie";
 import { listVertraege, vertragsende } from "@/buero/daten/vertraege";
-import { datumDe, heute, tagePlus } from "@/buero/logik/ablauf";
-import { centAusBetrag, euro } from "@/buero/logik/geld";
+import { datumDe, heute, monatePlus, tagePlus } from "@/buero/logik/ablauf";
+import { ustNachMonat } from "@/buero/logik/export";
+import { mahnTitel } from "@/buero/logik/forderung";
+import { euro, rechnungsSummen } from "@/buero/logik/geld";
 import { requireUser } from "@/cms/auth/guard";
 import { isAdmin } from "@/cms/auth/roles";
 import { getContactForm, listSubmissions, submissionsPerWeek } from "@/cms/content/forms";
@@ -28,10 +42,12 @@ import { publicationsPerWeek, recentPublications } from "@/cms/content/versions"
 import { CardLink, tileLinkSurface } from "../_components/card-link";
 import { PageShell } from "../_components/page-shell";
 import { DokumentKachel } from "../_components/buero/kachel";
-import { RechnungStatus, VertragStatus } from "../_components/buero/status";
+import { AngebotStatus, VertragStatus } from "../_components/buero/status";
+import { NeueWiedervorlage, WiedervorlagenListe } from "../_components/buero/wiedervorlage";
 import { StatusBadge } from "../_components/status-badge";
 import { summarize } from "./anfragen/_lib/summary";
 import { Reveal } from "./_components/reveal";
+import { MonatsChart, type MonatsPunkt } from "./_components/monats-chart";
 import { StatCard } from "./_components/stat-card";
 import { WeeklyChart } from "./_components/weekly-chart";
 
@@ -42,6 +58,9 @@ const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: 
 const greeting = (hour: number) =>
   hour < 11 ? "Guten Morgen" : hour < 18 ? "Guten Tag" : "Guten Abend";
 
+// Twelve months back to the first of the month, for the money chart.
+const zwoelfMonate = (tag: string) => `${monatePlus(tag, -11).slice(0, 7)}-01`;
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -49,6 +68,7 @@ export default async function DashboardPage({
 }) {
   const user = await requireUser();
   const admin = isAdmin(user);
+  const seit = zwoelfMonate(heute());
   const [
     { passwort },
     pages,
@@ -59,9 +79,13 @@ export default async function DashboardPage({
     perWeek,
     published,
     recent,
-    rechnungen,
-    auftraege,
     vertraege,
+    posten,
+    wiedervorlagen,
+    angebote,
+    abo,
+    gestellt,
+    eingaenge,
   ] = await Promise.all([
     searchParams,
     listPages(),
@@ -73,17 +97,40 @@ export default async function DashboardPage({
     publicationsPerWeek(12),
     recentPublications(6),
     // The office only for admins (src/cms/auth/roles.ts).
-    admin ? listRechnungen() : [],
-    admin ? listAuftraege() : [],
     admin ? listVertraege() : [],
+    admin ? offenePosten() : [],
+    admin ? listWiedervorlagen({ bis: tagePlus(heute(), 0) }) : [],
+    admin ? listAngebote() : [],
+    admin ? faelligeAboZeitraeume() : [],
+    admin ? journal(seit, heute()) : [],
+    admin ? eingaengeNachMonat(seit) : [],
   ]);
-  // The office at a glance: what is owed, what is late, what runs, which notice dates come up.
+  // The office at a glance: what is due today, what is owed and late, what was earned, which
+  // offers wait for an answer, which notice dates come up.
   const tag = heute();
-  const offen = rechnungen.filter((r) => r.typ === "rechnung" && r.status === "gestellt");
-  const ueberfaellig = offen.filter((r) => r.faelligAm && r.faelligAm < tag);
-  const laufend = auftraege.filter((a) =>
-    ["beauftragt", "in_arbeit", "abgenommen"].includes(a.status),
-  );
+  const offenSumme = posten.reduce((s, p) => s + p.offen, 0);
+  const ueberfaellig = posten.filter((p) => p.tageUeberfaellig > 0);
+  const ueberfaelligSumme = ueberfaellig.reduce((s, p) => s + p.offen, 0);
+  const beimKunden = angebote
+    .filter((a) => a.status === "versendet")
+    .sort((a, b) => (a.gueltigBis ?? "9999").localeCompare(b.gueltigBis ?? "9999"));
+  const aboZeitraeume = abo.reduce((s, a) => s + a.zeitraeume.length, 0);
+  const umsatzMonate = ustNachMonat(gestellt);
+  const monate: MonatsPunkt[] = Array.from({ length: 12 }, (_, i) => {
+    const monat = monatePlus(seit, i).slice(0, 7);
+    const u = umsatzMonate.find((m) => m.monat === monat);
+    const e = eingaenge.find((m) => m.monat === monat);
+    return {
+      monat,
+      umsatz: u ? (u.netto19 + u.netto7 + u.netto0) / 100 : 0,
+      eingang: e ? e.cent / 100 : 0,
+    };
+  });
+  const jahr = tag.slice(0, 4);
+  const umsatzJahr = umsatzMonate
+    .filter((m) => m.monat.startsWith(jahr))
+    .reduce((s, m) => s + m.netto19 + m.netto7 + m.netto0, 0);
+  const eingangMonat = eingaenge.find((m) => m.monat === tag.slice(0, 7))?.cent ?? 0;
   const bald = tagePlus(tag, 60);
   const fristen = vertraege
     .map((v) => ({ v, ende: vertragsende(v, tag) }))
@@ -108,11 +155,163 @@ export default async function DashboardPage({
       lead={
         passwort === "geaendert"
           ? "Ihr Passwort ist geändert. Auf anderen Geräten sind Sie abgemeldet."
-          : "Was auf der Website steht, was hereinkam und was noch nicht veröffentlicht ist."
+          : admin
+            ? "Was heute ansteht, was offen ist, und was auf der Website geschieht."
+            : "Was auf der Website steht, was hereinkam und was noch nicht veröffentlicht ist."
       }
       wide
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {admin ? (
+        <>
+          <section aria-label="Heute" className="grid gap-6 xl:grid-cols-3">
+            <Card className="rise-in xl:col-span-2">
+              <CardHeader>
+                <CardTitle>Heute</CardTitle>
+                <CardDescription>
+                  {wiedervorlagen.length === 0
+                    ? "Keine Wiedervorlage fällig."
+                    : `${wiedervorlagen.length} ${wiedervorlagen.length === 1 ? "Wiedervorlage" : "Wiedervorlagen"} fällig.`}
+                </CardDescription>
+                <CardAction>
+                  <NeueWiedervorlage heute={tag} label="Vormerken" />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <WiedervorlagenListe
+                  heute={tag}
+                  leer="Nichts für heute. Neues merken Sie mit „Vormerken“ vor."
+                  punkte={wiedervorlagen.map((w) => ({
+                    id: w.id,
+                    titel: w.titel,
+                    notiz: w.notiz,
+                    faelligAm: w.faelligAm,
+                    erledigt: false,
+                    kundeId: w.kundeId,
+                    kundeName: w.kundeName,
+                  }))}
+                />
+              </CardContent>
+            </Card>
+            <Card className="rise-in" style={{ "--rise-index": 1 } as React.CSSProperties}>
+              <CardHeader>
+                <CardTitle>Zu erledigen</CardTitle>
+                <CardDescription>
+                  {ueberfaellig.length + beimKunden.length + fristen.length + aboZeitraeume === 0
+                    ? "Nichts drängt."
+                    : "Überfällig, beim Kunden, bald kündbar."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul role="list" className="flex flex-col gap-2">
+                  {aboZeitraeume > 0 ? (
+                    <DokumentKachel
+                      href="/admin/rechnungen"
+                      titel="Laufende Rechnungen vorbereiten"
+                      unter={`${aboZeitraeume} ${aboZeitraeume === 1 ? "Zeitraum" : "Zeiträume"} aus Verträgen fällig`}
+                      status={
+                        <RepeatIcon aria-hidden="true" className="size-4 text-primary-soft" />
+                      }
+                    />
+                  ) : null}
+                  {ueberfaellig.slice(0, 4).map((p) => (
+                    <DokumentKachel
+                      key={`r-${p.id}`}
+                      href={`/admin/rechnungen/${p.id}`}
+                      titel={`${p.nummer} · ${euro(p.offen)}`}
+                      unter={`${p.kundeName}, ${p.tageUeberfaellig} Tage überfällig${p.mahnstufe !== null ? `, ${mahnTitel(p.mahnstufe)} geschrieben` : ""}`}
+                      status={<ClockAlertIcon aria-hidden="true" className="text-warning size-4" />}
+                    />
+                  ))}
+                  {beimKunden.slice(0, 3).map((a) => (
+                    <DokumentKachel
+                      key={`a-${a.id}`}
+                      href={`/admin/angebote/${a.id}`}
+                      titel={a.titel}
+                      unter={`${a.kundeName}${a.gueltigBis ? `, gilt bis ${datumDe(a.gueltigBis)}` : ""}`}
+                      status={
+                        <AngebotStatus
+                          status={a.status}
+                          abgelaufen={Boolean(a.gueltigBis && a.gueltigBis < tag)}
+                        />
+                      }
+                    />
+                  ))}
+                  {fristen.slice(0, 3).map(({ v, ende }) => (
+                    <DokumentKachel
+                      key={`v-${v.id}`}
+                      href={`/admin/vertraege/${v.id}`}
+                      titel={v.titel}
+                      unter={`Kündbar bis ${datumDe(ende!.kuendigenBis!)}`}
+                      status={<VertragStatus status={v.status} />}
+                    />
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section aria-label="Geld" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              index={2}
+              label="Offen"
+              value={offenSumme}
+              euro
+              hint={`${posten.length} ${posten.length === 1 ? "Rechnung" : "Rechnungen"}`}
+              href="/admin/offene-posten"
+              icon={<ReceiptIcon />}
+            />
+            <StatCard
+              index={3}
+              label="Überfällig"
+              value={ueberfaelligSumme}
+              euro
+              ton="warnung"
+              hint={
+                ueberfaellig.length
+                  ? `${ueberfaellig.length} über dem Zahlungsziel`
+                  : "Alles im Zahlungsziel"
+              }
+              href="/admin/offene-posten"
+              icon={<ClockAlertIcon />}
+            />
+            <StatCard
+              index={4}
+              label={`Umsatz ${jahr}`}
+              value={umsatzJahr}
+              euro
+              hint="netto, gestellt"
+              href={`/admin/steuerberater?zeitraum=${jahr}`}
+              icon={<TrendingUpIcon />}
+            />
+            <StatCard
+              index={5}
+              label="Eingang diesen Monat"
+              value={eingangMonat}
+              euro
+              hint={`${beimKunden.length} ${beimKunden.length === 1 ? "Angebot" : "Angebote"} beim Kunden über ${euro(beimKunden.reduce((s, a) => s + rechnungsSummen(a.positionen, false).netto, 0))}`}
+              href="/admin/rechnungen"
+              icon={<BanknoteIcon />}
+            />
+          </section>
+
+          <Reveal>
+            <Card>
+              <CardHeader>
+                <CardTitle>Umsatz und Eingang</CardTitle>
+                <CardDescription>
+                  Die letzten zwölf Monate: gestellt nach Rechnungsdatum, eingegangen nach
+                  Zahlungstag.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MonatsChart data={monate} />
+              </CardContent>
+            </Card>
+          </Reveal>
+        </>
+      ) : null}
+
+      <section aria-label="Website" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           index={0}
           label="Anfragen ungelesen"
@@ -145,70 +344,7 @@ export default async function DashboardPage({
           href="/admin/medien"
           icon={<ImageIcon />}
         />
-      </div>
-
-      {admin ? (
-        <section aria-label="Büro" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            index={4}
-            label="Rechnungen offen"
-            value={offen.length}
-            hint={euro(offen.reduce((sum, r) => sum + centAusBetrag(r.summeBrutto), 0))}
-            href="/admin/rechnungen"
-            icon={<ReceiptIcon />}
-          />
-          <StatCard
-            index={5}
-            label="Überfällig"
-            value={ueberfaellig.length}
-            hint={ueberfaellig.length ? "Zahlungsziel verstrichen" : "Keine"}
-            href="/admin/rechnungen"
-            icon={<ClockAlertIcon />}
-          />
-          <StatCard
-            index={6}
-            label="Aufträge laufend"
-            value={laufend.length}
-            hint={`${auftraege.filter((a) => a.status === "angebot").length} Angebote offen`}
-            href="/admin/auftraege"
-            icon={<BriefcaseIcon />}
-          />
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Fristen</CardTitle>
-              <CardDescription>
-                {ueberfaellig.length + fristen.length === 0
-                  ? "Nichts wird in den nächsten 60 Tagen fällig."
-                  : "Überfällige Rechnungen und Kündigungstermine der nächsten 60 Tage."}
-              </CardDescription>
-            </CardHeader>
-            {ueberfaellig.length + fristen.length > 0 ? (
-              <CardContent>
-                <ul role="list" className="flex flex-col gap-2">
-                  {ueberfaellig.slice(0, 4).map((r) => (
-                    <DokumentKachel
-                      key={`r-${r.id}`}
-                      href={`/admin/rechnungen/${r.id}`}
-                      titel={r.nummer ?? "Rechnung"}
-                      unter={`${r.kundeName}, fällig ${datumDe(r.faelligAm!)}`}
-                      status={<RechnungStatus status={r.status} ueberfaellig typ={r.typ} />}
-                    />
-                  ))}
-                  {fristen.slice(0, 4).map(({ v, ende }) => (
-                    <DokumentKachel
-                      key={`v-${v.id}`}
-                      href={`/admin/vertraege/${v.id}`}
-                      titel={v.titel}
-                      unter={`Kündbar bis ${datumDe(ende!.kuendigenBis!)}`}
-                      status={<VertragStatus status={v.status} />}
-                    />
-                  ))}
-                </ul>
-              </CardContent>
-            ) : null}
-          </Card>
-        </section>
-      ) : null}
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Reveal>
