@@ -9,9 +9,19 @@ type Door = { id: number; title: string; path: string; summary: string | null };
 
 // The pages below a page, each a door showing the horizon its own page opens with (lib/horizon,
 // seeded by its path), drawn as the door comes into view. One page fills the row; more share it.
-export function ChildDoors({ doors, large = false }: { doors: Door[]; large?: boolean }) {
+export function ChildDoors({
+  doors,
+  label,
+  large = false,
+}: {
+  doors: Door[];
+  /** Names the list (an overview's pages are its body: the page's title). */
+  label?: string;
+  large?: boolean;
+}) {
   return (
     <ul
+      aria-label={label}
       className={cn(
         "grid sd-stagger gap-4",
         doors.length > 1 ? "md:grid-cols-2" : null,
@@ -23,10 +33,9 @@ export function ChildDoors({ doors, large = false }: { doors: Door[]; large?: bo
         return (
           <li key={door.id} style={{ "--i": i } as CSSProperties}>
             <Spotlight className="group h-full rounded-3xl border border-primary-soft/15 bg-card transition-colors hover:border-primary-soft/40">
-              <Link
-                href={door.path as never}
+              <div
                 className={cn(
-                  "flex h-full flex-col outline-none after:absolute after:inset-0 after:rounded-3xl after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-ring",
+                  "flex h-full flex-col",
                   large && doors.length === 1 ? "lg:grid lg:grid-cols-2 lg:items-end" : null,
                 )}
               >
@@ -42,14 +51,23 @@ export function ChildDoors({ doors, large = false }: { doors: Door[]; large?: bo
                       large ? "text-3xl sm:text-5xl 3xl:text-6xl" : "text-2xl sm:text-3xl",
                     )}
                   >
-                    {door.title}
+                    {/* Only the title names the link; the whole door is its target. */}
+                    <Link
+                      href={door.path as never}
+                      className="outline-none after:absolute after:inset-0 after:rounded-3xl after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-ring"
+                    >
+                      {door.title}
+                    </Link>
                   </h2>
                   {door.summary ? (
                     <p className="max-w-prose text-lg text-pretty text-muted-foreground sm:text-xl">
                       {door.summary}
                     </p>
                   ) : null}
-                  <span className="mt-2 inline-flex items-center gap-3 font-medium text-primary-soft">
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 inline-flex items-center gap-3 font-medium text-primary-soft"
+                  >
                     <span className="decoration-2 underline-offset-8 group-hover:underline">
                       Ansehen
                     </span>
@@ -83,7 +101,7 @@ export function ChildDoors({ doors, large = false }: { doors: Door[]; large?: bo
                     className="sd-stroke fill-none stroke-[oklch(0.7_0.12_58)] [stroke-width:2.5]"
                   />
                 </svg>
-              </Link>
+              </div>
             </Spotlight>
           </li>
         );

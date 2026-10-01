@@ -135,7 +135,11 @@ export default async function CmsPage({ params }: Props) {
           />
           {intro ? (
             <div className="page-container py-16 sm:py-24" data-cms-zone="text">
-              <RichText data={intro} className="prose-lg max-w-prose 3xl:prose-xl" />
+              <RichText
+                data={intro}
+                // Long addresses and legal compounds break instead of widening the page.
+                className="prose-lg max-w-prose break-words hyphens-auto 3xl:prose-xl"
+              />
             </div>
           ) : null}
         </>
@@ -160,9 +164,9 @@ export default async function CmsPage({ params }: Props) {
 
       {overview ? (
         // An overview's pages are its body: a door for each.
-        <section aria-label={page.title} className="border-t">
+        <section className="border-t">
           <div className="page-container py-20 sm:py-28">
-            <ChildDoors doors={doors} large />
+            <ChildDoors doors={doors} label={page.title} large />
           </div>
         </section>
       ) : children.length > 0 ? (

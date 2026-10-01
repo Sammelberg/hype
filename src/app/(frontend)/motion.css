@@ -196,9 +196,10 @@
     scale: 1 0;
   }
 }
+/* From the muted text colour (9.2:1 on the background), so unread words stay readable (WCAG). */
 @keyframes sd-word {
   from {
-    opacity: 0.22;
+    color: var(--muted-foreground);
   }
 }
 @keyframes sd-away {

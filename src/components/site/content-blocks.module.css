@@ -3,7 +3,7 @@
 /* ── The page's contour map ── */
 .map {
   width: 100%;
-  max-width: 30rem;
+  max-width: min(30rem, 75%);
   justify-self: center;
   overflow: visible;
   view-timeline: --map block;

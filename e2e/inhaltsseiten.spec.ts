@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { hideDevOverlays } from "./_admin";
 
-// Content pages lay their text out in parts, one per h2 of the CMS text; a page without parts of
-// its own is an overview whose child pages are its body. Content from scripts/seed-data.ts.
+// Content pages lay their text out in parts, one per h2 of the CMS text, shaped by what the part
+// holds; a page without parts of its own is an overview whose child pages are its body. Content from scripts/seed-data.ts.
 
 test.beforeEach(async ({ page }) => {
   await hideDevOverlays(page);
@@ -22,7 +22,11 @@ test("/ueber-uns shows its text in parts and points onward", async ({ page }) =>
     .getByRole("link", { name: "Unsere Arbeitsweise" })
     .click();
   await expect(page).toHaveURL(/\/ueber-uns\/arbeitsweise$/);
-  await expect(page.getByRole("heading", { level: 2, name: "1. Verstehen" })).toBeVisible();
+  // Numbered parts („1. Verstehen“) are the steps of one way (cms/rich-text/shapes.ts).
+  const steps = page.getByRole("region", { name: "Schritte" });
+  await expect(
+    steps.getByRole("heading", { level: 2, name: "Schritt 1: Verstehen" }),
+  ).toBeVisible();
 });
 
 test("/branchen lists its pages as its body", async ({ page }) => {
