@@ -193,11 +193,16 @@ test("after the last card the page moves on, and from below the stage takes it b
   await expect.poll(() => current(page)).toBe("4");
   await page.waitForTimeout(600);
 
-  // One more turn: the stage lets go and the page glides on by itself.
+  // One more turn: the stage lets go and the page glides on by itself, to the next section,
+  // its top under the header, in one glide.
   const docked = await header(page);
   await page.mouse.wheel(0, NOTCH);
   await expect(section(page)).not.toHaveAttribute("data-held");
   expect(await settle(() => stageTop(page))).toBeLessThan(docked - 200);
+  const nextTop = await section(page).evaluate((el) =>
+    Math.round(el.nextElementSibling!.getBoundingClientRect().top),
+  );
+  expect(nextTop).toBe(docked);
   expect(await current(page)).toBe("4");
 
   // Back up: the stage takes the page again, at the last card, and the next turn up goes back.
@@ -213,7 +218,7 @@ test("after the last card the page moves on, and from below the stage takes it b
   await expect.poll(() => current(page)).toBe("3");
 });
 
-test("back up from the first card: the first turn leaves, and turning on is never lost", async ({
+test("back up from the first card: one turn goes back onto the hero in one glide", async ({
   page,
   isMobile,
 }) => {
@@ -222,17 +227,14 @@ test("back up from the first card: the first turn leaves, and turning on is neve
   const docked = await header(page);
   const y = () => page.evaluate(() => Math.round(scrollY));
   const before = await y();
-  // One turn up: the stage lets go and the page glides back up at once.
+  // One turn up: the stage lets go and the page glides back onto the hero in one glide.
   await page.mouse.wheel(0, -NOTCH);
   await expect(section(page)).not.toHaveAttribute("data-held");
   await expect.poll(y).toBeLessThan(before - 100);
-  // Turning on while it still glides carries the page on further up: no turn is swallowed.
-  for (let i = 0; i < 3; i++) {
-    await page.mouse.wheel(0, -NOTCH);
-    await page.waitForTimeout(120);
-  }
-  const after = await settle(y);
-  expect(after).toBeLessThan(before - (await page.evaluate(() => innerHeight)) * 0.55 - 100);
+  // A new turn while it still glides is not swallowed and does not brake it.
+  await page.waitForTimeout(350);
+  await page.mouse.wheel(0, -NOTCH);
+  expect(await settle(y)).toBe(0);
   expect(await stageTop(page)).toBeGreaterThan(docked);
 });
 

@@ -6,7 +6,7 @@ import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type CSSProperties, type ReactNode, useRef } from "react";
 
-import { glidePageTo } from "@/components/site/smooth-scroll";
+import { glidePageTo, isGliding } from "@/components/site/smooth-scroll";
 import { cn } from "@/lib/utils";
 
 import styles from "./mountain-scene.module.css";
@@ -163,7 +163,8 @@ export function MountainHero({
           end: () => `+=${window.innerHeight * PULL}`,
           onUpdate: (self) => {
             const y = self.scroll();
-            if (gliding || self.direction >= 0 || y <= 0 || y > self.end) return;
+            // Not over another glide (the services stage taking the page back up here itself).
+            if (gliding || isGliding() || self.direction >= 0 || y <= 0 || y > self.end) return;
             gliding = true;
             glidePageTo(0, {
               duration: 0.8,

@@ -14,6 +14,11 @@ let lenis: Lenis | null = null;
 let holder: (() => void) | null = null;
 // The glide that a wheel turn or swipe extends instead of interrupting (glidePageTo's `follow`).
 let following: ((delta: number) => void) | null = null;
+// A glide from code is under way (glidePageTo until its end, or until it is replaced).
+let glide = 0;
+
+/** Whether a glide from code is moving the page: another pull should leave it be. */
+export const isGliding = () => glide !== 0;
 
 /**
  * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
@@ -24,6 +29,7 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
   const release = holder;
   holder = null;
   following = null;
+  glide = 0;
   release?.();
   if (lenis) {
     // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
@@ -56,17 +62,24 @@ export function glidePageTo(
      */
     carry?: boolean;
     /**
-     * Open to the hand: a wheel turn or swipe while it glides moves the target on by as much and
-     * the glide carries on from its speed toward it, so turning on never brakes the page.
-     * Without it the glide is deaf to wheel and keys meanwhile.
+     * Open to the hand: a new wheel turn or swipe while it glides moves the target on by as much
+     * and the glide carries on from its speed toward it, so turning on never brakes the page. The
+     * rest of the gesture that started the glide (input within `follow` ms of the one before) is
+     * swallowed: it asked for this glide, not for more. Without it the glide is deaf to wheel and
+     * keys meanwhile.
      */
-    follow?: boolean;
+    follow?: number | false;
   },
 ) {
   following = null;
+  const id = ++glide;
+  const done = () => {
+    if (glide === id) glide = 0;
+    onComplete?.();
+  };
   if (!lenis) {
     window.scrollTo({ top: y, behavior: "smooth" });
-    window.setTimeout(() => onComplete?.(), duration * 1000);
+    window.setTimeout(done, duration * 1000);
     return;
   }
   const instance = lenis;
@@ -86,19 +99,26 @@ export function glidePageTo(
     instance.scrollTo(target, {
       duration: d,
       easing: e,
-      lock: !follow,
+      lock: follow === false,
       force: true,
       onComplete: () => {
         if (following === extend) following = null;
-        onComplete?.();
+        done();
       },
     });
   };
+  let lastInput = performance.now();
+  let extending = false;
   const extend = (delta: number) => {
+    const now = performance.now();
+    const quiet = now - lastInput > Number(follow);
+    lastInput = now;
+    if (!extending && !quiet) return;
+    extending = true;
     target = Math.min(instance.limit, Math.max(0, target + delta));
     run(true);
   };
-  if (follow) following = extend;
+  if (follow !== false) following = extend;
   instance.resize();
   run(carry);
 }

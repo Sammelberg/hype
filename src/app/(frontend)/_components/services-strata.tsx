@@ -147,15 +147,15 @@ const SLIDE = { duration: 0.95, ease: "power3.inOut" };
  */
 const DOCK = { duration: 0.8, carry: true };
 /**
- * And away from it after the last card (or back up before the first): from the speed the page
- * has, and open to the hand: turning on while it glides carries the page on, nothing is lost.
- */
-const LEAVE = { duration: 0.9, carry: true, follow: true };
-/**
  * Input within this long of the one before is the same gesture: the notches of one turn of the
  * wheel (a hand spins several at once), a trackpad's glide. A new card needs a pause.
  */
 const QUIET_MS = 300;
+/**
+ * And on to the next section after the last card (or back to the one before the first): from the
+ * speed the page has, and open to the hand: a new turn while it glides carries the page on.
+ */
+const LEAVE = { duration: 0.9, carry: true, follow: QUIET_MS };
 /** A glide may pause this long and still be the same gesture, if its steps keep shrinking. */
 const TAIL_MS = 700;
 
@@ -429,8 +429,20 @@ export function ServicesStrata({
           release();
           releasePage();
           setMode("leaving");
-          glidePageTo(place() + dir * window.innerHeight * ONWARD, {
+          // On to the section before or after, its top under the header: from the first card one
+          // turn up is back on the hero, from the last one turn down on the next section, in one
+          // glide (without a neighbour: ONWARD of a screen).
+          const neighbour = (
+            dir < 0 ? section.previousElementSibling : section.nextElementSibling
+          ) as HTMLElement | null;
+          const target = neighbour
+            ? Math.max(0, neighbour.getBoundingClientRect().top + window.scrollY - header())
+            : place() + dir * window.innerHeight * ONWARD;
+          const distance = Math.abs(target - window.scrollY);
+          glidePageTo(target, {
             ...LEAVE,
+            // A longer way takes a little longer, never a rush.
+            duration: Math.min(1.4, LEAVE.duration + distance / 3000),
             onComplete: () => {
               if (mode === "leaving") setMode("free");
             },
