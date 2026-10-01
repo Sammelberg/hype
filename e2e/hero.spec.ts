@@ -183,22 +183,3 @@ test.describe("reduced motion", () => {
     await expect.poll(() => starSpring(page), { intervals: [50] }).toBe(1);
   });
 });
-
-test("scrolling back up, the page is pulled onto the hero", async ({ page, isMobile }) => {
-  test.skip(isMobile, "wheel input needs a fine pointer");
-  await page.goto("/");
-  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
-  await page.mouse.move(640, 360);
-  const y = () => page.evaluate(() => Math.round(scrollY));
-  // Down a little over half a screen: the hero stays where it was left.
-  for (let i = 0; i < 4; i++) {
-    await page.mouse.wheel(0, 100);
-    await page.waitForTimeout(150);
-  }
-  await expect.poll(y).toBe(400);
-  await page.waitForTimeout(300);
-  expect(await y()).toBe(400);
-  // One notch up: the rest of the way glides by itself.
-  await page.mouse.wheel(0, -53);
-  await expect.poll(y, { timeout: 5_000 }).toBe(0);
-});

@@ -389,14 +389,22 @@ export function ServicesStrata({
             }
             // Only inside the approach zone: the trigger also reports a jump across it.
             if (mode !== "free" || y < self.start || y > self.end) return;
-            // Coming down onto it, or having overshot it with cards still ahead; coming up onto it,
-            // or having overshot it upwards with cards still behind.
-            const down = direction > 0 && (y < place || index < last);
-            const up = direction < 0 && (y > place || index > 0);
-            if (down || up) dock();
+            // Only on the way down: coming down onto it, or having overshot it with cards still
+            // ahead. On the way up the page passes freely (the owner's call, 2026-10-01).
+            if (direction > 0 && (y < place || index < last)) dock();
           },
         });
         const place = () => (watcher.start + watcher.end) / 2;
+
+        // Once the page has gone back up past the stage (it lies wholly below the screen), the
+        // cards return to the first, unseen: the next way down starts at the beginning.
+        const rewind = ScrollTrigger.create({
+          trigger: stage,
+          start: "top bottom",
+          onLeaveBack: () => {
+            if (mode === "free" && index !== 0) slideTo(0, true);
+          },
+        });
 
         const release = () => {
           setMode("free");
@@ -425,16 +433,30 @@ export function ServicesStrata({
             onComplete: () => mode === "docking" && hold(),
           });
         };
-        const leave = (dir: 1 | -1) => {
+        // Back up before the first card: an ordinary turn of the page, as far as the hand turned,
+        // carried on from the speed the page has; no pull anywhere (the owner's call, 2026-10-01).
+        const turnUp = (distance: number) => {
           release();
           releasePage();
           setMode("leaving");
-          // On to the section before or after, its top under the header: from the first card one
-          // turn up is back on the hero, from the last one turn down on the next section, in one
-          // glide (without a neighbour: ONWARD of a screen).
-          const neighbour = (
-            dir < 0 ? section.previousElementSibling : section.nextElementSibling
-          ) as HTMLElement | null;
+          glidePageTo(Math.max(0, window.scrollY - distance), {
+            ...LEAVE,
+            duration: 0.6,
+            // Every further notch of the same turn scrolls on as usual.
+            follow: 0,
+            onComplete: () => {
+              if (mode === "leaving") setMode("free");
+            },
+          });
+        };
+        const leave = (dir: 1 | -1, turned: number) => {
+          if (dir < 0) return turnUp(turned);
+          release();
+          releasePage();
+          setMode("leaving");
+          // On to the next section, its top under the header, in one glide (without one: ONWARD
+          // of a screen).
+          const neighbour = section.nextElementSibling as HTMLElement | null;
           const target = neighbour
             ? Math.max(0, neighbour.getBoundingClientRect().top + window.scrollY - header())
             : place() + dir * window.innerHeight * ONWARD;
@@ -455,17 +477,18 @@ export function ServicesStrata({
         };
         window.addEventListener("wheel", onHand, { passive: true });
         window.addEventListener("touchstart", onHand, { passive: true });
-        const move = (dir: 1 | -1) => {
+        // `distance`: how far the hand turned, for a turn that leaves upward.
+        const move = (dir: 1 | -1, distance: number) => {
           if (mode !== "docked" && mode !== "docking") return;
           const next = index + dir;
           // On its way in, one card may already move on; a turn past the first or last card turns
           // the page round at once (it glides away from the speed it has).
           if (mode === "docking") {
-            if (next < 0 || next > last) return leave(dir);
+            if (next < 0 || next > last) return leave(dir, distance);
             if (movedWhileDocking) return;
             movedWhileDocking = true;
             slideTo(next);
-          } else if (next < 0 || next > last) leave(dir);
+          } else if (next < 0 || next > last) leave(dir, distance);
           else slideTo(next);
         };
         // One gesture, one card: one turn of the wheel of however many notches, one swipe. A
@@ -487,7 +510,7 @@ export function ServicesStrata({
           lastSize = size;
           if (!go) return;
           lastMove = now;
-          move(dir);
+          move(dir, size);
         };
 
         // Wheel and touch while the stage holds the page (off otherwise). wheelSpeed -1: turning
@@ -518,7 +541,11 @@ export function ServicesStrata({
           const space = event.key === " " && !target.closest("button, a");
           if (!onward && !back && !space) return;
           event.preventDefault();
-          move(onward || (space && !event.shiftKey) ? 1 : -1);
+          const pageKey = event.key.startsWith("Page") || space;
+          move(
+            onward || (space && !event.shiftKey) ? 1 : -1,
+            pageKey ? window.innerHeight * 0.8 : 100,
+          );
         };
         window.addEventListener("keydown", onKey);
 
@@ -583,6 +610,7 @@ export function ServicesStrata({
           ScrollTrigger.removeEventListener("refresh", onRefresh);
           observer.kill();
           watcher.kill();
+          rewind.kill();
           slide?.kill();
           if (mode === "docked") releasePage();
           gsap.set(track, { clearProps: "x" });

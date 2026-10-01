@@ -14,11 +14,6 @@ let lenis: Lenis | null = null;
 let holder: (() => void) | null = null;
 // The glide that a wheel turn or swipe extends instead of interrupting (glidePageTo's `follow`).
 let following: ((delta: number) => void) | null = null;
-// A glide from code is under way (glidePageTo until its end, or until it is replaced).
-let glide = 0;
-
-/** Whether a glide from code is moving the page: another pull should leave it be. */
-export const isGliding = () => glide !== 0;
 
 /**
  * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
@@ -29,7 +24,6 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
   const release = holder;
   holder = null;
   following = null;
-  glide = 0;
   release?.();
   if (lenis) {
     // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
@@ -72,11 +66,7 @@ export function glidePageTo(
   },
 ) {
   following = null;
-  const id = ++glide;
-  const done = () => {
-    if (glide === id) glide = 0;
-    onComplete?.();
-  };
+  const done = () => onComplete?.();
   if (!lenis) {
     window.scrollTo({ top: y, behavior: "smooth" });
     window.setTimeout(done, duration * 1000);
