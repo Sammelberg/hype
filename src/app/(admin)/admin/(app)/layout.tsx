@@ -10,6 +10,7 @@ import { listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
 import { offenePosten } from "@/buero/daten/forderungen";
 import { zaehleFaelligeWiedervorlagen } from "@/buero/daten/historie";
+import { termineHeute } from "@/buero/daten/kalender";
 import { listAngebote } from "@/buero/daten/angebote";
 import { listRechnungen } from "@/buero/daten/rechnungen";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +35,7 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
     angebote,
     faelligeWv,
     posten,
+    heuteTermine,
   ] = await Promise.all([
     getSiteSettings(),
     countUnreadSubmissions(),
@@ -46,11 +48,16 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
     admin ? listAngebote() : [],
     admin ? zaehleFaelligeWiedervorlagen() : 0,
     admin ? offenePosten() : [],
+    admin ? termineHeute() : [],
   ]);
   const ueberfaellig = posten.filter((p) => p.tageUeberfaellig > 0).length;
   const badges = {
     "/admin/anfragen": { anzahl: unread, label: `${unread} ungelesen` },
     "/admin/wiedervorlagen": { anzahl: faelligeWv, label: `${faelligeWv} fällig` },
+    "/admin/kalender": {
+      anzahl: heuteTermine.length,
+      label: `${heuteTermine.length} Termine heute`,
+    },
     "/admin/offene-posten": { anzahl: ueberfaellig, label: `${ueberfaellig} überfällig` },
   };
   const entries: PaletteEntry[] = [

@@ -349,3 +349,38 @@ export const AngebotSchema = z.object({
   positionen: z.array(PositionSchema).min(1, "Mindestens eine Position."),
 });
 export type AngebotInput = z.infer<typeof AngebotSchema>;
+
+// ---------------------------------------------------------------------------------------------
+// Termine: entered as German days and wall-clock times; the server turns them into instants.
+
+const uhrzeit = z.string().regex(/^\d{2}:\d{2}$/, "Bitte eine Uhrzeit.");
+
+export const TerminSchema = z
+  .object({
+    titel: text("worum es geht"),
+    datum: tagIso,
+    bisDatum: optionalerTag,
+    ganztags: z.boolean(),
+    von: uhrzeit.nullish().transform((v) => v ?? null),
+    bis: uhrzeit.nullish().transform((v) => v ?? null),
+    ort: optional(300),
+    notiz: optional(4000),
+    kundeId: optionaleId,
+  })
+  .refine((t) => t.ganztags || t.von !== null, {
+    message: "Bitte eine Uhrzeit, oder ganztägig.",
+    path: ["von"],
+  })
+  .refine((t) => !t.bisDatum || t.bisDatum >= t.datum, {
+    message: "Das Ende liegt nach dem Beginn.",
+    path: ["bisDatum"],
+  })
+  .refine(
+    (t) =>
+      t.ganztags ||
+      !t.bis ||
+      (t.bisDatum ?? t.datum) > t.datum ||
+      (t.von !== null && t.bis > t.von),
+    { message: "Das Ende liegt nach dem Beginn.", path: ["bis"] },
+  );
+export type TerminInput = z.infer<typeof TerminSchema>;

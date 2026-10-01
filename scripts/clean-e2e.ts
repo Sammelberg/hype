@@ -56,6 +56,7 @@ await db.execute(
   sql`delete from buero.angebote where kunde_id in (select id from buero.kunden where firma like 'E2E %' or name like 'E2E %')`,
 );
 await db.execute(sql`delete from buero.wiedervorlagen where titel like 'E2E %'`);
+await db.execute(sql`delete from buero.termine where titel like 'E2E %'`);
 await db.execute(
   sql`delete from buero.vertraege where kunde_id in (select id from buero.kunden where firma like 'E2E %' or name like 'E2E %') and not exists (select 1 from buero.rechnungen r where r.vertrag_id = buero.vertraege.id)`,
 );

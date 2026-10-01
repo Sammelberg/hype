@@ -24,6 +24,7 @@ export const ADMIN_ONLY = [
   "/admin/vertraege",
   "/admin/rechnungen",
   "/admin/wiedervorlagen",
+  "/admin/kalender",
   "/admin/offene-posten",
   "/admin/steuerberater",
   "/admin/firma",

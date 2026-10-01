@@ -202,6 +202,38 @@ test("the customer card keeps the history, a Wiedervorlage and an offer", async 
   await expect(page).toHaveURL(/\/admin\/kunden$/);
 });
 
+test("a Termin goes into the calendar, shows on its day and can be removed", async ({ page }) => {
+  // A day in the next month, so it is never „today“ or past whatever the date of the run.
+  const d = new Date();
+  const tag = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 12))
+    .toISOString()
+    .slice(0, 10);
+  await page.goto(`/admin/kalender?ansicht=woche&tag=${tag}`);
+  await page.getByRole("button", { name: "Termin", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Neuer Termin" });
+  await dialog.getByRole("textbox", { name: "Was" }).fill(`E2E Abnahme ${STAMP}`);
+  await dialog.getByLabel("Am").fill(tag);
+  await dialog.getByLabel("Von").fill("14:00");
+  await dialog.getByLabel("Bis", { exact: true }).last().fill("15:30");
+  await dialog.getByRole("button", { name: "Eintragen" }).click();
+  const eintrag = page.getByRole("button", {
+    name: new RegExp(`14:00–15:30.*E2E Abnahme ${STAMP}`),
+  });
+  await expect(eintrag).toBeVisible();
+  // The month view has it on its day too.
+  await page.getByRole("link", { name: "Monat" }).click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(`E2E Abnahme ${STAMP}`) }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: new RegExp(`E2E Abnahme ${STAMP}`) }).click();
+  const offen = page.getByRole("dialog", { name: "Termin" });
+  await expect(offen.getByLabel("Von")).toHaveValue("14:00");
+  await offen.getByRole("button", { name: "Löschen" }).click();
+  await expect(page.getByRole("button", { name: new RegExp(`E2E Abnahme ${STAMP}`) })).toHaveCount(
+    0,
+  );
+});
+
 test("an invoice is not issued while §14 details of the issuer are missing", async ({ page }) => {
   await page.goto("/admin/firma");
   const bereit = page.getByText("Bereit für Rechnungen?");

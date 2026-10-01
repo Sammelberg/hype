@@ -41,9 +41,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Ereignis } from "@/buero/daten/historie";
 import { datumDe } from "@/buero/logik/ablauf";
-import { HISTORIE_ARTEN } from "@/buero/logik/typen";
+import type { KalenderEreignis } from "@/buero/logik/kalender";
+import { HISTORIE_ARTEN, type TerminInput } from "@/buero/logik/typen";
 import { cn } from "@/lib/utils";
 import { addHistorieAction, deleteHistorieAction } from "../../../_actions/historie";
+import { neuerTermin, TerminDialog } from "../../../_components/buero/termin-dialog";
 import {
   NeueWiedervorlage,
   WiedervorlagenListe,
@@ -76,15 +78,20 @@ export function KundenVerlauf({
   heute,
   ereignisse,
   wiedervorlagen,
+  termine,
+  kundeName,
 }: {
   kundeId: number;
   heute: string;
   ereignisse: Ereignis[];
   wiedervorlagen: WiedervorlagePunkt[];
+  termine: { ereignis: KalenderEreignis; eingabe: TerminInput }[];
+  kundeName: string;
 }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [alle, setAlle] = useState(false);
+  const [termin, setTermin] = useState<{ id: number | null; werte: TerminInput } | null>(null);
   const sichtbar = alle ? ereignisse : ereignisse.slice(0, ERSTE);
 
   const loeschen = async (id: number) => {
@@ -96,6 +103,56 @@ export function KundenVerlauf({
 
   return (
     <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Termine</CardTitle>
+          <CardDescription>
+            {termine.length === 0 ? "Keiner geplant." : `${termine.length} anstehend.`}
+          </CardDescription>
+          <CardAction>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setTermin({ id: null, werte: neuerTermin(heute, kundeId) })}
+            >
+              <PlusIcon data-icon="inline-start" /> Termin
+            </Button>
+          </CardAction>
+        </CardHeader>
+        {termine.length > 0 ? (
+          <CardContent>
+            <ul role="list" className="flex flex-col gap-1.5">
+              {termine.map(({ ereignis: t, eingabe }) => (
+                <li key={t.key}>
+                  <button
+                    type="button"
+                    onClick={() => setTermin({ id: t.terminId!, werte: eingabe })}
+                    className="flex w-full items-baseline gap-3 rounded-lg border-l-2 border-l-primary-soft bg-primary/10 px-3 py-2 text-left text-sm hover:brightness-125 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  >
+                    <span className="shrink-0 text-muted-foreground tabular-nums">
+                      {t.von.split("-").reverse().join(".")}
+                      {t.uhrzeit ? `, ${t.uhrzeit}` : ""}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{t.titel}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        ) : null}
+      </Card>
+      {termin ? (
+        <TerminDialog
+          key={termin.id ?? "neu"}
+          offen
+          onOffen={(o) => !o && setTermin(null)}
+          terminId={termin.id}
+          werte={termin.werte}
+          kunden={[{ id: kundeId, name: kundeName }]}
+        />
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Wiedervorlagen</CardTitle>

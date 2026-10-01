@@ -349,3 +349,28 @@ export const angebote = buero.table(
   },
   (t) => [index("angebote_kunde_idx").on(t.kundeId), index("angebote_status_idx").on(t.status)],
 );
+
+// ---------------------------------------------------------------------------------------------
+// Termine: the owner's own events in the calendar (/admin/kalender), at a time or all day, over
+// one or several days, optionally with a customer. Everything else the calendar shows is read
+// from the documents (due dates, Wiedervorlagen, notice dates, scheduled publishing).
+
+export const termine = buero.table(
+  "termine",
+  {
+    id: serial().primaryKey(),
+    titel: varchar({ length: 300 }).notNull(),
+    beginn: timestamp({ withTimezone: true, mode: "date" }).notNull(),
+    ende: timestamp({ withTimezone: true, mode: "date" }),
+    ganztags: boolean().notNull().default(false),
+    ort: varchar({ length: 300 }),
+    notiz: text(),
+    kundeId: integer().references(() => kunden.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (t) => [
+    index("termine_zeit_idx").on(t.beginn),
+    index("termine_kunde_idx").on(t.kundeId),
+    check("termine_ende_nach_beginn", sql`${t.ende} is null or ${t.ende} >= ${t.beginn}`),
+  ],
+);

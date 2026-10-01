@@ -1,5 +1,6 @@
 import {
   BanknoteIcon,
+  CalendarDaysIcon,
   CircleDashedIcon,
   ClockAlertIcon,
   FileTextIcon,
@@ -27,6 +28,7 @@ import { listAngebote } from "@/buero/daten/angebote";
 import { journal } from "@/buero/daten/export";
 import { eingaengeNachMonat, offenePosten } from "@/buero/daten/forderungen";
 import { listWiedervorlagen } from "@/buero/daten/historie";
+import { termineHeute } from "@/buero/daten/kalender";
 import { listVertraege, vertragsende } from "@/buero/daten/vertraege";
 import { datumDe, heute, monatePlus, tagePlus } from "@/buero/logik/ablauf";
 import { ustNachMonat } from "@/buero/logik/export";
@@ -86,6 +88,7 @@ export default async function DashboardPage({
     abo,
     gestellt,
     eingaenge,
+    termine,
   ] = await Promise.all([
     searchParams,
     listPages(),
@@ -104,6 +107,7 @@ export default async function DashboardPage({
     admin ? faelligeAboZeitraeume() : [],
     admin ? journal(seit, heute()) : [],
     admin ? eingaengeNachMonat(seit) : [],
+    admin ? termineHeute() : [],
   ]);
   // The office at a glance: what is due today, what is owed and late, what was earned, which
   // offers wait for an answer, which notice dates come up.
@@ -168,15 +172,50 @@ export default async function DashboardPage({
               <CardHeader>
                 <CardTitle>Heute</CardTitle>
                 <CardDescription>
-                  {wiedervorlagen.length === 0
-                    ? "Keine Wiedervorlage fällig."
-                    : `${wiedervorlagen.length} ${wiedervorlagen.length === 1 ? "Wiedervorlage" : "Wiedervorlagen"} fällig.`}
+                  {[
+                    termine.length === 0
+                      ? "Kein Termin"
+                      : `${termine.length} ${termine.length === 1 ? "Termin" : "Termine"}`,
+                    wiedervorlagen.length === 0
+                      ? "keine Wiedervorlage fällig."
+                      : `${wiedervorlagen.length} ${wiedervorlagen.length === 1 ? "Wiedervorlage" : "Wiedervorlagen"} fällig.`,
+                  ].join(", ")}
                 </CardDescription>
-                <CardAction>
+                <CardAction className="flex gap-2">
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={"/admin/kalender?ansicht=woche" as never}>
+                      <CalendarDaysIcon data-icon="inline-start" /> Kalender
+                    </Link>
+                  </Button>
                   <NeueWiedervorlage heute={tag} label="Vormerken" />
                 </CardAction>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-col gap-3">
+                {termine.length > 0 ? (
+                  <ul role="list" aria-label="Termine heute" className="flex flex-col gap-1.5">
+                    {termine.map((t) => (
+                      <li key={t.key}>
+                        <Link
+                          href={`/admin/kalender?ansicht=liste&tag=${tag}` as never}
+                          className={`${tileLinkSurface} flex items-baseline gap-3 rounded-lg border-l-2 border-l-primary-soft bg-primary/10 px-3 py-2 text-sm`}
+                        >
+                          <span className="w-24 shrink-0 text-muted-foreground tabular-nums">
+                            {t.von !== tag
+                              ? "seit " + t.von.split("-").reverse().join(".")
+                              : (t.uhrzeit ?? "ganztägig")}
+                            {t.von === tag && t.bisUhrzeit ? `–${t.bisUhrzeit}` : ""}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate font-medium">{t.titel}</span>
+                          {t.ort || t.kundeName ? (
+                            <span className="hidden truncate text-muted-foreground sm:inline">
+                              {[t.ort, t.kundeName].filter(Boolean).join(" · ")}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <WiedervorlagenListe
                   heute={tag}
                   leer="Nichts für heute. Neues merken Sie mit „Vormerken“ vor."

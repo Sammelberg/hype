@@ -11,6 +11,7 @@ import {
   kundenHistorie,
   mahnungen,
   rechnungen,
+  termine,
   vertraege,
   wiedervorlagen,
   zahlungen,
@@ -60,7 +61,7 @@ const iso = (d: Date) => d.toISOString();
 
 /** Everything that happened with a customer, newest first. */
 export async function zeitleiste(kundeId: number): Promise<Ereignis[]> {
-  const [notizen, a, an, v, r, z, m] = await Promise.all([
+  const [notizen, a, an, v, r, z, m, ts] = await Promise.all([
     db.select().from(kundenHistorie).where(eq(kundenHistorie.kundeId, kundeId)),
     db.select().from(auftraege).where(eq(auftraege.kundeId, kundeId)),
     db.select().from(angebote).where(eq(angebote.kundeId, kundeId)),
@@ -76,8 +77,17 @@ export async function zeitleiste(kundeId: number): Promise<Ereignis[]> {
       .from(mahnungen)
       .innerJoin(rechnungen, eq(rechnungen.id, mahnungen.rechnungId))
       .where(eq(rechnungen.kundeId, kundeId)),
+    db.select().from(termine).where(eq(termine.kundeId, kundeId)),
   ]);
   const liste: Ereignis[] = [
+    ...ts.map((t) => ({
+      key: `t${t.id}`,
+      am: iso(t.beginn),
+      art: "termin" as const,
+      titel: `Termin: ${t.titel}`,
+      text: t.ort,
+      href: `/admin/kalender?ansicht=woche&tag=${t.beginn.toISOString().slice(0, 10)}`,
+    })),
     ...notizen.map((n) => ({
       key: `n${n.id}`,
       am: iso(n.am),

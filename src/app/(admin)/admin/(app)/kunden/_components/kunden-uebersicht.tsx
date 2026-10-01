@@ -13,6 +13,8 @@ import {
 import type { Angebot } from "@/buero/daten/angebote";
 import type { Auftrag } from "@/buero/daten/auftraege";
 import type { Ereignis } from "@/buero/daten/historie";
+import type { KalenderEreignis } from "@/buero/logik/kalender";
+import type { TerminInput } from "@/buero/logik/typen";
 import type { Rechnung } from "@/buero/daten/rechnungen";
 import { type Vertrag, vertragsende } from "@/buero/daten/vertraege";
 import { datumDe } from "@/buero/logik/ablauf";
@@ -32,6 +34,8 @@ export function KundenUebersicht({
   kundeId,
   heute: tag,
   ereignisse,
+  termine,
+  kundeName,
   wiedervorlagen,
   angebote,
   auftraege,
@@ -41,6 +45,8 @@ export function KundenUebersicht({
   kundeId: number;
   heute: string;
   ereignisse: Ereignis[];
+  termine: { ereignis: KalenderEreignis; eingabe: TerminInput }[];
+  kundeName: string;
   wiedervorlagen: WiedervorlagePunkt[];
   angebote: Angebot[];
   auftraege: Auftrag[];
@@ -82,6 +88,8 @@ export function KundenUebersicht({
         heute={tag}
         ereignisse={ereignisse}
         wiedervorlagen={wiedervorlagen}
+        termine={termine}
+        kundeName={kundeName}
       />
 
       <Card>

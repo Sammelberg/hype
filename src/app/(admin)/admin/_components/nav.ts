@@ -3,6 +3,7 @@ import {
   ArrowRightLeftIcon,
   BriefcaseIcon,
   BuildingIcon,
+  CalendarDaysIcon,
   ContactIcon,
   FileSignatureIcon,
   ReceiptIcon,
@@ -86,6 +87,12 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Verträge",
         icon: FileSignatureIcon,
         keywords: "kündigung laufzeit wartung abo",
+      },
+      {
+        href: "/admin/kalender",
+        label: "Kalender",
+        icon: CalendarDaysIcon,
+        keywords: "termine ereignisse fristen woche monat",
       },
       {
         href: "/admin/wiedervorlagen",
