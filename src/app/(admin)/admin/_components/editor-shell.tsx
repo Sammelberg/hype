@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { DocStatus } from "@/cms/content/types";
 import { SaveIndicator } from "./save-indicator";
+import { ScrollProgress } from "./screen/scroll-progress";
 import { StatusBadge } from "./status-badge";
 import type { SaveState } from "./use-autosave";
 
@@ -69,7 +70,7 @@ export function EditorShell({
         </Button>
         <div className="flex min-w-40 flex-1 items-center gap-3">
           <div className="flex min-w-0 flex-col justify-center">
-            <h1 className="truncate text-lg font-semibold tracking-tight">
+            <h1 className="truncate text-xl font-semibold tracking-[-0.02em]">
               {title || "Ohne Titel"}
             </h1>
             {lead ? <p className="truncate text-xs text-muted-foreground">{lead}</p> : null}
@@ -104,6 +105,7 @@ export function EditorShell({
           ) : null}
         </div>
         {nav ? <div className="w-full min-w-0">{nav}</div> : null}
+        <ScrollProgress />
       </div>
       <div
         className={

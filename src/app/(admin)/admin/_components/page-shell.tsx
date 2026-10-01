@@ -1,30 +1,44 @@
 import type { ReactNode } from "react";
 
-// The top of every admin screen: title, one line of context, the actions on the right.
+import { CompactTitle } from "./screen/compact-title";
+import { ScreenHorizon } from "./screen/horizon";
+
+// The top of every admin screen: title, one line of context, the actions on the right, and the
+// section's drawn horizon underneath. Scrolled away, it condenses into a slim bar (CompactTitle).
 export function PageShell({
   title,
   lead,
   actions,
   children,
   wide = false,
+  tall = false,
 }: {
   title: ReactNode;
   lead?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   wide?: boolean;
+  /** A taller horizon, for the overview. */
+  tall?: boolean;
 }) {
   return (
     <div className={wide ? "flex flex-col gap-8" : "mx-auto flex w-full max-w-5xl flex-col gap-8"}>
-      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-            {title}
-          </h1>
-          {lead ? <p className="max-w-prose text-pretty text-muted-foreground">{lead}</p> : null}
-        </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-      </header>
+      <CompactTitle title={title}>
+        <header className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <h1 className="text-3xl leading-[1.05] font-semibold tracking-[-0.03em] text-balance sm:text-4xl">
+                {title}
+              </h1>
+              {lead ? (
+                <p className="max-w-prose text-pretty text-muted-foreground">{lead}</p>
+              ) : null}
+            </div>
+            {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+          </div>
+          <ScreenHorizon tall={tall} />
+        </header>
+      </CompactTitle>
       {children}
     </div>
   );

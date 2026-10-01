@@ -78,11 +78,11 @@ export function UserMenu({ user }: { user: { name: string | null; email: string 
               Darstellung
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as Theme)}>
-              <DropdownMenuRadioItem value="light">
-                <SunIcon /> Hell
-              </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="dark">
                 <MoonIcon /> Dunkel
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="light">
+                <SunIcon /> Hell
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="system">
                 <MonitorIcon /> Wie das Gerät

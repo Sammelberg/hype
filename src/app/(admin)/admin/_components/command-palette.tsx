@@ -13,7 +13,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { mayOpen, type Role } from "@/cms/auth/roles";
-import { NAV_BUERO, NAV_CONTENT, NAV_MORE, NAV_SITE } from "./nav";
+import { NAV_ALL } from "./nav";
 
 export type PaletteEntry = { label: string; href: string; group: string; keywords?: string };
 
@@ -55,18 +55,16 @@ export function CommandPalette({ entries, role }: { entries: PaletteEntry[]; rol
         <CommandList>
           <CommandEmpty>Nichts gefunden.</CommandEmpty>
           <CommandGroup heading="Bereiche">
-            {[...NAV_CONTENT, ...NAV_BUERO, ...NAV_SITE, ...NAV_MORE]
-              .filter((item) => mayOpen(role, item.href))
-              .map((item) => (
-                <CommandItem
-                  key={item.href}
-                  value={`${item.label} ${item.keywords ?? ""}`}
-                  onSelect={() => go(item.href)}
-                >
-                  <item.icon />
-                  {item.label}
-                </CommandItem>
-              ))}
+            {NAV_ALL.filter((item) => mayOpen(role, item.href)).map((item) => (
+              <CommandItem
+                key={item.href}
+                value={`${item.label} ${item.keywords ?? ""}`}
+                onSelect={() => go(item.href)}
+              >
+                <item.icon />
+                {item.label}
+              </CommandItem>
+            ))}
           </CommandGroup>
           {[...groups.entries()].map(([group, items]) => (
             <CommandGroup key={group} heading={group}>

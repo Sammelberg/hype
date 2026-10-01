@@ -18,80 +18,113 @@ import {
 } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; keywords?: string };
+export type NavGroup = { label: string; items: NavItem[] };
 
-// Two groups: what the owner touches every week, and what runs the site underneath. Every text
-// of a page is edited on that page (Seiten); „Website“ holds only what all pages share.
-export const NAV_CONTENT: NavItem[] = [
-  { href: "/admin", label: "Übersicht", icon: LayoutDashboardIcon, keywords: "dashboard start" },
-  { href: "/admin/seiten", label: "Seiten", icon: FileTextIcon, keywords: "pages inhalt" },
-  {
-    href: "/admin/projekte",
-    label: "Projekte",
-    icon: FolderKanbanIcon,
-    keywords: "referenzen kunden",
-  },
-  {
-    href: "/admin/anfragen",
-    label: "Anfragen",
-    icon: InboxIcon,
-    keywords: "nachrichten kontakt eingang",
-  },
-  { href: "/admin/medien", label: "Medien", icon: ImageIcon, keywords: "bilder uploads dateien" },
-];
+export const NAV_HOME: NavItem = {
+  href: "/admin",
+  label: "Übersicht",
+  icon: LayoutDashboardIcon,
+  keywords: "dashboard start",
+};
 
-// The office: who the customers are, what they commissioned, what is agreed, what is billed.
-export const NAV_BUERO: NavItem[] = [
-  { href: "/admin/kunden", label: "Kunden", icon: ContactIcon, keywords: "kundenkarte crm firmen" },
+// The sidebar in the order of the owner's week: the site's content, the customers and what they
+// commissioned, the money, and what runs underneath. Every text of a page is edited on that page
+// (Seiten); „Website“ holds only what all pages share.
+export const NAV_GROUPS: NavGroup[] = [
   {
-    href: "/admin/auftraege",
-    label: "Aufträge",
-    icon: BriefcaseIcon,
-    keywords: "angebote bestellungen",
+    label: "Inhalte",
+    items: [
+      { href: "/admin/seiten", label: "Seiten", icon: FileTextIcon, keywords: "pages inhalt" },
+      {
+        href: "/admin/projekte",
+        label: "Projekte",
+        icon: FolderKanbanIcon,
+        keywords: "referenzen kunden",
+      },
+      {
+        href: "/admin/anfragen",
+        label: "Anfragen",
+        icon: InboxIcon,
+        keywords: "nachrichten kontakt eingang",
+      },
+      {
+        href: "/admin/medien",
+        label: "Medien",
+        icon: ImageIcon,
+        keywords: "bilder uploads dateien",
+      },
+    ],
   },
   {
-    href: "/admin/vertraege",
-    label: "Verträge",
-    icon: FileSignatureIcon,
-    keywords: "kündigung laufzeit wartung",
+    // Who the customers are, what they commissioned and what is agreed.
+    label: "Vertrieb",
+    items: [
+      {
+        href: "/admin/kunden",
+        label: "Kunden",
+        icon: ContactIcon,
+        keywords: "kundenkarte crm firmen",
+      },
+      {
+        href: "/admin/auftraege",
+        label: "Aufträge",
+        icon: BriefcaseIcon,
+        keywords: "angebote bestellungen",
+      },
+      {
+        href: "/admin/vertraege",
+        label: "Verträge",
+        icon: FileSignatureIcon,
+        keywords: "kündigung laufzeit wartung",
+      },
+    ],
   },
   {
-    href: "/admin/rechnungen",
-    label: "Rechnungen",
-    icon: ReceiptIcon,
-    keywords: "e-rechnung xrechnung storno bezahlt",
+    // What is billed, what came in, what the tax adviser gets.
+    label: "Finanzen",
+    items: [
+      {
+        href: "/admin/rechnungen",
+        label: "Rechnungen",
+        icon: ReceiptIcon,
+        keywords: "e-rechnung xrechnung storno bezahlt",
+      },
+    ],
   },
   {
-    href: "/admin/firma",
-    label: "Firmendaten",
-    icon: BuildingIcon,
-    keywords: "steuernummer iban bank kleinunternehmer",
-  },
-];
-
-export const NAV_SITE: NavItem[] = [
-  {
-    href: "/admin/einstellungen",
-    label: "Website",
-    icon: SettingsIcon,
-    keywords: "einstellungen name fußbereich kontakt e-mail abschluss",
-  },
-  {
-    href: "/admin/weiterleitungen",
-    label: "Weiterleitungen",
-    icon: ArrowRightLeftIcon,
-    keywords: "redirects urls",
-  },
-  {
-    href: "/admin/benutzer",
-    label: "Benutzer",
-    icon: UsersIcon,
-    keywords: "zugänge konten passwort",
-  },
-  {
-    href: "/admin/protokoll",
-    label: "Protokoll",
-    icon: ScrollTextIcon,
-    keywords: "audit log anmeldungen änderungen verlauf",
+    label: "Einstellungen",
+    items: [
+      {
+        href: "/admin/einstellungen",
+        label: "Website",
+        icon: SettingsIcon,
+        keywords: "einstellungen name fußbereich kontakt e-mail abschluss",
+      },
+      {
+        href: "/admin/firma",
+        label: "Firmendaten",
+        icon: BuildingIcon,
+        keywords: "steuernummer iban bank kleinunternehmer",
+      },
+      {
+        href: "/admin/weiterleitungen",
+        label: "Weiterleitungen",
+        icon: ArrowRightLeftIcon,
+        keywords: "redirects urls",
+      },
+      {
+        href: "/admin/benutzer",
+        label: "Benutzer",
+        icon: UsersIcon,
+        keywords: "zugänge konten passwort",
+      },
+      {
+        href: "/admin/protokoll",
+        label: "Protokoll",
+        icon: ScrollTextIcon,
+        keywords: "audit log anmeldungen änderungen verlauf",
+      },
+    ],
   },
 ];
 
@@ -104,6 +137,8 @@ export const NAV_MORE: NavItem[] = [
     keywords: "felder formular kontakt",
   },
 ];
+
+export const NAV_ALL: NavItem[] = [NAV_HOME, ...NAV_GROUPS.flatMap((g) => g.items), ...NAV_MORE];
 
 export const isActive = (pathname: string, href: string) =>
   href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);

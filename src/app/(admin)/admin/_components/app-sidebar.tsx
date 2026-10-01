@@ -1,5 +1,6 @@
 "use client";
 
+import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -19,27 +20,44 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { isActive, NAV_BUERO, NAV_CONTENT, NAV_SITE, type NavItem } from "./nav";
+import { isActive, NAV_GROUPS, NAV_HOME, type NavItem } from "./nav";
 import { UserMenu } from "./user-menu";
 
-function Items({ items, unread }: { items: NavItem[]; unread: number }) {
-  const pathname = usePathname();
+// The ice bar beside the open section glides to the next one when the section changes — it
+// shows where the click went. Without motion it simply moves.
+function ActiveMark() {
+  const reduce = useReducedMotion();
   return (
-    <SidebarMenu>
-      {items.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton asChild isActive={isActive(pathname, item.href)} tooltip={item.label}>
-            <Link href={item.href as never}>
-              <item.icon />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-          {item.href === "/admin/anfragen" && unread > 0 ? (
-            <SidebarMenuBadge aria-label={`${unread} ungelesen`}>{unread}</SidebarMenuBadge>
-          ) : null}
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+    <motion.span
+      layoutId="nav-active"
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-primary-soft group-data-[collapsible=icon]:hidden"
+      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 42 }}
+    />
+  );
+}
+
+function Item({ item, badge }: { item: NavItem; badge?: number }) {
+  const pathname = usePathname();
+  const active = isActive(pathname, item.href);
+  return (
+    <SidebarMenuItem>
+      {active ? <ActiveMark /> : null}
+      <SidebarMenuButton
+        asChild
+        isActive={active}
+        tooltip={item.label}
+        className="transition-[background-color,color] duration-150 data-[active=true]:text-sidebar-accent-foreground [&>svg]:transition-colors data-[active=true]:[&>svg]:text-primary-soft"
+      >
+        <Link href={item.href as never}>
+          <item.icon />
+          <span>{item.label}</span>
+        </Link>
+      </SidebarMenuButton>
+      {badge ? (
+        <SidebarMenuBadge aria-label={`${badge} ungelesen`}>{badge}</SidebarMenuBadge>
+      ) : null}
+    </SidebarMenuItem>
   );
 }
 
@@ -53,20 +71,22 @@ export function AppSidebar({
   unread: number;
 }) {
   // What the role may not open is not shown; the pages refuse it on their own as well.
-  const visible = (items: NavItem[]) => items.filter((item) => mayOpen(user.role, item.href));
-  const buero = visible(NAV_BUERO);
+  const groups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((item) => mayOpen(user.role, item.href)),
+  })).filter((g) => g.items.length > 0);
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip="Übersicht">
+            <SidebarMenuButton size="lg" asChild tooltip={siteName}>
               <Link href={"/admin" as never}>
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-[inset_0_1px_0_oklch(1_0_0/0.18)]">
                   <FirMark className="size-5" />
                 </span>
                 <span className="flex flex-col leading-tight">
-                  <span className="truncate font-medium">{siteName}</span>
+                  <span className="truncate font-semibold tracking-tight">{siteName}</span>
                   <span className="truncate text-xs text-muted-foreground">Verwaltung</span>
                 </span>
               </Link>
@@ -76,26 +96,31 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Bereiche" className="contents">
-          <SidebarGroup>
-            <SidebarGroupLabel>Inhalte</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <Items items={visible(NAV_CONTENT)} unread={unread} />
-            </SidebarGroupContent>
-          </SidebarGroup>
-          {buero.length ? (
+          <LayoutGroup id="admin-nav">
             <SidebarGroup>
-              <SidebarGroupLabel>Büro</SidebarGroupLabel>
               <SidebarGroupContent>
-                <Items items={buero} unread={0} />
+                <SidebarMenu>
+                  <Item item={NAV_HOME} />
+                </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          ) : null}
-          <SidebarGroup>
-            <SidebarGroupLabel>Betrieb</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <Items items={visible(NAV_SITE)} unread={0} />
-            </SidebarGroupContent>
-          </SidebarGroup>
+            {groups.map((g) => (
+              <SidebarGroup key={g.label}>
+                <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {g.items.map((item) => (
+                      <Item
+                        key={item.href}
+                        item={item}
+                        badge={item.href === "/admin/anfragen" && unread > 0 ? unread : undefined}
+                      />
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </LayoutGroup>
         </nav>
       </SidebarContent>
       <SidebarFooter>

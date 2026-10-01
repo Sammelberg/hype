@@ -8,20 +8,21 @@ import {
   useSyncExternalStore,
 } from "react";
 
-// Light, dark or the device's choice — remembered per browser. No package: the inline script in
-// the root layout applies the class before the first paint, this context keeps it in step.
+// Dark (the brand's Deep Space, the default), light or the device's choice — remembered per
+// browser. No package: the inline script in the root layout applies the class before the first
+// paint, this context keeps it in step.
 export type Theme = "light" | "dark" | "system";
 const KEY = "cms-theme";
 
-export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("${KEY}");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
+export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("${KEY}");var d=t!=="light"&&(t!=="system"||matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
 
 const listeners = new Set<() => void>();
 const read = (): Theme => {
   try {
     const value = localStorage.getItem(KEY);
-    return value === "dark" || value === "light" ? value : "system";
+    return value === "light" || value === "system" ? value : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 };
 const apply = (theme: Theme) => {
@@ -51,21 +52,21 @@ const ThemeContext = createContext<{
   resolved: "light" | "dark";
   setTheme: (t: Theme) => void;
 }>({
-  theme: "system",
-  resolved: "light",
+  theme: "dark",
+  resolved: "dark",
   setTheme: () => undefined,
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useSyncExternalStore(subscribe, read, () => "system" as Theme);
+  const theme = useSyncExternalStore(subscribe, read, () => "dark" as Theme);
   const resolved = useSyncExternalStore(
     subscribe,
     () => (document.documentElement.classList.contains("dark") ? "dark" : "light"),
-    () => "light" as const,
+    () => "dark" as const,
   );
   const setTheme = useCallback((next: Theme) => {
     try {
-      if (next === "system") localStorage.removeItem(KEY);
+      if (next === "dark") localStorage.removeItem(KEY);
       else localStorage.setItem(KEY, next);
     } catch {
       /* private mode: the choice lasts for this page */

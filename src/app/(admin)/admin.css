@@ -3,10 +3,18 @@
 @import "shadcn/tailwind.css";
 
 /*
- * The admin of Schwarzwald Systems — „Forstamt“: a working tool, not the site. Paper-light by
- * default, a dark room on request (next-themes). One accent: fir green, the colour of the brand
- * mark, in two roles — `primary` (solid fill, white text) and `primary-soft` (accent text and
- * icons). Warm neutrals with a hint of the same hue, so nothing reads as a default grey template.
+ * The admin of Schwarzwald Systems in the brand's „Deep Space“ (see (frontend)/globals.css): space
+ * navy and sapphire, one hue family (blue 250–262), dark by default. „Frost“ is the light variant
+ * in the same blues, for daylight and print. Accent in two roles, as on the site — `primary`
+ * (sapphire fill, white text) and `primary-soft` (ice blue in the dark, deep sapphire in the light:
+ * accent text, icons, the drawn ridge). Status colours borrow the brand's gem tones: malachite for
+ * done, copper gold for waiting, red only for faults. Measured WCAG contrast (oklch → sRGB):
+ *   dark   fg/bg 18.0 · fg/card 16.9 · muted/bg 9.3 · muted/card 8.7 · primary-fg/primary 5.5
+ *          primary-soft/card 10.0 · destructive/card 6.5 · success/card 9.7 · warning/card 10.6
+ *          input/card 3.1 · primary fill/bg 3.6
+ *   light  fg/bg 16.2 · muted/bg 6.6 · muted/secondary 6.1 · primary-fg/primary 6.8
+ *          primary-soft/card 6.0 · destructive/card 5.5 · success/card 6.1 · warning/card 5.3
+ *          input/card 3.1
  * The site's tokens live in (frontend)/globals.css; the two never load together.
  */
 
@@ -49,6 +57,9 @@
   --color-background: var(--background);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-ridge: var(--ridge);
+  --color-ridge-ground: var(--ridge-ground);
+  --color-arc: var(--arc);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -68,82 +79,87 @@
 :root {
   color-scheme: light;
   --radius: 0.625rem;
-  /* Paper: warm, a touch of the fir hue in every neutral. */
-  --background: oklch(0.985 0.004 110);
-  --foreground: oklch(0.23 0.018 160);
-  --card: oklch(0.998 0.002 110);
-  --card-foreground: oklch(0.23 0.018 160);
-  --popover: oklch(0.998 0.002 110);
-  --popover-foreground: oklch(0.23 0.018 160);
-  /* Fir green: 6.9:1 on the paper background (measured), white text on it 6.6:1. */
-  --primary: oklch(0.43 0.095 158);
-  --primary-foreground: oklch(0.99 0.003 110);
-  --primary-soft: oklch(0.5 0.11 158);
-  --secondary: oklch(0.955 0.008 120);
-  --secondary-foreground: oklch(0.3 0.02 160);
-  --muted: oklch(0.955 0.008 120);
-  --muted-foreground: oklch(0.44 0.02 160);
-  --accent: oklch(0.94 0.025 158);
-  --accent-foreground: oklch(0.3 0.06 158);
-  --destructive: oklch(0.55 0.19 27);
-  /* Status text on paper: both measured above 4.5:1 (axe, e2e/admin.spec.ts). */
-  --success: oklch(0.46 0.12 150);
-  --warning: oklch(0.52 0.13 70);
-  --border: oklch(0.9 0.008 120);
-  --input: oklch(0.88 0.01 120);
-  --ring: oklch(0.55 0.11 158);
-  --chart-1: oklch(0.43 0.095 158);
-  --chart-2: oklch(0.65 0.1 158);
-  --chart-3: oklch(0.8 0.07 158);
-  --chart-4: oklch(0.7 0.14 70);
-  --chart-5: oklch(0.55 0.02 160);
-  --sidebar: oklch(0.965 0.006 110);
-  --sidebar-foreground: oklch(0.3 0.02 160);
-  --sidebar-primary: oklch(0.43 0.095 158);
-  --sidebar-primary-foreground: oklch(0.99 0.003 110);
-  --sidebar-accent: oklch(0.925 0.012 120);
-  --sidebar-accent-foreground: oklch(0.23 0.018 160);
-  --sidebar-border: oklch(0.9 0.008 120);
-  --sidebar-ring: oklch(0.55 0.11 158);
+  /* Frost: blue-white paper, navy ink. */
+  --background: oklch(0.975 0.006 255);
+  --foreground: oklch(0.22 0.045 262);
+  --card: oklch(0.995 0.002 255);
+  --card-foreground: oklch(0.22 0.045 262);
+  --popover: oklch(0.995 0.002 255);
+  --popover-foreground: oklch(0.22 0.045 262);
+  --primary: oklch(0.47 0.15 260);
+  --primary-foreground: oklch(0.99 0.004 250);
+  --primary-soft: oklch(0.5 0.15 259);
+  --secondary: oklch(0.945 0.012 258);
+  --secondary-foreground: oklch(0.27 0.05 262);
+  --muted: oklch(0.945 0.012 258);
+  --muted-foreground: oklch(0.46 0.04 260);
+  --accent: oklch(0.93 0.03 255);
+  --accent-foreground: oklch(0.33 0.11 260);
+  --destructive: oklch(0.54 0.19 27);
+  --success: oklch(0.48 0.09 168);
+  --warning: oklch(0.53 0.11 70);
+  --border: oklch(0.9 0.012 258);
+  --input: oklch(0.66 0.035 258);
+  --ring: oklch(0.5 0.15 259);
+  /* The drawn horizon in the screen headers: ridge line and the copper arc on its crest. */
+  --ridge: oklch(0.5 0.15 259);
+  --ridge-ground: oklch(0.95 0.014 258);
+  --arc: oklch(0.6 0.11 62);
+  --chart-1: oklch(0.47 0.15 260);
+  --chart-2: oklch(0.62 0.13 255);
+  --chart-3: oklch(0.78 0.08 252);
+  --chart-4: oklch(0.53 0.11 70);
+  --chart-5: oklch(0.48 0.09 168);
+  --sidebar: oklch(0.945 0.012 258);
+  --sidebar-foreground: oklch(0.27 0.05 262);
+  --sidebar-primary: oklch(0.47 0.15 260);
+  --sidebar-primary-foreground: oklch(0.99 0.004 250);
+  --sidebar-accent: oklch(0.91 0.025 258);
+  --sidebar-accent-foreground: oklch(0.22 0.045 262);
+  --sidebar-border: oklch(0.89 0.014 258);
+  --sidebar-ring: oklch(0.5 0.15 259);
 }
 
 .dark {
   color-scheme: dark;
-  /* The dark room: charcoal with the same green undertone, the accent lightened to stay legible. */
-  --background: oklch(0.175 0.012 160);
-  --foreground: oklch(0.95 0.006 120);
-  --card: oklch(0.215 0.014 160);
-  --card-foreground: oklch(0.95 0.006 120);
-  --popover: oklch(0.215 0.014 160);
-  --popover-foreground: oklch(0.95 0.006 120);
-  --primary: oklch(0.74 0.12 158);
-  --primary-foreground: oklch(0.17 0.03 158);
-  --primary-soft: oklch(0.8 0.11 158);
-  --secondary: oklch(0.27 0.016 160);
-  --secondary-foreground: oklch(0.95 0.006 120);
-  --muted: oklch(0.26 0.016 160);
-  --muted-foreground: oklch(0.72 0.014 140);
-  --accent: oklch(0.29 0.04 158);
-  --accent-foreground: oklch(0.92 0.05 158);
-  --destructive: oklch(0.7 0.17 25);
-  --success: oklch(0.75 0.13 150);
-  --warning: oklch(0.8 0.13 75);
-  --border: oklch(0.31 0.016 160);
-  --input: oklch(0.34 0.018 160);
-  --ring: oklch(0.74 0.12 158);
-  --chart-1: oklch(0.74 0.12 158);
-  --chart-2: oklch(0.6 0.1 158);
-  --chart-3: oklch(0.45 0.08 158);
-  --chart-4: oklch(0.8 0.13 75);
-  --chart-5: oklch(0.72 0.014 140);
-  --sidebar: oklch(0.15 0.012 160);
-  --sidebar-foreground: oklch(0.9 0.008 120);
-  --sidebar-primary: oklch(0.74 0.12 158);
-  --sidebar-primary-foreground: oklch(0.17 0.03 158);
-  --sidebar-accent: oklch(0.24 0.016 160);
-  --sidebar-accent-foreground: oklch(0.95 0.006 120);
-  --sidebar-border: oklch(0.27 0.016 160);
-  --sidebar-ring: oklch(0.74 0.12 158);
+  /* Deep Space: near-black navy, a shade lighter than the site's for long working hours. */
+  --background: oklch(0.14 0.03 262);
+  --foreground: oklch(0.965 0.008 250);
+  --card: oklch(0.185 0.034 262);
+  --card-foreground: oklch(0.965 0.008 250);
+  --popover: oklch(0.185 0.034 262);
+  --popover-foreground: oklch(0.965 0.008 250);
+  --primary: oklch(0.52 0.15 260);
+  --primary-foreground: oklch(0.99 0.004 250);
+  --primary-soft: oklch(0.8 0.085 252);
+  --secondary: oklch(0.235 0.04 262);
+  --secondary-foreground: oklch(0.965 0.008 250);
+  --muted: oklch(0.235 0.04 262);
+  --muted-foreground: oklch(0.76 0.03 255);
+  --accent: oklch(0.25 0.055 260);
+  --accent-foreground: oklch(0.9 0.05 252);
+  --destructive: oklch(0.7 0.18 25);
+  --success: oklch(0.78 0.1 168);
+  --warning: oklch(0.82 0.11 78);
+  --border: oklch(0.29 0.04 262);
+  --input: oklch(0.5 0.05 258);
+  --ring: oklch(0.8 0.085 252);
+  --ridge: oklch(0.8 0.085 252);
+  --ridge-ground: oklch(0.165 0.034 262);
+  --arc: oklch(0.74 0.11 62);
+  --chart-1: oklch(0.8 0.085 252);
+  --chart-2: oklch(0.52 0.15 260);
+  --chart-3: oklch(0.64 0.15 258);
+  --chart-4: oklch(0.82 0.11 78);
+  --chart-5: oklch(0.78 0.1 168);
+  --sidebar: oklch(0.115 0.03 262);
+  --sidebar-foreground: oklch(0.93 0.012 252);
+  --sidebar-primary: oklch(0.52 0.15 260);
+  --sidebar-primary-foreground: oklch(0.99 0.004 250);
+  --sidebar-accent: oklch(0.21 0.045 261);
+  --sidebar-accent-foreground: oklch(0.965 0.008 250);
+  --sidebar-border: oklch(0.24 0.038 262);
+  --sidebar-ring: oklch(0.8 0.085 252);
 }
 
 @layer base {
