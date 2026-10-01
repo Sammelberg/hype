@@ -95,6 +95,7 @@ export function FirmaEditor({ firma, gespeichert }: { firma: Firma; gespeichert:
           backHref="/admin/rechnungen"
           backLabel="Rechnungen"
           title="Firmendaten"
+          lead="Ihre Angaben als Rechnungssteller – stehen auf jeder Rechnung."
           nav={<SectionIndex sections={SECTIONS} invalid={invalid} />}
           actions={
             <Button type="submit" size="sm" disabled={busy || (gespeichert && !formState.isDirty)}>

@@ -137,6 +137,7 @@ export function SettingsEditor({
           nav={<SectionIndex sections={SECTIONS} invalid={invalid} />}
           backLabel="Übersicht"
           title="Website"
+          lead="Was jede Seite teilt. Einzelne Seitentexte stehen unter „Seiten“."
           status="published"
           hasDraft={dirty}
           saveState={autosave.state}
@@ -168,11 +169,6 @@ export function SettingsEditor({
             <PreviewPane ref={preview} path="/" className="sticky top-20 h-[calc(100vh-6.5rem)]" />
           }
         >
-          <p className="text-sm text-pretty text-muted-foreground">
-            Was jede Seite teilt. Die Texte einer einzelnen Seite, auch der Startseite, bearbeiten
-            Sie unter „Seiten“.
-          </p>
-
           <SectionCard
             section={SECTIONS[0]!}
             description="Oben links neben der Tanne, im Fußbereich und am Ende jedes Seitentitels im Browser."

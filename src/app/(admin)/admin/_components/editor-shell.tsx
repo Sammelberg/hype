@@ -27,6 +27,7 @@ export function EditorShell({
   backHref,
   backLabel,
   title,
+  lead,
   status,
   hasDraft,
   saveState,
@@ -42,6 +43,8 @@ export function EditorShell({
   backHref: string;
   backLabel: string;
   title: string;
+  /** One short line under the title: what this document is for, not what it holds. */
+  lead?: string;
   status?: DocStatus;
   hasDraft?: boolean;
   saveState?: SaveState;
@@ -65,7 +68,12 @@ export function EditorShell({
           </Link>
         </Button>
         <div className="flex min-w-40 flex-1 items-center gap-3">
-          <h1 className="truncate text-lg font-semibold tracking-tight">{title || "Ohne Titel"}</h1>
+          <div className="flex min-w-0 flex-col justify-center">
+            <h1 className="truncate text-lg font-semibold tracking-tight">
+              {title || "Ohne Titel"}
+            </h1>
+            {lead ? <p className="truncate text-xs text-muted-foreground">{lead}</p> : null}
+          </div>
           {status ? <StatusBadge status={status} hasDraft={hasDraft ?? false} /> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
