@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react";
+import { ArrowDownUpIcon, PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -24,14 +24,14 @@ export const metadata: Metadata = { title: "Seiten" };
 const when = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
 // One card per section of the site: a top-level page, and inside it the pages below it as
-// tiles, in the order they were created — the order the navigation shows them in. Columns
+// tiles, in the navigation's order (changed under Reihenfolge). Columns
 // rather than a grid, so a long section does not leave holes beside it.
 export default async function PagesPage() {
   await requireUser();
   const pages = await listPages();
   const rows = flattenTree(
     pages.map((p) => ({ ...p, parentId: p.parent })),
-    (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id,
+    (a, b) => a.sortOrder - b.sortOrder || a.createdAt.getTime() - b.createdAt.getTime(),
   );
   const sections: { page: (typeof rows)[number]; children: typeof rows }[] = [];
   for (const row of rows) {
@@ -45,11 +45,18 @@ export default async function PagesPage() {
       title="Seiten"
       lead="Jede veröffentlichte Seite steht in der Navigation und im Fußbereich der Website."
       actions={
-        <Button asChild size="sm">
-          <Link href={"/admin/seiten/neu" as never}>
-            <PlusIcon data-icon="inline-start" /> Neue Seite
-          </Link>
-        </Button>
+        <>
+          <Button asChild variant="ghost" size="sm">
+            <Link href={"/admin/seiten/reihenfolge" as never}>
+              <ArrowDownUpIcon data-icon="inline-start" /> Reihenfolge
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href={"/admin/seiten/neu" as never}>
+              <PlusIcon data-icon="inline-start" /> Neue Seite
+            </Link>
+          </Button>
+        </>
       }
       wide
     >
@@ -70,7 +77,11 @@ export default async function PagesPage() {
                     {page.path}
                   </CardDescription>
                   <CardAction>
-                    <StatusBadge status={page.status} hasDraft={page.hasDraft} />
+                    <StatusBadge
+                      status={page.status}
+                      hasDraft={page.hasDraft}
+                      publishAt={page.publishAt}
+                    />
                   </CardAction>
                 </CardHeader>
                 {children.length > 0 ? (
@@ -98,7 +109,11 @@ export default async function PagesPage() {
                               {child.path}
                             </span>
                           </div>
-                          <StatusBadge status={child.status} hasDraft={child.hasDraft} />
+                          <StatusBadge
+                            status={child.status}
+                            hasDraft={child.hasDraft}
+                            publishAt={child.publishAt}
+                          />
                         </li>
                       ))}
                     </ul>

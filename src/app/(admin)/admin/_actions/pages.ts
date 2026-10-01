@@ -6,6 +6,8 @@ import {
   createPage,
   deletePage,
   discardDraft,
+  ordnePages,
+  planePage,
   publishPage,
   restorePageVersion,
   saveDraft,
@@ -93,4 +95,36 @@ export const restorePageVersionAction = authActionClient
       throw new CmsError("Diese Version gehört nicht zu dieser Seite.");
     }
     await restorePageVersion(parsedInput.id, version.snapshot, ctx.user.id);
+  });
+
+// The navigation's order among a parent's pages (Seiten → Reihenfolge); live at once.
+export const ordnePagesAction = authActionClient
+  .inputSchema(
+    z.object({
+      parentId: z.number().int().positive().nullable(),
+      ids: z.array(z.number().int().positive()).min(1).max(200),
+    }),
+  )
+  .action(async ({ parsedInput, ctx }) => {
+    const paths = await audited((tx) => ordnePages(parsedInput.parentId, parsedInput.ids, tx), {
+      actor: ctx.user,
+      action: "seiten.reihenfolge",
+      target: parsedInput.parentId ? { type: "seite", id: parsedInput.parentId } : null,
+      details: { reihenfolge: parsedInput.ids },
+    });
+    revalidateDocument(paths);
+  });
+
+// Publishing later: saves what is on screen into the draft, then sets (or clears) the moment.
+export const planePageAction = authActionClient
+  .inputSchema(id.extend({ at: z.iso.datetime().nullable(), input: PageInputSchema.optional() }))
+  .action(async ({ parsedInput, ctx }) => {
+    if (parsedInput.input) await saveDraft(parsedInput.id, parsedInput.input);
+    const at = parsedInput.at ? new Date(parsedInput.at) : null;
+    await audited((tx) => planePage(parsedInput.id, at, tx), {
+      actor: ctx.user,
+      action: "seite.geplant",
+      target: { type: "seite", id: parsedInput.id },
+      details: { am: parsedInput.at },
+    });
   });

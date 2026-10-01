@@ -128,6 +128,8 @@ export const media = cms.table("media", {
   focalX: real().notNull().default(50),
   focalY: real().notNull().default(50),
   sizes: jsonb().$type<MediaSizes>().notNull().default({}),
+  // A folder to file it under in the library (Projekte, Team, Leistungen …); null = none.
+  ordner: varchar({ length: 100 }),
   ...timestamps,
 });
 
@@ -147,6 +149,8 @@ const documentColumns = {
   draft: jsonb(),
   // plainText(content), kept for the full-text search column below.
   contentText: text(),
+  // Scheduled publishing: the draft goes live at this moment (cms:geplant, /next/geplant).
+  publishAt: timestamp({ withTimezone: true, mode: "date" }),
 };
 
 const germanSearch = (parts: { a: SQL; b: SQL; c: SQL }) =>
@@ -164,6 +168,8 @@ export const pages = cms.table(
     content: jsonb().$type<LexicalDocument>(),
     // The sections of a page with its own route (home, Leistungen, Projekte, Kontakt).
     sections: jsonb().$type<PageSections>(),
+    // Place among its siblings: the navigation's order (live, not drafted).
+    sortOrder: integer().notNull().default(0),
     ...seoColumns,
     ...documentColumns,
     search: tsvector().generatedAlwaysAs((): SQL =>
@@ -177,7 +183,7 @@ export const pages = cms.table(
   },
   (t) => [
     check("pages_slug_check", sql`${t.slug} ~ ${sql.raw(`'${SLUG_PATTERN}'`)}`),
-    index("pages_parent_idx").on(t.parentId),
+    index("pages_parent_idx").on(t.parentId, t.sortOrder),
     index("pages_status_idx").on(t.status),
     index("pages_search_idx").using("gin", t.search),
   ],

@@ -15,13 +15,19 @@ import {
   ROUTED_LEADS,
 } from "../src/cms/content/page-sections";
 import { kindOf } from "../src/cms/content/page-tree";
-import { listPages, listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
+import {
+  listPages,
+  listPublishedPages,
+  ordnePages,
+  upsertPublishedPage,
+} from "../src/cms/content/pages";
 import { getProjektBySlug, upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
 import type { PageSections, SiteSettings } from "../src/cms/content/types";
 import {
   lexical,
+  SEED_NAV_ORDER,
   SEED_REDIRECT,
   seedContactForm,
   seedPages,
@@ -158,6 +164,11 @@ async function main() {
     });
     ids.set(page.slug, pageId);
   }
+  // The navigation's order of the sections; every other top-level page after them.
+  await ordnePages(
+    null,
+    SEED_NAV_ORDER.map((slug) => ids.get(slug)).filter((id): id is number => id !== undefined),
+  );
 
   for (const project of seedProjects) {
     await upsertPublishedProjekt({

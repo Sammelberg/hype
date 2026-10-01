@@ -25,12 +25,14 @@ import {
   createProjektAction,
   deleteProjektAction,
   discardProjektDraftAction,
+  planeProjektAction,
   publishProjektAction,
   restoreProjektVersionAction,
   saveProjektDraftAction,
   unpublishProjektAction,
 } from "../../../_actions/projekte";
 import { EditorShell } from "../../../_components/editor-shell";
+import { PlanenKnopf } from "../../../_components/planen-knopf";
 import { LexicalEditor } from "../../../_components/lexical-editor/editor";
 import { PreviewPane, type PreviewHandle } from "../../../_components/preview-pane";
 import {
@@ -76,7 +78,7 @@ export function ProjektEditor({ projekt, editing, media, versions }: Props) {
     defaultValues: editing,
     mode: "onBlur",
   });
-  const { control, handleSubmit, setValue, setError, reset, formState } = form;
+  const { control, handleSubmit, setValue, setError, reset, formState, getValues } = form;
   const values = useWatch({ control });
   const previewPath = projektPath(values.slug || "projekt");
 
@@ -223,6 +225,33 @@ export function ProjektEditor({ projekt, editing, media, versions }: Props) {
                     Zurückziehen
                   </Button>
                 ) : null}
+                <PlanenKnopf
+                  geplant={projekt.publishAt}
+                  disabled={
+                    busy !== null ||
+                    (projekt.status === "published" && !hasDraft && !projekt.publishAt)
+                  }
+                  onPlanen={async (at) => {
+                    const result = await planeProjektAction({
+                      id: projekt.id,
+                      at: at ? at.toISOString() : null,
+                      input: getValues(),
+                    });
+                    if (result.serverError || result.validationErrors) {
+                      toast.error(
+                        result.serverError?.message ?? "Bitte prüfen Sie die markierten Felder.",
+                      );
+                      return false;
+                    }
+                    toast.success(
+                      at
+                        ? "Geplant. Das Projekt geht zum gewählten Zeitpunkt online."
+                        : "Plan aufgehoben.",
+                    );
+                    router.refresh();
+                    return true;
+                  }}
+                />
                 <Button
                   type="submit"
                   size="sm"

@@ -1,9 +1,9 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../db/client";
-import { media } from "../db/schema";
+import { media, pages, projekte } from "../db/schema";
 import { toMediaDoc } from "./media-doc";
-import type { MediaDoc, MediaSizes } from "./types";
+import type { MediaDoc, MediaSizes, MediaVerwendung } from "./types";
 
 export type MediaRecord = {
   filename: string;
@@ -14,6 +14,7 @@ export type MediaRecord = {
   alt: string;
   focalX?: number;
   focalY?: number;
+  ordner?: string | null;
   sizes: MediaSizes;
 };
 
@@ -37,7 +38,7 @@ export async function createMedia(record: MediaRecord, client: Db | Tx = db): Pr
 
 export async function updateMedia(
   id: number,
-  patch: Partial<Pick<MediaRecord, "alt" | "focalX" | "focalY">>,
+  patch: Partial<Pick<MediaRecord, "alt" | "focalX" | "focalY" | "ordner">>,
 ): Promise<MediaDoc | null> {
   const [row] = await db
     .update(media)
@@ -51,4 +52,49 @@ export async function updateMedia(
 export async function deleteMedia(id: number, client: Db | Tx = db): Promise<MediaDoc | null> {
   const [row] = await client.delete(media).where(eq(media.id, id)).returning();
   return row ? toMediaDoc(row) : null;
+}
+
+/**
+ * Where each image is used: as the share image of a page or a project, live or in a draft.
+ * One query per collection for the whole library.
+ */
+export async function mediaVerwendung(): Promise<Map<number, MediaVerwendung[]>> {
+  const bild = (t: typeof pages | typeof projekte) =>
+    sql<number | null>`nullif(${t.draft} -> 'meta' ->> 'imageId', '')::int`;
+  const [p, q] = await Promise.all([
+    db
+      .select({ id: pages.id, titel: pages.title, live: pages.metaImageId, entwurf: bild(pages) })
+      .from(pages)
+      .where(
+        sql`${pages.metaImageId} is not null or ${pages.draft} -> 'meta' ->> 'imageId' is not null`,
+      ),
+    db
+      .select({
+        id: projekte.id,
+        titel: projekte.title,
+        live: projekte.metaImageId,
+        entwurf: bild(projekte),
+      })
+      .from(projekte)
+      .where(
+        sql`${projekte.metaImageId} is not null or ${projekte.draft} -> 'meta' ->> 'imageId' is not null`,
+      ),
+  ]);
+  const map = new Map<number, MediaVerwendung[]>();
+  const add = (mediaId: number | null, v: MediaVerwendung) => {
+    if (!mediaId) return;
+    const liste = map.get(mediaId) ?? [];
+    if (!liste.some((x) => x.art === v.art && x.id === v.id)) liste.push(v);
+    map.set(mediaId, liste);
+  };
+  for (const [art, rows] of [
+    ["seite", p],
+    ["projekt", q],
+  ] as const) {
+    for (const r of rows) {
+      add(r.live, { art, id: r.id, titel: r.titel, entwurf: false });
+      if (r.entwurf !== r.live) add(r.entwurf, { art, id: r.id, titel: r.titel, entwurf: true });
+    }
+  }
+  return map;
 }

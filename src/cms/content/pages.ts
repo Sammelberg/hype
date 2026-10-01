@@ -85,13 +85,18 @@ function toPage(row: Row, tree: TreeNode[], images: Map<number, MediaDoc>, draft
     status: row.status,
     hasDraft: row.draft !== null,
     publishedAt: row.publishedAt,
+    publishAt: row.publishAt,
+    sortOrder: row.sortOrder,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
 }
 
 async function allRows(client: Db | Tx = db) {
-  return client.select().from(pages).orderBy(asc(pages.createdAt), asc(pages.id));
+  return client
+    .select()
+    .from(pages)
+    .orderBy(asc(pages.sortOrder), asc(pages.createdAt), asc(pages.id));
 }
 
 async function build(
@@ -251,6 +256,7 @@ export async function createPage(
       .insert(pages)
       .values({
         ...columnsOf(input),
+        sortOrder: await nextSortOrder(tx, input.parentId),
         path: "\u0001pending-new",
         status: options.publish ? "published" : "draft",
         publishedAt: options.publish ? new Date() : null,
@@ -267,6 +273,54 @@ export async function createPage(
       });
     }
     return inserted!.id;
+  });
+}
+
+/**
+ * Schedules the draft (or the unpublished page) to go live at `at`; null cancels. The timer
+ * publishes it (content/geplant.ts).
+ */
+export async function planePage(id: number, at: Date | null, client: Db | Tx = db) {
+  const [row] = await client.select().from(pages).where(eq(pages.id, id)).limit(1);
+  if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
+  if (at && row.status === "published" && row.draft === null)
+    throw new PageError("Es gibt keine Änderungen, die veröffentlicht werden könnten.");
+  if (at && at.getTime() < Date.now() - 60_000)
+    throw new PageError("Der Zeitpunkt liegt in der Vergangenheit.");
+  await client.update(pages).set({ publishAt: at }).where(eq(pages.id, id));
+}
+
+/** The place after the last of a parent's pages: a new page joins at the end. */
+async function nextSortOrder(tx: Db | Tx, parentId: number | null) {
+  const [row] = await tx
+    .select({ n: sql<number>`coalesce(max(${pages.sortOrder}), 0) + 1` })
+    .from(pages)
+    .where(parentId === null ? sql`${pages.parentId} is null` : eq(pages.parentId, parentId));
+  return Number(row?.n ?? 1);
+}
+
+/**
+ * New order among a parent's pages (the navigation's order): `ids` first, in that order; pages
+ * of the parent not named keep their relative order after them. Live at once — order is not
+ * drafted.
+ */
+export async function ordnePages(parentId: number | null, ids: number[], client: Db | Tx = db) {
+  return client.transaction(async (tx) => {
+    const geschwister = await tx
+      .select({ id: pages.id, path: pages.path })
+      .from(pages)
+      .where(parentId === null ? sql`${pages.parentId} is null` : eq(pages.parentId, parentId))
+      .orderBy(asc(pages.sortOrder), asc(pages.createdAt), asc(pages.id));
+    const bekannt = new Set(geschwister.map((g) => g.id));
+    if (ids.some((id) => !bekannt.has(id)))
+      throw new PageError("Diese Seiten liegen nicht nebeneinander; bitte laden Sie neu.");
+    const folge = [...ids, ...geschwister.map((g) => g.id).filter((id) => !ids.includes(id))];
+    for (const [index, id] of folge.entries())
+      await tx
+        .update(pages)
+        .set({ sortOrder: index + 1 })
+        .where(eq(pages.id, id));
+    return geschwister.map((g) => g.path);
   });
 }
 
@@ -324,7 +378,13 @@ export async function publishPage(
     const beforeById = subtreePathMap(rows, id);
     await tx
       .update(pages)
-      .set({ ...columnsOf(input), draft: null, status: "published", publishedAt: new Date() })
+      .set({
+        ...columnsOf(input),
+        draft: null,
+        status: "published",
+        publishedAt: new Date(),
+        publishAt: null,
+      })
       .where(eq(pages.id, id));
     await rewritePaths(tx, id);
     // The old public addresses of the page and every published page below lead to the new ones.
@@ -459,6 +519,7 @@ export async function upsertPublishedPage(
       .values({
         ...(raw.id ? { id: raw.id } : {}),
         ...columnsOf(input),
+        sortOrder: await nextSortOrder(tx, input.parentId),
         path: `\u0001pending-${input.slug}`,
         status: "published",
         publishedAt: new Date(),

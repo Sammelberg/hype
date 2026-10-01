@@ -25,12 +25,14 @@ import {
   createPageAction,
   deletePageAction,
   discardPageDraftAction,
+  planePageAction,
   publishPageAction,
   restorePageVersionAction,
   savePageDraftAction,
   unpublishPageAction,
 } from "../../../_actions/pages";
 import { EditorShell } from "../../../_components/editor-shell";
+import { PlanenKnopf } from "../../../_components/planen-knopf";
 import { PreviewPane, type PreviewHandle } from "../../../_components/preview-pane";
 import {
   SectionFocusProvider,
@@ -142,7 +144,7 @@ export function PageEditor({
     defaultValues: editing,
     mode: "onBlur",
   });
-  const { control, handleSubmit, setValue, setError, reset, formState } = form;
+  const { control, handleSubmit, setValue, setError, reset, formState, getValues } = form;
   const values = useWatch({ control });
   const protectedSlug = page ? PROTECTED_SLUGS.has(page.slug) : false;
 
@@ -203,6 +205,21 @@ export function PageEditor({
     toast.success("Veröffentlicht. Die Seite ist jetzt online.");
     router.refresh();
   });
+
+  const onPlanen = async (at: Date | null) => {
+    if (!page) return false;
+    const result = await planePageAction({
+      id: page.id,
+      at: at ? at.toISOString() : null,
+      input: getValues(),
+    });
+    if (applyFailure(result)) return false;
+    toast.success(
+      at ? "Geplant. Die Seite geht zum gewählten Zeitpunkt online." : "Plan aufgehoben.",
+    );
+    router.refresh();
+    return true;
+  };
 
   const onUnpublish = async () => {
     if (!page) return;
@@ -333,6 +350,13 @@ export function PageEditor({
                     Zurückziehen
                   </Button>
                 ) : null}
+                <PlanenKnopf
+                  geplant={page.publishAt}
+                  disabled={
+                    busy !== null || (page.status === "published" && !hasDraft && !page.publishAt)
+                  }
+                  onPlanen={onPlanen}
+                />
                 <Button
                   type="submit"
                   size="sm"

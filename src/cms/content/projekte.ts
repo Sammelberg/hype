@@ -56,6 +56,7 @@ function toProjekt(row: Row, images: Map<number, MediaDoc>, draft: boolean): Pro
     status: row.status,
     hasDraft: row.draft !== null,
     publishedAt: row.publishedAt,
+    publishAt: row.publishAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -194,7 +195,13 @@ export async function publishProjekt(
     await assertSlugFree(tx, input.slug, id);
     await tx
       .update(projekte)
-      .set({ ...columnsOf(input), draft: null, status: "published", publishedAt: new Date() })
+      .set({
+        ...columnsOf(input),
+        draft: null,
+        status: "published",
+        publishedAt: new Date(),
+        publishAt: null,
+      })
       .where(eq(projekte.id, id));
     await addVersion(tx, {
       collection: "projekte",
@@ -210,6 +217,17 @@ export async function publishProjekt(
     ]);
     return { pathsBefore: [projektPath(row.slug)], pathsAfter: [projektPath(input.slug)] };
   });
+}
+
+/** Schedules the project's draft to go live at `at`; null cancels (content/geplant.ts). */
+export async function planeProjekt(id: number, at: Date | null, client: Db | Tx = db) {
+  const [row] = await client.select().from(projekte).where(eq(projekte.id, id)).limit(1);
+  if (!row) throw new ProjektError("Das Projekt gibt es nicht mehr.");
+  if (at && row.status === "published" && row.draft === null)
+    throw new ProjektError("Es gibt keine Änderungen, die veröffentlicht werden könnten.");
+  if (at && at.getTime() < Date.now() - 60_000)
+    throw new ProjektError("Der Zeitpunkt liegt in der Vergangenheit.");
+  await client.update(projekte).set({ publishAt: at }).where(eq(projekte.id, id));
 }
 
 export async function unpublishProjekt(

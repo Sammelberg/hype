@@ -10,23 +10,25 @@ const page = (id: number, slug: string, title: string, parent?: number, url?: st
   breadcrumbs: [{ url: url ?? `/${slug}` }],
 });
 
+// In their order (sort_order), as listPublishedPages hands them over.
 const PAGES = [
-  page(1, "startseite", "Startseite"),
-  page(2, "impressum", "Impressum"),
-  page(3, "datenschutz", "Datenschutz"),
-  page(4, "ueber-uns", "Über uns"),
-  page(5, "team", "Team", 4, "/ueber-uns/team"),
   page(6, "leistungen", "Leistungen"),
   page(7, "web-anwendungen", "Web-Anwendungen", 6, "/leistungen/web-anwendungen"),
   page(8, "branchen", "Branchen"),
   page(9, "handwerk", "Handwerk", 8, "/branchen/handwerk"),
+  page(11, "projekte", "Projekte"),
+  page(4, "ueber-uns", "Über uns"),
+  page(5, "team", "Team", 4, "/ueber-uns/team"),
   page(10, "presse", "Presse"),
+  page(1, "startseite", "Startseite"),
+  page(2, "impressum", "Impressum"),
+  page(3, "datenschutz", "Datenschutz"),
 ];
 
 describe("siteNav", () => {
   const nav = siteNav(PAGES, [{ title: "Meistrum für Krone Parkett", slug: "meistrum" }]);
 
-  it("lists the sections in the site's order, new CMS sections before Kontakt", () => {
+  it("lists the sections in the order of the pages, Kontakt last", () => {
     expect(nav.map((s) => s.label)).toEqual([
       "Leistungen",
       "Branchen",
@@ -73,5 +75,29 @@ describe("siteNav", () => {
       "Anfrage",
     ]);
     expect(withPages.find((s) => s.href === "/projekte")?.children).toHaveLength(1);
+  });
+
+  it("follows a new order of the pages", () => {
+    const anders = [PAGES[5]!, PAGES[6]!, ...PAGES.filter((_, i) => i !== 5 && i !== 6)];
+    expect(siteNav(anders, []).map((s) => s.label)).toEqual([
+      "Über uns",
+      "Leistungen",
+      "Branchen",
+      "Projekte",
+      "Presse",
+      "Kontakt",
+    ]);
+  });
+
+  it("keeps Projekte without its page, after the other sections", () => {
+    const ohne = PAGES.filter((p) => p.slug !== "projekte");
+    expect(siteNav(ohne, []).map((s) => s.label)).toEqual([
+      "Leistungen",
+      "Branchen",
+      "Über uns",
+      "Presse",
+      "Projekte",
+      "Kontakt",
+    ]);
   });
 });

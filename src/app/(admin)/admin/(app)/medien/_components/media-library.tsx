@@ -1,9 +1,10 @@
 "use client";
 
-import { ImageIcon, Trash2Icon, UploadIcon } from "lucide-react";
+import { FolderIcon, ImageIcon, SearchIcon, Trash2Icon, UploadIcon } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -37,13 +38,14 @@ import {
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import type { MediaDoc } from "@/cms/content/types";
+import type { MediaDoc, MediaVerwendung } from "@/cms/content/types";
+import { cn } from "@/lib/utils";
 import { deleteMediaAction, updateMediaAction } from "../../../_actions/media";
 
 const size = (bytes: number) =>
   bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 
-function UploadForm() {
+function UploadForm({ ordner }: { ordner: string | null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -55,6 +57,7 @@ function UploadForm() {
     setBusy(true);
     const data = new FormData();
     for (const file of list) data.append("files", file);
+    if (ordner) data.append("ordner", ordner);
     // A route of its own, not an action: see medien/hochladen/route.ts.
     const response = await fetch("/admin/medien/hochladen", { method: "POST", body: data }).catch(
       () => null,
@@ -86,8 +89,8 @@ function UploadForm() {
       <UploadIcon className="size-8 text-muted-foreground" aria-hidden="true" />
       <p className="font-medium">Bilder hierher ziehen</p>
       <p className="text-sm text-muted-foreground">
-        JPG, PNG, WebP, AVIF, GIF oder SVG, bis 20 MB. Die Größen für die Website entstehen beim
-        Hochladen.
+        JPG, PNG, WebP, AVIF oder GIF, bis 20 MB. Die Größen für die Website entstehen beim
+        Hochladen{ordner ? `; sie kommen in den Ordner „${ordner}“` : ""}.
       </p>
       <Input
         ref={input}
@@ -112,9 +115,20 @@ function UploadForm() {
   );
 }
 
-function EditDialog({ item, onClose }: { item: MediaDoc | null; onClose: () => void }) {
+function EditDialog({
+  item,
+  ordnerListe,
+  verwendung,
+  onClose,
+}: {
+  item: MediaDoc | null;
+  ordnerListe: string[];
+  verwendung: MediaVerwendung[];
+  onClose: () => void;
+}) {
   const router = useRouter();
   const [alt, setAlt] = useState(item?.alt ?? "");
+  const [ordner, setOrdner] = useState(item?.ordner ?? "");
   const [focal, setFocal] = useState({ x: item?.focalX ?? 50, y: item?.focalY ?? 50 });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +136,13 @@ function EditDialog({ item, onClose }: { item: MediaDoc | null; onClose: () => v
 
   const save = async () => {
     setBusy(true);
-    const result = await updateMediaAction({ id: item.id, alt, focalX: focal.x, focalY: focal.y });
+    const result = await updateMediaAction({
+      id: item.id,
+      alt,
+      focalX: focal.x,
+      focalY: focal.y,
+      ordner: ordner || null,
+    });
     setBusy(false);
     if (result.serverError) return setError(result.serverError.message);
     if (result.validationErrors) return setError("Bitte beschreiben Sie das Bild.");
@@ -215,6 +235,49 @@ function EditDialog({ item, onClose }: { item: MediaDoc | null; onClose: () => v
               </FieldDescription>
               {error ? <FieldError>{error}</FieldError> : null}
             </Field>
+            <Field>
+              <FieldLabel htmlFor="media-ordner">Ordner</FieldLabel>
+              <Input
+                id="media-ordner"
+                value={ordner}
+                list="media-ordner-liste"
+                maxLength={100}
+                placeholder="Ohne Ordner"
+                onChange={(e) => setOrdner(e.target.value)}
+              />
+              <datalist id="media-ordner-liste">
+                {ordnerListe.map((o) => (
+                  <option key={o} value={o} />
+                ))}
+              </datalist>
+              <FieldDescription>Ein bestehender oder ein neuer Name.</FieldDescription>
+            </Field>
+            <div className="flex flex-col gap-1.5 text-sm">
+              <p className="font-medium">Verwendet</p>
+              {verwendung.length === 0 ? (
+                <p className="text-muted-foreground">Noch nirgends als Vorschaubild.</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {verwendung.map((v) => (
+                    <li key={`${v.art}-${v.id}`}>
+                      <Link
+                        href={
+                          `/admin/${v.art === "seite" ? "seiten" : "projekte"}/${v.id}` as never
+                        }
+                        className="underline underline-offset-2"
+                      >
+                        {v.titel}
+                      </Link>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        ({v.art === "seite" ? "Seite" : "Projekt"}
+                        {v.entwurf ? ", im Entwurf" : ""})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </FieldGroup>
         </div>
         <DialogFooter className="sm:justify-between">
@@ -228,7 +291,9 @@ function EditDialog({ item, onClose }: { item: MediaDoc | null; onClose: () => v
               <AlertDialogHeader>
                 <AlertDialogTitle>Bild löschen?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Seiten, die es als Vorschaubild nutzen, zeigen danach wieder das gezeichnete Bild.
+                  {verwendung.length > 0
+                    ? `Es ist Vorschaubild von ${verwendung.map((v) => v.titel).join(", ")}; dort erscheint danach wieder das gezeichnete Bild.`
+                    : "Es wird nirgends verwendet."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -249,11 +314,48 @@ function EditDialog({ item, onClose }: { item: MediaDoc | null; onClose: () => v
   );
 }
 
-export function MediaLibrary({ media }: { media: MediaDoc[] }) {
+const OHNE = "\u0000ohne";
+
+export function MediaLibrary({
+  media,
+  verwendung,
+}: {
+  media: MediaDoc[];
+  verwendung: Record<number, MediaVerwendung[]>;
+}) {
   const [editing, setEditing] = useState<MediaDoc | null>(null);
+  const [suche, setSuche] = useState("");
+  const [ordner, setOrdner] = useState<string | null>(null);
+  const ordnerListe = useMemo(
+    () =>
+      [...new Set(media.map((m) => m.ordner).filter((o): o is string => Boolean(o)))].sort((a, b) =>
+        a.localeCompare(b, "de"),
+      ),
+    [media],
+  );
+  const q = suche.trim().toLowerCase();
+  const sichtbar = media.filter(
+    (m) =>
+      (ordner === null || (ordner === OHNE ? !m.ordner : m.ordner === ordner)) &&
+      (!q || m.alt.toLowerCase().includes(q) || m.filename.toLowerCase().includes(q)),
+  );
+  const chip = (wert: string | null, label: string, anzahl: number) => (
+    <Button
+      key={wert ?? "alle"}
+      type="button"
+      size="sm"
+      variant={ordner === wert ? "default" : "ghost"}
+      aria-pressed={ordner === wert}
+      onClick={() => setOrdner(wert)}
+    >
+      {wert && wert !== OHNE ? <FolderIcon data-icon="inline-start" /> : null}
+      {label} <span className="tabular-nums opacity-70">{anzahl}</span>
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-8">
-      <UploadForm />
+    <div className="flex flex-col gap-6">
+      <UploadForm ordner={ordner && ordner !== OHNE ? ordner : null} />
       {media.length === 0 ? (
         <Empty>
           <EmptyHeader>
@@ -269,38 +371,86 @@ export function MediaLibrary({ media }: { media: MediaDoc[] }) {
           <EmptyContent />
         </Empty>
       ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
-          {media.map((item, index) => (
-            <li
-              key={item.id}
-              className="rise-in"
-              style={{ "--rise-index": index } as React.CSSProperties}
-            >
-              <button
-                type="button"
-                onClick={() => setEditing(item)}
-                className="group block w-full overflow-hidden rounded-lg border bg-muted text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                aria-label={`${item.alt || item.filename} bearbeiten`}
-              >
-                <span className="relative block aspect-4/3">
-                  <Image
-                    src={item.sizes.thumbnail?.url ?? item.url}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1536px) 16vw, (min-width: 1024px) 25vw, 50vw"
-                    className="object-cover transition-transform duration-300 ease-(--ease-out-strong) group-hover:scale-[1.03]"
-                    style={{ objectPosition: `${item.focalX}% ${item.focalY}%` }}
-                  />
-                </span>
-                <span className="block truncate px-2 py-1.5 text-xs text-muted-foreground">
-                  {item.alt || item.filename}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative w-full max-w-xs">
+              <SearchIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                type="search"
+                value={suche}
+                onChange={(e) => setSuche(e.target.value)}
+                placeholder="Beschreibung oder Dateiname"
+                aria-label="Bilder durchsuchen"
+                className="pl-8"
+              />
+            </div>
+            {ordnerListe.length > 0 ? (
+              <nav aria-label="Ordner" className="flex flex-wrap gap-1">
+                {chip(null, "Alle", media.length)}
+                {ordnerListe.map((o) => chip(o, o, media.filter((m) => m.ordner === o).length))}
+                {media.some((m) => !m.ordner)
+                  ? chip(OHNE, "Ohne Ordner", media.filter((m) => !m.ordner).length)
+                  : null}
+              </nav>
+            ) : null}
+          </div>
+          {sichtbar.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Kein Bild passt dazu.</p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+              {sichtbar.map((item, index) => {
+                const benutzt = verwendung[item.id]?.length ?? 0;
+                return (
+                  <li
+                    key={item.id}
+                    className="rise-in"
+                    style={{ "--rise-index": Math.min(index, 12) } as React.CSSProperties}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setEditing(item)}
+                      className="group block w-full overflow-hidden rounded-lg border bg-muted text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      aria-label={`${item.alt || item.filename} bearbeiten`}
+                    >
+                      <span className="relative block aspect-4/3">
+                        <Image
+                          src={item.sizes.thumbnail?.url ?? item.url}
+                          alt=""
+                          fill
+                          sizes="(min-width: 1536px) 16vw, (min-width: 1024px) 25vw, 50vw"
+                          className="object-cover transition-transform duration-300 ease-(--ease-out-strong) group-hover:scale-[1.03]"
+                          style={{ objectPosition: `${item.focalX}% ${item.focalY}%` }}
+                        />
+                      </span>
+                      <span className="flex items-center justify-between gap-2 px-2 py-1.5 text-xs text-muted-foreground">
+                        <span className="truncate">{item.alt || item.filename}</span>
+                        <span
+                          className={cn(
+                            "shrink-0",
+                            benutzt > 0 ? "text-primary-soft" : "opacity-60",
+                          )}
+                        >
+                          {benutzt > 0 ? `${benutzt}× genutzt` : "frei"}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
-      <EditDialog key={editing?.id ?? "none"} item={editing} onClose={() => setEditing(null)} />
+      <EditDialog
+        key={editing?.id ?? "none"}
+        item={editing}
+        ordnerListe={ordnerListe}
+        verwendung={editing ? (verwendung[editing.id] ?? []) : []}
+        onClose={() => setEditing(null)}
+      />
     </div>
   );
 }

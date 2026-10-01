@@ -6,6 +6,7 @@ import {
   createProjekt,
   deleteProjekt,
   discardProjektDraft,
+  planeProjekt,
   publishProjekt,
   restoreProjektVersion,
   saveProjektDraft,
@@ -93,4 +94,18 @@ export const restoreProjektVersionAction = authActionClient
       throw new CmsError("Diese Version gehört nicht zu diesem Projekt.");
     }
     await restoreProjektVersion(parsedInput.id, version.snapshot, ctx.user.id);
+  });
+
+// Publishing later: saves what is on screen into the draft, then sets (or clears) the moment.
+export const planeProjektAction = authActionClient
+  .inputSchema(id.extend({ at: z.iso.datetime().nullable(), input: ProjektInputSchema.optional() }))
+  .action(async ({ parsedInput, ctx }) => {
+    if (parsedInput.input) await saveProjektDraft(parsedInput.id, parsedInput.input);
+    const at = parsedInput.at ? new Date(parsedInput.at) : null;
+    await audited((tx) => planeProjekt(parsedInput.id, at, tx), {
+      actor: ctx.user,
+      action: "projekt.geplant",
+      target: { type: "projekt", id: parsedInput.id },
+      details: { am: parsedInput.at },
+    });
   });

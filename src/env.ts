@@ -8,6 +8,9 @@ export const env = createEnv({
     MEDIA_DIR: z.string().min(1).optional(),
     // Signs the contact form's start time (anti-spam); `openssl rand -base64 32`.
     FORM_SECRET: z.string().min(32),
+    // Lets the server's timer publish scheduled pages (/next/geplant, pnpm cms:geplant);
+    // `openssl rand -base64 32`. Without it nothing is published on schedule.
+    CRON_SECRET: z.string().min(32).optional(),
   },
   client: {
     NEXT_PUBLIC_SERVER_URL: z.url(),

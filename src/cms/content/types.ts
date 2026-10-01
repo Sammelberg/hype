@@ -26,10 +26,20 @@ export type MediaDoc = {
   height: number | null;
   focalX: number;
   focalY: number;
+  /** The folder it is filed under in the library; null = none. */
+  ordner: string | null;
   url: string;
   sizes: Partial<Record<MediaSizeName, MediaVariant & { url: string }>>;
   createdAt: Date;
   updatedAt: Date;
+};
+
+/** Where an image is used (content/media.ts mediaVerwendung). */
+export type MediaVerwendung = {
+  art: "seite" | "projekt";
+  id: number;
+  titel: string;
+  entwurf: boolean;
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -174,6 +184,9 @@ export type Page = {
   status: DocStatus;
   hasDraft: boolean;
   publishedAt: Date | null;
+  /** Scheduled: the draft goes live at this moment. */
+  publishAt: Date | null;
+  sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -203,6 +216,8 @@ export type Projekt = {
   status: DocStatus;
   hasDraft: boolean;
   publishedAt: Date | null;
+  /** Scheduled: the draft goes live at this moment. */
+  publishAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -39,6 +39,7 @@
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "cms:import": "tsx --env-file-if-exists=.env scripts/import-payload.ts",
     "cms:passwort": "tsx --env-file-if-exists=.env scripts/set-password.ts",
+    "cms:geplant": "tsx --env-file-if-exists=.env scripts/geplant.ts",
     "cms:aufbewahrung": "tsx --env-file-if-exists=.env scripts/aufbewahrung.ts",
     "cms:metadaten-entfernen": "tsx --env-file-if-exists=.env scripts/strip-media-metadata.ts",
     "init:project": "node scripts/init-project.mjs"

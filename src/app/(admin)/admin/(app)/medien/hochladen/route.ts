@@ -43,13 +43,18 @@ export async function POST(request: Request) {
   }
   const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   const alt = String(form.get("alt") ?? "").trim();
+  // The folder the library shows while uploading: the new images land in it.
+  const ordner =
+    String(form.get("ordner") ?? "")
+      .trim()
+      .slice(0, 100) || null;
   if (files.length === 0) return refuse("Bitte wählen Sie mindestens eine Datei.", 400);
 
   const ids: number[] = [];
   try {
     for (const file of files) {
       const stored = await storeUpload(file);
-      const record = { ...stored, alt: alt || file.name.replace(/\.[^.]+$/, "") };
+      const record = { ...stored, ordner, alt: alt || file.name.replace(/\.[^.]+$/, "") };
       const doc = await audited(
         (tx) => createMedia(record, tx),
         (d) => ({

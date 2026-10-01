@@ -21,6 +21,7 @@ export function toMediaDoc(row: typeof media.$inferSelect): MediaDoc {
     height: row.height,
     focalX: row.focalX,
     focalY: row.focalY,
+    ordner: row.ordner,
     url: mediaUrlOf(row.filename),
     sizes,
     createdAt: row.createdAt,

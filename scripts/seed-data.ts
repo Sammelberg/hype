@@ -912,6 +912,10 @@ export type SeedProject = {
 // Real projects are entered in /admin; the seed brings none (no invented clients).
 export const seedProjects: SeedProject[] = [];
 
+// The sections of the navigation in their order (cms.pages.sort_order); Seiten → Reihenfolge
+// changes it later.
+export const SEED_NAV_ORDER = ["leistungen", "branchen", "projekte", "ueber-uns"];
+
 export const SEED_PATHS = [
   "/kontakt",
   "/suche",

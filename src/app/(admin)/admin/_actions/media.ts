@@ -16,6 +16,12 @@ export const updateMediaAction = authActionClient
       alt: z.string().trim().min(1, "Bitte beschreiben Sie das Bild.").max(500),
       focalX: z.number().min(0).max(100),
       focalY: z.number().min(0).max(100),
+      ordner: z
+        .string()
+        .trim()
+        .max(100)
+        .nullish()
+        .transform((v) => v || null),
     }),
   )
   .action(async ({ parsedInput: { id, ...patch } }) => {

@@ -1,5 +1,5 @@
-// The site's pages as navigation: every top-level page of the CMS as a section with the pages
-// below it; Projekte lists its projects, Kontakt comes last. Both exist without their page too
+// The site's pages as navigation, in the order the admin gives them: every top-level page of the
+// CMS as a section with the pages below it; Projekte lists its projects, Kontakt comes last. Both exist without their page too
 // (a fresh database). The header, the phone menu and the footer all show this, so a page
 // published in /admin appears everywhere.
 
@@ -18,8 +18,6 @@ type Projekt = { title: string; slug?: string | null };
 /** Pages that live in the footer only (Impressum, Datenschutz). */
 export const LEGAL_SLUGS: ReadonlySet<string> = new Set(["impressum", "datenschutz"]);
 const HIDDEN = new Set(["startseite", "kontakt", ...LEGAL_SLUGS]);
-/** Known sections first, in this order; any other top-level page follows them. */
-const ORDER = ["leistungen", "branchen", "projekte", "ueber-uns"];
 
 const urlOf = (page: Page) => page.breadcrumbs?.at(-1)?.url ?? `/${page.slug}`;
 const parentOf = (page: Page) =>
@@ -45,10 +43,8 @@ export function siteNav(pages: readonly Page[], projekte: readonly Projekt[]): N
       .map((p) => ({ label: p.title, href: `/projekte/${p.slug}` })),
   });
 
-  const rank = (slug: string) => (ORDER.includes(slug) ? ORDER.indexOf(slug) : ORDER.length);
-  const ordered = [...sections.entries()]
-    .sort(([a], [b]) => rank(a) - rank(b))
-    .map(([, section]) => section);
+  // The pages come in their order (Seiten → Reihenfolge); Projekte without its page goes last.
+  const ordered = [...sections.values()];
   const kontakt = pages.find((page) => page.slug === "kontakt" && parentOf(page) === null);
   return [...ordered, { label: kontakt?.title ?? "Kontakt", href: "/kontakt", children: [] }];
 }

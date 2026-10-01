@@ -76,7 +76,11 @@ export default async function ProjektePage() {
                     </CardTitle>
                     <CardDescription>{projekt.kunde}</CardDescription>
                     <CardAction>
-                      <StatusBadge status={projekt.status} hasDraft={projekt.hasDraft} />
+                      <StatusBadge
+                        status={projekt.status}
+                        hasDraft={projekt.hasDraft}
+                        publishAt={projekt.publishAt}
+                      />
                     </CardAction>
                   </CardHeader>
                   {projekt.summary ? (

@@ -401,7 +401,7 @@ export default async function DashboardPage({
                     >
                       {d.title}
                     </CardLink>
-                    <StatusBadge status={d.status} hasDraft={d.hasDraft} />
+                    <StatusBadge status={d.status} hasDraft={d.hasDraft} publishAt={d.publishAt} />
                   </li>
                 ))}
               </ul>
