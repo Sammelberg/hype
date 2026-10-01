@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { env } from "@/env";
 import type { MediaDoc } from "@/cms/content/types";
 
+import { clampDescription } from "./description";
+
 type Meta = { title?: string | null; description?: string | null; image?: MediaDoc | null };
 
 // Alt text of the drawn share images (components/site/share-image.tsx).
@@ -29,7 +31,7 @@ export function buildMetadata({
   path: string;
 }): Metadata {
   const title = meta?.title || fallbackTitle;
-  const description = meta?.description || fallbackDescription || undefined;
+  const description = meta?.description || clampDescription(fallbackDescription);
   const image = mediaUrl(meta?.image ?? null, "hero");
   return {
     title,
