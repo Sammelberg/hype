@@ -57,6 +57,13 @@
       "when": 1790768947224,
       "tag": "0007_redirects_308",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790860674034,
+      "tag": "0008_buero_ausbau",
+      "breakpoints": true
     }
   ]
 }

@@ -70,8 +70,31 @@ export const FirmaSchema = z.object({
   email,
   zahlungszielTage: z.coerce.number().int().min(0).max(120),
   fusszeile: optional(1000),
+  // §247 BGB, published by the Bundesbank for 1 January and 1 July; Mahnungen compute interest on
+  // it. Entered by the owner, never assumed.
+  basiszinssatz: z.coerce
+    .number()
+    .min(-5)
+    .max(15)
+    .nullish()
+    .transform((v) => v ?? null),
+  // DATEV export (logik/export.ts): the adviser's numbers; accounts default to SKR03.
+  datev: z
+    .object({
+      beraternummer: z.coerce.number().int().min(1000, "Vier- bis siebenstellig.").max(9999999),
+      mandantennummer: z.coerce.number().int().min(1).max(99999),
+      kontenrahmen: z.enum(["03", "04"]),
+      sachkontenlaenge: z.coerce.number().int().min(4).max(8),
+      debitor: z.coerce.number().int().min(1),
+      erloes19: z.coerce.number().int().min(1),
+      erloes7: z.coerce.number().int().min(1),
+      erloes0: z.coerce.number().int().min(1),
+    })
+    .nullish()
+    .transform((v) => v ?? null),
 });
 export type Firma = z.infer<typeof FirmaSchema>;
+export type FirmaInput = z.input<typeof FirmaSchema>;
 
 // ---------------------------------------------------------------------------------------------
 // Kunden
@@ -178,6 +201,7 @@ export const VertragSchema = z.object({
     .transform((v) => v ?? null),
   unterzeichnetAm: optionalerTag,
   inhalt: optional(20000),
+  aboRechnungen: z.boolean().default(false),
 });
 export type VertragInput = z.infer<typeof VertragSchema>;
 
@@ -206,6 +230,8 @@ export const PositionSchema = z.object({
 export type Position = z.infer<typeof PositionSchema>;
 
 export const RechnungSchema = z.object({
+  // „abo“ is set by the contract's billing, not chosen.
+  art: z.enum(["normal", "abo", "abschlag", "schluss"]).default("normal"),
   kundeId: z.number({ error: "Bitte einen Kunden wählen." }).int().positive(),
   auftragId: z
     .number()
@@ -241,3 +267,77 @@ export type Empfaenger = {
   email: string | null;
   privat: boolean;
 };
+
+// ---------------------------------------------------------------------------------------------
+// Kundenhistorie, Wiedervorlagen
+
+export const HISTORIE_ARTEN = {
+  notiz: "Notiz",
+  anruf: "Anruf",
+  email: "E-Mail",
+  termin: "Termin",
+} as const;
+
+export const HistorieSchema = z.object({
+  kundeId: z.number().int().positive(),
+  art: z.enum(Object.keys(HISTORIE_ARTEN) as [keyof typeof HISTORIE_ARTEN]),
+  text: text("einen Text", 5000),
+});
+export type HistorieInput = z.infer<typeof HistorieSchema>;
+
+const optionaleId = z
+  .number()
+  .int()
+  .positive()
+  .nullish()
+  .transform((v) => v ?? null);
+
+export const WiedervorlageSchema = z.object({
+  kundeId: optionaleId,
+  auftragId: optionaleId,
+  vertragId: optionaleId,
+  rechnungId: optionaleId,
+  titel: text("worum es geht"),
+  notiz: optional(2000),
+  faelligAm: tagIso,
+});
+export type WiedervorlageInput = z.infer<typeof WiedervorlageSchema>;
+
+// ---------------------------------------------------------------------------------------------
+// Zahlungen, Mahnungen
+
+export const ZahlungSchema = z.object({
+  rechnungId: z.number().int().positive(),
+  betrag: betrag.refine((n) => n > 0, "Mehr als null."),
+  am: tagIso,
+  notiz: optional(300),
+});
+export type ZahlungInput = z.infer<typeof ZahlungSchema>;
+
+const nichtNegativ = betrag.refine((n) => n >= 0, "Nicht negativ.");
+
+export const MahnungSchema = z.object({
+  rechnungId: z.number().int().positive(),
+  am: tagIso,
+  frist: tagIso,
+  zinssatz: z.coerce.number().min(0).max(30),
+  zinsen: nichtNegativ,
+  pauschale: nichtNegativ,
+  gebuehr: nichtNegativ,
+  text: optional(3000),
+});
+export type MahnungInput = z.infer<typeof MahnungSchema>;
+
+// ---------------------------------------------------------------------------------------------
+// Angebote
+
+export const AngebotSchema = z.object({
+  kundeId: z.number({ error: "Bitte einen Kunden wählen." }).int().positive(),
+  auftragId: optionaleId,
+  titel: text("einen Titel"),
+  einleitung: optional(4000),
+  schlusstext: optional(4000),
+  gueltigBis: optionalerTag,
+  positionen: z.array(PositionSchema).min(1, "Mindestens eine Position."),
+});
+export type AngebotInput = z.infer<typeof AngebotSchema>;

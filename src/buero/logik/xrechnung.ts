@@ -1,7 +1,8 @@
 // XRechnung 3.0 as UBL 2.1 (EN 16931): the E-Rechnung a German business customer or authority
 // receives. Ported from boden/lib/services/xrechnung.ts (KoSIT-validated there) and reduced to a
-// software business: the standard rates (S, 19 and 7 %), §19 Kleinunternehmer (E), Storno. No partial invoices, no
-// reverse charge, no allowances. Totals come from geld.ts, the same numbers the invoice stores.
+// software business: the standard rates (S, 19 and 7 %), §19 Kleinunternehmer (E), Storno,
+// invoices on account (326) and the final invoice that deducts them (BT-113). No reverse charge,
+// no allowances. Totals come from geld.ts, the same numbers the invoice stores.
 // UBL is a sequence: element order below is part of the contract (the XSD stage rejects others).
 import { positionNetto, rechnungsSummen } from "./geld";
 import type { Einheit, Empfaenger, Firma } from "./typen";
@@ -15,8 +16,8 @@ const KLEINUNTERNEHMER_BEFREIUNG = "Umsatzsteuerbefreiung gemäß §19 Abs. 1 US
 
 export type XRechnungDaten = {
   nummer: string;
-  /** 380 = Rechnung, 384 = Rechnungskorrektur (Storno). */
-  typ: "380" | "384";
+  /** 380 = Rechnung, 326 = Teil-/Abschlagsrechnung, 384 = Rechnungskorrektur (Storno). */
+  typ: "380" | "326" | "384";
   ausgestelltAm: string;
   faelligAm: string;
   leistungVon: string | null;
@@ -33,6 +34,10 @@ export type XRechnungDaten = {
   kleinunternehmer: boolean;
   /** BG-3: the invoice a Storno corrects. */
   korrigiert?: string | null;
+  /** BG-3 as well: the invoices on account a final invoice settles. */
+  vorherige?: string[];
+  /** BT-113: what those invoices on account came to (gross, cents); deducted from the amount due. */
+  vorausbezahlt?: number;
   hinweise?: string[];
 };
 
@@ -67,9 +72,13 @@ export function xrechnungXml(d: XRechnungDaten): string {
     von && (!bis || von === bis)
       ? `\n  <cac:Delivery>\n    <cbc:ActualDeliveryDate>${von}</cbc:ActualDeliveryDate>\n  </cac:Delivery>`
       : "";
-  const korrektur = d.korrigiert
-    ? `\n  <cac:BillingReference>\n    <cac:InvoiceDocumentReference><cbc:ID>${esc(d.korrigiert)}</cbc:ID></cac:InvoiceDocumentReference>\n  </cac:BillingReference>`
-    : "";
+  const korrektur = [...(d.korrigiert ? [d.korrigiert] : []), ...(d.vorherige ?? [])]
+    .map(
+      (nr) =>
+        `\n  <cac:BillingReference>\n    <cac:InvoiceDocumentReference><cbc:ID>${esc(nr)}</cbc:ID></cac:InvoiceDocumentReference>\n  </cac:BillingReference>`,
+    )
+    .join("");
+  const vorausbezahlt = d.vorausbezahlt ?? 0;
 
   // BR-DE-15: BT-10 always; the Leitweg-ID for authorities, else the invoice number.
   const referenz = e.leitwegId || d.nummer;
@@ -206,8 +215,8 @@ export function xrechnungXml(d: XRechnungDaten): string {
   <cac:LegalMonetaryTotal>
     <cbc:LineExtensionAmount ${cur}>${geld(summen.netto)}</cbc:LineExtensionAmount>
     <cbc:TaxExclusiveAmount ${cur}>${geld(summen.netto)}</cbc:TaxExclusiveAmount>
-    <cbc:TaxInclusiveAmount ${cur}>${geld(summen.brutto)}</cbc:TaxInclusiveAmount>
-    <cbc:PayableAmount ${cur}>${geld(summen.brutto)}</cbc:PayableAmount>
+    <cbc:TaxInclusiveAmount ${cur}>${geld(summen.brutto)}</cbc:TaxInclusiveAmount>${vorausbezahlt ? `\n    <cbc:PrepaidAmount ${cur}>${geld(vorausbezahlt)}</cbc:PrepaidAmount>` : ""}
+    <cbc:PayableAmount ${cur}>${geld(summen.brutto - vorausbezahlt)}</cbc:PayableAmount>
   </cac:LegalMonetaryTotal>${zeilen}
 </ubl:Invoice>
 `;

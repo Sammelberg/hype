@@ -49,6 +49,7 @@ export default async function RechnungPage({ params }: Props) {
         auftraege={auftraege}
         vertraege={vertraege}
         rechnung={{
+          art: r.art,
           kundeId: r.kundeId,
           auftragId: r.auftragId,
           vertragId: r.vertragId,

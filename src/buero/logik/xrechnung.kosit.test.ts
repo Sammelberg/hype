@@ -43,6 +43,19 @@ describe.skipIf(!KOSIT_URL)(
         },
       ],
       [
+        "an invoice on account (Abschlagsrechnung)",
+        { ...beispiel, nummer: "RE-2026-0003", typ: "326" },
+      ],
+      [
+        "a final invoice deducting two invoices on account",
+        {
+          ...beispiel,
+          nummer: "RE-2026-0006",
+          vorherige: ["RE-2026-0003", "RE-2026-0004"],
+          vorausbezahlt: 50000,
+        },
+      ],
+      [
         "an invoice to an authority by Leitweg-ID, on one service day",
         {
           ...beispiel,

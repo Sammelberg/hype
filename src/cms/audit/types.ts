@@ -29,6 +29,12 @@ export const AUDIT_ACTIONS = {
   "weiterleitung.geloescht": "Weiterleitung gelöscht",
   "rechnung.gestellt": "Rechnung gestellt",
   "rechnung.storniert": "Rechnung storniert",
+  "zahlung.erfasst": "Zahlung erfasst",
+  "zahlung.entfernt": "Zahlung entfernt",
+  "mahnung.geschrieben": "Mahnung geschrieben",
+  "angebot.versendet": "Angebot versendet",
+  "abo.vorbereitet": "Laufende Rechnungen vorbereitet",
+  "export.steuerberater": "Export für den Steuerberater",
   aufbewahrung: "Aufbewahrungsfristen angewendet",
 } as const;
 

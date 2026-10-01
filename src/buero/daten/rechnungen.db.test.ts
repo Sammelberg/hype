@@ -50,6 +50,7 @@ const kunde = {
 };
 
 const entwurf = (kundeId: number) => ({
+  art: "normal" as const,
   kundeId,
   auftragId: null,
   vertragId: null,

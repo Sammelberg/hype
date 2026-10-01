@@ -40,6 +40,7 @@ export default async function NeuerVertragPage({
         verguetungIntervall: "monatlich",
         unterzeichnetAm: null,
         inhalt: null,
+        aboRechnungen: false,
       }}
     />
   );

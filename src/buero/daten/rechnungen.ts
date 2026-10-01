@@ -3,22 +3,25 @@
 // enforces what this module does). Corrections are Stornos: a second, negative invoice.
 import { createHash } from "node:crypto";
 
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../../cms/db/client";
 import { auftraege, kunden, rechnungen, vertraege } from "../db/schema";
 import { datumDe, heute, jahr, kannWechseln, tagePlus } from "../logik/ablauf";
-import { betragAusCent, rechnungsSummen } from "../logik/geld";
+import { typCode } from "../logik/abrechnung";
+import { betragAusCent, centAusBetrag, rechnungsSummen } from "../logik/geld";
 import { type Mangel, pruefeRechnung } from "../logik/pflichtangaben";
 import { type Position, type RechnungInput, RechnungSchema } from "../logik/typen";
 import { type XRechnungDaten, xrechnungXml } from "../logik/xrechnung";
 import { BueroError, naechsteNummer } from "./basis";
 import { getFirma } from "./firma";
+import { erfasseZahlung, forderungVon, offenVon } from "./forderungen";
 import { empfaengerVon, kundenName } from "./kunden";
 
 export type Rechnung = typeof rechnungen.$inferSelect;
 
 const spalten = (r: RechnungInput) => ({
+  art: r.art,
   kundeId: r.kundeId,
   auftragId: r.auftragId,
   vertragId: r.vertragId,
@@ -155,6 +158,12 @@ export async function stelleRechnung(id: number, client: Db | Tx = db) {
     });
     if (stellen.length > 0)
       throw new BueroError(`Es fehlt noch: ${stellen.map((m) => m.text).join(", ")}.`);
+    if ((r.art === "schluss" || r.art === "abschlag") && !r.auftragId)
+      throw new BueroError(
+        "Abschlags- und Schlussrechnungen gehören zu einem Auftrag. Wählen Sie ihn aus.",
+        "auftragId",
+      );
+    const abschlaege = r.art === "schluss" ? await abschlaegeZu(tx, r.auftragId!, r.id) : null;
     const tag = heute();
     const nummer = await naechsteNummer(tx, "RE", jahr(tag));
     await tx
@@ -168,11 +177,12 @@ export async function stelleRechnung(id: number, client: Db | Tx = db) {
         verkaeufer: firma,
         kleinunternehmer: firma.kleinunternehmer,
         ...summenSpalten(r.positionen, firma.kleinunternehmer),
+        abschlaege,
         updatedAt: new Date(),
       })
       .where(eq(rechnungen.id, id));
-    // An accepted order is billed now.
-    if (r.auftragId)
+    // An accepted order is billed now — by its final or only invoice, not by one on account.
+    if (r.auftragId && r.art !== "abschlag")
       await tx
         .update(auftraege)
         .set({ status: "abgerechnet", updatedAt: new Date() })
@@ -181,14 +191,39 @@ export async function stelleRechnung(id: number, client: Db | Tx = db) {
   });
 }
 
+/** Paid in full on `am`: what is still open is recorded as one payment (forderungen.ts). */
 export async function markiereBezahlt(id: number, am: string, client: Db | Tx = db) {
   const [r] = await client.select().from(rechnungen).where(eq(rechnungen.id, id));
   if (!r || !kannWechseln("rechnung", r.status, "bezahlt"))
     throw new BueroError("Nur eine gestellte Rechnung kann als bezahlt gelten.");
-  await client
-    .update(rechnungen)
-    .set({ status: "bezahlt", bezahltAm: am, updatedAt: new Date() })
-    .where(eq(rechnungen.id, id));
+  const { zahlungen } = await forderungVon(id, client);
+  const offen = offenVon(r, zahlungen);
+  await erfasseZahlung(
+    { rechnungId: id, betrag: offen / 100, am, notiz: zahlungen.length ? "Restbetrag" : null },
+    client,
+  );
+}
+
+/**
+ * The invoices on account of an order a final invoice deducts: issued or paid, not cancelled,
+ * oldest first. Frozen into the final invoice when it is issued.
+ */
+export async function abschlaegeZu(client: Db | Tx, auftragId: number, ohne?: number) {
+  const rows = await client
+    .select({ id: rechnungen.id, nummer: rechnungen.nummer, brutto: rechnungen.summeBrutto })
+    .from(rechnungen)
+    .where(
+      and(
+        eq(rechnungen.auftragId, auftragId),
+        eq(rechnungen.art, "abschlag"),
+        eq(rechnungen.typ, "rechnung"),
+        inArray(rechnungen.status, ["gestellt", "bezahlt"]),
+      ),
+    )
+    .orderBy(asc(rechnungen.ausgestelltAm), asc(rechnungen.id));
+  return rows
+    .filter((x) => x.id !== ohne)
+    .map((x) => ({ id: x.id, nummer: x.nummer!, brutto: x.brutto! }));
 }
 
 // A Storno is a second invoice with the same parties and negative quantities, issued today,
@@ -205,6 +240,8 @@ export async function storniereRechnung(id: number, client: Db | Tx = db) {
       .insert(rechnungen)
       .values({
         typ: "storno",
+        // Stornos of invoices on account keep the kind, so a final invoice no longer counts them.
+        art: r.art === "abo" ? "normal" : r.art,
         status: "gestellt",
         nummer,
         kundeId: r.kundeId,
@@ -238,7 +275,7 @@ export function ausgabeDaten(r: Rechnung, korrigiertNummer: string | null): XRec
     throw new BueroError("Erst eine gestellte Rechnung hat eine Ausgabe.");
   return {
     nummer: r.nummer,
-    typ: r.typ === "storno" ? "384" : "380",
+    typ: typCode(r.typ, r.art),
     ausgestelltAm: r.ausgestelltAm!,
     faelligAm: r.faelligAm!,
     leistungVon: r.leistungVon,
@@ -248,6 +285,11 @@ export function ausgabeDaten(r: Rechnung, korrigiertNummer: string | null): XRec
     positionen: r.positionen,
     kleinunternehmer: r.kleinunternehmer ?? false,
     korrigiert: korrigiertNummer,
+    vorherige: r.typ === "rechnung" ? (r.abschlaege ?? []).map((a) => a.nummer) : [],
+    vorausbezahlt:
+      r.typ === "rechnung"
+        ? (r.abschlaege ?? []).reduce((sum, a) => sum + centAusBetrag(a.brutto), 0)
+        : 0,
     hinweise: [r.einleitung, r.schlusstext].filter((x): x is string => Boolean(x)),
   };
 }

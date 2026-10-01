@@ -71,6 +71,7 @@ export default async function NeueRechnungPage({
       auftraege={auftraege}
       vertraege={vertraege}
       rechnung={{
+        art: "normal",
         kundeId: kunde?.id as number,
         auftragId: vonAuftrag?.auftrag.id ?? null,
         vertragId: vonVertrag?.vertrag.id ?? null,

@@ -72,6 +72,7 @@ export default async function VertragPage({ params }: Props) {
         verguetungIntervall: v.verguetungIntervall,
         unterzeichnetAm: v.unterzeichnetAm,
         inhalt: v.inhalt,
+        aboRechnungen: v.aboRechnungen,
       }}
       seite={
         <div className="flex flex-col gap-6 xl:sticky xl:top-36">

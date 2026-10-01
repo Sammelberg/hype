@@ -26,6 +26,7 @@ const spalten = (v: VertragInput) => ({
   verguetungIntervall: v.verguetungIntervall,
   unterzeichnetAm: v.unterzeichnetAm,
   inhalt: v.inhalt,
+  aboRechnungen: v.aboRechnungen,
 });
 
 /** When an active contract ends at the earliest, and by when notice must be given. */

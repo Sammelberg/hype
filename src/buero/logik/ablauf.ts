@@ -9,6 +9,7 @@ export const STATUS = {
   auftrag: ["angebot", "beauftragt", "in_arbeit", "abgenommen", "abgerechnet", "storniert"],
   vertrag: ["entwurf", "aktiv", "gekuendigt", "beendet"],
   rechnung: ["entwurf", "gestellt", "bezahlt", "storniert"],
+  angebot: ["entwurf", "versendet", "angenommen", "abgelehnt"],
 } as const;
 
 export type Art = keyof typeof STATUS;
@@ -29,12 +30,20 @@ const WECHSEL: { [A in Art]: Record<StatusVon<A>, readonly StatusVon<A>[]> } = {
     gekuendigt: ["beendet"],
     beendet: [],
   },
-  // An issued invoice stays issued (GoBD): it is paid, or corrected by a Storno.
+  // An issued invoice stays issued (GoBD): it is paid, or corrected by a Storno. A payment entered
+  // by mistake and removed again makes a paid invoice open again.
   rechnung: {
     entwurf: ["gestellt"],
     gestellt: ["bezahlt", "storniert"],
-    bezahlt: ["storniert"],
+    bezahlt: ["gestellt", "storniert"],
     storniert: [],
+  },
+  // An offer is written, sent (then it has its number), and accepted or declined.
+  angebot: {
+    entwurf: ["versendet"],
+    versendet: ["angenommen", "abgelehnt"],
+    angenommen: [],
+    abgelehnt: ["versendet"],
   },
 };
 
@@ -105,6 +114,8 @@ export const heute = (jetzt: Date = new Date()) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(jetzt);
 
 export const tagePlus = (isoTag: string, tage: number) => plusTage(isoTag, tage);
+
+export const monatePlus = (isoTag: string, monate: number) => plusMonate(isoTag, monate);
 
 export const jahr = (isoTag: string) => Number(isoTag.slice(0, 4));
 

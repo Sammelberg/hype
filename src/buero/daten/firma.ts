@@ -28,6 +28,8 @@ async function vorgabe(): Promise<Firma> {
     email: settings?.contactEmail || null,
     zahlungszielTage: 14,
     fusszeile: null,
+    basiszinssatz: null,
+    datev: null,
   };
 }
 

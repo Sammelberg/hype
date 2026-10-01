@@ -19,6 +19,8 @@ const firma: Firma = {
   email: "rechnung@example.com",
   zahlungszielTage: 14,
   fusszeile: null,
+  basiszinssatz: null,
+  datev: null,
 };
 
 const empfaenger: Empfaenger = {

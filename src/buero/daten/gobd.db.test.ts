@@ -99,6 +99,7 @@ async function gestellteRechnung(tx: Tx) {
   const kundeId = await createKunde(kunde, tx);
   const id = await createRechnung(
     {
+      art: "normal",
       kundeId,
       auftragId: null,
       vertragId: null,
