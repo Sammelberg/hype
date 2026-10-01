@@ -1,0 +1,310 @@
+/* The blocks of a content page (content-blocks.tsx). */
+
+/* ── The page's contour map ── */
+.map {
+  width: 100%;
+  max-width: 30rem;
+  justify-self: center;
+  overflow: visible;
+  view-timeline: --map block;
+}
+
+.ring,
+.ringMajor {
+  fill: none;
+  stroke-linejoin: round;
+}
+
+.ring {
+  stroke: oklch(0.79 0.085 252 / 0.32);
+  stroke-width: 1.2;
+}
+
+/* Every fourth line stronger, as on a map. */
+.ringMajor {
+  stroke: oklch(0.79 0.085 252 / 0.7);
+  stroke-width: 1.8;
+}
+
+.summit {
+  fill: oklch(0.7 0.12 58);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ── The way through numbered parts ── */
+.way {
+  position: relative;
+  display: grid;
+  gap: 3.5rem;
+  --node: 4rem;
+}
+
+/* Phones: a straight line down the waypoints. */
+.way::before {
+  position: absolute;
+  top: calc(var(--node) / 2);
+  bottom: 0;
+  left: calc(var(--node) / 2);
+  width: 1px;
+  background: oklch(0.79 0.085 252 / 0.3);
+  content: "";
+}
+
+.stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--node) minmax(0, 1fr);
+  column-gap: 1.5rem;
+}
+
+.waypoint {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: var(--node);
+  height: var(--node);
+  place-items: center;
+  border: 1px solid oklch(0.79 0.085 252 / 0.6);
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--primary-soft);
+  font-size: calc(var(--node) * 0.4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stopText {
+  padding-top: 0.5rem;
+}
+
+.path {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .way {
+    --node: 7rem;
+    grid-auto-rows: minmax(20rem, 1fr);
+    gap: 0;
+  }
+
+  .way::before {
+    display: none;
+  }
+
+  .stop {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 4rem;
+  }
+
+  .stop[data-side="left"] .waypoint {
+    grid-column: 1;
+    justify-self: center;
+  }
+
+  .stop[data-side="left"] .stopText {
+    grid-column: 2;
+  }
+
+  .stop[data-side="right"] .waypoint {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+  }
+
+  .stop[data-side="right"] .stopText {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .stopText {
+    max-width: 34rem;
+    padding: 0;
+  }
+
+  .path {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .path path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .track {
+    stroke: oklch(0.79 0.085 252 / 0.16);
+  }
+
+  .walked path {
+    stroke: var(--primary-soft);
+  }
+}
+
+/* ── Modules around one centre ── */
+.constellation {
+  position: relative;
+  margin-top: 2.5rem;
+}
+
+.constellation > svg,
+.hub {
+  display: none;
+}
+
+.modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.modules li {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid oklch(0.79 0.085 252 / 0.3);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+@media (min-width: 48rem) {
+  .constellation {
+    aspect-ratio: 16 / 10;
+    margin-block: 3rem 1rem;
+  }
+
+  .constellation > svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .constellation line {
+    stroke: oklch(0.79 0.085 252 / 0.4);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    width: 5.5rem;
+    height: 5.5rem;
+    place-items: center;
+    border: 1px solid var(--primary-soft);
+    border-radius: 50%;
+    background: var(--background);
+    box-shadow: 0 0 0 10px oklch(0.79 0.085 252 / 0.06);
+    translate: -50% -50%;
+  }
+
+  .modules li {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    translate: -50% -50%;
+  }
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* The rings draw from the summit outwards as the map comes into view. */
+    .ring,
+    .ringMajor {
+      stroke-dasharray: 1;
+      animation: draw linear both;
+      animation-timeline: --map;
+      animation-range: entry calc(var(--k) * 4%) cover calc(35% + var(--k) * 3%);
+    }
+
+    .summit {
+      animation: appear linear both;
+      animation-timeline: --map;
+      animation-range: entry 0% entry 30%;
+    }
+
+    .way {
+      view-timeline: --way block;
+    }
+
+    /* The walked path uncovers from the top down to the waypoint at the middle of the screen. */
+    .walked {
+      animation: walk linear both;
+      animation-timeline: --way;
+      animation-range: cover 50vh cover calc(100% - 50vh);
+    }
+
+    .waypoint {
+      animation: ignite linear both;
+      animation-timeline: view();
+      animation-range: cover calc(50vh - 3rem) cover 50vh;
+    }
+
+    .modules li {
+      animation: pop linear both;
+      animation-timeline: view();
+      animation-range: entry calc(10% + var(--i, 0) * 5%) cover calc(30% + var(--i, 0) * 5%);
+    }
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@keyframes walk {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes ignite {
+  to {
+    border-color: var(--primary-soft);
+    background: var(--primary-soft);
+    color: var(--background);
+    box-shadow: 0 0 0 8px oklch(0.79 0.085 252 / 0.12);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+}

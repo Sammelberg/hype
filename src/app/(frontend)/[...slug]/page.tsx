@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import Link from "next/link";
-
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
 import { Part } from "@/components/site/part";
@@ -21,10 +19,12 @@ import { redirectOrNotFound } from "@/data/redirect-or-not-found";
 import { pageTrail } from "@/lib/breadcrumbs";
 import { ROUTED_PATHS } from "@/cms/content/page-tree";
 import { partsOf } from "@/cms/rich-text/parts";
+import { shapeParts } from "@/cms/rich-text/shapes";
 import { firstParagraph } from "@/cms/rich-text/text";
 import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
+import { ChildDoors } from "./_components/child-doors";
+import { ContentBlocks, Statement } from "./_components/content-blocks";
 import { LeistungSections } from "./_components/leistung-sections";
 
 type Props = { params: Promise<{ slug: string[] }> };
@@ -85,6 +85,12 @@ export default async function CmsPage({ params }: Props) {
     legal || service ? { intro: page.content, parts: [] } : partsOf(page.content);
   // A page with no parts of its own is an overview: the pages below it are its body.
   const overview = parts.length === 0 && !legal && !service && children.length > 0;
+  const doors = children.map((child) => ({
+    id: child.id,
+    title: child.title,
+    path: `${path}/${child.slug}`,
+    summary: child.lead || firstParagraph(child.content),
+  }));
 
   return (
     <main>
@@ -120,87 +126,48 @@ export default async function CmsPage({ params }: Props) {
         }
       />
 
-      {intro ? (
-        <div
-          className="page-container py-16 sm:py-24"
-          data-cms-zone={parts.length > 0 ? undefined : "text"}
-        >
-          <RichText
-            data={intro}
-            className={cn(
-              "max-w-prose",
-              // A service's text opens its page at the size of a lead.
-              service ? "prose-xl 3xl:prose-2xl" : "prose-lg 3xl:prose-xl",
-            )}
+      {legal ? (
+        // Legal pages: one column of prose, a hairline under the header showing how far in.
+        <>
+          <span
+            aria-hidden="true"
+            className="fixed inset-x-0 top-header z-40 h-0.5 sd-progress origin-left bg-primary-soft"
           />
+          {intro ? (
+            <div className="page-container py-16 sm:py-24" data-cms-zone="text">
+              <RichText data={intro} className="prose-lg max-w-prose 3xl:prose-xl" />
+            </div>
+          ) : null}
+        </>
+      ) : service ? (
+        intro ? (
+          // A service's text opens its page at the size of a lead.
+          <div className="page-container py-16 sm:py-24" data-cms-zone="text">
+            <RichText data={intro} className="prose-xl max-w-prose 3xl:prose-2xl" />
+          </div>
+        ) : null
+      ) : intro ? (
+        <div data-cms-zone={parts.length > 0 ? undefined : "text"}>
+          <Statement intro={intro} mapKey={path} />
         </div>
       ) : null}
 
-      {parts.length > 0 ? (
-        <div data-cms-zone="text">
-          {parts.map((part, i) => (
-            <Part key={`${i}-${part.title}`} id={`abschnitt-${i + 1}`} title={part.title}>
-              <RichText data={part.body} className="prose-lg max-w-prose 3xl:prose-xl" />
-            </Part>
-          ))}
-        </div>
-      ) : null}
+      {parts.length > 0 ? <ContentBlocks blocks={shapeParts(parts)} /> : null}
 
       {service ? (
         <LeistungSections sections={service} projekt={projekt} others={otherServices} />
       ) : null}
 
       {overview ? (
-        // An overview's pages are its body: one wide row each, its title and lead.
-        <ul aria-label={page.title} className="page-container">
-          {children.map((child) => {
-            const summary = child.lead || firstParagraph(child.content);
-            return (
-              <li
-                key={child.id}
-                className="grid gap-x-16 gap-y-4 border-t py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
-              >
-                <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl">
-                  <Link
-                    href={`${path}/${child.slug}` as never}
-                    className="decoration-primary-soft decoration-2 underline-offset-8 hover:underline"
-                  >
-                    {child.title}
-                  </Link>
-                </h2>
-                {summary ? (
-                  <p className="max-w-prose text-xl text-pretty text-muted-foreground lg:pt-2 3xl:text-2xl">
-                    {summary}
-                  </p>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+        // An overview's pages are its body: a door for each.
+        <section aria-label={page.title} className="border-t">
+          <div className="page-container py-20 sm:py-28">
+            <ChildDoors doors={doors} large />
+          </div>
+        </section>
       ) : children.length > 0 ? (
         <Part id="unterseiten-titel" title="Weiterlesen">
-          <ul className="grid gap-x-16 md:grid-cols-2">
-            {children.map((child) => {
-              const summary = child.lead || firstParagraph(child.content);
-              return (
-                <li key={child.id} className="border-t border-primary-soft/40 pt-6 pb-8">
-                  <h3 className="text-2xl font-medium tracking-tight text-balance 3xl:text-3xl">
-                    <Link
-                      href={`${path}/${child.slug}` as never}
-                      className="decoration-primary-soft decoration-2 underline-offset-8 hover:underline"
-                    >
-                      {child.title}
-                    </Link>
-                  </h3>
-                  {summary ? (
-                    <p className="mt-3 line-clamp-3 max-w-prose text-lg text-pretty text-muted-foreground">
-                      {summary}
-                    </p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+          <ChildDoors doors={doors} />
         </Part>
       ) : null}
 
