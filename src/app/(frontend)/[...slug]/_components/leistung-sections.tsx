@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Faq } from "@/components/site/faq";
 import type { LeistungSections as Sections, Projekt } from "@/cms/content/types";
 
-import { Part } from "./part";
+import { Part } from "@/components/site/part";
 
 // The service's own sections, under its lead and text (/leistungen/*), in the parts' rhythm. Only
 // the steps are numbered, because only they are a sequence. Every part leaves the page when the

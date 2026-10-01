@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
+import { Part } from "@/components/site/part";
 import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
 import { ServiceGlyph } from "@/components/site/service-glyphs";
@@ -24,7 +25,6 @@ import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 import { LeistungSections } from "./_components/leistung-sections";
-import { Part } from "./_components/part";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
