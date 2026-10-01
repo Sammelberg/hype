@@ -191,24 +191,56 @@ test("a second swipe while the first still glides on moves one more card", async
   expect(await current(page)).toBe("2");
 });
 
-test("a fast spin of the wheel rides on through several cards, and on past the last", async ({
+test("a fast spin rides on card by card, each coming to rest, and on past the last", async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
+  test.slow();
   await rideIn(page);
-  // A quick spin: notches of a Windows wheel as fast as they come.
-  for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 100);
-  await settle(() => trackX(page));
-  const moved = Number(await current(page));
-  expect(moved).toBeGreaterThan(1);
-  // A longer one carries on past the last card: the page scrolls on, as anywhere else.
-  await page.waitForTimeout(500);
-  const before = await scrollTop(page);
+  // Every frame's track position, from here on.
+  await section(page)
+    .locator("[data-track]")
+    .evaluate((el) => {
+      const w = window as unknown as { trackXs: { t: number; x: number }[] };
+      w.trackXs = [];
+      const read = (t: number) => {
+        w.trackXs.push({ t, x: Math.round(new DOMMatrix(getComputedStyle(el).transform).m41) });
+        requestAnimationFrame(read);
+      };
+      requestAnimationFrame(read);
+    });
+  // A long quick spin: notches of a Windows wheel as fast as they come.
   for (let i = 0; i < 40; i++) await page.mouse.wheel(0, 100);
+  // Then hands off until the cards stand still (a card rides and rests about 1.25 s).
+  await page.waitForTimeout(1500);
+  await settle(() => trackX(page));
+
+  // The cards it went through, in order, each standing still in the middle for a while: none
+  // skipped, none passed by.
+  const offsets = await card(page, 0).evaluate((first: HTMLElement) =>
+    [...first.parentElement!.children].map((c) => (c as HTMLElement).offsetLeft - first.offsetLeft),
+  );
+  const samples = await page.evaluate(
+    () => (window as unknown as { trackXs: { t: number; x: number }[] }).trackXs,
+  );
+  const reached = offsets
+    .map((offset, i) => ({ i, at: samples.filter((s) => Math.abs(s.x + offset) <= 1) }))
+    .filter(({ at }) => at.length > 0);
+  const furthest = reached.at(-1)!.i;
+  expect(furthest).toBeGreaterThan(1);
+  expect(reached.map(({ i }) => i)).toEqual([...Array(furthest + 1).keys()]);
+  // (The first stood there before the spin began.)
+  for (const { i, at } of reached.slice(1))
+    expect(at.at(-1)!.t - at[0]!.t, `card ${i} rested`).toBeGreaterThanOrEqual(250);
+
+  // Turning on carries the page on past the last card, as anywhere else.
+  const before = await scrollTop(page);
+  for (let i = 0; i < 150 && (await section(page).getAttribute("data-held")) !== null; i++)
+    await page.mouse.wheel(0, 100);
   await expect(section(page)).not.toHaveAttribute("data-held");
   expect(await current(page)).toBe("4");
-  expect(await settle(() => scrollTop(page))).toBeGreaterThan(before + 200);
+  expect(await settle(() => scrollTop(page))).toBeGreaterThan(before);
 });
 
 test("a fast spin from the top runs on through the cards instead of stopping dead", async ({

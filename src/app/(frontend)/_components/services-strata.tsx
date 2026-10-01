@@ -149,6 +149,11 @@ const RIDE =
 /** One card to the next: long enough to read as travel, soft at both ends. */
 const SLIDE = { duration: 0.95, ease: "power3.inOut" };
 /**
+ * Every card comes to rest in the middle for at least this long (s), however fast the hand turns
+ * (the owner's call, 2026-10-01: no card is skipped). Input meanwhile waits: one step, not more.
+ */
+const REST = 0.3;
+/**
  * Input within this long of the one before is the same gesture: the notches of one turn of the
  * wheel (a hand spins several at once), a trackpad's glide. A new card needs a pause.
  */
@@ -351,18 +356,41 @@ export function ServicesStrata({
         let slide: gsap.core.Tween | null = null;
         let lastInput = Number.NEGATIVE_INFINITY;
 
+        // Steps asked for while a card still rides or rests, taken one by one, each card resting:
+        // every deliberate turn counts, a hand that keeps turning adds at most one.
+        let pending: { dir: 1 | -1; delta: number }[] = [];
+        let rest: gsap.core.Tween | null = null;
+        const busy = () => slide !== null || rest !== null;
+        const settleDown = () => {
+          pending = [];
+          rest?.kill();
+          rest = null;
+        };
+
         const slideTo = (to: number, instant = false) => {
           index = gsap.utils.clamp(0, last, to);
           show(index);
           slide?.kill();
+          rest?.kill();
+          rest = null;
+          if (instant) {
+            slide = null;
+            gsap.set(track, { x: -offset(index) });
+            sync();
+            return;
+          }
           slide = gsap.to(track, {
             x: -offset(index),
             ...SLIDE,
-            duration: instant ? 0 : SLIDE.duration,
             onUpdate: sync,
             onComplete: () => {
               slide = null;
               sync();
+              rest = gsap.delayedCall(REST, () => {
+                rest = null;
+                const next = pending.shift();
+                if (next) move(next.dir, next.delta);
+              });
             },
           });
         };
@@ -411,6 +439,7 @@ export function ServicesStrata({
         });
 
         const release = () => {
+          settleDown();
           setMode("free");
           section.removeAttribute("data-held");
           observer.disable();
@@ -442,8 +471,15 @@ export function ServicesStrata({
           scrollPageBy(distance);
         };
         // `delta`: the step of the wheel (signed, down positive), passed on when the page leaves.
-        const move = (dir: 1 | -1, delta: number) => {
+        // `rushing`: a step of a hand that keeps turning, which never queues behind another.
+        const move = (dir: 1 | -1, delta: number, rushing = false) => {
           if (mode !== "docked" && mode !== "docking") return;
+          // A card on its way or resting: the step waits its turn.
+          if (busy()) {
+            if (pending.length < last && !(rushing && pending.length > 0))
+              pending.push({ dir, delta });
+            return;
+          }
           const next = index + dir;
           if (next < 0 || next > last) return leave(delta);
           // While the page comes to rest one card may already move on.
@@ -472,7 +508,9 @@ export function ServicesStrata({
           const pause = gap > QUIET_MS;
           const go = pause
             ? !(gap < TAIL_MS && size < lastSize)
-            : size > floor * 2 + 4 && now - lastMove > QUIET_MS;
+            : // A new push only after the last one had nearly died away (a trackpad's tail): a
+              // wheel's notches stay as large as the first, merged ones (a busy frame) larger.
+              size > floor * 2 + 4 && floor < unit / 3 && now - lastMove > QUIET_MS;
           const sustained = !pause && size >= 20 && size >= lastSize;
           floor = pause || go ? size : Math.min(floor, size);
           lastInput = now;
@@ -490,7 +528,7 @@ export function ServicesStrata({
           if (rush < unit * RUSH) return;
           rush = 0;
           lastMove = now;
-          move(dir, dir * size);
+          move(dir, dir * size, true);
         };
 
         // Wheel and touch while the stage holds the page (off otherwise). wheelSpeed -1: turning
@@ -500,6 +538,9 @@ export function ServicesStrata({
           type: "wheel,touch",
           wheelSpeed: -1,
           tolerance: 8,
+          // Every event on its own: a frame's events summed would make a tapering glide look
+          // like a steady turn, and a turn of single notches like a new push.
+          debounce: false,
           preventDefault: true,
           onUp: (self) => gesture(1, Math.abs(self.deltaY)),
           onDown: (self) => gesture(-1, Math.abs(self.deltaY)),
@@ -568,6 +609,7 @@ export function ServicesStrata({
         // there yet (asked for by a click, so no pull).
         jump.current = (to) => {
           if (mode === "free") dock();
+          settleDown();
           slideTo(to);
         };
 
@@ -593,6 +635,7 @@ export function ServicesStrata({
           watcher.kill();
           ends.kill();
           slide?.kill();
+          rest?.kill();
           if (mode !== "free") releasePage();
           gsap.set(track, { clearProps: "x" });
           section.removeAttribute("data-ride");
