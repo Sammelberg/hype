@@ -13,7 +13,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { pruefeRechnung } from "@/buero/logik/pflichtangaben";
 import { type Firma, FirmaSchema } from "@/buero/logik/typen";
 import { saveFirmaAction } from "../../../_actions/buero";
-import { SchalterFeld, ZahlFeld } from "../../../_components/buero/felder";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { DATEV_VORGABE } from "@/buero/logik/export";
+import { AuswahlFeld, SchalterFeld, ZahlFeld } from "../../../_components/buero/felder";
 import { EditorShell } from "../../../_components/editor-shell";
 import {
   SectionCard,
@@ -29,6 +32,8 @@ const SECTIONS: SectionInfo[] = [
   { id: "bank", title: "Bankverbindung" },
   { id: "kontakt", title: "Kontakt für Rechnungen" },
   { id: "rechnungen", title: "Rechnungen" },
+  { id: "mahnungen", title: "Mahnungen" },
+  { id: "datev", title: "Steuerberater" },
 ];
 
 // A customer with everything filled, so the check below speaks only about the issuer.
@@ -55,7 +60,7 @@ export function FirmaEditor({ firma, gespeichert }: { firma: Firma; gespeichert:
     defaultValues: firma,
     mode: "onBlur",
   });
-  const { control, handleSubmit, formState, reset } = form;
+  const { control, handleSubmit, formState, reset, setValue } = form;
   const werte = useWatch({ control }) as Firma;
   const pruefung = pruefeRechnung({
     firma: werte,
@@ -85,7 +90,11 @@ export function FirmaEditor({ firma, gespeichert }: { firma: Firma; gespeichert:
           ? "kontakt"
           : ["zahlungszielTage", "fusszeile"].includes(k)
             ? "rechnungen"
-            : "unternehmen",
+            : k === "basiszinssatz"
+              ? "mahnungen"
+              : k === "datev"
+                ? "datev"
+                : "unternehmen",
   );
 
   return (
@@ -231,6 +240,122 @@ export function FirmaEditor({ firma, gespeichert }: { firma: Firma; gespeichert:
               rows={2}
               description="Etwa ein Hinweis auf Ihre Website. Pflichtangaben stehen dort schon."
             />
+          </SectionCard>
+
+          <SectionCard
+            section={SECTIONS[5]!}
+            description="Verzugszinsen rechnen mit dem Basiszinssatz nach §247 BGB. Die Bundesbank veröffentlicht ihn zum 1. Januar und 1. Juli; tragen Sie den jeweils geltenden ein."
+          >
+            <div className="max-w-56">
+              <ZahlFeld
+                control={control}
+                name="basiszinssatz"
+                label="Basiszinssatz"
+                einheit="%"
+                description="Leer: Mahnungen schlagen keine Zinsen vor."
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            section={SECTIONS[6]!}
+            description="Für den DATEV-Buchungsstapel unter Steuerberater. Die Nummern und Konten nennt Ihnen Ihre Kanzlei."
+          >
+            <Field orientation="horizontal" className="items-start">
+              <Switch
+                id="datev-an"
+                checked={Boolean(werte.datev)}
+                onCheckedChange={(an) =>
+                  setValue(
+                    "datev",
+                    an
+                      ? {
+                          beraternummer: 0,
+                          mandantennummer: 0,
+                          kontenrahmen: "03",
+                          sachkontenlaenge: 4,
+                          ...DATEV_VORGABE["03"],
+                        }
+                      : null,
+                    { shouldDirty: true },
+                  )
+                }
+              />
+              <div className="flex flex-col gap-1">
+                <FieldLabel htmlFor="datev-an">DATEV-Export einrichten</FieldLabel>
+                <FieldDescription>
+                  Rechnungsausgangsbuch und Umsatzsteuer gibt es auch ohne.
+                </FieldDescription>
+              </div>
+            </Field>
+            {werte.datev ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <ZahlFeld
+                    control={control}
+                    name="datev.beraternummer"
+                    label="Beraternummer"
+                    leerIstNull={false}
+                  />
+                  <ZahlFeld
+                    control={control}
+                    name="datev.mandantennummer"
+                    label="Mandantennummer"
+                    leerIstNull={false}
+                  />
+                  <AuswahlFeld
+                    control={control}
+                    name="datev.kontenrahmen"
+                    label="Kontenrahmen"
+                    optionen={[
+                      { value: "03", label: "SKR 03" },
+                      { value: "04", label: "SKR 04" },
+                    ]}
+                    onAuswahl={(wert) => {
+                      const vorgabe = DATEV_VORGABE[wert === "04" ? "04" : "03"];
+                      for (const [k, v] of Object.entries(vorgabe))
+                        setValue(`datev.${k as keyof typeof vorgabe}`, v, { shouldDirty: true });
+                    }}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <ZahlFeld
+                    control={control}
+                    name="datev.debitor"
+                    label="Debitor"
+                    leerIstNull={false}
+                    description="Sammelkonto der Kunden."
+                  />
+                  <ZahlFeld
+                    control={control}
+                    name="datev.erloes19"
+                    label="Erlöse 19 %"
+                    leerIstNull={false}
+                  />
+                  <ZahlFeld
+                    control={control}
+                    name="datev.erloes7"
+                    label="Erlöse 7 %"
+                    leerIstNull={false}
+                  />
+                  <ZahlFeld
+                    control={control}
+                    name="datev.erloes0"
+                    label="Erlöse §19"
+                    leerIstNull={false}
+                  />
+                </div>
+                <div className="max-w-56">
+                  <ZahlFeld
+                    control={control}
+                    name="datev.sachkontenlaenge"
+                    label="Sachkontenlänge"
+                    einheit="Stellen"
+                    leerIstNull={false}
+                  />
+                </div>
+              </>
+            ) : null}
           </SectionCard>
         </EditorShell>
       </form>

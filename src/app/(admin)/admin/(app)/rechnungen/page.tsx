@@ -1,4 +1,4 @@
-import { BuildingIcon, PlusIcon, ReceiptIcon } from "lucide-react";
+import { BuildingIcon, ListChecksIcon, PlusIcon, ReceiptIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,12 +20,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { faelligeAboZeitraeume } from "@/buero/daten/abo";
 import { listRechnungen } from "@/buero/daten/rechnungen";
+import { RECHNUNGSARTEN } from "@/buero/logik/abrechnung";
 import { datumDe, heute } from "@/buero/logik/ablauf";
 import { centAusBetrag, euro, rechnungsSummen } from "@/buero/logik/geld";
 import { CardLink, cardLinkSurface } from "../../_components/card-link";
 import { RechnungStatus } from "../../_components/buero/status";
 import { PageShell } from "../../_components/page-shell";
+import { AboHinweis } from "./_components/abo-hinweis";
 
 export const metadata: Metadata = { title: "Rechnungen" };
 
@@ -36,8 +39,10 @@ const betrag = (r: Zeile) =>
 
 export default async function RechnungenPage() {
   await requireRole("admin");
-  const rechnungen = await listRechnungen();
+  const [rechnungen, abo] = await Promise.all([listRechnungen(), faelligeAboZeitraeume()]);
   const tag = heute();
+  const aboFaellig = abo.filter((a) => a.zeitraeume.length > 0);
+  const aboZeitraeume = aboFaellig.reduce((s, a) => s + a.zeitraeume.length, 0);
   const ueber = (r: Zeile) =>
     r.typ === "rechnung" && r.status === "gestellt" && Boolean(r.faelligAm && r.faelligAm < tag);
   const offen = rechnungen
@@ -73,6 +78,11 @@ export default async function RechnungenPage() {
       actions={
         <>
           <Button asChild variant="ghost" size="sm">
+            <Link href={"/admin/offene-posten" as never}>
+              <ListChecksIcon data-icon="inline-start" /> Offene Posten
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
             <Link href={"/admin/firma" as never}>
               <BuildingIcon data-icon="inline-start" /> Firmendaten
             </Link>
@@ -82,6 +92,9 @@ export default async function RechnungenPage() {
       }
       wide
     >
+      {aboZeitraeume > 0 ? (
+        <AboHinweis zeitraeume={aboZeitraeume} vertraege={aboFaellig.length} />
+      ) : null}
       {rechnungen.length === 0 ? (
         <Empty className="rise-in">
           <EmptyHeader>
@@ -117,7 +130,11 @@ export default async function RechnungenPage() {
                           <CardTitle className="truncate text-lg">
                             <CardLink href={`/admin/rechnungen/${r.id}`}>
                               {r.nummer ?? "Entwurf"}
-                              {r.typ === "storno" ? " (Storno)" : ""}
+                              {r.typ === "storno"
+                                ? " (Storno)"
+                                : r.art !== "normal"
+                                  ? ` · ${RECHNUNGSARTEN[r.art]}`
+                                  : ""}
                             </CardLink>
                           </CardTitle>
                           <CardDescription className="truncate">{r.kundeName}</CardDescription>

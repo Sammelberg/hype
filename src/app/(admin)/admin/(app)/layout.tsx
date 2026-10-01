@@ -8,6 +8,9 @@ import { listProjekte } from "@/cms/content/projekte";
 import { getSiteSettings } from "@/cms/content/site-settings";
 import { listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
+import { offenePosten } from "@/buero/daten/forderungen";
+import { zaehleFaelligeWiedervorlagen } from "@/buero/daten/historie";
+import { listAngebote } from "@/buero/daten/angebote";
 import { listRechnungen } from "@/buero/daten/rechnungen";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,7 +23,18 @@ import { CommandPalette, type PaletteEntry } from "../_components/command-palett
 export default async function AdminAppLayout({ children }: { children: ReactNode }) {
   const user = await requireUser();
   const admin = isAdmin(user);
-  const [settings, unread, pages, projekte, kunden, auftraege, rechnungen] = await Promise.all([
+  const [
+    settings,
+    unread,
+    pages,
+    projekte,
+    kunden,
+    auftraege,
+    rechnungen,
+    angebote,
+    faelligeWv,
+    posten,
+  ] = await Promise.all([
     getSiteSettings(),
     countUnreadSubmissions(),
     listPages(),
@@ -29,7 +43,16 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
     admin ? listKundenAuswahl() : [],
     admin ? listAuftraegeAuswahl() : [],
     admin ? listRechnungen() : [],
+    admin ? listAngebote() : [],
+    admin ? zaehleFaelligeWiedervorlagen() : 0,
+    admin ? offenePosten() : [],
   ]);
+  const ueberfaellig = posten.filter((p) => p.tageUeberfaellig > 0).length;
+  const badges = {
+    "/admin/anfragen": { anzahl: unread, label: `${unread} ungelesen` },
+    "/admin/wiedervorlagen": { anzahl: faelligeWv, label: `${faelligeWv} fällig` },
+    "/admin/offene-posten": { anzahl: ueberfaellig, label: `${ueberfaellig} überfällig` },
+  };
   const entries: PaletteEntry[] = [
     ...kunden.map((k) => ({
       label: k.name,
@@ -42,6 +65,12 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
       href: `/admin/auftraege/${a.id}`,
       group: "Aufträge",
       keywords: a.nummer,
+    })),
+    ...angebote.map((a) => ({
+      label: a.titel,
+      href: `/admin/angebote/${a.id}`,
+      group: "Angebote",
+      keywords: `${a.nummer ?? ""} ${a.kundeName}`,
     })),
     ...rechnungen
       .filter((r) => r.nummer)
@@ -68,7 +97,7 @@ export default async function AdminAppLayout({ children }: { children: ReactNode
   return (
     <TooltipProvider delayDuration={300}>
       <SidebarProvider>
-        <AppSidebar siteName={settings?.siteName ?? "Website"} user={user} unread={unread} />
+        <AppSidebar siteName={settings?.siteName ?? "Website"} user={user} badges={badges} />
         <SidebarInset>
           <header className="flex h-14 shrink-0 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" aria-label="Navigation ein- oder ausblenden" />

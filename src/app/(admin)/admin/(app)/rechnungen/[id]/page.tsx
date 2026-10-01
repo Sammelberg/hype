@@ -6,14 +6,23 @@ import { requireRole } from "@/cms/auth/guard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { getFirma } from "@/buero/daten/firma";
+import { forderungVon, offenVon } from "@/buero/daten/forderungen";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
-import { ausgabeDaten, getRechnung } from "@/buero/daten/rechnungen";
+import {
+  abschlaegeJeAuftrag,
+  abzuegeVon,
+  ausgabeDaten,
+  getRechnung,
+} from "@/buero/daten/rechnungen";
 import { listVertraegeAuswahl } from "@/buero/daten/vertraege";
 import { datumDe, heute } from "@/buero/logik/ablauf";
+import { naechsteMahnstufe } from "@/buero/logik/forderung";
+import { centAusBetrag } from "@/buero/logik/geld";
 import { pruefeRechnung } from "@/buero/logik/pflichtangaben";
 import { RechnungsDokument } from "../../../_components/buero/rechnungs-dokument";
 import { RechnungStatus } from "../../../_components/buero/status";
 import { EditorShell } from "../../../_components/editor-shell";
+import { Forderung } from "../_components/forderung";
 import { RechnungAktionen } from "../_components/rechnung-aktionen";
 import { RechnungEditor } from "../_components/rechnung-editor";
 
@@ -34,11 +43,12 @@ export default async function RechnungPage({ params }: Props) {
 
   // A draft is edited; an issued invoice is shown as it was issued.
   if (r.status === "entwurf") {
-    const [{ firma }, kunden, auftraege, vertraege] = await Promise.all([
+    const [{ firma }, kunden, auftraege, vertraege, abschlaege] = await Promise.all([
       getFirma(),
       listKundenAuswahl(r.kundeId),
       listAuftraegeAuswahl(),
       listVertraegeAuswahl(),
+      abschlaegeJeAuftrag(),
     ]);
     return (
       <RechnungEditor
@@ -48,6 +58,7 @@ export default async function RechnungPage({ params }: Props) {
         kunden={kunden}
         auftraege={auftraege}
         vertraege={vertraege}
+        abschlaege={abschlaege}
         rechnung={{
           art: r.art,
           kundeId: r.kundeId,
@@ -73,6 +84,8 @@ export default async function RechnungPage({ params }: Props) {
     leistungBis: daten.leistungBis,
   });
   const tag = heute();
+  const forderung = await forderungVon(r.id);
+  const offen = offenVon(r, forderung.zahlungen);
   const ueberfaellig =
     r.typ === "rechnung" && r.status === "gestellt" && Boolean(r.faelligAm && r.faelligAm < tag);
   const zeilen = [
@@ -161,7 +174,6 @@ export default async function RechnungPage({ params }: Props) {
           status={r.status as "gestellt" | "bezahlt" | "storniert"}
           typ={r.typ}
           xrechnungMoeglich={xrechnung.length === 0}
-          heute={tag}
         />
       }
       asideAlways
@@ -188,6 +200,36 @@ export default async function RechnungPage({ params }: Props) {
               </dl>
             </CardContent>
           </Card>
+          {r.typ === "rechnung" && r.status !== "storniert" ? (
+            <Forderung
+              rechnungId={r.id}
+              nummer={daten.nummer}
+              brutto={centAusBetrag(r.summeBrutto)}
+              offen={offen}
+              zahlbar={r.status === "gestellt" || r.status === "bezahlt"}
+              mahnbar={
+                r.status === "gestellt" &&
+                offen > 0 &&
+                ueberfaellig &&
+                naechsteMahnstufe(forderung.mahnungen.map((m) => m.stufe)) !== null
+              }
+              zahlungen={forderung.zahlungen.map((z) => ({
+                id: z.id,
+                betrag: centAusBetrag(z.betrag),
+                am: z.am,
+                notiz: z.notiz,
+              }))}
+              mahnungen={forderung.mahnungen.map((m) => ({
+                id: m.id,
+                stufe: m.stufe,
+                am: m.am,
+                frist: m.frist,
+                gesamt: centAusBetrag(m.gesamt),
+              }))}
+              heute={tag}
+              faelligAm={r.faelligAm}
+            />
+          ) : null}
           <Card>
             <CardHeader>
               <CardTitle>E-Rechnung</CardTitle>
@@ -217,6 +259,8 @@ export default async function RechnungPage({ params }: Props) {
           daten={{
             ...daten,
             storno: r.typ === "storno",
+            art: r.art,
+            abzuege: abzuegeVon(r),
             korrigiert: found.korrigiert?.nummer ?? null,
             kundennummer: found.kunde.nummer,
             einleitung: r.einleitung,

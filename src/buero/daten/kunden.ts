@@ -2,7 +2,7 @@
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../../cms/db/client";
-import { auftraege, kunden, rechnungen, vertraege } from "../db/schema";
+import { angebote, auftraege, kunden, rechnungen, vertraege } from "../db/schema";
 import type { Empfaenger } from "../logik/typen";
 import { type KundeInput, KundeSchema } from "../logik/typen";
 import { BueroError, naechsteNummer } from "./basis";
@@ -77,7 +77,7 @@ export async function listKunden({ archiviert = false } = {}): Promise<KundeZeil
 export async function getKunde(id: number) {
   const [kunde] = await db.select().from(kunden).where(eq(kunden.id, id)).limit(1);
   if (!kunde) return null;
-  const [a, v, r] = await Promise.all([
+  const [a, v, r, an] = await Promise.all([
     db.select().from(auftraege).where(eq(auftraege.kundeId, id)).orderBy(desc(auftraege.createdAt)),
     db.select().from(vertraege).where(eq(vertraege.kundeId, id)).orderBy(desc(vertraege.beginn)),
     db
@@ -85,8 +85,9 @@ export async function getKunde(id: number) {
       .from(rechnungen)
       .where(eq(rechnungen.kundeId, id))
       .orderBy(desc(rechnungen.createdAt)),
+    db.select().from(angebote).where(eq(angebote.kundeId, id)).orderBy(desc(angebote.updatedAt)),
   ]);
-  return { kunde, auftraege: a, vertraege: v, rechnungen: r };
+  return { kunde, auftraege: a, vertraege: v, rechnungen: r, angebote: an };
 }
 
 /** A customer as the pickers offer it: enough to recognise, address, and invoice. */
@@ -174,9 +175,9 @@ export async function archiveKunde(id: number, archivieren: boolean) {
 export async function deleteKunde(id: number) {
   const k = await getKunde(id);
   if (!k) return;
-  if (k.auftraege.length || k.vertraege.length || k.rechnungen.length)
+  if (k.auftraege.length || k.vertraege.length || k.rechnungen.length || k.angebote.length)
     throw new BueroError(
-      "Kunden mit Aufträgen, Verträgen oder Rechnungen werden archiviert, nicht gelöscht.",
+      "Kunden mit Angeboten, Aufträgen, Verträgen oder Rechnungen werden archiviert, nicht gelöscht.",
     );
   await db.delete(kunden).where(eq(kunden.id, id));
 }

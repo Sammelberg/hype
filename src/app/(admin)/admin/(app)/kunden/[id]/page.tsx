@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/cms/auth/guard";
+import { listWiedervorlagen, zeitleiste } from "@/buero/daten/historie";
 import { getKunde, kundenName } from "@/buero/daten/kunden";
+import { heute } from "@/buero/logik/ablauf";
 import { KundenEditor } from "../_components/kunden-editor";
 import { KundenUebersicht } from "../_components/kunden-uebersicht";
 
@@ -20,6 +22,10 @@ export default async function KundePage({ params }: Props) {
   const found = await getKunde(id);
   if (!found) notFound();
   const k = found.kunde;
+  const [ereignisse, wiedervorlagen] = await Promise.all([
+    zeitleiste(id),
+    listWiedervorlagen({ kundeId: id }),
+  ]);
   return (
     <KundenEditor
       key={k.updatedAt.getTime()}
@@ -46,6 +52,18 @@ export default async function KundePage({ params }: Props) {
       uebersicht={
         <KundenUebersicht
           kundeId={k.id}
+          heute={heute()}
+          ereignisse={ereignisse}
+          wiedervorlagen={wiedervorlagen.map((w) => ({
+            id: w.id,
+            titel: w.titel,
+            notiz: w.notiz,
+            faelligAm: w.faelligAm,
+            erledigt: false,
+            kundeId: w.kundeId,
+            kundeName: w.kundeName,
+          }))}
+          angebote={found.angebote}
           auftraege={found.auftraege}
           vertraege={found.vertraege}
           rechnungen={found.rechnungen}

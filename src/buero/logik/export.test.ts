@@ -4,9 +4,11 @@ import {
   DATEV_VORGABE,
   datevBuchungsstapel,
   journalCsv,
+  letztesQuartal,
   type JournalRechnung,
   ustCsv,
   ustNachMonat,
+  zeitraum,
 } from "./export";
 
 const pos = (einzelpreis: number, ustSatz: 19 | 7, menge = 1) => ({
@@ -173,5 +175,25 @@ describe("datevBuchungsstapel", () => {
     }).split("\r\n");
     expect(zeilen[2]!.startsWith('1190,00;"H";"EUR";;;"";10000;8400;')).toBe(true);
     expect(zeilen[3]!.startsWith('300,00;"S";"EUR";;;"";10000;8195;')).toBe(true);
+  });
+});
+
+describe("zeitraum", () => {
+  it("reads a month, a quarter and a year", () => {
+    expect(zeitraum("2026-02")).toEqual({
+      schluessel: "2026-02",
+      name: "Februar 2026",
+      von: "2026-02-01",
+      bis: "2026-02-28",
+    });
+    expect(zeitraum("2026-Q3")).toMatchObject({ von: "2026-07-01", bis: "2026-09-30" });
+    expect(zeitraum("2028")).toMatchObject({ von: "2028-01-01", bis: "2028-12-31" });
+    expect(zeitraum("2026-13")).toBeNull();
+    expect(zeitraum("irgendwas")).toBeNull();
+  });
+
+  it("proposes the quarter before today's", () => {
+    expect(letztesQuartal("2026-10-01")).toBe("2026-Q3");
+    expect(letztesQuartal("2027-02-10")).toBe("2026-Q4");
   });
 });

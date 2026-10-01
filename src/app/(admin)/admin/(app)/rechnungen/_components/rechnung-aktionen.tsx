@@ -1,8 +1,7 @@
 "use client";
 
-import { BanknoteIcon, FileCodeIcon, PrinterIcon, Undo2Icon } from "lucide-react";
+import { FileCodeIcon, PrinterIcon, Undo2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -17,47 +16,24 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { bezahltAction, stornoAction } from "../../../_actions/buero";
+import { stornoAction } from "../../../_actions/buero";
 
-// What happens to an issued invoice: printed, sent as E-Rechnung, paid, or cancelled by a Storno.
+// What happens to an issued invoice: printed, sent as E-Rechnung, or cancelled by a Storno. Payments
+// and reminders sit beside it (forderung.tsx).
 export function RechnungAktionen({
   id,
   nummer,
   status,
   typ,
   xrechnungMoeglich,
-  heute,
 }: {
   id: number;
   nummer: string;
   status: "gestellt" | "bezahlt" | "storniert";
   typ: "rechnung" | "storno";
   xrechnungMoeglich: boolean;
-  heute: string;
 }) {
   const router = useRouter();
-  const [am, setAm] = useState(heute);
-  const [offen, setOffen] = useState(false);
-
-  const bezahlt = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = await bezahltAction({ id, am });
-    if (result.serverError) return void toast.error(result.serverError.message);
-    setOffen(false);
-    toast.success(`Rechnung ${nummer} ist bezahlt.`);
-    router.refresh();
-  };
 
   const storno = async () => {
     const result = await stornoAction({ id });
@@ -79,37 +55,6 @@ export function RechnungAktionen({
             <FileCodeIcon data-icon="inline-start" /> XRechnung laden
           </a>
         </Button>
-      ) : null}
-      {status === "gestellt" && typ === "rechnung" ? (
-        <Dialog open={offen} onOpenChange={setOffen}>
-          <DialogTrigger asChild>
-            <Button type="button" size="sm">
-              <BanknoteIcon data-icon="inline-start" /> Als bezahlt markieren
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={bezahlt} className="flex flex-col gap-6">
-              <DialogHeader>
-                <DialogTitle>Zahlung erfassen</DialogTitle>
-                <DialogDescription>An welchem Tag ist das Geld eingegangen?</DialogDescription>
-              </DialogHeader>
-              <Field>
-                <FieldLabel htmlFor="bezahlt-am">Eingang am</FieldLabel>
-                <Input
-                  id="bezahlt-am"
-                  type="date"
-                  value={am}
-                  max={heute}
-                  required
-                  onChange={(e) => setAm(e.target.value)}
-                />
-              </Field>
-              <DialogFooter>
-                <Button type="submit">Als bezahlt markieren</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
       ) : null}
       {status !== "storniert" && typ === "rechnung" ? (
         <AlertDialog>

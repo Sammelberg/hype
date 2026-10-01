@@ -217,8 +217,10 @@ export async function getMahnung(id: number) {
     .innerJoin(rechnungen, eq(rechnungen.id, mahnungen.rechnungId))
     .where(eq(mahnungen.id, id));
   if (!row) return null;
-  const { zahlungen: z } = await forderungVon(row.rechnung.id);
-  return { ...row, zahlungen: z };
+  const { zahlungen: z, mahnungen: alle } = await forderungVon(row.rechnung.id);
+  // The step before, which the letter refers to.
+  const vorige = alle.filter((x) => x.stufe < row.mahnung.stufe).at(-1) ?? null;
+  return { ...row, zahlungen: z, vorigeAm: vorige?.am ?? null };
 }
 
 export type OffenerPosten = {

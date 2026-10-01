@@ -1,3 +1,4 @@
+import { RECHNUNGSARTEN, type Rechnungsart, schlussBetrag } from "@/buero/logik/abrechnung";
 import { datumDe } from "@/buero/logik/ablauf";
 import { euro, positionNetto, rechnungsSummen } from "@/buero/logik/geld";
 import { EINHEITEN, type Einheit, type Empfaenger, type Firma } from "@/buero/logik/typen";
@@ -5,7 +6,7 @@ import { KLEINUNTERNEHMER_HINWEIS } from "@/buero/logik/xrechnung";
 import { cn } from "@/lib/utils";
 
 // The invoice as a sheet of paper (DIN 5008 order): the same component shows a draft live beside
-// its form and prints an issued invoice. It reads only its props — the numbers come from
+// its form and prints an issued invoice — and, with `angebot`, an offer. It reads only its props — the numbers come from
 // geld.ts, the same ones the invoice stores and the XRechnung carries.
 export type DokumentDaten = {
   nummer: string | null;
@@ -28,6 +29,11 @@ export type DokumentDaten = {
     einzelpreis: number;
     ustSatz: number;
   }[];
+  art?: Rechnungsart;
+  /** A final invoice: the invoices on account it deducts, gross in cents. */
+  abzuege?: { nummer: string; brutto: number }[];
+  /** An offer instead of an invoice: valid until this day (or open). */
+  angebot?: { gueltigBis: string | null };
 };
 
 const menge = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 3 });
@@ -52,13 +58,28 @@ export function RechnungsDokument({
     daten.leistungVon && daten.leistungBis && daten.leistungVon !== daten.leistungBis
       ? `${d(daten.leistungVon)} bis ${d(daten.leistungBis)}`
       : d(daten.leistungVon ?? daten.leistungBis);
+  const angebot = daten.angebot;
+  const abzuege = daten.abzuege ?? [];
+  const { zahlbetrag } = schlussBetrag(
+    summen.brutto,
+    abzuege.map((a) => a.brutto),
+  );
+  const titel = angebot
+    ? "Angebot"
+    : daten.storno
+      ? "Rechnungskorrektur (Storno)"
+      : daten.art && daten.art !== "abo"
+        ? RECHNUNGSARTEN[daten.art]
+        : "Rechnung";
   const absender = [v.name, v.strasse, [v.plz, v.ort].filter(Boolean).join(" ")]
     .filter(Boolean)
     .join(" · ");
 
   return (
     <article
-      aria-label={daten.nummer ? `Rechnung ${daten.nummer}` : "Rechnungsentwurf"}
+      aria-label={
+        daten.nummer ? `${titel} ${daten.nummer}` : angebot ? "Angebotsentwurf" : "Rechnungsentwurf"
+      }
       data-rechnungsblatt=""
       className={cn(
         "mx-auto flex w-full max-w-[210mm] flex-col gap-8 bg-white p-[12mm] text-[10pt] leading-snug text-zinc-900 shadow-sm",
@@ -85,18 +106,35 @@ export function RechnungsDokument({
         <div className="text-right">
           <p className="text-[13pt] font-semibold">{v.name}</p>
           <dl className="mt-3 grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-left text-[9pt]">
-            <dt className="text-zinc-500">Rechnungsnummer</dt>
+            <dt className="text-zinc-500">{angebot ? "Angebotsnummer" : "Rechnungsnummer"}</dt>
             <dd className="font-medium">{daten.nummer ?? "Entwurf"}</dd>
-            <dt className="text-zinc-500">Rechnungsdatum</dt>
-            <dd>{daten.ausgestelltAm ? d(daten.ausgestelltAm) : "beim Stellen"}</dd>
+            <dt className="text-zinc-500">{angebot ? "Datum" : "Rechnungsdatum"}</dt>
+            <dd>
+              {daten.ausgestelltAm
+                ? d(daten.ausgestelltAm)
+                : angebot
+                  ? "beim Versenden"
+                  : "beim Stellen"}
+            </dd>
             {daten.kundennummer ? (
               <>
                 <dt className="text-zinc-500">Kundennummer</dt>
                 <dd>{daten.kundennummer}</dd>
               </>
             ) : null}
-            <dt className="text-zinc-500">Leistung</dt>
-            <dd>{zeitraum}</dd>
+            {angebot ? (
+              angebot.gueltigBis ? (
+                <>
+                  <dt className="text-zinc-500">Gültig bis</dt>
+                  <dd>{d(angebot.gueltigBis)}</dd>
+                </>
+              ) : null
+            ) : (
+              <>
+                <dt className="text-zinc-500">Leistung</dt>
+                <dd>{zeitraum}</dd>
+              </>
+            )}
             {e?.ustId ? (
               <>
                 <dt className="text-zinc-500">Ihre USt-IdNr</dt>
@@ -109,7 +147,7 @@ export function RechnungsDokument({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-[14pt] font-semibold">
-          {daten.storno ? "Rechnungskorrektur (Storno)" : "Rechnung"}
+          {titel}
           {daten.nummer ? ` ${daten.nummer}` : ""}
         </h2>
         {daten.storno && daten.korrigiert ? (
@@ -184,15 +222,35 @@ export function RechnungsDokument({
         <dd className="border-t border-zinc-900 pt-1 text-right font-semibold">
           {euro(summen.brutto)}
         </dd>
+        {abzuege.map((a) => (
+          <div key={a.nummer} className="contents">
+            <dt>abzüglich Abschlagsrechnung {a.nummer}</dt>
+            <dd className="text-right">−{euro(a.brutto)}</dd>
+          </div>
+        ))}
+        {abzuege.length > 0 ? (
+          <>
+            <dt className="border-t border-zinc-900 pt-1 font-semibold">Zahlbetrag</dt>
+            <dd className="border-t border-zinc-900 pt-1 text-right font-semibold">
+              {euro(zahlbetrag)}
+            </dd>
+          </>
+        ) : null}
       </dl>
 
       <div className="flex flex-col gap-2">
         {daten.kleinunternehmer ? <p>{KLEINUNTERNEHMER_HINWEIS}</p> : null}
-        {daten.storno ? (
+        {angebot ? (
+          <p>
+            {angebot.gueltigBis
+              ? `An dieses Angebot halten wir uns bis zum ${d(angebot.gueltigBis)} gebunden.`
+              : "Wir freuen uns auf Ihre Zusage."}
+          </p>
+        ) : daten.storno ? (
           <p>Der Betrag wird mit der ursprünglichen Rechnung verrechnet oder erstattet.</p>
         ) : (
           <p>
-            Bitte überweisen Sie den Gesamtbetrag
+            Bitte überweisen Sie {abzuege.length > 0 ? "den Zahlbetrag" : "den Gesamtbetrag"}
             {daten.faelligAm
               ? ` bis zum ${d(daten.faelligAm)}`
               : " innerhalb des Zahlungsziels"}{" "}

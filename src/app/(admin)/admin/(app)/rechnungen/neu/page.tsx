@@ -4,6 +4,7 @@ import { requireRole } from "@/cms/auth/guard";
 import { getAuftrag, listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { getFirma } from "@/buero/daten/firma";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
+import { abschlaegeJeAuftrag } from "@/buero/daten/rechnungen";
 import { getVertrag, listVertraegeAuswahl } from "@/buero/daten/vertraege";
 import { heute } from "@/buero/logik/ablauf";
 import type { Position } from "@/buero/logik/typen";
@@ -22,12 +23,13 @@ export default async function NeueRechnungPage({
 }) {
   await requireRole("admin");
   const q = await searchParams;
-  const [{ firma }, auftraege, vertraege, vonAuftrag, vonVertrag] = await Promise.all([
+  const [{ firma }, auftraege, vertraege, vonAuftrag, vonVertrag, abschlaege] = await Promise.all([
     getFirma(),
     listAuftraegeAuswahl(),
     listVertraegeAuswahl(),
     q.auftrag ? getAuftrag(Number(q.auftrag)) : null,
     q.vertrag ? getVertrag(Number(q.vertrag)) : null,
+    abschlaegeJeAuftrag(),
   ]);
   const kundeId =
     vonAuftrag?.auftrag.kundeId ??
@@ -70,6 +72,7 @@ export default async function NeueRechnungPage({
       kunden={kunden}
       auftraege={auftraege}
       vertraege={vertraege}
+      abschlaege={abschlaege}
       rechnung={{
         art: "normal",
         kundeId: kunde?.id as number,

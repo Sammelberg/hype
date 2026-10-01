@@ -8,6 +8,7 @@ import {
   setAuftragStatus,
   updateAuftrag,
 } from "@/buero/daten/auftraege";
+import { bereiteAboRechnungenVor } from "@/buero/daten/abo";
 import { saveFirma } from "@/buero/daten/firma";
 import {
   archiveKunde,
@@ -19,7 +20,6 @@ import {
 import {
   createRechnung,
   deleteRechnung,
-  markiereBezahlt,
   saveRechnung,
   stelleRechnung,
   storniereRechnung,
@@ -44,7 +44,6 @@ import { adminActionClient } from "./client";
 // The office: customers, orders, contracts, invoices and the issuer's details. The repositories
 // in src/buero/daten enforce the rules (status steps, GoBD); these only validate and delegate.
 const id = z.object({ id: z.number().int().positive() });
-const tag = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const saveFirmaAction = adminActionClient
   .inputSchema(FirmaSchema)
@@ -119,9 +118,6 @@ export const stelleRechnungAction = adminActionClient
     );
     return { nummer };
   });
-export const bezahltAction = adminActionClient
-  .inputSchema(id.extend({ am: tag }))
-  .action(async ({ parsedInput }) => markiereBezahlt(parsedInput.id, parsedInput.am));
 export const stornoAction = adminActionClient
   .inputSchema(id)
   .action(async ({ parsedInput, ctx }) => ({
@@ -135,3 +131,11 @@ export const stornoAction = adminActionClient
       }),
     ),
   }));
+
+// Drafts for every contract period due (src/buero/daten/abo.ts); the owner issues them.
+export const aboRechnungenAction = adminActionClient.action(async ({ ctx }) =>
+  audited(
+    (tx) => bereiteAboRechnungenVor(undefined, tx),
+    (r) => ({ actor: ctx.user, action: "abo.vorbereitet", details: r }),
+  ),
+);

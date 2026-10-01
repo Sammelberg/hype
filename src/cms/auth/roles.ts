@@ -19,9 +19,13 @@ export const isAdmin = (user: { role: Role }) => user.role === "admin";
 // decides what the navigation shows.
 export const ADMIN_ONLY = [
   "/admin/kunden",
+  "/admin/angebote",
   "/admin/auftraege",
   "/admin/vertraege",
   "/admin/rechnungen",
+  "/admin/wiedervorlagen",
+  "/admin/offene-posten",
+  "/admin/steuerberater",
   "/admin/firma",
   "/admin/benutzer",
   "/admin/protokoll",

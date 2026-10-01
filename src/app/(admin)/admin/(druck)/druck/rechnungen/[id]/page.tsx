@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/cms/auth/guard";
-import { ausgabeDaten, getRechnung } from "@/buero/daten/rechnungen";
+import { abzuegeVon, ausgabeDaten, getRechnung } from "@/buero/daten/rechnungen";
 import { RechnungsDokument } from "../../../../_components/buero/rechnungs-dokument";
 import { DruckenKnopf } from "./drucken";
 
@@ -36,6 +36,8 @@ export default async function DruckRechnungPage({ params }: Props) {
         daten={{
           ...daten,
           storno: r.typ === "storno",
+          art: r.art,
+          abzuege: abzuegeVon(r),
           korrigiert: found.korrigiert?.nummer ?? null,
           kundennummer: found.kunde.nummer,
           einleitung: r.einleitung,

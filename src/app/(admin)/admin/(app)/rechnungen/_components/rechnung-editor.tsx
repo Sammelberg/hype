@@ -21,21 +21,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { euro, positionNetto } from "@/buero/logik/geld";
+import { RECHNUNGSARTEN } from "@/buero/logik/abrechnung";
+import { euro } from "@/buero/logik/geld";
 import { pruefeRechnung } from "@/buero/logik/pflichtangaben";
 import type { AuftragOption } from "@/buero/daten/auftraege";
 import type { KundeOption } from "@/buero/daten/kunden";
 import type { VertragOption } from "@/buero/daten/vertraege";
-import {
-  EINHEITEN,
-  type Firma,
-  type Position,
-  type RechnungInput,
-  RechnungSchema,
-} from "@/buero/logik/typen";
+import { type Firma, type Position, type RechnungInput, RechnungSchema } from "@/buero/logik/typen";
 import {
   createRechnungAction,
   deleteRechnungAction,
@@ -44,9 +39,13 @@ import {
 } from "../../../_actions/buero";
 import { AuswahlFeld, DatumFeld, ZahlFeld } from "../../../_components/buero/felder";
 import { KundenWahl } from "../../../_components/buero/kunden-wahl";
+import {
+  neuePositionsId,
+  PositionenListe,
+  positionenAusWerten,
+} from "../../../_components/buero/positionen";
 import { RechnungsDokument } from "../../../_components/buero/rechnungs-dokument";
 import { EditorShell } from "../../../_components/editor-shell";
-import { ItemCards } from "../../../_components/item-cards";
 import {
   SectionCard,
   SectionFocusProvider,
@@ -62,8 +61,6 @@ const SECTIONS: SectionInfo[] = [
   { id: "texte", title: "Texte" },
 ];
 
-const newId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-
 // A draft invoice: the fields on the left, the invoice as it will look on the right, and what
 // is still missing before it can be issued. Issuing saves what is on screen and freezes it.
 export function RechnungEditor({
@@ -73,6 +70,7 @@ export function RechnungEditor({
   kunden,
   auftraege,
   vertraege,
+  abschlaege,
 }: {
   id: number | null;
   rechnung: RechnungInput;
@@ -80,6 +78,8 @@ export function RechnungEditor({
   kunden: KundeOption[];
   auftraege: AuftragOption[];
   vertraege: VertragOption[];
+  /** Per order: its invoices on account issued so far, gross in cents. */
+  abschlaege: Record<number, { nummer: string; brutto: number }[]>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<"speichern" | "stellen" | null>(null);
@@ -91,13 +91,10 @@ export function RechnungEditor({
   });
   const { control, handleSubmit, formState, reset, getValues, setValue } = form;
   const werte = useWatch({ control }) as Partial<RechnungInput>;
-  const positionen = (werte.positionen ?? []).map((p) => ({
-    bezeichnung: p?.bezeichnung ?? "",
-    menge: Number(p?.menge ?? 0),
-    einheit: p?.einheit ?? "HUR",
-    einzelpreis: Number(p?.einzelpreis ?? 0),
-    ustSatz: Number(p?.ustSatz ?? 19),
-  }));
+  const positionen = positionenAusWerten(werte.positionen);
+  const art = werte.art ?? "normal";
+  // A final invoice deducts the order's invoices on account issued so far (frozen when it is issued).
+  const abzuege = art === "schluss" && werte.auftragId ? (abschlaege[werte.auftragId] ?? []) : [];
   const kunde = kundenListe.find((k) => k.id === werte.kundeId) ?? null;
   const auftrag = auftraege.find((a) => a.id === werte.auftragId) ?? null;
   const vertrag = vertraege.find((v) => v.id === werte.vertragId) ?? null;
@@ -124,7 +121,7 @@ export function RechnungEditor({
   const uebernehmen = (neu: Omit<Position, "id">, von?: string | null, bis?: string | null) => {
     const jetzt = getValues("positionen") ?? [];
     const leer = jetzt.length === 1 && !jetzt[0]?.bezeichnung && !Number(jetzt[0]?.einzelpreis);
-    const position = { id: newId(), ...neu };
+    const position = { id: neuePositionsId(), ...neu };
     setValue("positionen", leer ? [position] : [...jetzt, position], dirty);
     if (von && !getValues("leistungVon")) setValue("leistungVon", von, dirty);
     if (bis && !getValues("leistungBis")) setValue("leistungBis", bis, dirty);
@@ -203,7 +200,9 @@ export function RechnungEditor({
         <EditorShell
           backHref="/admin/rechnungen"
           backLabel="Rechnungen"
-          title={id ? "Rechnungsentwurf" : "Neue Rechnung"}
+          title={
+            id ? `${art === "normal" ? "Rechnung" : RECHNUNGSARTEN[art]}: Entwurf` : "Neue Rechnung"
+          }
           nav={<SectionIndex sections={SECTIONS} invalid={invalid} />}
           onDelete={id ? loeschen : undefined}
           deleteLabel="Entwurf löschen"
@@ -330,6 +329,8 @@ export function RechnungEditor({
                     einleitung: werte.einleitung ?? null,
                     schlusstext: werte.schlusstext ?? null,
                     positionen,
+                    art,
+                    abzuege,
                   }}
                 />
               </section>
@@ -340,6 +341,46 @@ export function RechnungEditor({
             section={SECTIONS[0]!}
             description="An wen die Rechnung geht und wozu sie gehört."
           >
+            {art === "abo" ? (
+              <p className="text-sm text-muted-foreground">
+                Laufende Rechnung aus dem Vertrag, für den Zeitraum unter „Leistung und Zahlung“.
+              </p>
+            ) : (
+              <Controller
+                control={control}
+                name="art"
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>Art der Rechnung</FieldLabel>
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size="sm"
+                      value={field.value}
+                      onValueChange={(v) => v && field.onChange(v)}
+                      aria-label="Art der Rechnung"
+                      className="self-start"
+                    >
+                      {(["normal", "abschlag", "schluss"] as const).map((a) => (
+                        <ToggleGroupItem key={a} value={a}>
+                          {RECHNUNGSARTEN[a]}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                    {art !== "normal" ? (
+                      <FieldDescription>
+                        {art === "abschlag"
+                          ? "Ein Teil des Auftrags vorab; die Schlussrechnung zieht ihn wieder ab."
+                          : abzuege.length > 0
+                            ? `Der ganze Auftrag; abgezogen werden ${abzuege.map((x) => `${x.nummer} (${euro(x.brutto)})`).join(", ")}.`
+                            : "Der ganze Auftrag; gestellte Abschlagsrechnungen zum Auftrag werden abgezogen."}
+                        {werte.auftragId ? "" : " Wählen Sie dazu den Auftrag."}
+                      </FieldDescription>
+                    ) : null}
+                  </Field>
+                )}
+              />
+            )}
             <KundenWahl
               control={control}
               name="kundeId"
@@ -425,92 +466,11 @@ export function RechnungEditor({
                 : "Menge und Art jeder Leistung; die Umsatzsteuer wird je Satz einmal berechnet."
             }
           >
-            <ItemCards
+            <PositionenListe
               control={control}
-              name="positionen"
-              itemLabel={(i) => positionen[i]?.bezeichnung || `Position ${i + 1}`}
-              addLabel="Position hinzufügen"
-              min={1}
-              // A short invoice shows its positions open; an empty one always.
-              anfangsOffen={(i) =>
-                rechnung.positionen.length <= 3 || !rechnung.positionen[i]?.bezeichnung
-              }
-              summary={(i) => (
-                <span className="flex min-w-0 items-baseline justify-between gap-3">
-                  <span className="truncate font-medium">
-                    {positionen[i]?.bezeichnung || "Neue Position"}
-                  </span>
-                  <span className="shrink-0 text-muted-foreground tabular-nums">
-                    {positionen[i] ? euro(positionNetto(positionen[i])) : ""}
-                  </span>
-                </span>
-              )}
-              make={() => ({
-                id: newId(),
-                bezeichnung: "",
-                menge: 1,
-                einheit: "HUR" as const,
-                einzelpreis: 0,
-                ustSatz: 19 as const,
-              })}
-              render={(i) => (
-                <div className="grid gap-3">
-                  <TextField
-                    control={control}
-                    name={`positionen.${i}.bezeichnung`}
-                    label="Leistung"
-                    multiline
-                    rows={2}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
-                    <ZahlFeld
-                      control={control}
-                      name={`positionen.${i}.menge`}
-                      label="Menge"
-                      leerIstNull={false}
-                    />
-                    <AuswahlFeld
-                      control={control}
-                      name={`positionen.${i}.einheit`}
-                      label="Einheit"
-                      optionen={Object.entries(EINHEITEN).map(([value, label]) => ({
-                        value,
-                        label,
-                      }))}
-                    />
-                    <ZahlFeld
-                      control={control}
-                      name={`positionen.${i}.einzelpreis`}
-                      label="Einzelpreis netto"
-                      einheit="€"
-                      leerIstNull={false}
-                    />
-                  </div>
-                  {firma.kleinunternehmer ? null : (
-                    <Controller
-                      control={control}
-                      name={`positionen.${i}.ustSatz`}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Umsatzsteuer</FieldLabel>
-                          <ToggleGroup
-                            type="single"
-                            variant="outline"
-                            size="sm"
-                            value={String(field.value)}
-                            onValueChange={(v) => v && field.onChange(Number(v))}
-                            aria-label="Umsatzsteuersatz"
-                            className="self-start"
-                          >
-                            <ToggleGroupItem value="19">19 %</ToggleGroupItem>
-                            <ToggleGroupItem value="7">7 %</ToggleGroupItem>
-                          </ToggleGroup>
-                        </Field>
-                      )}
-                    />
-                  )}
-                </div>
-              )}
+              positionen={positionen}
+              anfang={rechnung.positionen}
+              kleinunternehmer={firma.kleinunternehmer}
             />
           </SectionCard>
 

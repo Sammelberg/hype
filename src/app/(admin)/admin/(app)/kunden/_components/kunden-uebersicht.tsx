@@ -10,27 +10,43 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { Angebot } from "@/buero/daten/angebote";
 import type { Auftrag } from "@/buero/daten/auftraege";
+import type { Ereignis } from "@/buero/daten/historie";
 import type { Rechnung } from "@/buero/daten/rechnungen";
 import { type Vertrag, vertragsende } from "@/buero/daten/vertraege";
-import { datumDe, heute } from "@/buero/logik/ablauf";
+import { datumDe } from "@/buero/logik/ablauf";
 import { centAusBetrag, euro, rechnungsSummen } from "@/buero/logik/geld";
 import { DokumentKachel } from "../../../_components/buero/kachel";
-import { AuftragStatus, RechnungStatus, VertragStatus } from "../../../_components/buero/status";
+import {
+  AngebotStatus,
+  AuftragStatus,
+  RechnungStatus,
+  VertragStatus,
+} from "../../../_components/buero/status";
+import type { WiedervorlagePunkt } from "../../../_components/buero/wiedervorlage";
+import { KundenVerlauf } from "./kunden-verlauf";
 
 // Beside the customer card: what the customer is worth, what runs, what is owed.
 export function KundenUebersicht({
   kundeId,
+  heute: tag,
+  ereignisse,
+  wiedervorlagen,
+  angebote,
   auftraege,
   vertraege,
   rechnungen,
 }: {
   kundeId: number;
+  heute: string;
+  ereignisse: Ereignis[];
+  wiedervorlagen: WiedervorlagePunkt[];
+  angebote: Angebot[];
   auftraege: Auftrag[];
   vertraege: Vertrag[];
   rechnungen: Rechnung[];
 }) {
-  const tag = heute();
   const gestellt = rechnungen.filter(
     (r) => r.typ === "rechnung" && (r.status === "gestellt" || r.status === "bezahlt"),
   );
@@ -40,7 +56,7 @@ export function KundenUebersicht({
   const ueberfaellig = offen.filter((r) => r.faelligAm && r.faelligAm < tag).length;
 
   return (
-    <div className="flex flex-col gap-6 xl:sticky xl:top-36">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Auf einen Blick</CardTitle>
@@ -59,6 +75,52 @@ export function KundenUebersicht({
             ))}
           </dl>
         </CardContent>
+      </Card>
+
+      <KundenVerlauf
+        kundeId={kundeId}
+        heute={tag}
+        ereignisse={ereignisse}
+        wiedervorlagen={wiedervorlagen}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Angebote</CardTitle>
+          <CardDescription>
+            {angebote.length === 0 ? "Noch keins." : `${angebote.length} insgesamt`}
+          </CardDescription>
+          <CardAction>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/angebote/neu?kunde=${kundeId}` as never}>
+                <PlusIcon data-icon="inline-start" /> Angebot
+              </Link>
+            </Button>
+          </CardAction>
+        </CardHeader>
+        {angebote.length > 0 ? (
+          <CardContent>
+            <ul role="list" className="flex flex-col gap-2">
+              {angebote.map((a) => (
+                <DokumentKachel
+                  key={a.id}
+                  href={`/admin/angebote/${a.id}`}
+                  titel={a.titel}
+                  unter={a.nummer ?? "Entwurf"}
+                  betrag={euro(rechnungsSummen(a.positionen, false).netto)}
+                  status={
+                    <AngebotStatus
+                      status={a.status}
+                      abgelaufen={
+                        a.status === "versendet" && Boolean(a.gueltigBis && a.gueltigBis < tag)
+                      }
+                    />
+                  }
+                />
+              ))}
+            </ul>
+          </CardContent>
+        ) : null}
       </Card>
 
       <Card>

@@ -204,6 +204,36 @@ export async function markiereBezahlt(id: number, am: string, client: Db | Tx = 
   );
 }
 
+/** A final invoice's deductions as the document shows them (gross, cents). */
+export const abzuegeVon = (r: Rechnung) =>
+  r.typ === "rechnung"
+    ? (r.abschlaege ?? []).map((a) => ({ nummer: a.nummer, brutto: centAusBetrag(a.brutto) }))
+    : [];
+
+/** For the editor: per order, its invoices on account issued so far (gross, cents). */
+export async function abschlaegeJeAuftrag() {
+  const rows = await db
+    .select({
+      auftragId: rechnungen.auftragId,
+      nummer: rechnungen.nummer,
+      brutto: rechnungen.summeBrutto,
+    })
+    .from(rechnungen)
+    .where(
+      and(
+        eq(rechnungen.art, "abschlag"),
+        eq(rechnungen.typ, "rechnung"),
+        inArray(rechnungen.status, ["gestellt", "bezahlt"]),
+      ),
+    )
+    .orderBy(asc(rechnungen.ausgestelltAm), asc(rechnungen.id));
+  const je: Record<number, { nummer: string; brutto: number }[]> = {};
+  for (const r of rows)
+    if (r.auftragId)
+      (je[r.auftragId] ??= []).push({ nummer: r.nummer!, brutto: centAusBetrag(r.brutto) });
+  return je;
+}
+
 /**
  * The invoices on account of an order a final invoice deducts: issued or paid, not cancelled,
  * oldest first. Frozen into the final invoice when it is issued.

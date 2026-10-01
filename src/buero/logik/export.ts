@@ -263,3 +263,67 @@ export function datevBuchungsstapel(a: {
   );
   return [kopf, spalten, ...buchungen].join("\r\n") + "\r\n";
 }
+
+// ---------------------------------------------------------------------------------------------
+// Periods as the adviser asks for them: a month, a quarter (the VAT return's), a year. Written
+// „2026-09“, „2026-Q3“, „2026“.
+
+export type Zeitraum = { schluessel: string; name: string; von: string; bis: string };
+
+const MONATE = [
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember",
+];
+const letzter = (jahr: number, monat: number) =>
+  new Date(Date.UTC(jahr, monat, 0)).toISOString().slice(0, 10);
+const zwei = (n: number) => String(n).padStart(2, "0");
+
+export function zeitraum(schluessel: string): Zeitraum | null {
+  const monat = /^(\d{4})-(\d{2})$/.exec(schluessel);
+  if (monat) {
+    const [j, m] = [Number(monat[1]), Number(monat[2])];
+    if (m < 1 || m > 12) return null;
+    return {
+      schluessel,
+      name: `${MONATE[m - 1]} ${j}`,
+      von: `${j}-${zwei(m)}-01`,
+      bis: letzter(j, m),
+    };
+  }
+  const quartal = /^(\d{4})-Q([1-4])$/.exec(schluessel);
+  if (quartal) {
+    const [j, q] = [Number(quartal[1]), Number(quartal[2])];
+    return {
+      schluessel,
+      name: `${q}. Quartal ${j}`,
+      von: `${j}-${zwei(q * 3 - 2)}-01`,
+      bis: letzter(j, q * 3),
+    };
+  }
+  const jahr = /^(\d{4})$/.exec(schluessel);
+  if (jahr)
+    return {
+      schluessel,
+      name: `Jahr ${jahr[1]}`,
+      von: `${jahr[1]}-01-01`,
+      bis: `${jahr[1]}-12-31`,
+    };
+  return null;
+}
+
+/** The quarter before the one `heute` lies in: what the adviser usually asks for next. */
+export function letztesQuartal(heute: string) {
+  const j = Number(heute.slice(0, 4));
+  const q = Math.floor((Number(heute.slice(5, 7)) - 1) / 3) + 1;
+  return q === 1 ? `${j - 1}-Q4` : `${j}-Q${q - 1}`;
+}

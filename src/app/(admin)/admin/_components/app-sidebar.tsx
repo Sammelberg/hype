@@ -37,7 +37,9 @@ function ActiveMark() {
   );
 }
 
-function Item({ item, badge }: { item: NavItem; badge?: number }) {
+export type NavBadge = { anzahl: number; label: string };
+
+function Item({ item, badge }: { item: NavItem; badge?: NavBadge }) {
   const pathname = usePathname();
   const active = isActive(pathname, item.href);
   return (
@@ -54,8 +56,8 @@ function Item({ item, badge }: { item: NavItem; badge?: number }) {
           <span>{item.label}</span>
         </Link>
       </SidebarMenuButton>
-      {badge ? (
-        <SidebarMenuBadge aria-label={`${badge} ungelesen`}>{badge}</SidebarMenuBadge>
+      {badge && badge.anzahl > 0 ? (
+        <SidebarMenuBadge aria-label={badge.label}>{badge.anzahl}</SidebarMenuBadge>
       ) : null}
     </SidebarMenuItem>
   );
@@ -64,11 +66,12 @@ function Item({ item, badge }: { item: NavItem; badge?: number }) {
 export function AppSidebar({
   siteName,
   user,
-  unread,
+  badges,
 }: {
   siteName: string;
   user: { name: string | null; email: string; role: Role };
-  unread: number;
+  /** Per section: what waits there (unread inquiries, Wiedervorlagen due, overdue invoices). */
+  badges: Record<string, NavBadge>;
 }) {
   // What the role may not open is not shown; the pages refuse it on their own as well.
   const groups = NAV_GROUPS.map((g) => ({
@@ -110,11 +113,7 @@ export function AppSidebar({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {g.items.map((item) => (
-                      <Item
-                        key={item.href}
-                        item={item}
-                        badge={item.href === "/admin/anfragen" && unread > 0 ? unread : undefined}
-                      />
+                      <Item key={item.href} item={item} badge={badges[item.href]} />
                     ))}
                   </SidebarMenu>
                 </SidebarGroupContent>

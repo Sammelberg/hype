@@ -65,6 +65,24 @@ export default async function AuftragPage({ params }: Props) {
               ...(a.abgenommenAm ? [{ label: "Abgenommen", wert: datumDe(a.abgenommenAm) }] : []),
             ]}
           />
+          {a.status === "angebot" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Angebot</CardTitle>
+                <CardDescription>
+                  Als Dokument mit Positionen, Nummer und Gültigkeit; die Zusage beauftragt diesen
+                  Auftrag.
+                </CardDescription>
+                <CardAction>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/angebote/neu?auftrag=${a.id}` as never}>
+                      <PlusIcon data-icon="inline-start" /> Angebot
+                    </Link>
+                  </Button>
+                </CardAction>
+              </CardHeader>
+            </Card>
+          ) : null}
           <Card>
             <CardHeader>
               <CardTitle>Rechnungen</CardTitle>

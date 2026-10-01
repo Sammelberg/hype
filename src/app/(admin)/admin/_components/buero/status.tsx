@@ -8,7 +8,12 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { AUFTRAG_STATUS, RECHNUNG_STATUS, VERTRAG_STATUS } from "@/buero/logik/texte";
+import {
+  ANGEBOT_STATUS,
+  AUFTRAG_STATUS,
+  RECHNUNG_STATUS,
+  VERTRAG_STATUS,
+} from "@/buero/logik/texte";
 import { cn } from "@/lib/utils";
 
 // One status, spoken and coloured, with an icon so colour is never the only cue.
@@ -77,4 +82,24 @@ export function RechnungStatus({
           ? "fertig"
           : "aus";
   return <Chip ton={ton}>{RECHNUNG_STATUS[status].name}</Chip>;
+}
+
+export function AngebotStatus({
+  status,
+  abgelaufen = false,
+}: {
+  status: keyof typeof ANGEBOT_STATUS;
+  /** Sent and past its validity. */
+  abgelaufen?: boolean;
+}) {
+  if (abgelaufen) return <Chip ton="warnung">Abgelaufen</Chip>;
+  const ton: Ton =
+    status === "entwurf"
+      ? "offen"
+      : status === "versendet"
+        ? "laufend"
+        : status === "angenommen"
+          ? "fertig"
+          : "aus";
+  return <Chip ton={ton}>{ANGEBOT_STATUS[status].name}</Chip>;
 }

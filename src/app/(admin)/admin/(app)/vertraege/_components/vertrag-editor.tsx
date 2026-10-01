@@ -17,7 +17,7 @@ import {
   updateVertragAction,
 } from "../../../_actions/buero";
 import type { KundeOption } from "@/buero/daten/kunden";
-import { AuswahlFeld, DatumFeld, ZahlFeld } from "../../../_components/buero/felder";
+import { AuswahlFeld, DatumFeld, SchalterFeld, ZahlFeld } from "../../../_components/buero/felder";
 import { KundenWahl } from "../../../_components/buero/kunden-wahl";
 import { EditorShell } from "../../../_components/editor-shell";
 import {
@@ -42,6 +42,7 @@ const SECTION_OF: Record<string, string> = {
   unterzeichnetAm: "laufzeit",
   verguetungNetto: "verguetung",
   verguetungIntervall: "verguetung",
+  aboRechnungen: "verguetung",
   inhalt: "inhalt",
 };
 
@@ -252,6 +253,14 @@ export function VertragEditor({
                   optionen={Object.entries(INTERVALLE).map(([value, label]) => ({ value, label }))}
                 />
               </div>
+              {werte.verguetungIntervall && werte.verguetungIntervall !== "einmalig" ? (
+                <SchalterFeld
+                  control={control}
+                  name="aboRechnungen"
+                  label="Laufende Rechnungen vorbereiten"
+                  description="Zu Beginn jedes Zeitraums liegt ein Rechnungsentwurf bereit, im Voraus berechnet. Sie prüfen und stellen ihn."
+                />
+              ) : null}
             </SectionCard>
 
             <SectionCard
