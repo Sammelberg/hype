@@ -152,6 +152,56 @@ test("a customer is created inside an order, and the invoice follows the order",
   await expect(page).toHaveURL(/\/admin\/kunden$/);
 });
 
+test("the customer card keeps the history, a Wiedervorlage and an offer", async ({ page }) => {
+  test.setTimeout(90_000);
+  const kunde = `E2E Verlauf ${STAMP}`;
+  await page.goto("/admin/kunden/neu");
+  await tb(page, "Firmenname").fill(kunde);
+  await page.getByRole("button", { name: "Kunde anlegen" }).click();
+  await expect(page).toHaveURL(/\/admin\/kunden\/\d+$/);
+  const karte = page.url();
+
+  // A call, written into the history.
+  await page.getByRole("button", { name: "Eintrag", exact: true }).click();
+  const eintrag = page.getByRole("dialog", { name: "In den Verlauf" });
+  await eintrag.getByRole("radio", { name: "Anruf" }).click();
+  await eintrag.getByRole("textbox", { name: "Text" }).fill("E2E Rückruf vereinbart");
+  await eintrag.getByRole("button", { name: "Festhalten" }).click();
+  await expect(page.getByText("E2E Rückruf vereinbart")).toBeVisible();
+
+  // A Wiedervorlage for tomorrow, then done.
+  await page.getByRole("button", { name: "Vormerken" }).click();
+  const wv = page.getByRole("dialog", { name: "Wiedervorlage" });
+  await wv.getByRole("textbox", { name: "Worum es geht" }).fill("E2E Nachfassen");
+  await wv.getByRole("button", { name: "Morgen" }).click();
+  await wv.getByRole("button", { name: "Vormerken" }).click();
+  const erledigt = page.getByRole("button", { name: "„E2E Nachfassen“ erledigt" });
+  await expect(erledigt).toBeVisible();
+  await erledigt.click();
+  await expect(erledigt).toHaveCount(0);
+
+  // An offer started from the card: its total in the live document, then the draft goes.
+  await page.getByRole("link", { name: "Angebot", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/angebote\/neu\?kunde=\d+$/);
+  await expect(page.getByRole("combobox", { name: "Kunde" })).toContainText(kunde);
+  await tb(page, "Titel").fill("E2E Kundenportal");
+  await tb(page, "Leistung").fill("Kundenportal, Umsetzung");
+  await page.getByRole("spinbutton", { name: "Einzelpreis netto" }).fill("5000");
+  await page.getByRole("button", { name: "Entwurf anlegen" }).click();
+  await expect(page).toHaveURL(/\/admin\/angebote\/\d+$/);
+  await expect(
+    page.getByRole("region", { name: "Vorschau des Angebots" }).getByText("5.950,00\u00a0€"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Entwurf löschen" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Entwurf löschen" }).click();
+  await expect(page).toHaveURL(/\/admin\/angebote$/);
+
+  await page.goto(karte);
+  await page.getByRole("button", { name: "Kunde löschen" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Kunde löschen" }).click();
+  await expect(page).toHaveURL(/\/admin\/kunden$/);
+});
+
 test("an invoice is not issued while §14 details of the issuer are missing", async ({ page }) => {
   await page.goto("/admin/firma");
   const bereit = page.getByText("Bereit für Rechnungen?");

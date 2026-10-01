@@ -11,7 +11,7 @@ import { datumDe, heute, jahr, kannWechseln, tagePlus } from "../logik/ablauf";
 import { typCode } from "../logik/abrechnung";
 import { betragAusCent, centAusBetrag, rechnungsSummen } from "../logik/geld";
 import { type Mangel, pruefeRechnung } from "../logik/pflichtangaben";
-import { type Position, type RechnungInput, RechnungSchema } from "../logik/typen";
+import { type Abschlag, type Position, type RechnungInput, RechnungSchema } from "../logik/typen";
 import { type XRechnungDaten, xrechnungXml } from "../logik/xrechnung";
 import { BueroError, naechsteNummer } from "./basis";
 import { getFirma } from "./firma";
@@ -164,6 +164,14 @@ export async function stelleRechnung(id: number, client: Db | Tx = db) {
         "auftragId",
       );
     const abschlaege = r.art === "schluss" ? await abschlaegeZu(tx, r.auftragId!, r.id) : null;
+    if (
+      abschlaege &&
+      rechnungsSummen(r.positionen, firma.kleinunternehmer).brutto <
+        abschlaege.reduce((sum, x) => sum + centAusBetrag(x.brutto), 0)
+    )
+      throw new BueroError(
+        "Die Abschlagsrechnungen zum Auftrag übersteigen die Schlussrechnung. Die Schlussrechnung führt die ganze Leistung auf; prüfen Sie die Positionen.",
+      );
     const tag = heute();
     const nummer = await naechsteNummer(tx, "RE", jahr(tag));
     await tx
@@ -205,19 +213,21 @@ export async function markiereBezahlt(id: number, am: string, client: Db | Tx = 
 }
 
 /** A final invoice's deductions as the document shows them (gross, cents). */
-export const abzuegeVon = (r: Rechnung) =>
-  r.typ === "rechnung"
-    ? (r.abschlaege ?? []).map((a) => ({ nummer: a.nummer, brutto: centAusBetrag(a.brutto) }))
-    : [];
+export const abzuegeVon = (r: Rechnung) => {
+  // A Storno of a final invoice takes its deductions back: the same amounts, the other sign.
+  const vorzeichen = r.typ === "storno" ? -1 : 1;
+  return (r.abschlaege ?? []).map((a) => ({
+    nummer: a.nummer,
+    brutto: vorzeichen * centAusBetrag(a.brutto),
+    netto: a.gruppen ? vorzeichen * a.gruppen.reduce((s, g) => s + g.netto, 0) : null,
+    steuer: a.gruppen ? vorzeichen * a.gruppen.reduce((s, g) => s + g.steuer, 0) : null,
+  }));
+};
 
 /** For the editor: per order, its invoices on account issued so far (gross, cents). */
 export async function abschlaegeJeAuftrag() {
   const rows = await db
-    .select({
-      auftragId: rechnungen.auftragId,
-      nummer: rechnungen.nummer,
-      brutto: rechnungen.summeBrutto,
-    })
+    .select()
     .from(rechnungen)
     .where(
       and(
@@ -227,10 +237,17 @@ export async function abschlaegeJeAuftrag() {
       ),
     )
     .orderBy(asc(rechnungen.ausgestelltAm), asc(rechnungen.id));
-  const je: Record<number, { nummer: string; brutto: number }[]> = {};
-  for (const r of rows)
-    if (r.auftragId)
-      (je[r.auftragId] ??= []).push({ nummer: r.nummer!, brutto: centAusBetrag(r.brutto) });
+  const je: Record<number, { nummer: string; brutto: number; netto: number; steuer: number }[]> =
+    {};
+  for (const r of rows) {
+    if (!r.auftragId) continue;
+    (je[r.auftragId] ??= []).push({
+      nummer: r.nummer!,
+      brutto: centAusBetrag(r.summeBrutto),
+      netto: centAusBetrag(r.summeNetto),
+      steuer: centAusBetrag(r.summeSteuer),
+    });
+  }
   return je;
 }
 
@@ -238,9 +255,13 @@ export async function abschlaegeJeAuftrag() {
  * The invoices on account of an order a final invoice deducts: issued or paid, not cancelled,
  * oldest first. Frozen into the final invoice when it is issued.
  */
-export async function abschlaegeZu(client: Db | Tx, auftragId: number, ohne?: number) {
+export async function abschlaegeZu(
+  client: Db | Tx,
+  auftragId: number,
+  ohne?: number,
+): Promise<Abschlag[]> {
   const rows = await client
-    .select({ id: rechnungen.id, nummer: rechnungen.nummer, brutto: rechnungen.summeBrutto })
+    .select()
     .from(rechnungen)
     .where(
       and(
@@ -253,7 +274,12 @@ export async function abschlaegeZu(client: Db | Tx, auftragId: number, ohne?: nu
     .orderBy(asc(rechnungen.ausgestelltAm), asc(rechnungen.id));
   return rows
     .filter((x) => x.id !== ohne)
-    .map((x) => ({ id: x.id, nummer: x.nummer!, brutto: x.brutto! }));
+    .map((x) => ({
+      id: x.id,
+      nummer: x.nummer!,
+      brutto: x.summeBrutto!,
+      gruppen: rechnungsSummen(x.positionen, x.kleinunternehmer ?? false).gruppen,
+    }));
 }
 
 // A Storno is a second invoice with the same parties and negative quantities, issued today,
@@ -286,6 +312,8 @@ export async function storniereRechnung(id: number, client: Db | Tx = db) {
         empfaenger: r.empfaenger,
         verkaeufer: r.verkaeufer,
         kleinunternehmer: r.kleinunternehmer,
+        // A final invoice's deductions go with its Storno, so the two cancel out exactly.
+        abschlaege: r.abschlaege,
         ausgestelltAm: tag,
         faelligAm: tag,
         ...summenSpalten(positionen, r.kleinunternehmer ?? false),
@@ -316,10 +344,7 @@ export function ausgabeDaten(r: Rechnung, korrigiertNummer: string | null): XRec
     kleinunternehmer: r.kleinunternehmer ?? false,
     korrigiert: korrigiertNummer,
     vorherige: r.typ === "rechnung" ? (r.abschlaege ?? []).map((a) => a.nummer) : [],
-    vorausbezahlt:
-      r.typ === "rechnung"
-        ? (r.abschlaege ?? []).reduce((sum, a) => sum + centAusBetrag(a.brutto), 0)
-        : 0,
+    vorausbezahlt: abzuegeVon(r).reduce((sum, a) => sum + a.brutto, 0),
     hinweise: [r.einleitung, r.schlusstext].filter((x): x is string => Boolean(x)),
   };
 }

@@ -79,7 +79,7 @@ export function RechnungEditor({
   auftraege: AuftragOption[];
   vertraege: VertragOption[];
   /** Per order: its invoices on account issued so far, gross in cents. */
-  abschlaege: Record<number, { nummer: string; brutto: number }[]>;
+  abschlaege: Record<number, { nummer: string; brutto: number; netto: number; steuer: number }[]>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<"speichern" | "stellen" | null>(null);

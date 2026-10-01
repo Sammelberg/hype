@@ -20,7 +20,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
-import type { Empfaenger, Firma, KundeInput, Position } from "../logik/typen";
+import type { Abschlag, Empfaenger, Firma, KundeInput, Position } from "../logik/typen";
 
 export const buero = pgSchema("buero");
 
@@ -203,8 +203,9 @@ export const rechnungen = buero.table(
     summeSteuer: geld(),
     summeBrutto: geld(),
     bezahltAm: tag(),
-    // A final invoice: the invoices on account it deducts, frozen when it is issued.
-    abschlaege: jsonb().$type<{ id: number; nummer: string; brutto: string }[]>(),
+    // A final invoice: the invoices on account it deducts, frozen when it is issued — with their
+    // net and VAT per rate, which the final invoice states and the VAT return subtracts.
+    abschlaege: jsonb().$type<Abschlag[]>(),
     // The XRechnung as first handed out, and its sha256: written once (migration 0006), so
     // every later download is the same file, whatever the code that builds it becomes.
     archivXml: text(),

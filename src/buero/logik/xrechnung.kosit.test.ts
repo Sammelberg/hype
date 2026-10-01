@@ -56,6 +56,17 @@ describe.skipIf(!KOSIT_URL)(
         },
       ],
       [
+        "the Storno of a final invoice, taking its deductions back",
+        {
+          ...beispiel,
+          nummer: "RE-2026-0007",
+          typ: "384",
+          korrigiert: "RE-2026-0006",
+          positionen: beispiel.positionen.map((p) => ({ ...p, menge: -p.menge })),
+          vorausbezahlt: -50000,
+        },
+      ],
+      [
         "an invoice to an authority by Leitweg-ID, on one service day",
         {
           ...beispiel,

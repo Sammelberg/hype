@@ -17,6 +17,8 @@ export type JournalRechnung = {
   status: string;
   bezahltAm: string | null;
   korrigiert: string | null;
+  /** A final invoice: net and VAT per rate of the invoices on account it deducts (cents). */
+  abzuege?: { satz: number; netto: number; steuer: number }[];
 };
 
 const zahl = (cent: number) => (cent / 100).toFixed(2).replace(".", ",");
@@ -26,13 +28,31 @@ const tagDe = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.sli
 /** Excel in Germany opens UTF-8 only with the byte order mark. */
 const BOM = "﻿";
 
+/**
+ * What an invoice adds to revenue and VAT, per rate: its totals, less — for a final invoice —
+ * what its invoices on account already brought in (they are in the files themselves).
+ */
+const gruppenVon = (r: JournalRechnung) =>
+  rechnungsSummen(r.positionen, r.kleinunternehmer)
+    .gruppen.map((g) => {
+      const ab = (r.abzuege ?? []).filter((a) => a.satz === g.satz);
+      return {
+        satz: g.satz,
+        netto: g.netto - ab.reduce((s, a) => s + a.netto, 0),
+        steuer: g.steuer - ab.reduce((s, a) => s + a.steuer, 0),
+      };
+    })
+    .filter((g) => g.netto !== 0 || g.steuer !== 0);
+
 const steuerJeSatz = (r: JournalRechnung) => {
-  const s = rechnungsSummen(r.positionen, r.kleinunternehmer);
-  const satz = (n: number) => s.gruppen.find((g) => g.satz === n);
+  const gruppen = gruppenVon(r);
+  const satz = (n: number) => gruppen.find((g) => g.satz === n);
+  const netto = gruppen.reduce((s, g) => s + g.netto, 0);
+  const steuer = gruppen.reduce((s, g) => s + g.steuer, 0);
   return {
-    netto: s.netto,
-    brutto: s.brutto,
-    gruppen: s.gruppen,
+    netto,
+    brutto: netto + steuer,
+    gruppen,
     ust19: satz(19)?.steuer ?? 0,
     ust7: satz(7)?.steuer ?? 0,
   };
@@ -205,7 +225,7 @@ export function datevBuchungsstapel(a: {
     String(e.sachkontenlaenge),
     kompakt(a.von),
     kompakt(a.bis),
-    text(`Ausgangsrechnungen ${tagDe(a.von)}–${tagDe(a.bis)}`, 30),
+    text(`Rechnungen ${tagDe(a.von).slice(0, 6)}–${tagDe(a.bis)}`, 30),
     '""',
     "1",
     "0",
@@ -239,7 +259,7 @@ export function datevBuchungsstapel(a: {
   ].join(";");
   const konto = (satz: number) => (satz === 19 ? e.erloes19 : satz === 7 ? e.erloes7 : e.erloes0);
   const buchungen = a.rechnungen.flatMap((r) =>
-    rechnungsSummen(r.positionen, r.kleinunternehmer).gruppen.map((g) => {
+    gruppenVon(r).map((g) => {
       const brutto = g.netto + g.steuer;
       return [
         zahl(Math.abs(brutto)),

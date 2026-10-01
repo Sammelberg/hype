@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useSyncExternalStore,
 } from "react";
 
@@ -59,6 +60,12 @@ const ThemeContext = createContext<{
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(subscribe, read, () => "dark" as Theme);
+  // Once more after mounting: when hydration fails (a form sent before it finished), React
+  // renders the document anew and <html> loses the class the inline script had set.
+  useEffect(() => {
+    apply(read());
+    for (const listener of listeners) listener();
+  }, []);
   const resolved = useSyncExternalStore(
     subscribe,
     () => (document.documentElement.classList.contains("dark") ? "dark" : "light"),

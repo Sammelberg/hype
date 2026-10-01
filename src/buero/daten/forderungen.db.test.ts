@@ -14,7 +14,7 @@ import { BueroError } from "./basis";
 import { saveFirma } from "./firma";
 import { entferneZahlung, erfasseZahlung, forderungVon, schreibeMahnung } from "./forderungen";
 import { createKunde } from "./kunden";
-import { createRechnung, stelleRechnung, xrechnungFuer } from "./rechnungen";
+import { createRechnung, stelleRechnung, storniereRechnung, xrechnungFuer } from "./rechnungen";
 
 class Rueckgabe extends Error {}
 async function imRollback(fn: (tx: Tx) => Promise<void>) {
@@ -227,8 +227,18 @@ describe.skipIf(!process.env.DATABASE_URL)("invoices on account and the final in
       await stelleRechnung(schluss, tx);
       const r = await status(tx, schluss);
       expect(r.abschlaege).toEqual([
-        { id: expect.any(Number), nummer: eins, brutto: "3570.00" },
-        { id: expect.any(Number), nummer: zwei, brutto: "2380.00" },
+        {
+          id: expect.any(Number),
+          nummer: eins,
+          brutto: "3570.00",
+          gruppen: [{ satz: 19, netto: 300000, steuer: 57000 }],
+        },
+        {
+          id: expect.any(Number),
+          nummer: zwei,
+          brutto: "2380.00",
+          gruppen: [{ satz: 19, netto: 200000, steuer: 38000 }],
+        },
       ]);
       await verweigert(
         tx,
@@ -244,10 +254,42 @@ describe.skipIf(!process.env.DATABASE_URL)("invoices on account and the final in
       expect(xml).toContain(`<cbc:ID>${eins}</cbc:ID>`);
       expect(xml).toContain('<cbc:PrepaidAmount currencyID="EUR">5950.00</cbc:PrepaidAmount>');
       expect(xml).toContain('<cbc:PayableAmount currencyID="EUR">5950.00</cbc:PayableAmount>');
+      // Its Storno takes the deductions back: the two cancel out exactly.
+      const stornoId = await storniereRechnung(schluss, tx);
+      const storno = await status(tx, stornoId);
+      expect(storno.abschlaege).toEqual(r.abschlaege);
+      const { xml: stornoXml } = await xrechnungFuer(stornoId, tx);
+      expect(stornoXml).toContain(
+        '<cbc:PrepaidAmount currencyID="EUR">-5950.00</cbc:PrepaidAmount>',
+      );
+      expect(stornoXml).toContain(
+        '<cbc:PayableAmount currencyID="EUR">-5950.00</cbc:PayableAmount>',
+      );
       // The order is billed by the final invoice, not by the ones on account.
       expect(
         (await tx.select().from(auftraege).where(eq(auftraege.id, auftrag!.id)))[0]!.status,
       ).toBe("in_arbeit");
+    });
+  });
+
+  it("refuses a final invoice smaller than what was billed on account", async () => {
+    await imRollback(async (tx) => {
+      await saveFirma(firmaBeispiel, tx);
+      const kundeId = await createKunde(kunde, tx);
+      const [auftrag] = await tx
+        .insert(auftraege)
+        .values({ nummer: "AU-TEST-0002", kundeId, titel: "Portal", status: "in_arbeit" })
+        .returning();
+      const a = await createRechnung(
+        entwurf(kundeId, { art: "abschlag", auftragId: auftrag!.id, positionen: [position(3000)] }),
+        tx,
+      );
+      await stelleRechnung(a, tx);
+      const schluss = await createRechnung(
+        entwurf(kundeId, { art: "schluss", auftragId: auftrag!.id, positionen: [position(1000)] }),
+        tx,
+      );
+      await expect(stelleRechnung(schluss, tx)).rejects.toThrow(/übersteigen/);
     });
   });
 

@@ -30,8 +30,11 @@ export type DokumentDaten = {
     ustSatz: number;
   }[];
   art?: Rechnungsart;
-  /** A final invoice: the invoices on account it deducts, gross in cents. */
-  abzuege?: { nummer: string; brutto: number }[];
+  /**
+   * A final invoice: the invoices on account it deducts, in cents — with their net and VAT,
+   * which §14 Abs. 5 UStG wants stated (null for none recorded).
+   */
+  abzuege?: { nummer: string; brutto: number; netto?: number | null; steuer?: number | null }[];
   /** An offer instead of an invoice: valid until this day (or open). */
   angebot?: { gueltigBis: string | null };
 };
@@ -224,8 +227,15 @@ export function RechnungsDokument({
         </dd>
         {abzuege.map((a) => (
           <div key={a.nummer} className="contents">
-            <dt>abzüglich Abschlagsrechnung {a.nummer}</dt>
-            <dd className="text-right">−{euro(a.brutto)}</dd>
+            <dt>
+              {a.brutto < 0 ? "verrechnet mit" : "abzüglich"} Abschlagsrechnung {a.nummer}
+              {a.netto != null && a.steuer != null && !daten.kleinunternehmer ? (
+                <span className="block text-[8.5pt] text-zinc-500">
+                  netto {euro(Math.abs(a.netto))} zuzüglich USt {euro(Math.abs(a.steuer))}
+                </span>
+              ) : null}
+            </dt>
+            <dd className="text-right">{euro(-a.brutto)}</dd>
           </div>
         ))}
         {abzuege.length > 0 ? (

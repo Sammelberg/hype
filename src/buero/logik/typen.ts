@@ -254,6 +254,14 @@ export const RechnungSchema = z.object({
 });
 export type RechnungInput = z.infer<typeof RechnungSchema>;
 
+/** An invoice on account as a final invoice deducts it (gross as numeric text, groups in cents). */
+export type Abschlag = {
+  id: number;
+  nummer: string;
+  brutto: string;
+  gruppen?: { satz: number; netto: number; steuer: number }[];
+};
+
 // Who the invoice goes to and who issues it, frozen with the invoice when it is issued.
 export type Empfaenger = {
   name: string;

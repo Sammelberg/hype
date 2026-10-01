@@ -38,5 +38,11 @@ export async function journal(von: string, bis: string): Promise<JournalRechnung
     status: STATUS_DE[r.status],
     bezahltAm: r.bezahltAm,
     korrigiert,
+    // A Storno of a final invoice takes the deductions back with the other sign.
+    abzuege: (r.abschlaege ?? []).flatMap((a) =>
+      (a.gruppen ?? []).map((g) =>
+        r.typ === "storno" ? { satz: g.satz, netto: -g.netto, steuer: -g.steuer } : g,
+      ),
+    ),
   }));
 }

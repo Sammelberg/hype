@@ -65,6 +65,39 @@ describe("journalCsv", () => {
   });
 });
 
+describe("a final invoice", () => {
+  // 20,000 net for the whole work, 6,000 net of it billed on account before (§14 Abs. 5 UStG).
+  const schluss = rechnung({
+    nummer: "RE-2026-0002",
+    art: "Schlussrechnung",
+    positionen: [pos(20000, 19)],
+    abzuege: [{ satz: 19, netto: 600000, steuer: 114000 }],
+  });
+
+  it("counts only what is left after the invoices on account, in every file", () => {
+    expect(journalCsv([schluss]).split("\r\n")[1]).toContain(";14000,00;2660,00;0,00;16660,00;");
+    expect(ustNachMonat([schluss])[0]).toMatchObject({
+      netto19: 1400000,
+      ust19: 266000,
+      brutto: 1666000,
+    });
+    const zeilen = datevBuchungsstapel({
+      rechnungen: [schluss],
+      einstellungen: {
+        beraternummer: 1001,
+        mandantennummer: 1,
+        kontenrahmen: "03",
+        sachkontenlaenge: 4,
+        ...DATEV_VORGABE["03"],
+      },
+      von: "2026-09-01",
+      bis: "2026-09-30",
+      erzeugt: "20261001120000000",
+    }).split("\r\n");
+    expect(zeilen[2]!.startsWith('16660,00;"S";')).toBe(true);
+  });
+});
+
 describe("ustNachMonat", () => {
   it("adds revenue and VAT per month and rate, Stornos subtracting", () => {
     const monate = ustNachMonat([
@@ -143,6 +176,8 @@ describe("datevBuchungsstapel", () => {
     expect(f[13]).toBe("4");
     expect(f[14]).toBe("20260901");
     expect(f[15]).toBe("20260930");
+    // The batch's name, at most 30 characters.
+    expect(f[16]).toBe('"Rechnungen 01.09.–30.09.2026"');
     expect(f[21]).toBe('"EUR"');
     expect(f[26]).toBe('"03"');
     expect(spalten!.startsWith("Umsatz (ohne Soll/Haben-Kz);Soll/Haben-Kennzeichen")).toBe(true);
