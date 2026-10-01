@@ -11,6 +11,7 @@ export function Part({
   title,
   zone,
   aside,
+  line = true,
   className,
   children,
 }: {
@@ -19,6 +20,8 @@ export function Part({
   zone?: string;
   /** Under the sticky heading, travelling with it (a count, a short note). */
   aside?: ReactNode;
+  /** The reading line; off where the content draws a line of its own (a trail). */
+  line?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -39,12 +42,14 @@ export function Part({
           {aside}
         </div>
         <div className="relative min-w-0">
-          <span
-            aria-hidden="true"
-            className="absolute inset-y-0 -left-8 hidden w-px bg-border lg:block"
-          >
-            <span className="block size-full sd-read origin-top bg-primary-soft/70" />
-          </span>
+          {line ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 -left-8 hidden w-px bg-border lg:block"
+            >
+              <span className="block size-full sd-read origin-top bg-primary-soft/70" />
+            </span>
+          ) : null}
           {children}
         </div>
       </div>

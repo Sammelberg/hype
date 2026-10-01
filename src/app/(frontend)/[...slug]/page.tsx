@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/site/page-header";
 import { Part } from "@/components/site/part";
 import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
-import { ServiceGlyph } from "@/components/site/service-glyphs";
+import { ValleyView } from "@/components/site/valley-view";
+import { VALLEYS } from "@/components/site/valleys";
 import {
   getChildPages,
   getLeistungenContent,
@@ -70,9 +71,12 @@ export default async function CmsPage({ params }: Props) {
   const projekt = service?.projektId
     ? (projekte.find((p) => p.id === service.projektId) ?? null)
     : null;
-  // A service's page lists the other services beside its text.
-  const otherServices = path.startsWith("/leistungen/")
-    ? leistungen.sections.services.filter((service) => `/leistungen/${service.slug}` !== path)
+  // A service's page ends with the other services; its own gives it its valley.
+  const own = service
+    ? (leistungen.sections.services.find((s) => `/leistungen/${s.slug}` === path) ?? null)
+    : null;
+  const otherServices = service
+    ? leistungen.sections.services.filter((s) => `/leistungen/${s.slug}` !== path)
     : [];
   const legal = LEGAL.has(page.slug);
   // A content page lays its text out in parts, one per h2, each heading beside its text; legal
@@ -106,42 +110,29 @@ export default async function CmsPage({ params }: Props) {
         // Top-level pages sit directly under the home page; a trail there would add nothing.
         breadcrumbs={trail.length > 2 ? <PageBreadcrumbs trail={trail} /> : undefined}
         horizonKey={path}
+        // A service's page looks into its own valley, the one its card shows on the home page.
+        scene={
+          own ? (
+            <div className="page-container mt-10 pb-12 sm:mt-14 sm:pb-16">
+              <ValleyView spec={VALLEYS[own.glyph] ?? VALLEYS.web} id="kopf-tal" frame="panorama" />
+            </div>
+          ) : undefined
+        }
       />
 
-      {intro || otherServices.length > 0 ? (
+      {intro ? (
         <div
-          className={cn(
-            "page-container grid gap-16 py-16 sm:py-24",
-            otherServices.length > 0 &&
-              "lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]",
-          )}
+          className="page-container py-16 sm:py-24"
+          data-cms-zone={parts.length > 0 ? undefined : "text"}
         >
-          <div data-cms-zone={parts.length > 0 ? undefined : "text"}>
-            <RichText data={intro} className="prose-lg max-w-prose 3xl:prose-xl" />
-          </div>
-          {otherServices.length > 0 ? (
-            <nav aria-labelledby="weitere-leistungen" className="lg:border-l lg:pl-12">
-              <h2 id="weitere-leistungen" className="text-sm font-medium text-primary-soft">
-                Weitere Leistungen
-              </h2>
-              <ul className="mt-4">
-                {otherServices.map((service) => (
-                  <li key={service.id ?? service.slug}>
-                    <Link
-                      href={`/leistungen/${service.slug}` as never}
-                      className="flex items-center gap-4 py-3 text-lg tracking-tight transition-colors hover:text-primary-soft"
-                    >
-                      <ServiceGlyph
-                        name={service.glyph}
-                        className="size-8 shrink-0 text-primary-soft"
-                      />
-                      {service.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
+          <RichText
+            data={intro}
+            className={cn(
+              "max-w-prose",
+              // A service's text opens its page at the size of a lead.
+              service ? "prose-xl 3xl:prose-2xl" : "prose-lg 3xl:prose-xl",
+            )}
+          />
         </div>
       ) : null}
 
@@ -155,7 +146,9 @@ export default async function CmsPage({ params }: Props) {
         </div>
       ) : null}
 
-      {service ? <LeistungSections sections={service} projekt={projekt} /> : null}
+      {service ? (
+        <LeistungSections sections={service} projekt={projekt} others={otherServices} />
+      ) : null}
 
       {overview ? (
         // An overview's pages are its body: one wide row each, its title and lead.

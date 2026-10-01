@@ -1,0 +1,131 @@
+/* A service's sections (leistung-sections.tsx). */
+
+/* A check in a ring; the tick draws itself as the list comes in (sd-stroke). */
+.check {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.15em;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.check circle {
+  stroke: oklch(0.79 0.085 252 / 0.35);
+  stroke-width: 1;
+}
+
+.check path {
+  stroke: var(--primary-soft);
+  stroke-width: 1.75;
+}
+
+/* ── The trail through the steps ── */
+.trail {
+  position: relative;
+  max-width: 48rem;
+  --node: 3rem;
+}
+
+@media (min-width: 40rem) {
+  .trail {
+    --node: 3.5rem;
+  }
+}
+
+/* The track, and its ice filling up to the step at the middle of the screen. */
+.trail::before,
+.trail::after {
+  position: absolute;
+  top: calc(var(--node) / 2);
+  bottom: calc(var(--node) / 2);
+  left: calc(var(--node) / 2);
+  width: 1px;
+  content: "";
+}
+
+.trail::before {
+  background: oklch(0.79 0.085 252 / 0.2);
+}
+
+.trail::after {
+  background: var(--primary-soft);
+  transform-origin: center top;
+  scale: 1 0;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--node) minmax(0, 1fr);
+  column-gap: 1.5rem;
+  padding-bottom: 3.5rem;
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+.waypoint {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: var(--node);
+  height: var(--node);
+  place-items: center;
+  border: 1px solid oklch(0.79 0.085 252 / 0.6);
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--primary-soft);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Without scroll timelines the trail is simply drawn. */
+@supports not (animation-timeline: view()) {
+  .trail::after {
+    scale: 1 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail::after {
+    scale: 1 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .trail {
+      view-timeline: --trail block;
+    }
+    /* Full at the step whose waypoint is at the middle of the screen. */
+    .trail::after {
+      animation: fill linear both;
+      animation-timeline: --trail;
+      animation-range: cover 50vh cover calc(100% - 50vh);
+    }
+    .waypoint {
+      animation: ignite linear both;
+      animation-timeline: view();
+      animation-range: cover calc(50vh - 2rem) cover 50vh;
+    }
+  }
+}
+
+@keyframes fill {
+  to {
+    scale: 1 1;
+  }
+}
+
+@keyframes ignite {
+  to {
+    border-color: var(--primary-soft);
+    background: var(--primary-soft);
+    color: var(--background);
+    box-shadow: 0 0 0 6px oklch(0.79 0.085 252 / 0.12);
+  }
+}

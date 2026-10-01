@@ -31,7 +31,7 @@ export function ValleyView({
   spec: ValleySpec;
   id: string;
   className?: string;
-  /** A framed window, or a panorama that runs to the page's edges. */
+  /** A framed window, or the large wide picture under a page heading. */
   frame?: "window" | "panorama";
 }) {
   const v = valley(spec);
