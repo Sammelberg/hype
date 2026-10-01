@@ -68,7 +68,8 @@ const slugField = z
   .regex(SLUG_REGEX, SLUG_MESSAGE);
 
 // Pages with a route of their own carry the sections that route shows, typed by the kind of
-// page (src/cms/content/page-tree.ts: kindOf). Content pages have none: title, lead and text.
+// page (src/cms/content/page-tree.ts: kindOf); so do the services' own pages under /leistungen.
+// Other content pages have none: title, lead and text.
 export const GLYPHS = ["web", "mobile", "integration", "modernisation", "operations"] as const;
 export type Glyph = (typeof GLYPHS)[number];
 
@@ -114,15 +115,32 @@ export const KontaktSectionsSchema = z.object({
   nextText: LexicalDocumentSchema.nullish(),
 });
 
+// A service's own page (every page right under /leistungen): beside its lead and text, when it
+// fits, what it includes, how it goes, the questions asked about it, and a project that shows it.
+export const LeistungSectionsSchema = z.object({
+  kind: z.literal("leistung"),
+  fitTitle: required("die Überschrift"),
+  fit: z.array(item({ title: required("den Titel"), text: required("den Text") })),
+  scopeTitle: required("die Überschrift"),
+  scope: z.array(item({ text: required("den Punkt") })),
+  stepsTitle: required("die Überschrift"),
+  steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
+  faqTitle: required("die Überschrift"),
+  faq: z.array(item({ question: required("die Frage"), answer: required("die Antwort") })),
+  projektId: z.number().int().positive().nullable(),
+});
+
 export const PageSectionsSchema = z.discriminatedUnion("kind", [
   HomeSectionsSchema,
   LeistungenSectionsSchema,
+  LeistungSectionsSchema,
   ProjekteSectionsSchema,
   KontaktSectionsSchema,
 ]);
 export type PageSections = z.infer<typeof PageSectionsSchema>;
 export type HomeSections = z.infer<typeof HomeSectionsSchema>;
 export type LeistungenSections = z.infer<typeof LeistungenSectionsSchema>;
+export type LeistungSections = z.infer<typeof LeistungSectionsSchema>;
 export type ProjekteSections = z.infer<typeof ProjekteSectionsSchema>;
 export type KontaktSections = z.infer<typeof KontaktSectionsSchema>;
 export type PageKind = PageSections["kind"] | "content";

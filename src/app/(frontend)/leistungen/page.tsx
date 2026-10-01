@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ClosingCta } from "@/components/site/closing-cta";
+import { Faq } from "@/components/site/faq";
 import { PageHeader } from "@/components/site/page-header";
 import { ServiceGlyph } from "@/components/site/service-glyphs";
 import { getLeistungenContent } from "@/data/queries";
@@ -72,33 +73,7 @@ export default async function LeistungenIndex() {
         </ul>
       ) : null}
 
-      {faq.length > 0 ? (
-        <section aria-labelledby="faq-titel" className="bg-card" data-cms-zone="fragen">
-          <div className="page-container grid gap-10 py-20 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-            <h2
-              id="faq-titel"
-              className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:self-start 3xl:text-5xl"
-            >
-              Häufige Fragen
-            </h2>
-            <dl className="max-w-3xl">
-              {faq.map((item) => (
-                <div
-                  key={item.id ?? item.question}
-                  className="border-t py-8 first:border-t-0 first:pt-0"
-                >
-                  <dt className="text-xl font-medium tracking-tight text-balance 3xl:text-2xl">
-                    {item.question}
-                  </dt>
-                  <dd className="mt-3 text-lg text-pretty text-muted-foreground 3xl:text-xl">
-                    {item.answer}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-      ) : null}
+      <Faq id="faq-titel" title="Häufige Fragen" items={faq} zone="fragen" />
 
       <ClosingCta />
     </main>

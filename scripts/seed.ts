@@ -8,10 +8,15 @@ import { randomBytes } from "node:crypto";
 
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { upsertForm } from "../src/cms/content/forms";
-import { defaultSections, HOME_DEFAULTS, ROUTED_LEADS } from "../src/cms/content/page-sections";
+import {
+  defaultSections,
+  HOME_DEFAULTS,
+  LEISTUNG_DEFAULTS,
+  ROUTED_LEADS,
+} from "../src/cms/content/page-sections";
 import { kindOf } from "../src/cms/content/page-tree";
 import { listPages, listPublishedPages, upsertPublishedPage } from "../src/cms/content/pages";
-import { upsertPublishedProjekt } from "../src/cms/content/projekte";
+import { getProjektBySlug, upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
 import type { PageSections, SiteSettings } from "../src/cms/content/types";
@@ -23,6 +28,7 @@ import {
   seedProjects,
   seedSections,
   seedSettings,
+  type SeedPage,
   E2E_ADMIN,
 } from "./seed-data";
 
@@ -52,6 +58,30 @@ function settings(): SiteSettings {
 }
 
 // The sections and the lead of the pages with a route of their own; content pages have neither.
+// A page's lead and sections: a routed page's from the seed's sections, a service's page from its
+// `leistung` block (its project linked by slug when it exists, published), any other page none.
+async function fieldsOf(
+  page: SeedPage,
+): Promise<{ lead: string | null; sections: PageSections | null }> {
+  if (!page.leistung) {
+    const own = routed(page.slug);
+    return { lead: own.lead ?? page.lead ?? null, sections: own.sections };
+  }
+  const l = page.leistung;
+  const projekt = l.projekt ? await getProjektBySlug(l.projekt) : null;
+  return {
+    lead: page.lead ?? null,
+    sections: {
+      ...LEISTUNG_DEFAULTS,
+      fit: withIds(l.fit),
+      scope: withIds(l.scope.map((text) => ({ text }))),
+      steps: withIds(l.steps),
+      faq: withIds(l.faq),
+      projektId: projekt?.id ?? null,
+    },
+  };
+}
+
 function routed(slug: string): { lead: string | null; sections: PageSections | null } {
   const kind = kindOf(slug);
   const s = seedSections;
@@ -98,7 +128,7 @@ async function onlyPage(slug: string) {
     parentId,
     content: page.content.length > 0 ? lexical(page.content) : null,
     meta: {},
-    ...routed(page.slug),
+    ...(await fieldsOf(page)),
   });
   console.log(`Seite „${slug}“ aus dem Seed übernommen und veröffentlicht.`);
 }
@@ -124,7 +154,7 @@ async function main() {
       parentId,
       content: page.content.length > 0 ? lexical(page.content) : null,
       meta: {},
-      ...routed(page.slug),
+      ...(await fieldsOf(page)),
     });
     ids.set(page.slug, pageId);
   }

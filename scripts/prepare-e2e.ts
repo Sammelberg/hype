@@ -2,6 +2,8 @@
 // (scripts/clean-e2e.ts) has removed the one of the last run, and there is no setup page,
 // so it is created here again. Local databases and CI only.
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
+import { db } from "../src/cms/db/client";
+import { rateLimits } from "../src/cms/db/schema";
 import { E2E_ADMIN, E2E_REDAKTEUR } from "./seed-data";
 
 const url = new URL(process.env.DATABASE_URL ?? "");
@@ -18,4 +20,8 @@ for (const account of [
   await createUser({ ...account, password });
   console.log(`Testzugang ${account.email} angelegt.`);
 }
+// The limits of the last run do not carry over into this one (sign-ins, contact messages and
+// uploads are counted per address, and without a proxy every test shares one).
+await db.delete(rateLimits);
+
 process.exit(0);

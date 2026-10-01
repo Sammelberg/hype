@@ -14,7 +14,14 @@ const KINDS: Readonly<Record<string, Exclude<PageKind, "content">>> = {
   kontakt: "kontakt",
 };
 
-export const kindOf = (slug: string): PageKind => KINDS[slug] ?? "content";
+// The services' own pages are the pages right under /leistungen: their kind follows from the
+// parent, so a page moved there gains the service sections, and one moved away loses them.
+const BY_PARENT: Readonly<Record<string, Exclude<PageKind, "content">>> = {
+  leistungen: "leistung",
+};
+
+export const kindOf = (slug: string, parentSlug?: string | null): PageKind =>
+  KINDS[slug] ?? (parentSlug ? BY_PARENT[parentSlug] : undefined) ?? "content";
 
 /** Slugs of the pages rendered by a route of their own, not by the catch-all. */
 export const ROUTED_SLUGS: ReadonlySet<string> = new Set(Object.keys(KINDS));
@@ -32,8 +39,12 @@ export const PROTECTED_SLUGS: ReadonlySet<string> = new Set([
 ]);
 
 // Sections must match the page's kind; content pages have none.
-export function sectionsProblem(slug: string, sections: PageSections | null | undefined) {
-  const kind = kindOf(slug);
+export function sectionsProblem(
+  slug: string,
+  sections: PageSections | null | undefined,
+  parentSlug?: string | null,
+) {
+  const kind = kindOf(slug, parentSlug);
   if (kind === "content") return sections ? "Diese Seite hat keine festen Abschnitte." : null;
   if (!sections) return null;
   return sections.kind === kind ? null : "Die Abschnitte passen nicht zu dieser Seite.";

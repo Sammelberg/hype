@@ -4,6 +4,7 @@ import type {
   HomeSections,
   KontaktSections,
   LeistungenSections,
+  LeistungSections,
   PageSections,
   ProjekteSections,
 } from "./types";
@@ -32,6 +33,19 @@ export const LEISTUNGEN_DEFAULTS: LeistungenSections = {
   faq: [],
 };
 
+export const LEISTUNG_DEFAULTS: LeistungSections = {
+  kind: "leistung",
+  fitTitle: "Wann das passt",
+  fit: [],
+  scopeTitle: "Was Sie bekommen",
+  scope: [],
+  stepsTitle: "So gehen wir vor",
+  steps: [],
+  faqTitle: "Häufige Fragen",
+  faq: [],
+  projektId: null,
+};
+
 export const PROJEKTE_DEFAULTS: ProjekteSections = {
   kind: "projekte",
   empty: "Hier stellen wir bald unsere ersten Projekte vor.",
@@ -46,6 +60,7 @@ export const KONTAKT_DEFAULTS: KontaktSections = {
 const DEFAULTS: { [K in Kind]: SectionsOf<K> } = {
   home: HOME_DEFAULTS,
   leistungen: LEISTUNGEN_DEFAULTS,
+  leistung: LEISTUNG_DEFAULTS,
   projekte: PROJEKTE_DEFAULTS,
   kontakt: KONTAKT_DEFAULTS,
 };

@@ -1,3 +1,4 @@
+import { LEISTUNG_DEFAULTS } from "./page-sections";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -112,6 +113,22 @@ describe("page kinds", () => {
     expect(kindOf("kontakt")).toBe("kontakt");
     expect(kindOf("ueber-uns")).toBe("content");
     expect([...ROUTED_PATHS].sort()).toEqual(["/", "/kontakt", "/leistungen", "/projekte"]);
+  });
+
+  it("makes every page right under /leistungen a service's page, by its parent", () => {
+    expect(kindOf("web-anwendungen", "leistungen")).toBe("leistung");
+    expect(kindOf("neue-leistung", "leistungen")).toBe("leistung");
+    expect(kindOf("web-anwendungen", "ueber-uns")).toBe("content");
+    expect(kindOf("web-anwendungen")).toBe("content");
+    // A routed page keeps its kind wherever it stands.
+    expect(kindOf("kontakt", "leistungen")).toBe("kontakt");
+  });
+
+  it("gives a service's page the service sections, and only it", () => {
+    const leistung = { ...LEISTUNG_DEFAULTS };
+    expect(sectionsProblem("mobile-apps", leistung, "leistungen")).toBeNull();
+    expect(sectionsProblem("mobile-apps", null, "leistungen")).toBeNull();
+    expect(sectionsProblem("ueber-uns", leistung, null)).toMatch(/keine festen Abschnitte/);
   });
 
   it("keeps the routed and the legal pages", () => {

@@ -11,14 +11,18 @@ import {
   getChildPages,
   getLeistungenContent,
   getPageByPath,
+  getProjekte,
   getPublishedPagePaths,
+  getSiteSettings,
 } from "@/data/queries";
 import { redirectOrNotFound } from "@/data/redirect-or-not-found";
 import { pageTrail } from "@/lib/breadcrumbs";
 import { ROUTED_PATHS } from "@/cms/content/page-tree";
 import { firstParagraph } from "@/cms/rich-text/text";
-import { buildMetadata } from "@/lib/seo";
+import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
 import { cn } from "@/lib/utils";
+
+import { LeistungSections } from "./_components/leistung-sections";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
@@ -53,10 +57,17 @@ export default async function CmsPage({ params }: Props) {
   if (!page) return redirectOrNotFound(`/${slug.join("/")}`);
   const trail = pageTrail(page.breadcrumbs);
   const path = `/${slug.join("/")}`;
-  const [children, leistungen] = await Promise.all([
+  const [children, leistungen, projekte, settings] = await Promise.all([
     getChildPages(page.id),
     getLeistungenContent(),
+    getProjekte(),
+    getSiteSettings(),
   ]);
+  // A service's own page: its sections, the project it points to if that is published.
+  const service = page.sections?.kind === "leistung" ? page.sections : null;
+  const projekt = service?.projektId
+    ? (projekte.find((p) => p.id === service.projektId) ?? null)
+    : null;
   // A service's page lists the other services beside its text.
   const otherServices = path.startsWith("/leistungen/")
     ? leistungen.sections.services.filter((service) => `/leistungen/${service.slug}` !== path)
@@ -64,6 +75,22 @@ export default async function CmsPage({ params }: Props) {
 
   return (
     <main>
+      {service ? (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: page.title,
+            url: absoluteUrl(page.path),
+            ...(page.lead ? { description: page.lead } : {}),
+            provider: {
+              "@type": "Organization",
+              name: settings.siteName,
+              url: absoluteUrl("/"),
+            },
+          }}
+        />
+      ) : null}
       <PageHeader
         title={page.title}
         lead={page.lead}
@@ -106,6 +133,8 @@ export default async function CmsPage({ params }: Props) {
           </nav>
         ) : null}
       </div>
+
+      {service ? <LeistungSections sections={service} projekt={projekt} /> : null}
 
       {children.length > 0 ? (
         <section aria-labelledby="unterseiten-titel" className="border-t">

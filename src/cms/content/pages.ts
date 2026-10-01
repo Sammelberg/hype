@@ -79,7 +79,7 @@ function toPage(row: Row, tree: TreeNode[], images: Map<number, MediaDoc>, draft
       description: doc.meta.description ?? null,
       image: doc.meta.imageId ? (images.get(doc.meta.imageId) ?? null) : null,
     },
-    kind: kindOf(doc.slug),
+    kind: kindOf(doc.slug, tree.find((n) => n.id === doc.parentId)?.slug),
     sections: doc.sections ?? null,
     breadcrumbs: breadcrumbsOf(row.id, tree),
     status: row.status,
@@ -194,8 +194,9 @@ async function assertSlugFree(client: Db | Tx, slug: string, exceptId: number | 
 }
 
 // Sections must fit the page's kind; a fixed page keeps its slug and its place.
-function assertShape(input: PageInput, row: Row | null) {
-  const problem = sectionsProblem(input.slug, input.sections);
+function assertShape(input: PageInput, row: Row | null, rows: Row[]) {
+  const parentSlug = rows.find((r) => r.id === input.parentId)?.slug ?? null;
+  const problem = sectionsProblem(input.slug, input.sections, parentSlug);
   if (problem) throw new PageError(problem, "sections");
   if (row && PROTECTED_SLUGS.has(row.slug)) {
     if (input.slug !== row.slug) throw new PageError("Die Adresse dieser Seite ist fest.", "slug");
@@ -241,10 +242,10 @@ export async function createPage(
   options: { publish?: boolean; userId?: number | null } = {},
 ) {
   const input = PageInputSchema.parse(raw);
-  assertShape(input, null);
   return db.transaction(async (tx) => {
     await assertSlugFree(tx, input.slug, null);
     const rows = await allRows(tx);
+    assertShape(input, null, rows);
     assertTreeMove(null, input.parentId, treeOf(rows, false));
     const [inserted] = await tx
       .insert(pages)
@@ -291,7 +292,7 @@ export async function saveDraft(id: number, raw: PageInput) {
     const rows = await allRows(tx);
     const current = rows.find((r) => r.id === id);
     if (!current) throw new PageError("Die Seite gibt es nicht mehr.");
-    assertShape(input, current);
+    assertShape(input, current, rows);
     assertTreeMove(id, input.parentId, treeOf(rows, false));
     const [row] = await tx
       .update(pages)
@@ -316,7 +317,7 @@ export async function publishPage(
     if (!row) throw new PageError("Die Seite gibt es nicht mehr.");
     const input = effective(row, true);
     PageInputSchema.parse(input);
-    assertShape(input, row);
+    assertShape(input, row, rows);
     await assertSlugFree(tx, input.slug, id);
     assertTreeMove(id, input.parentId, treeOf(rows, false));
     const before = subtreePaths(rows, id);
@@ -437,8 +438,8 @@ export async function upsertPublishedPage(
   userId: number | null = null,
 ) {
   const input = PageInputSchema.parse(raw);
-  assertShape(input, null);
   return db.transaction(async (tx) => {
+    assertShape(input, null, await allRows(tx));
     const [existing] = await tx.select().from(pages).where(eq(pages.slug, input.slug)).limit(1);
     if (existing) {
       await tx

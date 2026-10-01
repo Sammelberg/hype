@@ -166,7 +166,28 @@ export const seedSections = {
   ],
 };
 
-export type SeedPage = { slug: string; title: string; parent?: string; content: Block[] };
+// A service's own page (under /leistungen) also carries its sections; `projekt` names a project by
+// its slug (projects live only in the database, so it is linked when one with that slug exists).
+export type SeedLeistung = {
+  fit: { title: string; text: string }[];
+  scope: string[];
+  steps: { title: string; text: string }[];
+  faq: { question: string; answer: string }[];
+  projekt?: string;
+};
+
+export type SeedPage = {
+  slug: string;
+  title: string;
+  parent?: string;
+  lead?: string;
+  content: Block[];
+  leistung?: SeedLeistung;
+};
+
+// Every statement below rests on what the owner confirmed (.agents/product-marketing.md): no stack,
+// no prices, no durations, no store publishing, no taking over other people's software.
+const MEISTRUM = "meistrum-krone-parkett";
 
 export const seedPages: SeedPage[] = [
   {
@@ -359,6 +380,73 @@ export const seedPages: SeedPage[] = [
     slug: "web-anwendungen",
     title: "Web-Anwendungen",
     parent: "leistungen",
+    lead: "Portale, interne Werkzeuge und Planungssysteme, die im Browser laufen – zugeschnitten auf die Abläufe Ihres Betriebs.",
+    leistung: {
+      fit: [
+        {
+          title: "Die Excel-Liste kommt an ihre Grenzen",
+          text: "Mehrere Personen pflegen dieselbe Datei, Stände laufen auseinander, niemand weiß, welcher gilt. Eine Web-Anwendung hält die Daten an einer Stelle und zeigt jedem, was er braucht.",
+        },
+        {
+          title: "Kunden fragen nach dem Stand ihres Auftrags",
+          text: "Statt Rückrufen und E-Mails sehen Ihre Kunden den Auftragsstatus in einem eigenen Portal, zusammen mit den Unterlagen, die sie betreffen.",
+        },
+        {
+          title: "Standardsoftware passt nicht zu Ihren Abläufen",
+          text: "Wenn Sie Ihre Arbeitsweise einer Software anpassen müssten statt umgekehrt, lohnt sich eine Anwendung, die genau Ihre Abläufe abbildet.",
+        },
+      ],
+      scope: [
+        "Workshop zu Zielen, Nutzern und Randbedingungen",
+        "Schriftliche Einschätzung zu Umfang und Vorgehen",
+        "Klickbarer Prototyp, bevor programmiert wird",
+        "Entwicklung in kurzen Iterationen mit lauffähigen Zwischenständen",
+        "Anbindung an Ihre bestehenden Systeme, wo nötig",
+        "Vollständiger Quellcode und Dokumentation",
+        "Betrieb auf Servern in Deutschland, auf Wunsch",
+      ],
+      steps: [
+        {
+          title: "Abläufe verstehen",
+          text: "Wir sehen uns an, wie heute gearbeitet wird: welche Listen, Werkzeuge und Übergaben es gibt und wo Zeit verloren geht.",
+        },
+        {
+          title: "Prototyp ausprobieren",
+          text: "Ein klickbarer Prototyp zeigt die wichtigsten Ansichten. Sie und Ihr Team probieren ihn aus, bevor eine Zeile Code entsteht.",
+        },
+        {
+          title: "In Etappen bauen",
+          text: "Wir entwickeln in kurzen Iterationen. Jeder Zwischenstand läuft und lässt sich prüfen, so bleibt sichtbar, was als Nächstes kommt.",
+        },
+        {
+          title: "Einführen und weiterentwickeln",
+          text: "Wir bringen die Anwendung in Betrieb und erweitern sie, wenn neue Anforderungen dazukommen.",
+        },
+      ],
+      faq: [
+        {
+          question: "Läuft die Anwendung auch auf Tablet und Smartphone?",
+          answer:
+            "Ja. Eine Web-Anwendung läuft im Browser, also auf jedem Gerät mit aktuellem Browser und ohne Installation. Muss sie auch ohne Netz funktionieren, ist eine mobile App die bessere Wahl.",
+        },
+        {
+          question: "Können wir die Anwendung später von jemand anderem weiterentwickeln lassen?",
+          answer:
+            "Ja. Sie erhalten den vollständigen Quellcode und die Dokumentation. Damit kann auch ein anderes Team daran weiterarbeiten.",
+        },
+        {
+          question: "Wie lange dauert die Entwicklung?",
+          answer:
+            "Das hängt vom Umfang ab. Nach dem ersten Workshop erhalten Sie eine schriftliche Einschätzung zu Umfang und Vorgehen als Grundlage für Ihre Entscheidung.",
+        },
+        {
+          question: "Wo werden die Daten gespeichert?",
+          answer:
+            "Auf Wunsch ausschließlich auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+        },
+      ],
+      projekt: MEISTRUM,
+    },
     content: [
       {
         kind: "p",
@@ -378,6 +466,66 @@ export const seedPages: SeedPage[] = [
     slug: "mobile-apps",
     title: "Mobile Apps",
     parent: "leistungen",
+    lead: "Apps für iOS und Android für Menschen, die unterwegs arbeiten – auch dort, wo das Netz nicht reicht.",
+    leistung: {
+      fit: [
+        {
+          title: "Ihr Team arbeitet beim Kunden vor Ort",
+          text: "Montage, Wartung, Außendienst: Wer unterwegs ist, braucht Aufträge, Pläne und Formulare auf dem Gerät, nicht im Büro.",
+        },
+        {
+          title: "Auf der Baustelle oder im Lager fehlt das Netz",
+          text: "Die App speichert Eingaben auf dem Gerät und gleicht sie automatisch ab, sobald wieder eine Verbindung besteht.",
+        },
+        {
+          title: "Papierformulare kommen zu spät im Büro an",
+          text: "Was vor Ort erfasst wird, landet direkt im System, statt Tage später abgetippt zu werden.",
+        },
+      ],
+      scope: [
+        "App für iOS und Android",
+        "Offline nutzbar mit automatischem Abgleich, wo nötig",
+        "Anbindung an Ihre Web-Anwendung oder Ihr Fachsystem",
+        "Klickbarer Prototyp vor der Entwicklung",
+        "Entwicklung in kurzen Iterationen mit lauffähigen Zwischenständen",
+        "Vollständiger Quellcode und Dokumentation",
+      ],
+      steps: [
+        {
+          title: "Einsatz klären",
+          text: "Wir klären, wo und wie die App genutzt wird: unterwegs, mit wenig Zeit, oft ohne verlässliches Netz.",
+        },
+        {
+          title: "Prototyp ausprobieren",
+          text: "Ein klickbarer Prototyp zeigt die wichtigsten Abläufe. Ihr Team probiert ihn aus, bevor entwickelt wird.",
+        },
+        {
+          title: "Entwickeln und anbinden",
+          text: "Wir entwickeln die App in kurzen Iterationen und verbinden sie mit den Systemen, in denen Ihre Daten heute liegen.",
+        },
+        {
+          title: "Einführen und pflegen",
+          text: "Nach dem Start bleiben wir ansprechbar: für Updates und für neue Funktionen nach Bedarf.",
+        },
+      ],
+      faq: [
+        {
+          question: "Funktioniert die App ohne Internet?",
+          answer:
+            "Wo es nötig ist, ja. Die App speichert Eingaben auf dem Gerät und gleicht sie automatisch ab, sobald wieder eine Verbindung besteht.",
+        },
+        {
+          question: "Brauchen wir dafür auch eine Web-Anwendung?",
+          answer:
+            "Nicht unbedingt. Oft gibt es schon ein System, in dem die Daten liegen; die App wird daran angebunden. Fehlt es, entwickeln wir beides aufeinander abgestimmt.",
+        },
+        {
+          question: "Gehört uns der Code der App?",
+          answer:
+            "Ja. Sie erhalten den vollständigen Quellcode und die Dokumentation und bleiben unabhängig von uns.",
+        },
+      ],
+    },
     content: [
       {
         kind: "p",
@@ -397,6 +545,64 @@ export const seedPages: SeedPage[] = [
     slug: "schnittstellen",
     title: "Schnittstellen und Integration",
     parent: "leistungen",
+    lead: "ERP, CRM, Webshop und Fachsysteme tauschen ihre Daten selbst aus – damit niemand sie mehr von Hand überträgt.",
+    leistung: {
+      fit: [
+        {
+          title: "Daten werden doppelt erfasst",
+          text: "Bestellungen aus dem Shop werden ins ERP abgetippt, Kundendaten in zwei Systemen gepflegt. Jede Übertragung kostet Zeit und öffnet die Tür für Fehler.",
+        },
+        {
+          title: "Zwischen den Systemen steht eine Person",
+          text: "Wenn nur eine Kollegin weiß, wie die Daten von einem System ins andere kommen, hängt ein Teil des Betriebs an ihr.",
+        },
+        {
+          title: "Ein neues System soll zu den alten passen",
+          text: "Ein neuer Shop, ein neues CRM: Die Schnittstelle sorgt dafür, dass das Neue mit dem Bestehenden zusammenarbeitet.",
+        },
+      ],
+      scope: [
+        "Bestandsaufnahme der Systeme und Datenflüsse",
+        "Entwurf der Schnittstelle, bevor gebaut wird",
+        "Automatischer Abgleich statt Doppeleingabe",
+        "Dokumentation der Datenflüsse",
+        "Betrieb und Überwachung der Schnittstelle, auf Wunsch",
+      ],
+      steps: [
+        {
+          title: "Bestandsaufnahme",
+          text: "Welche Systeme sprechen bereits miteinander, wo entstehen Brüche, welche Daten müssen wirklich fließen.",
+        },
+        {
+          title: "Entwurf",
+          text: "Wir legen fest, welche Daten in welche Richtung fließen, wann und nach welchen Regeln. Erst dann wird gebaut.",
+        },
+        {
+          title: "Umsetzung",
+          text: "Wir bauen die Schnittstelle, prüfen sie gründlich und nehmen sie erst dann in Betrieb.",
+        },
+        {
+          title: "Betrieb",
+          text: "Läuft die Schnittstelle, behalten wir sie auf Wunsch im Blick und passen sie an, wenn sich eines der Systeme ändert.",
+        },
+      ],
+      faq: [
+        {
+          question: "Welche Systeme lassen sich anbinden?",
+          answer:
+            "Das klären wir in der Bestandsaufnahme. Entscheidend ist, welche Wege ein System für den Datenaustausch anbietet, etwa eine Programmierschnittstelle, Datei-Exporte oder den Zugriff auf seine Datenbank.",
+        },
+        {
+          question: "Müssen wir dafür Systeme austauschen?",
+          answer: "Nein. Eine Schnittstelle verbindet die Systeme, die Sie bereits haben.",
+        },
+        {
+          question: "Was passiert, wenn sich eines der Systeme ändert?",
+          answer:
+            "Die Schnittstelle ist dokumentiert, Anpassungen bleiben nachvollziehbar. Auf Wunsch übernehmen wir den Betrieb und passen sie selbst an.",
+        },
+      ],
+    },
     content: [
       {
         kind: "p",
@@ -416,6 +622,66 @@ export const seedPages: SeedPage[] = [
     slug: "modernisierung",
     title: "Modernisierung",
     parent: "leistungen",
+    lead: "Gewachsene Software Schritt für Schritt erneuern, während der Betrieb weiterläuft.",
+    leistung: {
+      fit: [
+        {
+          title: "Nur noch eine Person kennt das System",
+          text: "Das Wissen über die Software steckt in wenigen Köpfen. Fällt jemand aus, steht ein Teil des Betriebs still.",
+        },
+        {
+          title: "Die Technik ist in die Jahre gekommen",
+          text: "Das System läuft auf veralteten Werkzeugen, Updates sind schwierig oder gar nicht mehr möglich.",
+        },
+        {
+          title: "Jede Änderung wird zum Risiko",
+          text: "Neue Anforderungen lassen sich kaum umsetzen, und jede Anpassung droht an anderer Stelle etwas zu beschädigen.",
+        },
+      ],
+      scope: [
+        "Bestandsaufnahme des gewachsenen Systems",
+        "Plan für die Ablösung in Etappen",
+        "Neue Oberfläche auf der bestehenden Datenbasis, wo sinnvoll",
+        "Eine funktionierende Anwendung nach jeder Etappe",
+        "Dokumentierte, wartbare Architektur",
+        "Vollständiger Quellcode und Dokumentation",
+      ],
+      steps: [
+        {
+          title: "Bestand verstehen",
+          text: "Wir sehen uns an, was das System heute leistet, wer damit arbeitet und welche Teile am dringendsten erneuert werden müssen.",
+        },
+        {
+          title: "Etappen planen",
+          text: "Wir teilen die Ablösung in Etappen, nach denen jeweils eine funktionierende Anwendung steht.",
+        },
+        {
+          title: "Neue Oberfläche",
+          text: "Häufig beginnt es mit einer neuen Oberfläche auf der bestehenden Datenbasis. So entsteht früh sichtbarer Nutzen.",
+        },
+        {
+          title: "Datenbasis erneuern",
+          text: "Danach modernisieren wir die Datenbasis selbst, bis das alte System abgeschaltet werden kann.",
+        },
+      ],
+      faq: [
+        {
+          question: "Müssen wir den Betrieb für die Umstellung unterbrechen?",
+          answer:
+            "Nein. Genau dafür gibt es die Etappen: An jedem Punkt läuft eine funktionierende Anwendung.",
+        },
+        {
+          question: "Ist eine Neuentwicklung in einem Zug nicht einfacher?",
+          answer:
+            "Selten. Eine Ablösung in einem Zug ist für die meisten Betriebe weder realistisch noch risikoarm. In der Bestandsaufnahme klären wir, welcher Weg zu Ihrem System passt.",
+        },
+        {
+          question: "Was passiert mit unseren Daten?",
+          answer:
+            "Sie bleiben erhalten. Die neue Oberfläche arbeitet zunächst auf der bestehenden Datenbasis, die anschließend Schritt für Schritt modernisiert wird.",
+        },
+      ],
+    },
     content: [
       {
         kind: "p",
@@ -435,6 +701,61 @@ export const seedPages: SeedPage[] = [
     slug: "betrieb",
     title: "Betrieb und Weiterentwicklung",
     parent: "leistungen",
+    lead: "Nach dem Start bleiben wir ansprechbar: für Updates, Überwachung und neue Funktionen.",
+    leistung: {
+      fit: [
+        {
+          title: "Die Anwendung läuft, aber niemand pflegt sie",
+          text: "Updates bleiben liegen, Fehler fallen erst auf, wenn sich jemand beschwert. Laufende Pflege hält die Anwendung sicher und verlässlich.",
+        },
+        {
+          title: "Ihre Anforderungen wachsen",
+          text: "Neue Abläufe, mehr Nutzer, neue Vorschriften: Software ist selten fertig, sie entwickelt sich mit Ihrem Betrieb.",
+        },
+        {
+          title: "Ihre Daten sollen in Deutschland bleiben",
+          text: "Auf Wunsch betreiben wir die Anwendung auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+        },
+      ],
+      scope: [
+        "Updates und Sicherheitskorrekturen",
+        "Überwachung und Fehleranalyse",
+        "Neue Funktionen nach Bedarf",
+        "Betrieb auf Servern in Deutschland, ohne US-Anbieter",
+        "Feste Ansprechpartner statt wechselnder Kontakte",
+      ],
+      steps: [
+        {
+          title: "Inbetriebnahme",
+          text: "Wir bringen die Anwendung auf die Server und richten die Überwachung ein.",
+        },
+        {
+          title: "Laufende Pflege",
+          text: "Updates und Sicherheitskorrekturen spielen wir regelmäßig ein; meldet die Überwachung einen Fehler, gehen wir ihm nach.",
+        },
+        {
+          title: "Weiterentwicklung",
+          text: "Neue Funktionen entwickeln wir, wenn Sie sie brauchen, in derselben Arbeitsweise wie zu Beginn.",
+        },
+      ],
+      faq: [
+        {
+          question: "Müssen wir den Betrieb bei Ihnen beauftragen?",
+          answer:
+            "Nein. Sie erhalten Quellcode und Dokumentation vollständig und können den Betrieb auch selbst oder mit einem anderen Partner übernehmen.",
+        },
+        {
+          question: "Wo läuft unsere Anwendung?",
+          answer: "Auf Wunsch auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+        },
+        {
+          question: "Mit wem haben wir es im Betrieb zu tun?",
+          answer:
+            "Mit den Menschen, die Ihre Software entwickeln, vom ersten Gespräch bis zum Betrieb. Keine wechselnden Kontakte, kein Callcenter dazwischen.",
+        },
+      ],
+      projekt: MEISTRUM,
+    },
     content: [
       {
         kind: "p",
