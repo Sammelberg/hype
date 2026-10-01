@@ -94,6 +94,34 @@
   }
 }
 
+/* The warm light on the crest (kontakt): a cream heart in an amber glow, breathing slowly. */
+.beaconHalo {
+  fill: rgb(255 192 104 / 0.28);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.beaconHeart {
+  fill: rgb(255 238 200);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .beacon {
+    opacity: 0;
+    animation: rise 0.9s ease-out 1.8s forwards;
+  }
+  .beaconHalo {
+    animation: breathe 3.6s ease-in-out infinite;
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.45;
+    scale: 1.5;
+  }
+}
+
 @keyframes twinkle {
   50% {
     opacity: 0.12;

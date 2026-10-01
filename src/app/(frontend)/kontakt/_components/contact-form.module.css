@@ -1,0 +1,30 @@
+/* The sent message's mark (contact-form.tsx): the ring closes, then the tick draws. */
+.sent {
+  width: 3.5rem;
+  height: 3.5rem;
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sent circle,
+  .sent path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 0.7s cubic-bezier(0.3, 0.6, 0.2, 1) forwards;
+  }
+
+  .sent path {
+    animation-duration: 0.45s;
+    animation-delay: 0.55s;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

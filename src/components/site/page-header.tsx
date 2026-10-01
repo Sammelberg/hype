@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { HORIZON_H, HORIZON_W, horizon, sky, SKY_H, SKY_W } from "@/lib/horizon";
+import { HORIZON_H, HORIZON_W, horizon, ridgeY, sky, SKY_H, SKY_W } from "@/lib/horizon";
 import { cn } from "@/lib/utils";
 
 import { FIR_DESIGNS } from "./fir-shapes";
@@ -25,6 +25,7 @@ export function PageHeader({
   breadcrumbs,
   horizonKey,
   scene,
+  beacon = false,
   children,
 }: {
   title: ReactNode;
@@ -35,6 +36,8 @@ export function PageHeader({
   horizonKey: string;
   /** The page's own picture in place of the horizon (a service's valley, a map). */
   scene?: ReactNode;
+  /** A warm light on the horizon's crest: someone is there (the contact page). */
+  beacon?: boolean;
   /** Extra content under the lead, such as a search form. */
   children?: ReactNode;
 }) {
@@ -97,13 +100,18 @@ export function PageHeader({
           </div>
         ) : null}
       </div>
-      <div className="relative sd-sink">{scene ?? <Horizon horizonKey={horizonKey} />}</div>
+      <div className="relative sd-sink">
+        {scene ?? <Horizon horizonKey={horizonKey} beacon={beacon} />}
+      </div>
     </InView>
   );
 }
 
-function Horizon({ horizonKey }: { horizonKey: string }) {
+function Horizon({ horizonKey, beacon }: { horizonKey: string; beacon: boolean }) {
   const h = horizon(horizonKey);
+  // The arc spans 180 units over the crest: the light stands in its middle, on the ridge.
+  const crestX = Number(/^M ([\d.]+)/.exec(h.arc)?.[1] ?? HORIZON_W / 2) + 90;
+  const crestY = ridgeY(horizonKey, crestX) - 4;
   return (
     <svg
       viewBox={`0 0 ${HORIZON_W} ${HORIZON_H}`}
@@ -132,6 +140,12 @@ function Horizon({ horizonKey }: { horizonKey: string }) {
       })}
       <path className={styles.ridge} d={h.ridge} pathLength={1} />
       <path className={styles.arc} d={h.arc} pathLength={1} />
+      {beacon ? (
+        <g className={styles.beacon}>
+          <circle cx={crestX} cy={crestY} r={16} className={cn(styles.beaconHalo, "loop")} />
+          <circle cx={crestX} cy={crestY} r={3.5} className={styles.beaconHeart} />
+        </g>
+      ) : null}
     </svg>
   );
 }

@@ -43,10 +43,13 @@ export function contours(key: string, count = 9): Contours {
   // and every ring grows by at least half a step, so no two rings ever touch.
   const waves = Array.from({ length: 4 }, (_, j) => ({
     k: j + 1,
-    a: (0.16 / (j + 1)) * (0.5 + rnd()),
+    a: (0.2 / (j + 1)) * (0.5 + rnd()),
     phase: rnd() * Math.PI * 2,
   }));
   const step = 30 + rnd() * 8;
+  // One slope gentler than the other: each ring's centre drifts a little further the same way,
+  // never by more than a third of a step, so the rings stay apart.
+  const drift = { x: (rnd() - 0.5) * step * 0.6, y: (rnd() - 0.5) * step * 0.6 };
   const shape = (t: number) => waves.reduce((s, w) => s + w.a * Math.sin(w.k * t + w.phase), 0);
   const radius = (k: number, t: number) => {
     const base = step * (k + 0.6);
@@ -59,7 +62,10 @@ export function contours(key: string, count = 9): Contours {
       Array.from({ length: POINTS }, (_, i) => {
         const t = (i / POINTS) * Math.PI * 2;
         const r = radius(k, t);
-        return [peak.x + r * Math.cos(t), peak.y + r * Math.sin(t)] as const;
+        return [
+          peak.x + k * drift.x + r * Math.cos(t),
+          peak.y + k * drift.y + r * Math.sin(t),
+        ] as const;
       }),
     ),
   );

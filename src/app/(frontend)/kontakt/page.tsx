@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 
 import { PageHeader } from "@/components/site/page-header";
 import { RichText } from "@/components/site/rich-text";
@@ -42,9 +43,14 @@ export default async function ContactPage() {
 
   return (
     <main>
-      <PageHeader title={page?.title || "Kontakt"} lead={page?.lead} horizonKey="/kontakt" />
-      <div className="page-container grid gap-16 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-24 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <div className="max-w-3xl" data-cms-zone="formular">
+      <PageHeader title={page?.title || "Kontakt"} lead={page?.lead} horizonKey="/kontakt" beacon />
+      <div className="page-container grid gap-10 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        {/* The form in one calm panel: the page's one job. */}
+        <div
+          className="max-w-4xl rise-later rounded-3xl border border-primary-soft/15 bg-card p-6 sm:p-10 lg:p-12"
+          style={{ "--delay": "0.55s" } as CSSProperties}
+          data-cms-zone="formular"
+        >
           {form && fields.length ? (
             <ContactForm
               fields={fields}
@@ -62,7 +68,7 @@ export default async function ContactPage() {
         </div>
         <aside
           aria-label="Weitere Wege"
-          className="space-y-10 lg:border-l lg:pl-12"
+          className="space-y-10 lg:sticky lg:top-[calc(var(--spacing-header)+2rem)] lg:self-start lg:pt-4"
           data-cms-zone="danach"
         >
           {mail ? (
@@ -74,7 +80,11 @@ export default async function ContactPage() {
             </div>
           ) : null}
           {next?.title ? (
-            <div>
+            <div className="relative pl-6">
+              <span
+                aria-hidden="true"
+                className="absolute top-1.5 bottom-1 left-0 w-px bg-gradient-to-b from-primary-soft to-transparent"
+              />
               <h2 className="text-xl font-medium tracking-tight">{next.title}</h2>
               <RichText data={next.text} className="prose-lg mt-3" />
             </div>

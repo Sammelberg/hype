@@ -12,6 +12,8 @@ import { prefillValues } from "../_lib/prefill";
 import { HONEYPOT, STARTED_AT, type ContactField } from "../_lib/validation";
 import { cn } from "@/lib/utils";
 
+import styles from "./contact-form.module.css";
+
 export type ContactFormField = ContactField & { width?: number | null };
 
 const SUPPORTED = new Set(["text", "email", "textarea", "number", "select", "checkbox"]);
@@ -60,7 +62,12 @@ export function ContactForm({
   if (state.status === "success") {
     return (
       <div ref={statusRef} tabIndex={-1} role="status" className="outline-none">
-        {confirmation}
+        {/* A ring that closes and a tick that draws: the message has arrived. */}
+        <svg viewBox="0 0 56 56" aria-hidden="true" className={styles.sent}>
+          <circle cx="28" cy="28" r="26" pathLength={1} />
+          <path d="M17 29l7.5 7.5L40 21" pathLength={1} />
+        </svg>
+        <div className="mt-6">{confirmation}</div>
       </div>
     );
   }
@@ -125,13 +132,13 @@ export function ContactForm({
                     {...common}
                     rows={8}
                     defaultValue={values[field.name]}
-                    className="min-h-40 text-base md:text-base"
+                    className="min-h-40 bg-background/60 text-base transition-[border-color,box-shadow] duration-200 focus-visible:border-primary-soft md:text-base"
                   />
                 ) : field.blockType === "select" ? (
                   <select
                     {...common}
                     defaultValue={values[field.name] ?? ""}
-                    className="h-11 rounded-md border border-input bg-transparent px-3 text-base"
+                    className="h-12 rounded-md border border-input bg-background/60 px-3 text-base transition-[border-color,box-shadow] duration-200 outline-none focus-visible:border-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="">Bitte wählen</option>
                     {field.options?.map((option) => (
@@ -158,7 +165,7 @@ export function ContactForm({
                           : undefined
                     }
                     defaultValue={values[field.name]}
-                    className="h-11 text-base md:text-base"
+                    className="h-12 bg-background/60 text-base transition-[border-color,box-shadow] duration-200 focus-visible:border-primary-soft md:text-base"
                   />
                 )}
               </>
@@ -206,8 +213,20 @@ export function ContactForm({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-5 sm:col-span-2">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={pending}
+          className="group h-12 gap-3 px-7 text-base"
+        >
           {pending ? "Wird gesendet …" : submitLabel}
+          <svg
+            viewBox="0 0 28 28"
+            aria-hidden="true"
+            className="size-5 fill-none stroke-current stroke-2 transition-transform duration-200 ease-out [stroke-linecap:round] [stroke-linejoin:round] group-hover:translate-x-1 group-disabled:translate-x-0"
+          >
+            <path d="M5 14h17M16 8l6 6-6 6" />
+          </svg>
         </Button>
         <p className="text-sm text-muted-foreground">
           Hinweise zur Verarbeitung Ihrer Angaben finden Sie in der{" "}
