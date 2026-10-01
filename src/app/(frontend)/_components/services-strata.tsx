@@ -155,6 +155,12 @@ const SLIDE = { duration: 0.95, ease: "power3.inOut" };
 const QUIET_MS = 300;
 /** A glide may pause this long and still be the same gesture, if its steps keep shrinking. */
 const TAIL_MS = 700;
+/**
+ * A hand that keeps turning: after the first card, every RUSH further steps of the same turn (as
+ * large as the step that started it, so a notch of any wheel) move one more card. An ordinary turn of a
+ * few notches stays one card.
+ */
+const RUSH = 6;
 
 const VIEW = `0 0 ${VALLEY_W} ${VALLEY_H}`;
 const FIR_CLASS: Record<Ridge, string | undefined> = {
@@ -418,6 +424,9 @@ export function ServicesStrata({
           lastInput = performance.now();
           lastSize = 0;
           floor = Number.POSITIVE_INFINITY;
+          // A fast turn that brought the page here rides on in steps of its own size.
+          rush = 0;
+          unit = 0;
           holdPage(release);
           section.setAttribute("data-held", "");
           observer.enable();
@@ -448,9 +457,15 @@ export function ServicesStrata({
         // gesture starts after a pause (QUIET_MS), unless what comes is
         // a smaller step after a lull (a trackpad's glide tapering off on a busy machine), or
         // inside a running glide as a clear new push (a swipe while the last one still glides on).
+        // A hand that keeps turning rides on: steps that do not shrink (a wheel's notches, a flick
+        // speeding up; a trackpad's glide tapering off does not count) add up, every RUSH of them
+        // one more card, and past the last the page scrolls on (the owner's call, 2026-10-01: fast
+        // scrolling works here as everywhere).
         let lastSize = 0;
         let floor = Number.POSITIVE_INFINITY;
         let lastMove = Number.NEGATIVE_INFINITY;
+        let rush = 0;
+        let unit = 1;
         const gesture = (dir: 1 | -1, size: number) => {
           const now = performance.now();
           const gap = now - lastInput;
@@ -458,10 +473,22 @@ export function ServicesStrata({
           const go = pause
             ? !(gap < TAIL_MS && size < lastSize)
             : size > floor * 2 + 4 && now - lastMove > QUIET_MS;
+          const sustained = !pause && size >= 20 && size >= lastSize;
           floor = pause || go ? size : Math.min(floor, size);
           lastInput = now;
           lastSize = size;
-          if (!go) return;
+          if (go) {
+            rush = 0;
+            unit = size;
+            lastMove = now;
+            move(dir, dir * size);
+            return;
+          }
+          if (!sustained) return;
+          unit ||= size;
+          rush += size;
+          if (rush < unit * RUSH) return;
+          rush = 0;
           lastMove = now;
           move(dir, dir * size);
         };

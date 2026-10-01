@@ -160,14 +160,14 @@ test("one turn of the wheel, several notches at once, moves one card", async ({
   await expect.poll(() => current(page)).toBe("2");
 });
 
-test("a trackpad swipe, gliding on for a second, moves one card, not several", async ({
+test("a calm trackpad swipe, gliding on for a second, moves one card, not several", async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
   for (let k = 0; k < 60; k++) {
-    await page.mouse.wheel(0, 80 * Math.exp(-k / 18) + 1);
+    await page.mouse.wheel(0, 30 * Math.exp(-k / 18) + 1);
     await page.waitForTimeout(16);
   }
   await settle(() => trackX(page));
@@ -181,7 +181,7 @@ test("a second swipe while the first still glides on moves one more card", async
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
   // A swipe gliding out, then a new push in the middle of the glide.
-  for (const start of [80, 80]) {
+  for (const start of [30, 30]) {
     for (let k = 0; k < 25; k++) {
       await page.mouse.wheel(0, start * Math.exp(-k / 8) + 1);
       await page.waitForTimeout(16);
@@ -189,6 +189,40 @@ test("a second swipe while the first still glides on moves one more card", async
   }
   await settle(() => trackX(page));
   expect(await current(page)).toBe("2");
+});
+
+test("a fast spin of the wheel rides on through several cards, and on past the last", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  // A quick spin: notches of a Windows wheel as fast as they come.
+  for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 100);
+  await settle(() => trackX(page));
+  const moved = Number(await current(page));
+  expect(moved).toBeGreaterThan(1);
+  // A longer one carries on past the last card: the page scrolls on, as anywhere else.
+  await page.waitForTimeout(500);
+  const before = await scrollTop(page);
+  for (let i = 0; i < 40; i++) await page.mouse.wheel(0, 100);
+  await expect(section(page)).not.toHaveAttribute("data-held");
+  expect(await current(page)).toBe("4");
+  expect(await settle(() => scrollTop(page))).toBeGreaterThan(before + 200);
+});
+
+test("a fast spin from the top runs on through the cards instead of stopping dead", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+  await page.mouse.move(700, 450);
+  // One long fast spin, no pause: the stage stops the page, the spin rides on through the cards.
+  for (let i = 0; i < 70 && (await current(page)) === "0"; i++) await page.mouse.wheel(0, 100);
+  await expect.poll(() => current(page)).not.toBe("0");
 });
 
 test("past the last card the page scrolls on as usual, and coming back up the cards ride back", async ({
