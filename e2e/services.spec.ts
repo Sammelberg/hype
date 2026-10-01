@@ -1,9 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 
 // Services on the home page (src/app/(frontend)/_components/services-strata.tsx): from lg up with
-// motion allowed the page glides onto the stage as it comes near and holds there; each gesture (a
-// wheel turn, a trackpad swipe, a key) moves exactly one card into the middle, one more after the
-// last glides the page on, and from below the stage takes the page back at the last card. A rail
+// motion allowed a wheel step that would carry the page past the stage's place stops it there,
+// from above and from below; each gesture (a wheel turn, a trackpad swipe, a key) moves exactly one
+// card into the middle, forward coming down and back coming up, and past the last (or the first)
+// the page simply scrolls on. Nothing ever pulls the page further than the hand turned. A rail
 // names the cards, steps either way and jumps. Below lg and with reduced motion the cards form a
 // native sideways track, centred card by card, the rail's arrows step through it.
 
@@ -57,6 +58,7 @@ const offCentre = (page: Page, index: number) =>
     return Math.round(r.left + r.width / 2 - innerWidth / 2);
   });
 
+const scrollTop = (page: Page) => page.evaluate(() => Math.round(scrollY));
 const header = (page: Page) =>
   page.locator("header").evaluate((el: HTMLElement) => el.offsetHeight);
 const stageTop = (page: Page) =>
@@ -64,41 +66,51 @@ const stageTop = (page: Page) =>
     .locator("[data-stage]")
     .evaluate((el) => Math.round(el.getBoundingClientRect().top));
 
-// Turns the wheel down notch by notch until the page has glided onto the stage and holds.
-async function rideIn(page: Page) {
-  await page.goto("/");
-  await expect(section(page)).toHaveAttribute("data-ride", "");
-  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
-  await page.mouse.move(700, 450);
-  // Until the stage catches the page; then the glide finishes on its own.
-  for (let i = 0; i < 40 && (await rideState(page)) === "free"; i++) {
-    await page.mouse.wheel(0, NOTCH);
+// Turns the wheel notch by notch (down, or up with -1) until the stage stops the page and holds.
+// The step that stops it never takes the page further than it asked: the stop is no pull.
+async function rideIn(page: Page, direction: 1 | -1 = 1, { load = true } = {}) {
+  if (load) {
+    await page.goto("/");
+    await expect(section(page)).toHaveAttribute("data-ride", "");
+    await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+    await page.mouse.move(700, 450);
+  }
+  // Each notch asks for NOTCH more; the stop may give less on the last one, never more.
+  const start = await settle(() => scrollTop(page));
+  let notches = 0;
+  while (notches < 60 && (await rideState(page)) === "free") {
+    await page.mouse.wheel(0, direction * NOTCH);
+    notches++;
     await page.waitForTimeout(250);
   }
   await expect(section(page)).toHaveAttribute("data-held", "");
+  await expect.poll(() => rideState(page)).toBe("docked");
   expect(await stageTop(page)).toBe(await header(page));
+  const travelled = Math.abs((await scrollTop(page)) - start);
+  expect(travelled).toBeLessThanOrEqual(notches * NOTCH + 1);
+  expect(travelled).toBeGreaterThanOrEqual((notches - 1) * NOTCH - 1);
   // Holding changes nothing on <html>: Lenis' stopped state clips its overflow, the scrollbar
   // would vanish and the page shift sideways by its width.
   await expect(page.locator("html")).not.toHaveClass(/lenis-stopped/);
-  // The turn that brought the page here must not count for the first card.
+  // The turn that brought the page here must not count for a card.
   await page.waitForTimeout(400);
 }
 
-test("the page glides onto the stage, and each wheel turn brings exactly one card", async ({
+test("the stage stops the page, and each wheel turn brings exactly one card", async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
   expect(await current(page)).toBe("0");
-  const y = await page.evaluate(() => Math.round(scrollY));
+  const y = await scrollTop(page);
   for (const expected of ["1", "2", "3", "4"]) {
     await page.mouse.wheel(0, NOTCH);
     await expect.poll(() => current(page)).toBe(expected);
     await settle(() => trackX(page));
     expect(Math.abs(await offCentre(page, Number(expected)))).toBeLessThanOrEqual(2);
     // The page stands still while the cards ride.
-    expect(await page.evaluate(() => Math.round(scrollY))).toBe(y);
+    expect(await scrollTop(page)).toBe(y);
     await page.waitForTimeout(300);
   }
 });
@@ -179,11 +191,13 @@ test("a second swipe while the first still glides on moves one more card", async
   expect(await current(page)).toBe("2");
 });
 
-test("after the last card the page moves on, and back up it passes the stage freely", async ({
+test("past the last card the page scrolls on as usual, and coming back up the cards ride back", async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, "wheel input needs a fine pointer");
+  // Two ways onto the stage, notch by notch.
+  test.slow();
   await rideIn(page);
   // Four turns, each after a pause: four cards.
   for (let i = 0; i < 4; i++) {
@@ -193,28 +207,51 @@ test("after the last card the page moves on, and back up it passes the stage fre
   await expect.poll(() => current(page)).toBe("4");
   await page.waitForTimeout(600);
 
-  // One more turn: the stage lets go and the page glides on by itself, to the next section,
-  // its top under the header, in one glide.
-  const docked = await header(page);
+  // One more turn: the stage lets go and the page moves on by that turn, nothing more.
+  const before = await scrollTop(page);
   await page.mouse.wheel(0, NOTCH);
   await expect(section(page)).not.toHaveAttribute("data-held");
-  expect(await settle(() => stageTop(page))).toBeLessThan(docked - 200);
-  const nextTop = await section(page).evaluate((el) =>
-    Math.round(el.nextElementSibling!.getBoundingClientRect().top),
-  );
-  expect(nextTop).toBe(docked);
+  expect(await settle(() => scrollTop(page))).toBe(before + NOTCH);
+  // The next turns scroll on as usual.
+  await page.mouse.wheel(0, NOTCH);
+  expect(await settle(() => scrollTop(page))).toBe(before + 2 * NOTCH);
   expect(await current(page)).toBe("4");
 
-  // Back up the page passes the stage freely: nothing catches or pulls it. Once the stage lies
-  // wholly below the screen the cards are back at the first, for the next way down.
-  const viewport = await page.evaluate(() => innerHeight);
-  for (let i = 0; i < 40 && (await stageTop(page)) < viewport; i++) {
+  // Back up: the stage stops the page again at the last card, and each turn rides one back.
+  await page.waitForTimeout(400);
+  await rideIn(page, -1, { load: false });
+  expect(await current(page)).toBe("4");
+  for (const expected of ["3", "2", "1", "0"]) {
     await page.mouse.wheel(0, -NOTCH);
-    await page.waitForTimeout(150);
-    expect(await rideState(page)).not.toBe("docking");
-    expect(await section(page).getAttribute("data-held")).toBeNull();
+    await expect.poll(() => current(page)).toBe(expected);
+    await page.waitForTimeout(500);
   }
-  await expect.poll(() => current(page)).toBe("0");
+});
+
+test("coming from further down, the stage meets the page at the last card", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  // Two ways onto the stage, notch by notch.
+  test.slow();
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+  await page.mouse.move(700, 450);
+  // The stage's place plus one screen: the stage lies wholly above it.
+  const below = await section(page)
+    .locator("[data-stage]")
+    .evaluate((el) => Math.round(el.getBoundingClientRect().bottom + scrollY + 20));
+  await page.evaluate((y) => window.scrollTo(0, y), below);
+  // Lenis takes the jump in with a tiny step of its own (see verify-interaction).
+  await page.mouse.wheel(0, 1);
+  await expect.poll(() => current(page)).toBe("4");
+  await rideIn(page, -1, { load: false });
+  await page.mouse.wheel(0, -NOTCH);
+  await expect.poll(() => current(page)).toBe("3");
+  // The page stood still meanwhile.
+  expect(await stageTop(page)).toBe(await header(page));
 });
 
 test("back up from the first card: an ordinary scroll, no turn lost and no pull", async ({
@@ -224,7 +261,7 @@ test("back up from the first card: an ordinary scroll, no turn lost and no pull"
   test.skip(isMobile, "wheel input needs a fine pointer");
   await rideIn(page);
   const docked = await header(page);
-  const y = () => page.evaluate(() => Math.round(scrollY));
+  const y = () => scrollTop(page);
   const before = await y();
   // One turn up: the stage lets go and the page scrolls up as far as the turn, an ordinary
   // scroll, no pull back onto the hero.
@@ -240,7 +277,7 @@ test("back up from the first card: an ordinary scroll, no turn lost and no pull"
   expect(await stageTop(page)).toBeGreaterThan(docked);
 });
 
-test("a turn back up while the page still glides in turns it round at once", async ({
+test("a turn back up while the page still comes to rest turns it round at once", async ({
   page,
   isMobile,
 }) => {
@@ -249,15 +286,15 @@ test("a turn back up while the page still glides in turns it round at once", asy
   await expect(section(page)).toHaveAttribute("data-ride", "");
   await expect(page.locator("html")).toHaveClass(/\blenis\b/);
   await page.mouse.move(700, 450);
-  for (let i = 0; i < 40 && (await rideState(page)) === "free"; i++) {
+  for (let i = 0; i < 60 && (await rideState(page)) === "free"; i++) {
     await page.mouse.wheel(0, NOTCH);
     await page.waitForTimeout(250);
   }
   expect(await rideState(page)).toBe("docking");
   await page.waitForTimeout(320);
   await page.mouse.wheel(0, -NOTCH);
-  // Not caught: the page goes back up instead of holding on the first card.
-  await expect.poll(() => rideState(page)).not.toBe("docking");
+  // Not held: the page goes back up instead of holding on the first card.
+  await expect.poll(() => rideState(page)).toBe("free");
   await page.waitForTimeout(1200);
   expect(await section(page).getAttribute("data-held")).toBeNull();
   expect(await stageTop(page)).toBeGreaterThan(await header(page));

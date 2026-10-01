@@ -10,7 +10,14 @@ import Link from "next/link";
 import { type CSSProperties, useRef, useState } from "react";
 
 import { type GlyphName, ServiceGlyph } from "@/components/site/service-glyphs";
-import { glidePageTo, holdPage, releasePage, scrollPageTo } from "@/components/site/smooth-scroll";
+import {
+  holdPage,
+  releasePage,
+  scrollPageBy,
+  scrollPageTo,
+  settlePageAt,
+  stopPageOnWheel,
+} from "@/components/site/smooth-scroll";
 import { Button } from "@/components/ui/button";
 
 import { FIR_DESIGNS } from "@/components/site/fir-shapes";
@@ -142,27 +149,12 @@ const RIDE =
 /** One card to the next: long enough to read as travel, soft at both ends. */
 const SLIDE = { duration: 0.95, ease: "power3.inOut" };
 /**
- * The page's glide onto the stage: it takes over at the speed the page already has (so the hand
- * feels no push and no brake) and settles softly under the header.
- */
-const DOCK = { duration: 0.8, carry: true };
-/**
  * Input within this long of the one before is the same gesture: the notches of one turn of the
  * wheel (a hand spins several at once), a trackpad's glide. A new card needs a pause.
  */
 const QUIET_MS = 300;
-/**
- * And on to the next section after the last card (or back to the one before the first): from the
- * speed the page has, and open to the hand: a new turn while it glides carries the page on.
- */
-const LEAVE = { duration: 0.9, carry: true, follow: QUIET_MS };
 /** A glide may pause this long and still be the same gesture, if its steps keep shrinking. */
 const TAIL_MS = 700;
-
-/** How near the stage comes to its place (share of the screen height) before the page docks. */
-const APPROACH = 0.3;
-/** How far the page moves on when it leaves the stage (share of the screen height). */
-const ONWARD = 0.55;
 
 const VIEW = `0 0 ${VALLEY_W} ${VALLEY_H}`;
 const FIR_CLASS: Record<Ridge, string | undefined> = {
@@ -244,10 +236,11 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 
 /**
  * „Was wir entwickeln“ as a gallery of framed views: five wide cards, the service on the left and
- * a window into its own Black Forest valley on the right (valley.ts). As the stage comes near its
- * place under the header the page glides onto it and holds; from then on each gesture (a wheel
- * turn, a trackpad swipe, a swipe on a touch screen, an arrow or page key) moves exactly one card
- * into the middle, and one more after the last glides the page on (before the first: back up).
+ * a window into its own Black Forest valley on the right (valley.ts). A wheel step that would carry
+ * the page past the stage's place under the header stops it there, from either side; from then on
+ * each gesture (a wheel turn, a trackpad swipe, an arrow or page key) moves exactly one card into
+ * the middle — forward coming down, back coming up — and past the last (or the first) the page
+ * simply scrolls on. Nothing pulls the page anywhere.
  * A card arriving shifts its ridges against each other, the near one faster than the far one, and
  * draws its ice line. A rail names the services, steps either way and jumps; focus inside a card
  * brings it to the middle. Below lg, on short screens and with reduced motion the cards form a
@@ -336,16 +329,17 @@ export function ServicesStrata({
           });
         };
 
-        // free: the page scrolls; docking/leaving: the page glides onto the stage or away;
-        // docked: the stage holds the page and every gesture moves one card.
-        let mode: "free" | "docking" | "docked" | "leaving" = "free";
+        // free: the page scrolls; docking: a wheel step stops the page on the stage's place;
+        // docked: the stage holds the page and every gesture moves one card. Nothing ever pulls
+        // the page (the owner's call, 2026-10-01): it only stops where the hand was taking it.
+        let mode: "free" | "docking" | "docked" = "free";
         // The mode on the section too (data-ride-state), for the tests and nothing else.
         const setMode = (next: typeof mode) => {
           mode = next;
           section.setAttribute("data-ride-state", next);
         };
         setMode("free");
-        // A card moved on while the page still glided in: one, not more.
+        // A card moved on while the page still came to rest: one, not more.
         let movedWhileDocking = false;
         let index = 0;
         let slide: gsap.core.Tween | null = null;
@@ -367,42 +361,46 @@ export function ServicesStrata({
           });
         };
 
-        let lastY = window.scrollY;
-        // The watcher's range is the approach zone around the stage's place under the header, so
-        // its middle is that place.
+        // The stage's place: its top under the header (the trigger's start).
         const watcher = ScrollTrigger.create({
           trigger: stage,
-          start: () => `top ${header() + window.innerHeight * APPROACH}`,
-          end: () => `top ${header() - window.innerHeight * APPROACH}`,
+          start: () => `top ${header()}`,
+          end: () => `top ${header()}`,
           onUpdate: (self) => {
-            const y = self.scroll();
-            // The direction from our own readings, which a stray frame cannot flip for long.
-            const direction = Math.sign(y - lastY);
-            lastY = y;
-            const place = (self.start + self.end) / 2;
-            // Something moved the page while the stage held it (a jump from code, the browser):
+            // Something moved the page while the stage held it (a jump from code, the scrollbar):
             // the stage lets go instead of holding a page that has gone elsewhere.
-            if (mode === "docked" && Math.abs(y - place) > 2) {
+            if (mode === "docked" && Math.abs(self.scroll() - self.start) > 2) {
               release();
               releasePage();
-              return;
             }
-            // Only inside the approach zone: the trigger also reports a jump across it.
-            if (mode !== "free" || y < self.start || y > self.end) return;
-            // Only on the way down: coming down onto it, or having overshot it with cards still
-            // ahead. On the way up the page passes freely (the owner's call, 2026-10-01).
-            if (direction > 0 && (y < place || index < last)) dock();
           },
         });
-        const place = () => (watcher.start + watcher.end) / 2;
+        const place = () => watcher.start;
 
-        // Once the page has gone back up past the stage (it lies wholly below the screen), the
-        // cards return to the first, unseen: the next way down starts at the beginning.
-        const rewind = ScrollTrigger.create({
+        // A wheel step that would carry the page across the place stops it there, if cards are
+        // left to ride that way: coming down from the first on, coming up from the last back.
+        const offStop = stopPageOnWheel((from, to) => {
+          if (mode !== "free") return false;
+          const at = place();
+          // A step that lands within a pixel of the place reaches it too.
+          const down = from < at - 1 && to >= at - 1 && index < last;
+          const up = from > at + 1 && to <= at + 1 && index > 0;
+          if (!down && !up) return false;
+          dock();
+          return true;
+        });
+
+        // Out of sight the cards wait at the end the page will meet them from: the first while the
+        // stage lies wholly below the screen, the last while it lies wholly above.
+        const ends = ScrollTrigger.create({
           trigger: stage,
           start: "top bottom",
+          end: "bottom top",
           onLeaveBack: () => {
             if (mode === "free" && index !== 0) slideTo(0, true);
+          },
+          onLeave: () => {
+            if (mode === "free" && index !== last) slideTo(last, true);
           },
         });
 
@@ -411,85 +409,40 @@ export function ServicesStrata({
           section.removeAttribute("data-held");
           observer.disable();
         };
-        const hold = () => {
-          setMode("docked");
-          holdPage(release);
-          section.setAttribute("data-held", "");
-          observer.enable();
-        };
-        // The stage listens from the first moment of the glide: a turn of the wheel while the page
-        // still glides in already moves the first card on, none is lost. The gesture that brought
-        // the page here runs on without a pause (a trackpad's glide) and so does not count.
+        // The stage listens from the first moment: a turn of the wheel while the page still comes
+        // to rest already moves a card, none is lost. The gesture that brought the page here runs
+        // on without a pause (a trackpad's glide) and so does not count.
         const dock = () => {
           setMode("docking");
           movedWhileDocking = false;
           lastInput = performance.now();
           lastSize = 0;
           floor = Number.POSITIVE_INFINITY;
+          holdPage(release);
+          section.setAttribute("data-held", "");
           observer.enable();
-          glidePageTo(place(), {
-            ...DOCK,
-            // Unless a turn the other way has sent the page off again in the meantime.
-            onComplete: () => mode === "docking" && hold(),
+          settlePageAt(place(), () => {
+            if (mode === "docking") setMode("docked");
           });
         };
-        // Back up before the first card: an ordinary turn of the page, as far as the hand turned,
-        // carried on from the speed the page has; no pull anywhere (the owner's call, 2026-10-01).
-        const turnUp = (distance: number) => {
+        // Past the first or the last card the page simply scrolls on, as far as the hand turns:
+        // this step, and the rest of the turn through Lenis as usual.
+        const leave = (distance: number) => {
           release();
           releasePage();
-          setMode("leaving");
-          glidePageTo(Math.max(0, window.scrollY - distance), {
-            ...LEAVE,
-            duration: 0.6,
-            // Every further notch of the same turn scrolls on as usual.
-            follow: 0,
-            onComplete: () => {
-              if (mode === "leaving") setMode("free");
-            },
-          });
+          scrollPageBy(distance);
         };
-        const leave = (dir: 1 | -1, turned: number) => {
-          if (dir < 0) return turnUp(turned);
-          release();
-          releasePage();
-          setMode("leaving");
-          // On to the next section, its top under the header, in one glide (without one: ONWARD
-          // of a screen).
-          const neighbour = section.nextElementSibling as HTMLElement | null;
-          const target = neighbour
-            ? Math.max(0, neighbour.getBoundingClientRect().top + window.scrollY - header())
-            : place() + dir * window.innerHeight * ONWARD;
-          const distance = Math.abs(target - window.scrollY);
-          glidePageTo(target, {
-            ...LEAVE,
-            // A longer way takes a little longer, never a rush.
-            duration: Math.min(1.4, LEAVE.duration + distance / 3000),
-            onComplete: () => {
-              if (mode === "leaving") setMode("free");
-            },
-          });
-        };
-        // A hand that scrolls on while the page leaves takes it over (Lenis follows the wheel
-        // from where the glide is): the ride is free again at once.
-        const onHand = () => {
-          if (mode === "leaving") setMode("free");
-        };
-        window.addEventListener("wheel", onHand, { passive: true });
-        window.addEventListener("touchstart", onHand, { passive: true });
-        // `distance`: how far the hand turned, for a turn that leaves upward.
-        const move = (dir: 1 | -1, distance: number) => {
+        // `delta`: the step of the wheel (signed, down positive), passed on when the page leaves.
+        const move = (dir: 1 | -1, delta: number) => {
           if (mode !== "docked" && mode !== "docking") return;
           const next = index + dir;
-          // On its way in, one card may already move on; a turn past the first or last card turns
-          // the page round at once (it glides away from the speed it has).
+          if (next < 0 || next > last) return leave(delta);
+          // While the page comes to rest one card may already move on.
           if (mode === "docking") {
-            if (next < 0 || next > last) return leave(dir, distance);
             if (movedWhileDocking) return;
             movedWhileDocking = true;
-            slideTo(next);
-          } else if (next < 0 || next > last) leave(dir, distance);
-          else slideTo(next);
+          }
+          slideTo(next);
         };
         // One gesture, one card: one turn of the wheel of however many notches, one swipe. A
         // gesture starts after a pause (QUIET_MS), unless what comes is
@@ -510,7 +463,7 @@ export function ServicesStrata({
           lastSize = size;
           if (!go) return;
           lastMove = now;
-          move(dir, size);
+          move(dir, dir * size);
         };
 
         // Wheel and touch while the stage holds the page (off otherwise). wheelSpeed -1: turning
@@ -542,10 +495,8 @@ export function ServicesStrata({
           if (!onward && !back && !space) return;
           event.preventDefault();
           const pageKey = event.key.startsWith("Page") || space;
-          move(
-            onward || (space && !event.shiftKey) ? 1 : -1,
-            pageKey ? window.innerHeight * 0.8 : 100,
-          );
+          const dir = onward || (space && !event.shiftKey) ? 1 : -1;
+          move(dir, dir * (pageKey ? window.innerHeight * 0.8 : 100));
         };
         window.addEventListener("keydown", onKey);
 
@@ -571,7 +522,10 @@ export function ServicesStrata({
         // Back onto the stage's exact place at once (scrollPageTo lets go; hold again).
         const snap = () => {
           scrollPageTo(place(), { immediate: true });
-          hold();
+          setMode("docked");
+          holdPage(release);
+          section.setAttribute("data-held", "");
+          observer.enable();
         };
         // A new size moves the stage's place and the cards' offsets: stay where we are.
         const onRefresh = () => {
@@ -583,9 +537,10 @@ export function ServicesStrata({
 
         sync();
 
-        // The rail and focus: to card i, docking the page first if it is not yet on the stage.
+        // The rail and focus: to card i, the page coming to rest on the stage first if it is not
+        // there yet (asked for by a click, so no pull).
         jump.current = (to) => {
-          if (mode !== "docked") dock();
+          if (mode === "free") dock();
           slideTo(to);
         };
 
@@ -603,16 +558,15 @@ export function ServicesStrata({
         return () => {
           follow.forEach((off) => off());
           window.removeEventListener("keydown", onKey);
-          window.removeEventListener("wheel", onHand);
-          window.removeEventListener("touchstart", onHand);
           document.removeEventListener("click", onAnchor, true);
           section.removeEventListener("focusout", onFocusOut);
           ScrollTrigger.removeEventListener("refresh", onRefresh);
           observer.kill();
+          offStop();
           watcher.kill();
-          rewind.kill();
+          ends.kill();
           slide?.kill();
-          if (mode === "docked") releasePage();
+          if (mode !== "free") releasePage();
           gsap.set(track, { clearProps: "x" });
           section.removeAttribute("data-ride");
           section.removeAttribute("data-held");

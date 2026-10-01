@@ -6,14 +6,11 @@ import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import { useEffect } from "react";
 
-import { carryCurve } from "@/lib/glide";
-
 gsap.registerPlugin(ScrollTrigger);
 
 let lenis: Lenis | null = null;
 let holder: (() => void) | null = null;
-// The glide that a wheel turn or swipe extends instead of interrupting (glidePageTo's `follow`).
-let following: ((delta: number) => void) | null = null;
+let stopper: ((from: number, to: number) => boolean) | null = null;
 
 /**
  * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
@@ -23,7 +20,6 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
   // A scroll from code (an anchor, the admin's preview) outranks a section that holds the page.
   const release = holder;
   holder = null;
-  following = null;
   release?.();
   if (lenis) {
     // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
@@ -34,83 +30,35 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
 }
 
 /**
- * Glides the page to y over `duration` seconds on a curve of its own, deaf to wheel and keys
- * meanwhile unless `lock` is off (then the hand can take the page over and onComplete may never
- * come), then calls onComplete. The services ride docks and leaves with it, the hero pulls with it.
+ * Lets the page come to rest at y the way a wheel turn moves it (Lenis' own 0.6s glide from where
+ * it is), then calls onComplete. The services ride stops the page with it: never further than the
+ * hand turned, so nothing pulls.
  */
-export function glidePageTo(
-  y: number,
-  {
-    duration,
-    easing,
-    onComplete,
-    carry = false,
-    follow = false,
-  }: {
-    duration: number;
-    easing?: (t: number) => number;
-    onComplete?: () => void;
-    /**
-     * Take over the page in motion: the curve starts at exactly the speed and direction it
-     * already has (src/lib/glide.ts), whatever that is, and settles on y. No push, no brake.
-     */
-    carry?: boolean;
-    /**
-     * Open to the hand: a new wheel turn or swipe while it glides moves the target on by as much
-     * and the glide carries on from its speed toward it, so turning on never brakes the page. The
-     * rest of the gesture that started the glide (input within `follow` ms of the one before) is
-     * swallowed: it asked for this glide, not for more. Without it the glide is deaf to wheel and
-     * keys meanwhile.
-     */
-    follow?: number | false;
-  },
-) {
-  following = null;
-  const done = () => onComplete?.();
+export function settlePageAt(y: number, onComplete?: () => void) {
   if (!lenis) {
     window.scrollTo({ top: y, behavior: "smooth" });
-    window.setTimeout(done, duration * 1000);
+    onComplete?.();
     return;
   }
-  const instance = lenis;
-  let target = y;
-  const run = (curve: boolean) => {
-    let d = duration;
-    let e = easing;
-    if (curve) {
-      // Lenis' velocity is px per frame; the last frame's length makes it px per second, at any
-      // refresh rate (60, 120, 144 Hz).
-      const frame = gsap.ticker.deltaRatio(60) / 60;
-      const speed = instance.velocity / Math.max(frame, 1 / 240);
-      ({ duration: d, easing: e } = carryCurve(target - instance.animatedScroll, speed, {
-        duration,
-      }));
-    }
-    instance.scrollTo(target, {
-      duration: d,
-      easing: e,
-      lock: follow === false,
-      force: true,
-      onComplete: () => {
-        if (following === extend) following = null;
-        done();
-      },
-    });
+  lenis.scrollTo(y, { force: true, onComplete: () => onComplete?.() });
+}
+
+/** Moves the page on by delta as one wheel step would (from where Lenis is heading). */
+export function scrollPageBy(delta: number) {
+  if (!lenis) window.scrollBy({ top: delta, behavior: "smooth" });
+  else settlePageAt(Math.min(lenis.limit, Math.max(0, lenis.targetScroll + delta)));
+}
+
+/**
+ * A place the page stops at on its way past: `stop(from, to)` sees where a wheel step would take
+ * the page and returns true when it takes the step itself (the services ride does, when the step
+ * would carry the page across the stage's place). Touch, keys and the scrollbar pass freely.
+ */
+export function stopPageOnWheel(stop: (from: number, to: number) => boolean) {
+  stopper = stop;
+  return () => {
+    if (stopper === stop) stopper = null;
   };
-  let lastInput = performance.now();
-  let extending = false;
-  const extend = (delta: number) => {
-    const now = performance.now();
-    const quiet = now - lastInput > Number(follow);
-    lastInput = now;
-    if (!extending && !quiet) return;
-    extending = true;
-    target = Math.min(instance.limit, Math.max(0, target + delta));
-    run(true);
-  };
-  if (follow !== false) following = extend;
-  instance.resize();
-  run(carry);
 }
 
 /**
@@ -140,12 +88,14 @@ export function SmoothScroll() {
       // While a section holds the page (holdPage), its wheel and touch are not Lenis' to scroll.
       virtualScroll: ({ deltaY, event }) => {
         if (holder) return false;
-        if (following) {
-          // Handed past Lenis, the event would also scroll the page natively for a frame, and
-          // Lenis would pull it back: a jolt the eye sees.
-          if (event.cancelable) event.preventDefault();
-          following(deltaY);
-          return false;
+        if (stopper && event.type.includes("wheel") && !event.ctrlKey) {
+          const from = instance.targetScroll;
+          const to = Math.min(instance.limit, Math.max(0, from + deltaY));
+          if (stopper(from, to)) {
+            // Handed past Lenis, the event would also scroll the page natively for a frame.
+            if (event.cancelable) event.preventDefault();
+            return false;
+          }
         }
         return true;
       },
