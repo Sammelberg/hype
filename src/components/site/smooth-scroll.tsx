@@ -12,6 +12,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 let lenis: Lenis | null = null;
 let holder: (() => void) | null = null;
+// The glide that a wheel turn or swipe extends instead of interrupting (glidePageTo's `follow`).
+let following: ((delta: number) => void) | null = null;
 
 /**
  * Scrolls the page to y: through Lenis while it runs, so the two never fight; natively otherwise.
@@ -21,6 +23,7 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
   // A scroll from code (an anchor, the admin's preview) outranks a section that holds the page.
   const release = holder;
   holder = null;
+  following = null;
   release?.();
   if (lenis) {
     // Lenis clamps to the page height it last measured, and measures a resize only after a pause:
@@ -32,7 +35,8 @@ export function scrollPageTo(y: number, { immediate = false } = {}) {
 
 /**
  * Glides the page to y over `duration` seconds on a curve of its own, deaf to wheel and keys
- * meanwhile (Lenis' lock), then calls onComplete. The services ride docks and leaves with it.
+ * meanwhile unless `lock` is off (then the hand can take the page over and onComplete may never
+ * come), then calls onComplete. The services ride docks and leaves with it, the hero pulls with it.
  */
 export function glidePageTo(
   y: number,
@@ -41,6 +45,7 @@ export function glidePageTo(
     easing,
     onComplete,
     carry = false,
+    follow = false,
   }: {
     duration: number;
     easing?: (t: number) => number;
@@ -50,28 +55,52 @@ export function glidePageTo(
      * already has (src/lib/glide.ts), whatever that is, and settles on y. No push, no brake.
      */
     carry?: boolean;
+    /**
+     * Open to the hand: a wheel turn or swipe while it glides moves the target on by as much and
+     * the glide carries on from its speed toward it, so turning on never brakes the page.
+     * Without it the glide is deaf to wheel and keys meanwhile.
+     */
+    follow?: boolean;
   },
 ) {
-  if (lenis) {
-    lenis.resize();
-    if (carry) {
+  following = null;
+  if (!lenis) {
+    window.scrollTo({ top: y, behavior: "smooth" });
+    window.setTimeout(() => onComplete?.(), duration * 1000);
+    return;
+  }
+  const instance = lenis;
+  let target = y;
+  const run = (curve: boolean) => {
+    let d = duration;
+    let e = easing;
+    if (curve) {
       // Lenis' velocity is px per frame; the last frame's length makes it px per second, at any
       // refresh rate (60, 120, 144 Hz).
       const frame = gsap.ticker.deltaRatio(60) / 60;
-      const speed = lenis.velocity / Math.max(frame, 1 / 240);
-      ({ duration, easing } = carryCurve(y - lenis.animatedScroll, speed, { duration }));
+      const speed = instance.velocity / Math.max(frame, 1 / 240);
+      ({ duration: d, easing: e } = carryCurve(target - instance.animatedScroll, speed, {
+        duration,
+      }));
     }
-    lenis.scrollTo(y, {
-      duration,
-      easing,
-      lock: true,
+    instance.scrollTo(target, {
+      duration: d,
+      easing: e,
+      lock: !follow,
       force: true,
-      onComplete: () => onComplete?.(),
+      onComplete: () => {
+        if (following === extend) following = null;
+        onComplete?.();
+      },
     });
-  } else {
-    window.scrollTo({ top: y, behavior: "smooth" });
-    window.setTimeout(() => onComplete?.(), duration * 1000);
-  }
+  };
+  const extend = (delta: number) => {
+    target = Math.min(instance.limit, Math.max(0, target + delta));
+    run(true);
+  };
+  if (follow) following = extend;
+  instance.resize();
+  run(carry);
 }
 
 /**
@@ -99,7 +128,17 @@ export function SmoothScroll() {
       duration: 0.6,
       easing: (t) => 1 - (1 - t) ** 3,
       // While a section holds the page (holdPage), its wheel and touch are not Lenis' to scroll.
-      virtualScroll: () => holder === null,
+      virtualScroll: ({ deltaY, event }) => {
+        if (holder) return false;
+        if (following) {
+          // Handed past Lenis, the event would also scroll the page natively for a frame, and
+          // Lenis would pull it back: a jolt the eye sees.
+          if (event.cancelable) event.preventDefault();
+          following(deltaY);
+          return false;
+        }
+        return true;
+      },
     });
     lenis = instance;
     instance.on("scroll", ScrollTrigger.update);

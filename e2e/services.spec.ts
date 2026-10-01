@@ -213,6 +213,52 @@ test("after the last card the page moves on, and from below the stage takes it b
   await expect.poll(() => current(page)).toBe("3");
 });
 
+test("back up from the first card: the first turn leaves, and turning on is never lost", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await rideIn(page);
+  const docked = await header(page);
+  const y = () => page.evaluate(() => Math.round(scrollY));
+  const before = await y();
+  // One turn up: the stage lets go and the page glides back up at once.
+  await page.mouse.wheel(0, -NOTCH);
+  await expect(section(page)).not.toHaveAttribute("data-held");
+  await expect.poll(y).toBeLessThan(before - 100);
+  // Turning on while it still glides carries the page on further up: no turn is swallowed.
+  for (let i = 0; i < 3; i++) {
+    await page.mouse.wheel(0, -NOTCH);
+    await page.waitForTimeout(120);
+  }
+  const after = await settle(y);
+  expect(after).toBeLessThan(before - (await page.evaluate(() => innerHeight)) * 0.55 - 100);
+  expect(await stageTop(page)).toBeGreaterThan(docked);
+});
+
+test("a turn back up while the page still glides in turns it round at once", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "wheel input needs a fine pointer");
+  await page.goto("/");
+  await expect(section(page)).toHaveAttribute("data-ride", "");
+  await expect(page.locator("html")).toHaveClass(/\blenis\b/);
+  await page.mouse.move(700, 450);
+  for (let i = 0; i < 40 && (await rideState(page)) === "free"; i++) {
+    await page.mouse.wheel(0, NOTCH);
+    await page.waitForTimeout(250);
+  }
+  expect(await rideState(page)).toBe("docking");
+  await page.waitForTimeout(320);
+  await page.mouse.wheel(0, -NOTCH);
+  // Not caught: the page goes back up instead of holding on the first card.
+  await expect.poll(() => rideState(page)).not.toBe("docking");
+  await page.waitForTimeout(1200);
+  expect(await section(page).getAttribute("data-held")).toBeNull();
+  expect(await stageTop(page)).toBeGreaterThan(await header(page));
+});
+
 test("the arrow keys ride too, and Home lets the page go", async ({ page, isMobile }) => {
   test.skip(isMobile, "keys need a keyboard");
   await rideIn(page);

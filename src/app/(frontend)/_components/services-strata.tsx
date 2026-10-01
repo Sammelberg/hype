@@ -146,11 +146,11 @@ const SLIDE = { duration: 0.95, ease: "power3.inOut" };
  * feels no push and no brake) and settles softly under the header.
  */
 const DOCK = { duration: 0.8, carry: true };
-/** And away from it after the last card (or back up before the first). */
-const LEAVE = {
-  duration: 0.9,
-  easing: (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2),
-};
+/**
+ * And away from it after the last card (or back up before the first): from the speed the page
+ * has, and open to the hand: turning on while it glides carries the page on, nothing is lost.
+ */
+const LEAVE = { duration: 0.9, carry: true, follow: true };
 /**
  * Input within this long of the one before is the same gesture: the notches of one turn of the
  * wheel (a hand spins several at once), a trackpad's glide. A new card needs a pause.
@@ -367,6 +367,7 @@ export function ServicesStrata({
           });
         };
 
+        let lastY = window.scrollY;
         // The watcher's range is the approach zone around the stage's place under the header, so
         // its middle is that place.
         const watcher = ScrollTrigger.create({
@@ -375,6 +376,9 @@ export function ServicesStrata({
           end: () => `top ${header() - window.innerHeight * APPROACH}`,
           onUpdate: (self) => {
             const y = self.scroll();
+            // The direction from our own readings, which a stray frame cannot flip for long.
+            const direction = Math.sign(y - lastY);
+            lastY = y;
             const place = (self.start + self.end) / 2;
             // Something moved the page while the stage held it (a jump from code, the browser):
             // the stage lets go instead of holding a page that has gone elsewhere.
@@ -387,8 +391,8 @@ export function ServicesStrata({
             if (mode !== "free" || y < self.start || y > self.end) return;
             // Coming down onto it, or having overshot it with cards still ahead; coming up onto it,
             // or having overshot it upwards with cards still behind.
-            const down = self.direction > 0 && (y < place || index < last);
-            const up = self.direction < 0 && (y > place || index > 0);
+            const down = direction > 0 && (y < place || index < last);
+            const up = direction < 0 && (y > place || index > 0);
             if (down || up) dock();
           },
         });
@@ -415,7 +419,11 @@ export function ServicesStrata({
           lastSize = 0;
           floor = Number.POSITIVE_INFINITY;
           observer.enable();
-          glidePageTo(place(), { ...DOCK, onComplete: hold });
+          glidePageTo(place(), {
+            ...DOCK,
+            // Unless a turn the other way has sent the page off again in the meantime.
+            onComplete: () => mode === "docking" && hold(),
+          });
         };
         const leave = (dir: 1 | -1) => {
           release();
@@ -424,16 +432,25 @@ export function ServicesStrata({
           glidePageTo(place() + dir * window.innerHeight * ONWARD, {
             ...LEAVE,
             onComplete: () => {
-              setMode("free");
+              if (mode === "leaving") setMode("free");
             },
           });
         };
+        // A hand that scrolls on while the page leaves takes it over (Lenis follows the wheel
+        // from where the glide is): the ride is free again at once.
+        const onHand = () => {
+          if (mode === "leaving") setMode("free");
+        };
+        window.addEventListener("wheel", onHand, { passive: true });
+        window.addEventListener("touchstart", onHand, { passive: true });
         const move = (dir: 1 | -1) => {
           if (mode !== "docked" && mode !== "docking") return;
           const next = index + dir;
-          // Leaving waits until the page has arrived; one card may already move on its way in.
+          // On its way in, one card may already move on; a turn past the first or last card turns
+          // the page round at once (it glides away from the speed it has).
           if (mode === "docking") {
-            if (movedWhileDocking || next < 0 || next > last) return;
+            if (next < 0 || next > last) return leave(dir);
+            if (movedWhileDocking) return;
             movedWhileDocking = true;
             slideTo(next);
           } else if (next < 0 || next > last) leave(dir);
@@ -547,6 +564,8 @@ export function ServicesStrata({
         return () => {
           follow.forEach((off) => off());
           window.removeEventListener("keydown", onKey);
+          window.removeEventListener("wheel", onHand);
+          window.removeEventListener("touchstart", onHand);
           document.removeEventListener("click", onAnchor, true);
           section.removeEventListener("focusout", onFocusOut);
           ScrollTrigger.removeEventListener("refresh", onRefresh);
