@@ -126,10 +126,12 @@
   }
 }
 
-/* Reading progress of the whole page, as a hairline under the header. */
+/* Reading progress of the whole page, as a hairline under the header; only where it can move. */
 @utility sd-progress {
+  display: none;
   @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: scroll()) {
+      display: block;
       transform-origin: left center;
       animation: sd-draw-x linear both;
       animation-timeline: scroll(root);

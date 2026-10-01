@@ -1,9 +1,5 @@
 import type { CSSProperties } from "react";
 
-import { FirMark } from "@/components/site/fir-mark";
-import { Part } from "@/components/site/part";
-import { RichText } from "@/components/site/rich-text";
-import { LitWords } from "@/components/site/words";
 import type { LexicalDocument } from "@/cms/rich-text/schema";
 import { type Block, plainParagraphs, type Step } from "@/cms/rich-text/shapes";
 import type { TextPart } from "@/cms/rich-text/parts";
@@ -11,17 +7,27 @@ import { CONTOUR_SIZE, contours } from "@/lib/contours";
 import { HORIZON_H, HORIZON_W, horizon } from "@/lib/horizon";
 
 import styles from "./content-blocks.module.css";
+import { FirMark } from "./fir-mark";
+import { Part } from "./part";
+import { RichText } from "./rich-text";
+import { LitWords } from "./words";
 
-// A content page below its header, in the shapes its text takes (cms/rich-text/shapes.ts): the
-// text before the first h2 as a statement beside the page's own contour map, then each block with
-// the one movement that fits it.
+// A content page or a project below its header, in the shapes its text takes
+// (cms/rich-text/shapes.ts): the text before the first h2 as a statement, on content pages beside
+// the page's own contour map, then each block with the one movement that fits it.
 
 /** The text before the first h2: its first paragraph large, words lighting up as it is read. */
-export function Statement({ intro, mapKey }: { intro: LexicalDocument; mapKey: string }) {
+export function Statement({ intro, mapKey }: { intro: LexicalDocument; mapKey?: string }) {
   const paragraphs = plainParagraphs(intro);
-  const map = contours(mapKey);
+  const map = mapKey ? contours(mapKey) : null;
   return (
-    <div className="page-container grid gap-14 py-20 sm:py-28 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-center lg:gap-20">
+    <div
+      className={
+        map
+          ? "page-container grid gap-14 py-20 sm:py-28 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-center lg:gap-20"
+          : "page-container py-20 sm:py-28"
+      }
+    >
       <div className="min-w-0">
         {paragraphs ? (
           <>
@@ -43,22 +49,24 @@ export function Statement({ intro, mapKey }: { intro: LexicalDocument; mapKey: s
       </div>
       {/* The page's own mountain, as a hiking map draws it: rings that draw themselves from the
           summit outwards as the map comes into view, a copper mark on the top. */}
-      <svg
-        viewBox={`0 0 ${CONTOUR_SIZE} ${CONTOUR_SIZE}`}
-        aria-hidden="true"
-        className={styles.map}
-      >
-        {map.rings.map((d, k) => (
-          <path
-            key={d}
-            d={d}
-            pathLength={1}
-            className={k % 4 === 3 ? styles.ringMajor : styles.ring}
-            style={{ "--k": k } as CSSProperties}
-          />
-        ))}
-        <path className={styles.summit} d={`M ${map.peak.x} ${map.peak.y - 9} l 8 14 h -16 z`} />
-      </svg>
+      {map ? (
+        <svg
+          viewBox={`0 0 ${CONTOUR_SIZE} ${CONTOUR_SIZE}`}
+          aria-hidden="true"
+          className={styles.map}
+        >
+          {map.rings.map((d, k) => (
+            <path
+              key={d}
+              d={d}
+              pathLength={1}
+              className={k % 4 === 3 ? styles.ringMajor : styles.ring}
+              style={{ "--k": k } as CSSProperties}
+            />
+          ))}
+          <path className={styles.summit} d={`M ${map.peak.x} ${map.peak.y - 9} l 8 14 h -16 z`} />
+        </svg>
+      ) : null}
     </div>
   );
 }

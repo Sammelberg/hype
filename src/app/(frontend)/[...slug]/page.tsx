@@ -24,7 +24,7 @@ import { firstParagraph } from "@/cms/rich-text/text";
 import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
 
 import { ChildDoors } from "./_components/child-doors";
-import { ContentBlocks, Statement } from "./_components/content-blocks";
+import { ContentBlocks, Statement } from "@/components/site/content-blocks";
 import { LeistungSections } from "./_components/leistung-sections";
 
 type Props = { params: Promise<{ slug: string[] }> };
@@ -131,7 +131,7 @@ export default async function CmsPage({ params }: Props) {
         <>
           <span
             aria-hidden="true"
-            className="fixed inset-x-0 top-header z-40 h-0.5 sd-progress origin-left bg-primary-soft"
+            className="fixed inset-x-0 top-header z-40 sd-progress h-0.5 origin-left bg-primary-soft"
           />
           {intro ? (
             <div className="page-container py-16 sm:py-24" data-cms-zone="text">
