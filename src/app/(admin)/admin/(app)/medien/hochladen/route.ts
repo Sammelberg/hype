@@ -5,6 +5,7 @@ import { audited } from "@/cms/audit/log";
 import { createMedia } from "@/cms/content/media";
 import { clientIp } from "@/cms/security/client-ip";
 import { hitRateLimit, LIMITS } from "@/cms/security/rate-limit";
+import { sameOrigin } from "@/cms/security/same-origin";
 import { retryMessage } from "@/cms/security/window";
 import { storeUpload, UploadError } from "@/cms/media/store";
 
@@ -24,8 +25,7 @@ export async function POST(request: Request) {
   }
   // SameSite=Lax already keeps the session cookie off cross-site POSTs; the origin check is
   // what server actions do on their own.
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) return refuse("Nicht erlaubt.", 403);
+  if (!sameOrigin(request.headers)) return refuse("Nicht erlaubt.", 403);
 
   const limit = await hitRateLimit(`upload:${user.id}`, LIMITS.upload);
   if (!limit.ok) return refuse(retryMessage(limit.retryAfterSeconds), 429);

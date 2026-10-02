@@ -141,6 +141,7 @@ test("the call to action raises its pole star on hover and lets it go", async ({
   hasTouch,
 }) => {
   test.skip(hasTouch, "the star answers a mouse hover; a tap follows the link");
+  test.slow();
   await page.goto("/");
   // A hover before hydration meets no listener.
   await expect(page.locator("[data-hero-cta]")).toHaveAttribute("data-ready", "");
@@ -149,7 +150,9 @@ test("the call to action raises its pole star on hover and lets it go", async ({
   // The spring steps per frame, so under a loaded headless run it needs longer than on a real screen.
   await expect.poll(() => starSpring(page), { timeout: 5_000 }).toBeGreaterThan(0.9);
   await page.mouse.move(0, 0);
-  await expect.poll(() => starSpring(page)).toBe(0);
+  // Letting go takes longer than rising: the spring has to come to rest (isAtRest), and a frame
+  // advances it at most 0.25s, however long a CI runner without a GPU took to draw it.
+  await expect.poll(() => starSpring(page), { timeout: 20_000 }).toBe(0);
 });
 
 test.describe("reduced motion", () => {

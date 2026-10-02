@@ -410,8 +410,11 @@ test("tabbing into a card brings it to the middle", async ({ page, isMobile }) =
   await expect(
     page.getByRole("link", { name: "Mehr erfahren über Betrieb und Weiterentwicklung" }),
   ).toBeFocused();
-  await settle(() => trackX(page));
-  expect(Math.abs(await offCentre(page, 4))).toBeLessThanOrEqual(2);
+  // Polled, not settle(): on a CI runner without a GPU the hero's sky draws a frame less often
+  // than settle() reads, so two equal readings can fall inside one frame of the slide.
+  await expect
+    .poll(async () => Math.abs(await offCentre(page, 4)), { timeout: 10_000 })
+    .toBeLessThanOrEqual(2);
 });
 
 test("below lg the cards swipe sideways and the arrows step through", async ({
