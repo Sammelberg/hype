@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { siteNav } from "./site-nav";
+import { firstSentence, siteNav } from "./site-nav";
 
 const page = (id: number, slug: string, title: string, parent?: number, url?: string) => ({
   id,
@@ -99,5 +99,40 @@ describe("siteNav", () => {
       "Projekte",
       "Kontakt",
     ]);
+  });
+});
+
+describe("descriptions for the header's menus", () => {
+  it("takes a page's lead up to its first sentence", () => {
+    const pages = [
+      { ...page(6, "leistungen", "Leistungen"), lead: "Alles aus einer Hand. Und noch mehr." },
+      {
+        ...page(7, "betrieb", "Betrieb", 6, "/leistungen/betrieb"),
+        lead: "Nach dem Start bleiben wir ansprechbar: für Updates, Überwachung und z. B. Funktionen",
+      },
+    ];
+    const [leistungen] = siteNav(pages, []);
+    expect(leistungen?.description).toBe("Alles aus einer Hand.");
+    // „z. B.“ ends no sentence; without an end the lead stays whole.
+    expect(leistungen?.children[0]?.description).toBe(
+      "Nach dem Start bleiben wir ansprechbar: für Updates, Überwachung und z. B. Funktionen",
+    );
+  });
+
+  it("describes a project by its summary and leaves a page without lead without description", () => {
+    const nav = siteNav(
+      [page(8, "branchen", "Branchen")],
+      [{ title: "Meistrum", slug: "meistrum", summary: "Eine eigene Instanz. Mit allem." }],
+    );
+    expect(nav[0]?.description).toBeUndefined();
+    expect(nav.find((s) => s.href === "/projekte")?.children[0]?.description).toBe(
+      "Eine eigene Instanz.",
+    );
+  });
+
+  it("reads nothing into empty text", () => {
+    expect(firstSentence("  ")).toBeUndefined();
+    expect(firstSentence(null)).toBeUndefined();
+    expect(firstSentence("Warum? Darum.")).toBe("Warum?");
   });
 });

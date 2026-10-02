@@ -148,10 +148,10 @@ export function LeistungSections({
                         name={other.glyph}
                         className="size-11 text-primary-soft transition-transform duration-300 ease-out group-hover:-translate-y-1"
                       />
-                      <span className="text-xl font-medium tracking-tight text-balance">
+                      <span className="text-xl font-medium tracking-tight text-balance break-words hyphens-auto">
                         {other.title}
                       </span>
-                      <span className="line-clamp-3 text-base text-pretty text-muted-foreground">
+                      <span className="text-base text-pretty text-muted-foreground">
                         {other.text}
                       </span>
                       <span className="mt-auto text-primary-soft" aria-hidden="true">

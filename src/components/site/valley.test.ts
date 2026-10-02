@@ -15,6 +15,8 @@ const spec: ValleySpec = {
     { design: "konkav", x: 305, h: 240 },
     { design: "schlank", x: 915, h: 260 },
   ],
+  moon: { x: 600, y: 150, r: 30, lit: 0.3, side: "right" },
+  motif: { name: "viadukt", deck: 600 },
 };
 
 const RIDGES = ["far", "mid", "near"] as const;

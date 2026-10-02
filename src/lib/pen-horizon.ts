@@ -14,7 +14,9 @@ export const PEN_H = 220;
 export type PenFirDesign = "dicht" | "schlank" | "konkav";
 export type PenProfile = "kamm" | "gipfel" | "tal" | "stufen" | "lichtung";
 export type PenMotif = "weg" | "huette" | "turm" | "strasse";
-export type PenScene = { profile: PenProfile; motif?: PenMotif };
+/** How a page's landscape is drawn: pen lines, paper ridges (landscape.tsx) or the forest's edge. */
+export type PenStyle = "feder" | "kulissen" | "waldrand";
+export type PenScene = { profile: PenProfile; motif?: PenMotif; stil?: PenStyle };
 
 export type PenFir = {
   design: PenFirDesign;
@@ -39,25 +41,26 @@ export type PenRidge = {
   depth: number;
 };
 
-// Each page's own scene; any other key (a card's title, a page without an entry) gets a profile
-// of its own from its seed, without a motif.
+// Each page's own scene and the style it is drawn in (pen, paper ridges, the forest's edge — the
+// owner's picks of 2026-10-02, spread so neighbouring pages differ); any other key (a card's
+// title, a page without an entry) gets a profile of its own from its seed, in pen, without a motif.
 export const PAGE_SCENES: Readonly<Record<string, PenScene>> = {
-  "/leistungen": { profile: "kamm" },
-  "/projekte": { profile: "kamm" },
-  "/e-rechnung": { profile: "stufen" },
-  "/online-shops": { profile: "tal", motif: "strasse" },
-  "/branchen": { profile: "lichtung" },
-  "/branchen/handwerk": { profile: "lichtung", motif: "huette" },
-  "/ueber-uns": { profile: "gipfel", motif: "turm" },
-  "/ueber-uns/arbeitsweise": { profile: "gipfel", motif: "weg" },
-  "/ueber-uns/datensouveraenitaet": { profile: "tal" },
-  "/ueber-uns/technologie": { profile: "stufen", motif: "turm" },
-  "/kontakt": { profile: "tal", motif: "huette" },
-  "/leistungen/web-anwendungen": { profile: "kamm" },
-  "/leistungen/geschaeftssysteme": { profile: "stufen" },
-  "/leistungen/schnittstellen": { profile: "tal" },
-  "/leistungen/modernisierung": { profile: "gipfel" },
-  "/leistungen/betrieb": { profile: "lichtung" },
+  "/leistungen": { profile: "kamm", stil: "kulissen" },
+  "/projekte": { profile: "kamm", stil: "waldrand" },
+  "/e-rechnung": { profile: "stufen", stil: "feder" },
+  "/online-shops": { profile: "tal", motif: "strasse", stil: "kulissen" },
+  "/branchen": { profile: "lichtung", stil: "waldrand" },
+  "/branchen/handwerk": { profile: "lichtung", motif: "huette", stil: "feder" },
+  "/ueber-uns": { profile: "gipfel", motif: "turm", stil: "kulissen" },
+  "/ueber-uns/arbeitsweise": { profile: "gipfel", motif: "weg", stil: "feder" },
+  "/ueber-uns/datensouveraenitaet": { profile: "tal", stil: "waldrand" },
+  "/ueber-uns/technologie": { profile: "stufen", motif: "turm", stil: "kulissen" },
+  "/kontakt": { profile: "tal", motif: "huette", stil: "waldrand" },
+  "/leistungen/web-anwendungen": { profile: "kamm", stil: "feder" },
+  "/leistungen/geschaeftssysteme": { profile: "stufen", stil: "kulissen" },
+  "/leistungen/schnittstellen": { profile: "tal", stil: "waldrand" },
+  "/leistungen/modernisierung": { profile: "gipfel", stil: "feder" },
+  "/leistungen/betrieb": { profile: "lichtung", stil: "kulissen" },
 };
 
 const PROFILES: readonly PenProfile[] = ["kamm", "gipfel", "tal", "stufen", "lichtung"];

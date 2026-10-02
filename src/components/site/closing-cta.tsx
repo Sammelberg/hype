@@ -2,14 +2,12 @@ import { getSiteSettings } from "@/data/queries";
 
 import styles from "./closing-cta.module.css";
 import { InView } from "./in-view";
-import { PenHorizon } from "./pen-horizon";
 import { StarCta } from "./star-cta";
 import { LitWords } from "./words";
 
 // The invitation that ends the home page and the content pages: one sentence, one action. Its
-// words light up as it is read; underneath, the Black Forest comes back drawn as with a pen, its
-// ridges of fir tops drawing themselves as they come into view, and the footer stands on it. Its
-// text is edited under /admin → Website → Abschluss „Anfrage“.
+// words light up as it is read; the footer's paper ridges follow right under it. Its text is
+// edited under /admin → Website → Abschluss „Anfrage“.
 export async function ClosingCta() {
   const { cta } = await getSiteSettings();
   if (!cta?.title) return null;
@@ -17,7 +15,7 @@ export async function ClosingCta() {
   return (
     <InView className="border-t">
       <section aria-labelledby="anfrage-titel" className={styles.cta} data-cms-zone="anfrage">
-        <div className="page-container pt-24 sm:pt-36 3xl:pt-44">
+        <div className="page-container pt-24 pb-20 sm:pt-36 sm:pb-28 3xl:pt-44">
           <h2
             id="anfrage-titel"
             className="max-w-5xl text-[clamp(2.5rem,1.3rem+4.6vw,6rem)] leading-[0.98] font-semibold tracking-[-0.035em] text-balance 3xl:max-w-6xl"
@@ -32,9 +30,6 @@ export async function ClosingCta() {
             ) : null}
             {cta.label ? <StarCta label={cta.label} /> : null}
           </div>
-        </div>
-        <div aria-hidden="true" className={styles.land}>
-          <PenHorizon seed="anfrage" draw="scroll" className={styles.ridges} />
         </div>
       </section>
     </InView>

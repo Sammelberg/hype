@@ -1,69 +1,138 @@
 "use client";
 
-import { MenuIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { CSSProperties } from "react";
 
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { NavSection } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
+import { KontaktButton } from "./desktop-nav";
+import styles from "./mobile-menu.module.css";
 import { pauseSmoothScroll } from "./smooth-scroll";
+import { Wortmarke } from "./wortmarke";
 
-// Every page of the site on phones, where the header has no room for them. A sheet from the top:
+const inSection = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
+// Every page of the site below lg, where the header has no room for them. A sheet over the whole
+// screen whose top row is the header again — the logo where it was, „Schließen“ where „Menü“ was
+// — then the sections, numbered, each with its pages beside one another, and the inquiry as the
+// one button at the end. Its rows come up one after another (CSS, not with reduced motion).
 // Radix traps focus, closes on Escape and returns focus to the button; Lenis pauses so the page
 // behind it holds still.
-export function MobileMenu({ sections }: { sections: NavSection[] }) {
+export function MobileMenu({ sections, siteName }: { sections: NavSection[]; siteName: string }) {
   const pathname = usePathname();
-  const link = (href: string, label: string, className: string) => {
-    const current = pathname === href;
-    return (
-      <SheetClose asChild>
-        <Link
-          href={href as never}
-          aria-current={current ? "page" : undefined}
-          className={cn(
-            "block transition-colors hover:text-primary-soft",
-            className,
-            current && "text-primary-soft underline decoration-2 underline-offset-8",
-          )}
-        >
-          {label}
-        </Link>
-      </SheetClose>
-    );
-  };
+  const list = sections.filter((section) => section.href !== "/kontakt");
+  const link = (href: string, label: string, className: string) => (
+    <SheetClose asChild>
+      <Link
+        href={href as never}
+        aria-current={pathname === href ? "page" : undefined}
+        className={cn(
+          "transition-colors hover:text-foreground aria-[current=page]:text-primary-soft",
+          className,
+        )}
+      >
+        {label}
+      </Link>
+    </SheetClose>
+  );
 
   return (
     <Sheet onOpenChange={pauseSmoothScroll}>
-      <SheetTrigger className="-mr-2 inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-        <MenuIcon aria-hidden="true" className="size-5" />
+      <SheetTrigger className="inline-flex min-h-11 items-center gap-3 rounded-full px-2 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
         Menü
+        <span aria-hidden="true" className="flex w-5 flex-col items-end gap-[5px]">
+          <span className="h-px w-5 bg-current" />
+          <span className="h-px w-3.5 bg-current" />
+        </span>
       </SheetTrigger>
       <SheetContent
         side="top"
-        className="max-h-dvh overflow-y-auto overscroll-contain border-b bg-background px-gutter pt-5 pb-10"
+        showCloseButton={false}
+        overlayClassName="bg-background/60"
+        className="h-dvh max-h-dvh gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 shadow-none"
       >
-        <SheetTitle className="text-sm font-medium text-muted-foreground">Menü</SheetTitle>
-        <nav aria-label="Seiten" className="mt-2">
-          <ul className="grid gap-6">
-            {sections.map((section) => (
-              <li key={section.href}>
-                {link(section.href, section.label, "py-1 text-3xl font-semibold tracking-tight")}
-                {section.children.length > 0 ? (
-                  <ul className="mt-1 border-l border-primary-soft/40 pl-4">
-                    {section.children.map((child) => (
-                      <li key={child.href}>
-                        {link(child.href, child.label, "py-2 text-lg text-muted-foreground")}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
-            <li>{link("/suche", "Suche", "py-1 text-lg text-muted-foreground")}</li>
-          </ul>
+        <div className="sticky top-0 z-10 flex h-header shrink-0 items-center justify-between gap-6 border-b bg-background px-gutter">
+          <SheetClose asChild>
+            <Wortmarke siteName={siteName} />
+          </SheetClose>
+          <SheetClose className="-mr-2 inline-flex min-h-11 items-center gap-3 rounded-full px-2 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
+            Schließen
+            <XIcon aria-hidden="true" className="size-5" strokeWidth={1.5} />
+          </SheetClose>
+        </div>
+        <SheetTitle className="sr-only">Menü</SheetTitle>
+
+        <nav aria-label="Seiten" className="px-gutter">
+          <ol>
+            {list.map((section, i) => {
+              const current = inSection(pathname, section.href);
+              return (
+                <li
+                  key={section.href}
+                  className={cn(styles.row, "border-b py-4 sm:py-5")}
+                  style={{ "--i": i } as CSSProperties}
+                >
+                  <div className="flex items-baseline gap-4">
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "w-6 shrink-0 text-xs text-muted-foreground tabular-nums",
+                        current && "text-primary-soft",
+                      )}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    {link(
+                      section.href,
+                      section.label,
+                      cn(
+                        "py-1 text-2xl leading-tight font-semibold tracking-[-0.02em] sm:text-4xl",
+                        current && "text-primary-soft",
+                      ),
+                    )}
+                  </div>
+                  {section.children.length > 0 ? (
+                    <ul className="mt-1 grid gap-x-6 pl-10 sm:grid-cols-2">
+                      {section.children.map((child) => (
+                        <li key={child.href}>
+                          {link(
+                            child.href,
+                            child.label,
+                            "flex min-h-11 items-center text-base text-muted-foreground",
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
         </nav>
+
+        <div
+          className={cn(styles.row, "flex flex-col gap-4 px-gutter pt-8 pb-10")}
+          style={{ "--i": list.length } as CSSProperties}
+        >
+          <SheetClose asChild>
+            <KontaktButton className="h-12 w-full text-base" />
+          </SheetClose>
+          <SheetClose asChild>
+            <Link
+              href="/suche"
+              aria-current={pathname === "/suche" ? "page" : undefined}
+              className="inline-flex min-h-11 items-center gap-2 self-center text-sm text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-primary-soft"
+            >
+              <SearchIcon aria-hidden="true" className="size-4" />
+              Suche
+            </Link>
+          </SheetClose>
+        </div>
       </SheetContent>
     </Sheet>
   );

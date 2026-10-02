@@ -5,12 +5,13 @@ import { cn } from "@/lib/utils";
 
 import { InView } from "./in-view";
 import styles from "./page-header.module.css";
-import { PenHorizon } from "./pen-horizon";
+import { Landschaft } from "./landscape";
 import { RisingWords } from "./words";
 
 /**
  * Head of every page besides the home page: a sparse night sky, breadcrumbs, the heading at the
- * scale of the home sections, a lead beside it from lg up, and the page's own pen-drawn horizon
+ * scale of the home sections, a lead beside it from lg up, and the page's own landscape (pen,
+ * paper ridges or the forest's edge, landscape.tsx)
  * underneath (seeded by `horizonKey`, usually the path) — or a `scene` of the page's own in its
  * place. When the page opens the heading's words rise one by one and the horizon draws; scrolling
  * away, the text drifts up and dims while the horizon sinks a little slower (motion.css).
@@ -95,7 +96,7 @@ export function PageHeader({
         ) : null}
       </div>
       <div className="relative sd-sink">
-        {scene ?? <PenHorizon seed={horizonKey} className={cn(styles.horizon, "mt-10 sm:mt-14")} />}
+        {scene ?? <Landschaft seed={horizonKey} className={cn(styles.horizon, "mt-10 sm:mt-14")} />}
       </div>
     </InView>
   );

@@ -3,7 +3,9 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 import { FIR_DESIGNS } from "./fir-shapes";
+import { InView } from "./in-view";
 import { type Ridge, valley, VALLEY_H, VALLEY_W, type ValleySpec } from "./valley";
+import { Lake, Mist, Moon, Pieces, SceneDefs } from "./valley-scene";
 import styles from "./valley-view.module.css";
 
 const VIEW = `0 0 ${VALLEY_W} ${VALLEY_H}`;
@@ -27,7 +29,7 @@ export function ValleyView({
   className,
   frame = "window",
   ...rest
-}: Omit<ComponentProps<"div">, "id" | "children"> & {
+}: Omit<ComponentProps<"div">, "id" | "children" | "ref"> & {
   spec: ValleySpec;
   id: string;
   className?: string;
@@ -54,8 +56,22 @@ export function ValleyView({
         );
       });
 
+  const mirror = (
+    <>
+      <path className={styles.farRidge} d={v.ridges.far.fill} />
+      <path className={styles.farEdge} d={v.ridges.far.edge} />
+      {trees("far")}
+      <path className={styles.midRidge} d={v.ridges.mid.fill} />
+      <path className={styles.midEdge} d={v.ridges.mid.edge} />
+      {trees("mid")}
+      <path className={styles.nearRidge} d={v.ridges.near.fill} />
+      <path className={styles.edge} d={v.ridges.near.edge} />
+      {trees("near")}
+    </>
+  );
+
   return (
-    <div
+    <InView
       aria-hidden="true"
       {...rest}
       className={cn(styles.view, frame === "window" ? styles.window : styles.panorama, className)}
@@ -68,23 +84,32 @@ export function ValleyView({
         ))}
       </svg>
       <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice" className={styles.far}>
+        <SceneDefs v={v} prefix={id} />
         {v.stars.map((s) => (
           <circle key={`${s.x}-${s.y}`} cx={s.x} cy={s.y} r={s.r} opacity={s.o} />
         ))}
+        <Moon v={v} prefix={id} />
         <path className={styles.farRidge} d={v.ridges.far.fill} />
         <path className={styles.farEdge} d={v.ridges.far.edge} />
+        <Mist v={v} ridge="far" prefix={id} />
         {trees("far")}
       </svg>
       <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice" className={styles.mid}>
         <path className={styles.midRidge} d={v.ridges.mid.fill} />
         <path className={styles.midEdge} d={v.ridges.mid.edge} />
+        <Pieces pieces={v.motif.mid} />
+        <Mist v={v} ridge="mid" prefix={id} />
         {trees("mid")}
       </svg>
       <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice" className={styles.near}>
         <path className={styles.nearRidge} d={v.ridges.near.fill} />
+        <Lake v={v} prefix={id}>
+          {mirror}
+        </Lake>
+        <Pieces pieces={v.motif.near} />
         <path className={`${styles.edge} sd-stroke`} d={v.ridges.near.edge} pathLength={1} />
         {trees("near")}
       </svg>
-    </div>
+    </InView>
   );
 }

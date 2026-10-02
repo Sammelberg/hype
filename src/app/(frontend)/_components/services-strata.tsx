@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { FIR_DESIGNS } from "@/components/site/fir-shapes";
+import { InView } from "@/components/site/in-view";
+import { Lake, Mist, Moon, Pieces, SceneDefs } from "@/components/site/valley-scene";
 import styles from "./services-strata.module.css";
 import { type Ridge, valley, VALLEY_H, VALLEY_W, type ValleySpec } from "@/components/site/valley";
 import { VALLEYS } from "@/components/site/valleys";
@@ -101,10 +103,25 @@ function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs
         );
       });
 
+  const mirror = (
+    <>
+      <path className={styles.farRidge} d={v.ridges.far.fill} />
+      <path className={styles.farEdge} d={v.ridges.far.edge} />
+      {trees("far")}
+      <path className={styles.midRidge} d={v.ridges.mid.fill} />
+      <path className={styles.midEdge} d={v.ridges.mid.edge} />
+      {trees("mid")}
+      <path fill={`url(#${ground})`} d={v.ridges.near.fill} />
+      <path className={styles.edge} d={v.ridges.near.edge} />
+      {trees("near")}
+    </>
+  );
+
   return (
-    <div className={styles.window} aria-hidden="true">
+    <InView className={styles.window} aria-hidden="true">
       <div data-depth="far" className={styles.depth}>
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice">
+          <SceneDefs v={v} prefix={ground} />
           {v.stars.map((s) => (
             <circle
               key={`${s.x}-${s.y}`}
@@ -115,8 +132,10 @@ function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs
               opacity={s.o}
             />
           ))}
+          <Moon v={v} prefix={ground} />
           <path className={styles.farRidge} d={v.ridges.far.fill} />
           <path className={styles.farEdge} d={v.ridges.far.edge} />
+          <Mist v={v} ridge="far" prefix={ground} />
           {trees("far")}
         </svg>
       </div>
@@ -124,6 +143,8 @@ function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice">
           <path className={styles.midRidge} d={v.ridges.mid.fill} />
           <path className={styles.midEdge} d={v.ridges.mid.edge} />
+          <Pieces pieces={v.motif.mid} />
+          <Mist v={v} ridge="mid" prefix={ground} />
           {trees("mid")}
         </svg>
       </div>
@@ -136,6 +157,10 @@ function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs
             </linearGradient>
           </defs>
           <path fill={`url(#${ground})`} d={v.ridges.near.fill} />
+          <Lake v={v} prefix={ground}>
+            {mirror}
+          </Lake>
+          <Pieces pieces={v.motif.near} />
         </svg>
         {/* The drawn line in a layer of its own: drawing it repaints nothing else. */}
         <svg viewBox={VIEW} preserveAspectRatio="xMidYMax slice" className={styles.lines}>
@@ -145,7 +170,7 @@ function Valley({ spec, ground, firs }: { spec: ValleySpec; ground: string; firs
           {trees("near")}
         </svg>
       </div>
-    </div>
+    </InView>
   );
 }
 

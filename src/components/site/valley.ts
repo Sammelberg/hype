@@ -8,6 +8,8 @@
 import type { FirDesign } from "@/components/site/fir-shapes";
 import { r1, random } from "@/lib/curves";
 
+import { motif, type MotifDrawing, type MotifSpec } from "./valley-motifs";
+
 export const VALLEY_W = 1200;
 export const VALLEY_H = 800;
 
@@ -22,6 +24,10 @@ export type ValleySpec = {
   near: readonly Knee[];
   /** The large firs on the near ridge: x and height in valley units. */
   firs: readonly { design: FirDesign; x: number; h: number }[];
+  /** The moon: centre, radius and how much of it is lit (0 new … 1 full), from the right or left. */
+  moon: { x: number; y: number; r: number; lit: number; side: "left" | "right" };
+  /** The valley's landmark (valley-motifs.ts). */
+  motif: MotifSpec;
 };
 
 export type Valley = {
@@ -29,6 +35,20 @@ export type Valley = {
   ridges: Record<Ridge, { fill: string; edge: string }>;
   /** y is the fir's foot. */
   firs: { ridge: Ridge; design: FirDesign; x: number; y: number; h: number }[];
+  /** The lit part of the moon and its whole disc (for the faint unlit rest and the halo). */
+  moon: { lit: string; x: number; y: number; r: number };
+  /**
+   * Mist in the valley in front of the far and the middle ridge: each band follows its ridge's
+   * line a little below the crest and runs down behind the next ridge, which hides its foot.
+   */
+  mist: Record<"far" | "mid", string>;
+  motif: MotifDrawing;
+};
+
+/** Where each band of mist starts below its crest, and the span its light fades in over. */
+export const MIST: Record<"far" | "mid", { drop: number; from: number; to: number }> = {
+  far: { drop: 46, from: 330, to: 560 },
+  mid: { drop: 40, from: 470, to: 700 },
 };
 
 /**
@@ -104,7 +124,8 @@ function groves(
 ) {
   const front = ridge === "far" ? "mid" : "near";
   const firs: Valley["firs"] = [];
-  for (let g = 0; g < 2; g++) {
+  // The far ridge carries two groves, the middle one three: a forest, with gaps.
+  for (let g = 0; g < (ridge === "far" ? 2 : 3); g++) {
     const centre = between(rnd, SHOWN[0] + 60, SHOWN[1] - 60);
     const count = 2 + Math.floor(rnd() * 3);
     const gap = between(rnd, ...spacing);
@@ -121,6 +142,18 @@ function groves(
   return firs;
 }
 
+/**
+ * The moon's lit part: the outer half circle on the lit side, back along the terminator, an
+ * ellipse whose width follows the phase (bulging outwards while it is a crescent).
+ */
+export function moonPath({ x, y, r, lit, side }: ValleySpec["moon"]) {
+  const k = Math.min(1, Math.max(0, lit));
+  const rx = r1(Math.abs(2 * k - 1) * r);
+  const s = side === "right" ? 1 : 0;
+  const back = k < 0.5 ? 1 - s : s;
+  return `M ${r1(x)} ${r1(y - r)} A ${r} ${r} 0 0 ${s} ${r1(x)} ${r1(y + r)} A ${rx} ${r} 0 0 ${back} ${r1(x)} ${r1(y - r)} Z`;
+}
+
 export function valley(spec: ValleySpec): Valley {
   const rnd = random(spec.seed);
   const line = (ridge: Ridge) => {
@@ -134,6 +167,11 @@ export function valley(spec: ValleySpec): Valley {
     };
   };
   const near = (x: number) => ridgeAt(spec, "near", x);
+  const mist = (ridge: "far" | "mid") => {
+    const knees = kneesOf(spec, ridge);
+    const top = knees.map(([x, y], i) => `${i ? "L" : "M"} ${r1(x)} ${r1(y + MIST[ridge].drop)}`);
+    return `${top.join(" ")} L ${r1(knees.at(-1)![0])} ${VALLEY_H} L ${r1(knees[0]![0])} ${VALLEY_H} Z`;
+  };
 
   return {
     stars: Array.from({ length: 22 }, () => ({
@@ -143,6 +181,9 @@ export function valley(spec: ValleySpec): Valley {
       o: r1(between(rnd, 0.35, 0.85)),
     })),
     ridges: { far: line("far"), mid: line("mid"), near: line("near") },
+    moon: { lit: moonPath(spec.moon), x: spec.moon.x, y: spec.moon.y, r: spec.moon.r },
+    mist: { far: mist("far"), mid: mist("mid") },
+    motif: motif(spec.motif, near, spec.moon.x),
     firs: [
       ...groves(spec, rnd, "far", [30, 44], [18, 26]),
       ...groves(spec, rnd, "mid", [70, 100], [34, 50]),

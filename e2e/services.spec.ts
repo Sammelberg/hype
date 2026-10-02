@@ -52,10 +52,12 @@ async function settle(read: () => Promise<number>) {
 }
 
 // How far a card's centre is from the middle of the screen (px).
+// From the middle of the page, not of the window: <html> keeps the scrollbar's room reserved
+// (scrollbar-gutter: stable), so the page is narrower than innerWidth by that gutter.
 const offCentre = (page: Page, index: number) =>
   card(page, index).evaluate((el) => {
     const r = el.getBoundingClientRect();
-    return Math.round(r.left + r.width / 2 - innerWidth / 2);
+    return Math.round(r.left + r.width / 2 - document.body.getBoundingClientRect().width / 2);
   });
 
 const scrollTop = (page: Page) => page.evaluate(() => Math.round(scrollY));

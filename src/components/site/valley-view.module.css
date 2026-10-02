@@ -39,7 +39,8 @@
   height: 112%;
 }
 
-.far circle {
+/* The stars; the moon's circles carry data-v. */
+.far circle:not([data-v]) {
   fill: oklch(0.9 0.03 252);
 }
 
@@ -85,6 +86,123 @@
 
 .firNear {
   color: var(--primary-soft);
+}
+
+/* The moon, the mist and the landmark (valley-scene.tsx), in the same soft navy and ice. */
+.view [data-v="halo-in"] {
+  stop-color: var(--primary-soft);
+  stop-opacity: 0.16;
+}
+
+.view [data-v="halo-out"] {
+  stop-color: var(--primary-soft);
+  stop-opacity: 0;
+}
+
+.view [data-v="moon-rest"] {
+  fill: var(--primary-soft);
+  opacity: 0.1;
+}
+
+.view [data-v="moon"] {
+  fill: oklch(0.96 0.02 252);
+}
+
+.view [data-v="mist-clear"] {
+  stop-color: var(--primary-soft);
+  stop-opacity: 0;
+}
+
+.view [data-v="mist-dense"] {
+  stop-color: var(--primary-soft);
+  stop-opacity: 0.18;
+}
+
+.view [data-v="body"] {
+  fill: var(--card);
+}
+
+.view [data-v="line"],
+.view [data-v="shore"] {
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.view [data-v="light"] {
+  fill: oklch(0.96 0.02 252);
+}
+
+.view [data-v="sheet"] {
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 44;
+  stroke-linejoin: round;
+  opacity: 0.18;
+  filter: blur(6px);
+}
+
+.view [data-v="water"] {
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-dasharray: 30 8 12 10;
+}
+
+.view [data-v="lake"] {
+  fill: oklch(0.11 0.03 262);
+}
+
+.view [data-v="mirror"] {
+  opacity: 0.4;
+}
+
+.view [data-v="glitter"] {
+  fill: none;
+  stroke: oklch(0.96 0.02 252);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+/* Water falls and moonlight trembles on the lake, only while the valley is on screen. */
+@media (prefers-reduced-motion: no-preference) {
+  .view [data-v="water"] {
+    animation: fall 1.6s linear infinite;
+  }
+
+  .view [data-v="glitter"] {
+    animation: tremble 3.2s ease-in-out infinite alternate;
+  }
+
+  .view [data-v="glitter"]:nth-of-type(2n) {
+    animation-delay: -1.6s;
+  }
+
+  .view [data-v="glitter"]:nth-of-type(3n) {
+    animation-delay: -0.9s;
+  }
+
+  .view[data-active="false"] [data-v] {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes fall {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+@keyframes tremble {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 0.65;
+  }
 }
 
 /* The depths drift apart as the valley crosses the screen: far slowest, near fastest. */

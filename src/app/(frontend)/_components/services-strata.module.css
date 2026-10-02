@@ -166,9 +166,131 @@
   color: var(--ice);
 }
 
+/* The moon, the mist and the landmark (valley-scene.tsx): ice light only, bodies in the near
+   ground, lit windows the brightest thing in the valley. */
+.window [data-v="halo-in"] {
+  stop-color: var(--ice);
+  stop-opacity: 0.2;
+}
+
+.window [data-v="halo-out"] {
+  stop-color: var(--ice);
+  stop-opacity: 0;
+}
+
+.window [data-v="moon-rest"] {
+  fill: var(--ice);
+  opacity: 0.12;
+}
+
+.window [data-v="moon"] {
+  fill: var(--white);
+}
+
+.window [data-v="mist-clear"] {
+  stop-color: var(--ice);
+  stop-opacity: 0;
+}
+
+.window [data-v="mist-dense"] {
+  stop-color: var(--ice);
+  stop-opacity: 0.24;
+}
+
+.window [data-v="body"] {
+  fill: oklch(0.17 0.05 262);
+}
+
+.window [data-v="line"],
+.window [data-v="shore"] {
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.window [data-v="light"] {
+  fill: var(--white);
+}
+
+.window [data-v="sheet"] {
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 44;
+  stroke-linejoin: round;
+  opacity: 0.2;
+  filter: blur(6px);
+}
+
+.window [data-v="water"] {
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-dasharray: 30 8 12 10;
+  opacity: 0.9;
+}
+
+.window [data-v="lake"] {
+  fill: var(--night);
+}
+
+.window [data-v="mirror"] {
+  opacity: 0.42;
+}
+
+.window [data-v="glitter"] {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+
+/* Water falls and moonlight trembles on the lake, only while the valley is on screen. */
+@media (prefers-reduced-motion: no-preference) {
+  .window [data-v="water"] {
+    animation: fall 1.6s linear infinite;
+  }
+
+  .window [data-v="glitter"] {
+    animation: tremble 3.2s ease-in-out infinite alternate;
+  }
+
+  .window [data-v="glitter"]:nth-of-type(2n) {
+    animation-delay: -1.6s;
+  }
+
+  .window [data-v="glitter"]:nth-of-type(3n) {
+    animation-delay: -0.9s;
+  }
+
+  .window[data-active="false"] [data-v] {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes fall {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+@keyframes tremble {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
 /* ── The service ── */
 .copy {
+  /* The title is sized by the column it stands in (cqi), so its longest word always fits. */
+  container-type: inline-size;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 1.25rem;
   padding: 0 1rem;
@@ -208,7 +330,11 @@
 }
 
 .title {
-  font-size: clamp(2rem, 1rem + 3.6vw, 4.25rem);
+  /* The longest unbreakable title word („Weiterentwicklung“, „Geschäftssysteme“) is 8.5em wide;
+     the glyph and its gap take 3.125rem (3.625rem from lg up) of the row. */
+  --fit: calc((100cqi - 3.125rem) / 8.7);
+  min-width: 0;
+  font-size: min(clamp(2rem, 1rem + 3.6vw, 4.25rem), var(--fit));
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 0.98;
@@ -241,13 +367,16 @@
 
 .examples li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
 }
 
+/* On the first line, also when an example wraps. */
 .examples li::before {
   content: "";
   flex: none;
+  margin-top: 0.55lh;
+  translate: 0 -50%;
   width: 0.4rem;
   height: 0.4rem;
   transform: rotate(45deg);
@@ -368,10 +497,12 @@
     overflow: clip;
   }
 
+  /* The cards are as tall as the tallest copy needs, at least 80% of the stage. */
   .track {
     flex: none;
     gap: clamp(1.25rem, 2.5vw, 3rem);
-    height: min(80%, 48rem);
+    min-height: min(80%, 48rem);
+    max-height: 100%;
     padding: 0 calc((100% - min(84vw, 100rem)) / 2);
     overflow: visible;
     scroll-snap-type: none;
@@ -383,7 +514,6 @@
     flex-direction: row;
     align-items: stretch;
     gap: clamp(2rem, 4vw, 4.5rem);
-    height: 100%;
     padding: 0.875rem;
   }
 
@@ -393,7 +523,8 @@
     flex: 1 1 0;
     min-width: 0;
     align-content: center;
-    padding: clamp(1.5rem, 4vh, 3rem) 0 clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3.5rem);
+    gap: clamp(0.75rem, 2.2vh, 1.25rem);
+    padding: clamp(1rem, 4vh, 3rem) 0 clamp(1rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3.5rem);
   }
 
   .window {
@@ -408,12 +539,27 @@
   }
 
   .title {
-    font-size: clamp(2rem, 0.7rem + 2.8vw, 3.5rem);
+    --fit: calc((100cqi - 3.625rem) / 8.7);
+    font-size: min(clamp(2rem, 0.7rem + 2.8vw, 3.5rem), var(--fit));
     hyphens: manual;
   }
 
+  /* Short screens: the copy tightens with the height, so it never outgrows the card. */
   .text {
-    font-size: 1.1875rem;
+    font-size: clamp(1rem, 0.35rem + 1.75vh, 1.1875rem);
+  }
+
+  .lead {
+    margin-top: clamp(0.5rem, 2vh, 1.25rem);
+  }
+
+  .examples {
+    gap: clamp(0.25rem, 0.9vh, 0.5rem);
+    margin-top: clamp(0.375rem, 1.2vh, 0.75rem);
+  }
+
+  .more {
+    margin-top: clamp(0.25rem, 1.2vh, 0.75rem);
   }
 
   .rail {
@@ -423,7 +569,7 @@
 
 @media (min-width: 120rem) {
   .title {
-    font-size: clamp(4.25rem, 3.6vw, 5.75rem);
+    font-size: min(clamp(4.25rem, 3.6vw, 5.75rem), var(--fit));
   }
 
   .text {

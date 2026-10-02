@@ -1,3 +1,7 @@
+import { cn } from "@/lib/utils";
+
+import { FIR_DESIGNS } from "./fir-shapes";
+
 // Brand mark of Schwarzwald Systems: a fir built from three tiers. One path for the header, the
 // icons and the share image (next/og renders inline SVG). The mark stands in for initials on
 // purpose: the company's initials must never be shown as a monogram.
@@ -20,6 +24,32 @@ export function FirMark({
     </svg>
   );
 }
+
+/**
+ * The logo: our fir „Dicht“ exactly as drawn for the hero forest (fir-shapes.ts), its brush
+ * strokes thickened by an outline of their own colour so the drawing still reads at header size.
+ * Sized by height; the width follows the drawing (about 0.56 of the height). Below 24px the strokes
+ * close up, so the admin and the favicon keep the tiered `FirMark`.
+ */
+export function FirLogo({ className, weight = 6 }: { className?: string; weight?: number }) {
+  return (
+    <svg
+      viewBox={LOGO.viewBox}
+      aria-hidden="true"
+      className={cn("aspect-[155/276] h-9 w-auto overflow-visible", className)}
+    >
+      <path
+        d={LOGO.d}
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={weight}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const LOGO = FIR_DESIGNS.dicht;
 
 // Brand colours as hex for next/og, which cannot read CSS variables (globals.css holds the tokens).
 export const BRAND_HEX = {

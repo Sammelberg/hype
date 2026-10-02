@@ -24,7 +24,9 @@ describe("penHorizon", () => {
   it("gives the pages different scenes, every profile used", () => {
     const profiles = new Set(Object.values(PAGE_SCENES).map((s) => s.profile));
     expect(profiles.size).toBe(5);
-    expect(sceneFor("/ueber-uns")).toEqual({ profile: "gipfel", motif: "turm" });
+    expect(sceneFor("/ueber-uns")).toEqual({ profile: "gipfel", motif: "turm", stil: "kulissen" });
+    const styles = new Set(Object.values(PAGE_SCENES).map((s) => s.stil));
+    expect([...styles].sort()).toEqual(["feder", "kulissen", "waldrand"]);
     expect(PAGE_SCENES[sceneFor("Zahlung").profile]).toBeUndefined();
   });
 

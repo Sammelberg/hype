@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { FIR_DESIGNS } from "@/components/site/fir-shapes";
 
-import { hullOf } from "./fir-hull";
+import { hullOf, silhouetteOf } from "./fir-hull";
 
 describe("hullOf", () => {
   it("wraps a square's points in the square", () => {
@@ -27,5 +27,18 @@ describe("hullOf", () => {
         expect(Number(y)).toBeLessThanOrEqual(vy + vh + 1);
       }
     }
+  });
+
+  it("keeps a fir's tiers in its stepped outline: wider at the foot than at the top", () => {
+    const pts = silhouetteOf(FIR_DESIGNS.dicht.d);
+    const width = (y0: number, y1: number) => {
+      const band = pts.filter(([, y]) => y >= y0 && y <= y1).map(([x]) => x);
+      return Math.max(...band) - Math.min(...band);
+    };
+    const ys = pts.map(([, y]) => y);
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const h = bottom - top;
+    expect(width(top + h * 0.7, top + h * 0.85)).toBeGreaterThan(width(top, top + h * 0.15));
   });
 });

@@ -22,7 +22,14 @@ test("the header lists every section and opens a section's pages", async ({ page
   for (const name of ["Leistungen", "Branchen", "Projekte", "Über uns"]) {
     await expect(nav.getByRole("button", { name })).toBeVisible();
   }
-  await expect(nav.getByRole("link", { name: "Kontakt" })).toBeVisible();
+  // Kontakt is the one filled button at the end; the logo leads home.
+  await expect(nav.getByRole("link", { name: "Projekt anfragen" })).toHaveAttribute(
+    "href",
+    "/kontakt",
+  );
+  await expect(
+    page.getByRole("banner").getByRole("link", { name: "Schwarzwald Systems" }),
+  ).toHaveAttribute("href", "/");
   await expect(nav.getByRole("link", { name: "Suche" })).toBeVisible();
 
   // By keyboard: Enter opens the section's menu, Escape closes it again.
@@ -70,6 +77,10 @@ test("the phone menu opens, traps focus, closes on Escape and leads to a page", 
 
   await button.click();
   await expect(menu.getByRole("link", { name: "Handwerk" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Projekt anfragen" })).toHaveAttribute(
+    "href",
+    "/kontakt",
+  );
   await menu.getByRole("link", { name: "Projekte", exact: true }).click();
   await expect(page).toHaveURL(/\/projekte$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Projekte");

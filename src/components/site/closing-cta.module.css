@@ -1,14 +1,5 @@
-/* The closing invitation (closing-cta.tsx): type, then the pen-drawn land the footer stands on. */
+/* The closing invitation (closing-cta.tsx): type and one action; the footer's land follows. */
 .cta {
   position: relative;
   overflow: clip;
-}
-
-.land {
-  position: relative;
-  margin-top: clamp(3rem, 1rem + 6vw, 7rem);
-}
-
-.ridges {
-  min-height: 7rem;
 }

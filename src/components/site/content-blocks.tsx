@@ -188,7 +188,7 @@ function Cards({ parts }: { parts: TextPart[] }) {
                 className="min-h-28 [--pen-ground:var(--card)]"
               />
               <div className="flex flex-1 flex-col justify-end p-8 pt-6">
-                <h2 className="text-2xl font-semibold tracking-tight text-balance 3xl:text-3xl">
+                <h2 className="text-2xl font-semibold tracking-tight text-balance break-words hyphens-auto 3xl:text-3xl">
                   {part.title}
                 </h2>
                 <RichText data={part.body} className="prose-lg mt-3 text-pretty" />
@@ -244,7 +244,7 @@ function Modules({
   // Around the centre on an ellipse, starting at the top, clockwise.
   const at = (i: number) => {
     const t = -Math.PI / 2 + (i / n) * Math.PI * 2;
-    return { x: 50 + 40 * Math.cos(t), y: 50 + 38 * Math.sin(t) };
+    return { x: 50 + 34 * Math.cos(t), y: 50 + 38 * Math.sin(t) };
   };
   return (
     <Part id={id} title={part.title}>
