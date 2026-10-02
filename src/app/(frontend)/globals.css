@@ -130,6 +130,12 @@
   }
   html {
     @apply font-sans;
+    /*
+     * The scrollbar's room stays reserved while the menu (a Radix dialog) locks scrolling: else
+     * the scrollbar vanishes as it opens and every centred or right-aligned thing jumps sideways
+     * by its width.
+     */
+    scrollbar-gutter: stable;
   }
   /*
    * The header is sticky: anchor jumps and focus scrolling in the content stop below it
