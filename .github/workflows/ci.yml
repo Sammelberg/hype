@@ -26,7 +26,8 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DATABASE_URL: postgres://starter:starter@localhost:5432/starter
-      # One port for the build, `pnpm start` and Playwright (playwright.config.ts waits on PORT).
+      # One port for the build, the e2e server (standalone server.js) and Playwright
+      # (playwright.config.ts waits on PORT).
       PORT: "3002"
       NEXT_PUBLIC_SERVER_URL: http://localhost:3002
       NEXT_TELEMETRY_DISABLED: "1"

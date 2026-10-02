@@ -52,6 +52,13 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: "/media/**" }],
   },
   turbopack: { root: dirname },
+  // Production runs `node server.js` from .next/standalone (Dockerfile): only the traced files ship.
+  output: "standalone",
+  // The share images read Geist from disk (components/site/share-image.tsx); tracing cannot see
+  // those reads, so the fonts are shipped explicitly.
+  outputFileTracingIncludes: {
+    "/**": ["./node_modules/geist/dist/fonts/geist-sans/Geist-{Regular,SemiBold}.ttf"],
+  },
   // Server actions carry forms and page content, never files: uploads have their own route
   // (admin/(app)/medien/hochladen). Small, since the public contact form is an action too.
   experimental: {

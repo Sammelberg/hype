@@ -1,0 +1,77 @@
+# Production stack on the own server (IONOS): the site with its admin (Next.js with the own CMS
+# and the office) and Postgres — nothing else. HTTPS comes from the server's shared entrance (a
+# Caddy for every site on this host, `edge`): the app joins its network as `schwarzwald-app`, and
+# the entrance's site file (deploy/edge.caddy) sends the domain there. Data sits in named volumes.
+# Own project name: the development compose file in the repository root is project „starter“, and
+# a shared name would make both files manage the same containers and volumes.
+name: schwarzwald-prod
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-logging: &logging
+  logging:
+    driver: local
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  app:
+    <<: [*restart, *logging]
+    image: schwarzwald-app:latest
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://schwarzwald:${POSTGRES_PASSWORD}@postgres:5432/schwarzwald
+      MEDIA_DIR: /app/media
+    volumes:
+      - media:/app/media
+    networks:
+      default: {}
+      edge:
+        aliases: [schwarzwald-app]
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: 1536m
+
+  # One-off: the migrations (deploy/deploy.sh runs them before each build), the content transfer
+  # (deploy/inhalt.sh), the first administrator (deploy/admin.sh), the nightly jobs
+  # (deploy/aufgabe.sh).
+  migrate:
+    image: schwarzwald-migrate:latest
+    profiles: [tools]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://schwarzwald:${POSTGRES_PASSWORD}@postgres:5432/schwarzwald
+      MEDIA_DIR: /app/media
+    volumes:
+      - media:/app/media
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  postgres:
+    <<: [*restart, *logging]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: schwarzwald
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: schwarzwald
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=100"]
+    # Loopback only: the image build (deploy/deploy.sh) prerenders the site from this database.
+    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-5437}:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schwarzwald -d schwarzwald"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+
+networks:
+  # The shared entrance's network, made by the edge stack (EDGE_NETWORK in deploy/.env).
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-edge}
+
+volumes:
+  media:
+  pgdata:

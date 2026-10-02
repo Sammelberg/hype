@@ -24,7 +24,12 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: process.env.CI ? "pnpm start" : "pnpm dev",
+        // CI runs the standalone server the Dockerfile ships. Not through pnpm: Playwright could
+        // not stop a server started by `pnpm start`, and the run hung after the last test.
+        // HOSTNAME is the runner's own name on GitHub; server.js would listen on it alone.
+        command: process.env.CI
+          ? "cp -r .next/static .next/standalone/.next/ && HOSTNAME=0.0.0.0 node .next/standalone/server.js"
+          : "pnpm dev",
         url: baseURL,
         reuseExistingServer: !process.env.CI,
       },
