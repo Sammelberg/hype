@@ -27,7 +27,7 @@
 }
 
 .summit {
-  fill: oklch(0.7 0.12 58);
+  fill: var(--primary-soft);
   transform-box: fill-box;
   transform-origin: center;
 }

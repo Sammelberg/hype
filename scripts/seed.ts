@@ -16,9 +16,12 @@ import {
 } from "../src/cms/content/page-sections";
 import { kindOf } from "../src/cms/content/page-tree";
 import {
+  getPage,
   listPages,
   listPublishedPages,
   ordnePages,
+  publishPage,
+  saveDraft,
   upsertPublishedPage,
 } from "../src/cms/content/pages";
 import { getProjektBySlug, upsertPublishedProjekt } from "../src/cms/content/projekte";
@@ -29,6 +32,7 @@ import {
   lexical,
   SEED_NAV_ORDER,
   SEED_REDIRECT,
+  SEED_RENAMED,
   seedContactForm,
   seedPages,
   seedProjects,
@@ -97,6 +101,9 @@ function routed(slug: string): { lead: string | null; sections: PageSections | n
       sections: {
         ...HOME_DEFAULTS,
         hero: { ...HOME_DEFAULTS.hero, words: withIds(s.hero.words) },
+        eRechnungTitle: s.eRechnung.title,
+        eRechnungLead: s.eRechnung.lead,
+        milestones: withIds(s.eRechnung.milestones),
         steps: withIds(s.steps),
         principles: withIds(s.principles),
       },
@@ -119,12 +126,28 @@ function routed(slug: string): { lead: string | null; sections: PageSections | n
   return { lead: null, sections: null };
 }
 
+// A page whose slug the seed changed is moved, not doubled: saved under its new slug and published
+// as an edit in /admin would be, so its old address redirects to it (redirectMoves).
+async function moveRenamedPages() {
+  for (const { from, to } of SEED_RENAMED) {
+    const all = await listPages();
+    const old = all.find((p) => p.slug === from);
+    if (!old || all.some((p) => p.slug === to)) continue;
+    const found = await getPage(old.id);
+    if (!found) continue;
+    await saveDraft(old.id, { ...found.editing, slug: to });
+    await publishPage(old.id, null);
+    console.log(`Seite „${from}“ nach „${to}“ verschoben; die alte Adresse leitet weiter.`);
+  }
+}
+
 // `pnpm seed --nur <slug>`: that one page from the seed, nothing else — for a database with real
 // content, where a full seed would overwrite what was edited in /admin (the Datenschutzerklärung
 // after a change to what the site does, for instance). Its parent must exist already.
 async function onlyPage(slug: string) {
   const page = seedPages.find((p) => p.slug === slug);
   if (!page) throw new Error(`Keine Seite „${slug}“ im Seed.`);
+  await moveRenamedPages();
   const existing = await listPages();
   const parentId = page.parent ? (existing.find((p) => p.slug === page.parent)?.id ?? null) : null;
   if (page.parent && parentId === null) throw new Error(`Die Elternseite „${page.parent}“ fehlt.`);
@@ -142,6 +165,20 @@ async function onlyPage(slug: string) {
 async function main() {
   assertSafeTarget();
 
+  // `pnpm seed --reihenfolge`: only the navigation's order from SEED_NAV_ORDER — for a database
+  // with real content, after new top-level pages came in with `--nur`.
+  if (process.argv.includes("--reihenfolge")) {
+    const top = (await listPages()).filter((p) => p.parent === null);
+    const first = SEED_NAV_ORDER.flatMap((slug) => top.filter((p) => p.slug === slug));
+    const rest = top.filter((p) => !first.includes(p)).sort((a, b) => a.sortOrder - b.sortOrder);
+    await ordnePages(
+      null,
+      [...first, ...rest].map((p) => p.id),
+    );
+    console.log(`Reihenfolge übernommen: ${first.map((p) => p.slug).join(", ")}.`);
+    return;
+  }
+
   const only = process.argv[process.argv.indexOf("--nur") + 1];
   if (process.argv.includes("--nur")) {
     if (!only) throw new Error("Aufruf: pnpm seed --nur <slug>");
@@ -149,6 +186,7 @@ async function main() {
   }
 
   await upsertSiteSettings(settings());
+  await moveRenamedPages();
 
   // Parents first, so children can point at them.
   const ids = new Map<string, number>();

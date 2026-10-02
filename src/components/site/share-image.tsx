@@ -3,9 +3,10 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { HORIZON_H, HORIZON_W, horizon } from "@/lib/horizon";
+import { PEN_H, PEN_W, penHorizon } from "@/lib/pen-horizon";
 
 import { BRAND_HEX, FirMark } from "./fir-mark";
+import { FIR_DESIGNS } from "./fir-shapes";
 
 export const SHARE_SIZE = { width: 1200, height: 630 };
 
@@ -27,13 +28,10 @@ const loadFonts = () =>
     })),
   ]));
 
-// The hero's copper gold as hex; next/og cannot read CSS variables.
-const COPPER = "#cc8c54";
-
 /**
  * Share image of a page, rendered on our own server with next/og's bundled font: the site's name
- * with the fir, the page title large, and the page's own horizon along the bottom (the same one
- * its PageHeader draws, without the firs).
+ * with the fir, the page title large, and the page's own pen-drawn horizon along the bottom (the
+ * same ridges of fir tops its PageHeader draws).
  */
 export async function shareImage({
   siteName,
@@ -46,7 +44,7 @@ export async function shareImage({
   kicker?: string | null;
   horizonKey: string;
 }) {
-  const h = horizon(horizonKey);
+  const ridges = penHorizon(horizonKey);
   const fontList = await loadFonts();
   const long = title.length > 28;
   return new ImageResponse(
@@ -95,12 +93,44 @@ export async function shareImage({
         width={SHARE_SIZE.width}
         height={150}
         // The middle of the horizon at its own scale, as a wide screen sees it.
-        viewBox={`${(HORIZON_W - SHARE_SIZE.width) / 2} ${HORIZON_H - 150} ${SHARE_SIZE.width} 150`}
+        viewBox={`${(PEN_W - SHARE_SIZE.width) / 2} ${PEN_H - 150} ${SHARE_SIZE.width} 150`}
         style={{ display: "flex" }}
       >
-        <path d={h.ground} fill={BRAND_HEX.card} />
-        <path d={h.ridge} fill="none" stroke={BRAND_HEX.accent} strokeWidth={2.5} />
-        <path d={h.arc} fill="none" stroke={COPPER} strokeWidth={2.5} strokeLinecap="round" />
+        {ridges.map((ridge) => {
+          const ink = 0.38 + (0.57 * ridge.depth) / (ridges.length - 1);
+          return (
+            <g key={ridge.depth}>
+              <path d={ridge.fill} fill={BRAND_HEX.background} />
+              <path
+                d={ridge.line}
+                fill="none"
+                stroke={BRAND_HEX.accent}
+                strokeOpacity={ink}
+                strokeWidth={1.6}
+                strokeLinejoin="round"
+              />
+              {ridge.firs.map((fir) => {
+                const shape = FIR_DESIGNS[fir.design];
+                const [vx, vy, vw, vh] = shape.viewBox.split(" ").map(Number) as [
+                  number,
+                  number,
+                  number,
+                  number,
+                ];
+                const k = fir.h / vh;
+                return (
+                  <path
+                    key={`${fir.x}-${fir.h}`}
+                    d={shape.d}
+                    fill={BRAND_HEX.accent}
+                    fillOpacity={ink}
+                    transform={`translate(${fir.x - (vw * k) / 2 - vx * k} ${fir.y - fir.h - vy * k}) scale(${k})`}
+                  />
+                );
+              })}
+            </g>
+          );
+        })}
       </svg>
     </div>,
     { ...SHARE_SIZE, fonts: fontList },

@@ -43,7 +43,7 @@ export default async function ContactPage() {
 
   return (
     <main>
-      <PageHeader title={page?.title || "Kontakt"} lead={page?.lead} horizonKey="/kontakt" beacon />
+      <PageHeader title={page?.title || "Kontakt"} lead={page?.lead} horizonKey="/kontakt" />
       <div className="page-container grid gap-10 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16 3xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
         {/* The form in one calm panel: the page's one job. */}
         <div

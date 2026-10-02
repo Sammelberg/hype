@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
+import { lexical } from "@/cms/rich-text/build";
+import { firstParagraph } from "@/cms/rich-text/text";
 import { ClosingCta } from "@/components/site/closing-cta";
+import { Way } from "@/components/site/content-blocks";
+import { Doors } from "@/components/site/doors";
 import { fraktur } from "@/components/site/fraktur";
 import { StarCta } from "@/components/site/star-cta";
-import { getHomeContent, getLeistungenContent, getSiteSettings } from "@/data/queries";
+import { TechBand } from "@/components/site/tech-band";
+import {
+  getHomeContent,
+  getLeistungenContent,
+  getPublishedPages,
+  getSiteSettings,
+} from "@/data/queries";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
 import { MountainHero } from "./_components/mountain-scene";
@@ -17,6 +28,15 @@ import styles from "./page.module.css";
 // sections and SEO; the five services and their lead come from the page „leistungen“, the button
 // label from the site's closing invitation (/admin → Website). `data-cms-zone` marks each part
 // for the admin's preview.
+
+// The pages the home page opens doors to, in this order; each door shows its page's own title and
+// lead (edited on that page), and a page that is not published is simply left out.
+const PREVIEWS = [
+  "/ueber-uns/datensouveraenitaet",
+  "/branchen/handwerk",
+  "/online-shops",
+  "/ueber-uns/technologie",
+];
 
 // „A, B, C und D“: what a screen reader hears instead of the changing word.
 const listOf = (words: string[]) =>
@@ -48,13 +68,29 @@ function toServices(
 }
 
 export default async function HomePage() {
-  const [settings, { sections }, leistungen] = await Promise.all([
+  const [settings, { sections }, leistungen, pages] = await Promise.all([
     getSiteSettings(),
     getHomeContent(),
     getLeistungenContent(),
+    getPublishedPages(),
   ]);
+  const doors = PREVIEWS.flatMap((path) => {
+    const page = pages.find((p) => p.path === path);
+    return page
+      ? [
+          {
+            id: page.id,
+            title: page.title,
+            path: page.path,
+            summary: page.lead || firstParagraph(page.content),
+          },
+        ]
+      : [];
+  });
   const services = toServices(leistungen.sections.services);
   const { hero, steps, principles } = sections;
+  // Home pages saved before the timeline existed carry no milestones (migration 0012 adds them).
+  const milestones = sections.milestones ?? [];
   const words = (hero?.words ?? []).map((w) => w.word);
   const headline = hero?.headline ?? "";
 
@@ -107,6 +143,8 @@ export default async function HomePage() {
         </div>
       </MountainHero>
 
+      <TechBand title={sections.techTitle ?? "Womit wir bauen"} />
+
       {services.length > 0 ? (
         <>
           <ServicesStrata
@@ -123,33 +161,94 @@ export default async function HomePage() {
         </>
       ) : null}
 
-      {steps.length > 0 ? (
+      {/* The E-Rechnung's dates as one line through time: a dot on the rule for each, drawn in as
+          the section enters, the dates following one after another. */}
+      {milestones.length > 0 ? (
         <section
-          id="vorgehen"
-          aria-labelledby="vorgehen-titel"
-          className="border-t bg-card"
-          data-cms-zone="vorgehen"
+          id="e-rechnung"
+          aria-labelledby="e-rechnung-titel"
+          className="border-t"
+          data-cms-zone="e-rechnung"
         >
           <div className="page-container py-20 sm:py-28">
+            <div className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
+              <h2
+                id="e-rechnung-titel"
+                className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
+              >
+                {sections.eRechnungTitle}
+              </h2>
+              {sections.eRechnungLead ? (
+                <p className="max-w-xl text-pretty text-muted-foreground lg:text-lg 3xl:text-xl">
+                  {sections.eRechnungLead}
+                </p>
+              ) : null}
+            </div>
+            <div className="relative mt-14">
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-[6px] hidden h-px sd-draw-x bg-primary-soft/40 lg:block"
+              />
+              <ol className="grid sd-stagger gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+                {milestones.map((milestone, index) => (
+                  <li
+                    key={milestone.id}
+                    style={{ "--i": index } as CSSProperties}
+                    className="relative border-t border-primary-soft/40 pt-8 lg:border-t-0"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-[7px] left-0 size-3.5 rounded-full border-2 border-primary-soft bg-background lg:top-0"
+                    />
+                    <p className="font-mono text-sm text-primary-soft tabular-nums 3xl:text-base">
+                      {milestone.date}
+                    </p>
+                    <h3 className="mt-2 text-xl font-medium tracking-tight 3xl:text-2xl">
+                      {milestone.title}
+                    </h3>
+                    <p className="mt-3 text-pretty text-muted-foreground 3xl:text-lg">
+                      {milestone.text}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <p className="mt-10 text-right text-sm">
+              <Link
+                href={"/e-rechnung" as never}
+                className="font-medium text-primary-soft hover:underline"
+              >
+                Alles zur E-Rechnung →
+              </Link>
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      {/* The way of working as one way up the mountain, as on the content pages. */}
+      {steps.length > 0 ? (
+        <Way
+          id="vorgehen"
+          title={sections.stepsTitle}
+          zone="vorgehen"
+          steps={steps.map((step, i) => ({
+            number: i + 1,
+            title: step.title,
+            body: lexical([{ kind: "p", text: step.text }]),
+          }))}
+        />
+      ) : null}
+
+      {doors.length > 0 ? (
+        <section aria-labelledby="mehr-titel" className="border-t" data-cms-zone="vorschau">
+          <div className="page-container py-20 sm:py-28">
             <h2
-              id="vorgehen-titel"
-              className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
+              id="mehr-titel"
+              className="mb-12 max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
             >
-              {sections.stepsTitle}
+              {sections.previewsTitle ?? "Mehr über uns"}
             </h2>
-            <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-              {steps.map((step, index) => (
-                <li key={step.title} className="border-t border-primary-soft/40 pt-6">
-                  <span className="text-sm font-medium text-primary-soft tabular-nums">
-                    Schritt {index + 1}
-                  </span>
-                  <h3 className="mt-2 text-xl font-medium tracking-tight 3xl:text-2xl">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-pretty text-muted-foreground 3xl:text-lg">{step.text}</p>
-                </li>
-              ))}
-            </ol>
+            <Doors doors={doors} heading="h3" />
           </div>
         </section>
       ) : null}
@@ -167,13 +266,21 @@ export default async function HomePage() {
             >
               {sections.principlesTitle}
             </h2>
-            <dl className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
+            {/* Each principle a large line of its own, its rule drawn in as it comes into view. */}
+            <dl className="mt-12">
               {principles.map((principle) => (
-                <div key={principle.title}>
-                  <dt className="text-xl font-medium tracking-tight 3xl:text-2xl">
+                <div
+                  key={principle.title}
+                  className="relative grid gap-3 py-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-px sd-draw-x bg-primary-soft/40"
+                  />
+                  <dt className="text-2xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl">
                     {principle.title}
                   </dt>
-                  <dd className="mt-3 text-pretty text-muted-foreground 3xl:text-lg">
+                  <dd className="max-w-xl text-lg text-pretty text-muted-foreground lg:pt-2 3xl:text-xl">
                     {principle.text}
                   </dd>
                 </div>

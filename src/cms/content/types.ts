@@ -80,7 +80,7 @@ const slugField = z
 // Pages with a route of their own carry the sections that route shows, typed by the kind of
 // page (src/cms/content/page-tree.ts: kindOf); so do the services' own pages under /leistungen.
 // Other content pages have none: title, lead and text.
-export const GLYPHS = ["web", "mobile", "integration", "modernisation", "operations"] as const;
+export const GLYPHS = ["web", "system", "integration", "modernisation", "operations"] as const;
 export type Glyph = (typeof GLYPHS)[number];
 
 export const HomeSectionsSchema = z.object({
@@ -92,8 +92,18 @@ export const HomeSectionsSchema = z.object({
     lead: optionalText,
   }),
   servicesTitle: required("die Überschrift"),
+  // The running band of the stack under the hero; the logos themselves are fixed (tech-logos.ts).
+  techTitle: required("die Überschrift"),
+  // The E-Rechnung's dates as a timeline under the services (owner, 2026-10-01: the headline topic).
+  eRechnungTitle: required("die Überschrift"),
+  eRechnungLead: optionalText,
+  milestones: z.array(
+    item({ date: required("das Datum"), title: required("den Titel"), text: required("den Text") }),
+  ),
   stepsTitle: required("die Überschrift"),
   steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
+  // The other pages shown as doors on the home page; their titles and texts are their own.
+  previewsTitle: required("die Überschrift"),
   principlesTitle: required("die Überschrift"),
   principles: z.array(item({ title: required("den Titel"), text: required("den Text") })),
 });

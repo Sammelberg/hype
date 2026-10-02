@@ -18,14 +18,15 @@ import { cn } from "@/lib/utils";
 const inSection = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-// The header navigation from md up: every section, the ones with pages below them as a menu that
+// The header navigation from lg up (seven sections and the search need that width; below it the
+// menu sheet takes over): every section, the ones with pages below them as a menu that
 // opens on hover or click (Radix: arrow keys move through it, Escape closes it). A section's own
 // overview is the first entry of its menu; the current page and section are marked.
 export function DesktopNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
 
   return (
-    <NavigationMenu viewport={false} aria-label="Hauptnavigation" className="hidden md:flex">
+    <NavigationMenu viewport={false} aria-label="Hauptnavigation" className="hidden lg:flex">
       <NavigationMenuList className="gap-1 3xl:gap-2">
         {sections.map((section) => {
           const current = inSection(pathname, section.href);
@@ -38,7 +39,7 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
                 <>
                   <NavigationMenuTrigger
                     className={cn(
-                      "relative h-11 bg-transparent font-normal text-muted-foreground hover:text-foreground 3xl:text-base data-open:text-foreground",
+                      "relative h-11 bg-transparent font-normal whitespace-nowrap text-muted-foreground hover:text-foreground 3xl:text-base data-open:text-foreground",
                       mark,
                     )}
                   >
@@ -73,7 +74,7 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
                     href={section.href as never}
                     aria-current={pathname === section.href ? "page" : undefined}
                     className={cn(
-                      "relative inline-flex h-11 items-center rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground 3xl:text-base",
+                      "relative inline-flex h-11 items-center rounded-lg px-2.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground 3xl:text-base",
                       mark,
                     )}
                   >

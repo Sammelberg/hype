@@ -435,7 +435,7 @@ test("every card leads to its service's own page", async ({ page }) => {
   await expect(links).toHaveCount(5);
   for (const slug of [
     "web-anwendungen",
-    "mobile-apps",
+    "geschaeftssysteme",
     "schnittstellen",
     "modernisierung",
     "betrieb",
@@ -450,7 +450,9 @@ test.describe("reduced motion", () => {
   test("shows every valley complete, without a ride", async ({ page }) => {
     await page.goto("/");
     await expect(section(page)).not.toHaveAttribute("data-ride");
-    await expect(section(page).getByText("Apps für iOS und Android")).toBeAttached();
+    await expect(
+      section(page).getByText("Website und interne Steuerzentrale in einem System"),
+    ).toBeAttached();
     // The ice lines stand drawn: nothing ever dashed them.
     const dashes = await section(page)
       .locator("[data-ridge]")

@@ -119,6 +119,51 @@ pnpm dev       # http://localhost:<порт приложения>/admin
   `pnpm seed --nur <slug>`. Полный `pnpm seed` затрёт то, что правили в админке. Статическую страницу
   потом обновить: опубликовать её в админке или перезапустить сервер.
 
+## Деплой на сервер
+
+Всё работает на своём сервере (IONOS, Германия): Postgres и приложение только на localhost,
+снаружи — Caddy с TLS. Файлы лежат в `deploy/`.
+
+**Первый запуск (один раз):**
+
+1. Пользователь `schwarzwald`, код в `/srv/schwarzwald` (`git clone`), Node 26 и pnpm (Corepack),
+   Docker, Caddy.
+2. База: в `deploy/.env.db` записать `POSTGRES_PASSWORD=…` (`openssl rand -base64 32`), затем
+   `docker compose -f deploy/docker-compose.server.yml --env-file deploy/.env.db up -d`.
+3. `/srv/schwarzwald/.env` по образцу `.env.example`:
+   - `DATABASE_URL=postgres://schwarzwald:<пароль>@127.0.0.1:5432/schwarzwald`;
+   - `NEXT_PUBLIC_SERVER_URL=https://<домен>`;
+   - `FORM_SECRET`, `CRON_SECRET` — у каждого свой `openssl rand -base64 32`;
+   - `MEDIA_DIR=/srv/schwarzwald/media`.
+4. `pnpm install --frozen-lockfile && pnpm migrate && pnpm seed && pnpm build`.
+5. Первый аккаунт: `pnpm cms:passwort <e-mail> --anlegen`.
+6. Сервис: `deploy/schwarzwald.service` → `/etc/systemd/system/`, затем
+   `sudo systemctl enable --now schwarzwald`.
+7. Caddy: `deploy/Caddyfile` → `/etc/caddy/Caddyfile`, `SITE_DOMAIN=<домен>` в окружении Caddy
+   (`/etc/default/caddy`), `sudo systemctl reload caddy`.
+8. Cron и бэкап — как в разделе выше.
+
+**Каждое обновление:** `scripts/deploy.sh`. Скрипт делает `git pull`, `install`, `migrate`,
+`build`, перезапуск сервиса и проверку. Если в seed изменились тексты страниц, их передают по
+slug: `--seiten "…"`; новые разделы меню ставит на место `--reihenfolge`. Полный `pnpm seed` на
+базе с настоящим контентом не запускать.
+
+**Этот выпуск (2026-10-02):**
+
+```sh
+scripts/deploy.sh --reihenfolge --seiten "leistungen geschaeftssysteme startseite web-anwendungen ueber-uns handwerk branchen e-rechnung online-shops datensouveraenitaet technologie"
+```
+
+- Миграции 0011–0013: значок второй услуги, на главной линия дат E-Rechnung, бегущая строка
+  технологий и двери к другим страницам.
+- `--seiten "leistungen …"` переносит страницу Mobile Apps на `/leistungen/geschaeftssysteme` и
+  пишет 308-редирект со старого адреса.
+- Новые страницы: `/e-rechnung`, `/online-shops`, `/ueber-uns/datensouveraenitaet`,
+  `/ueber-uns/technologie`.
+- После: в админке «Website» → описание сайта (не больше 160 знаков), например
+  «Software für den Mittelstand: Web-Anwendungen für jedes Gerät, Geschäftssysteme mit
+  E-Rechnung und Schnittstellen – auf Ihrem eigenen Server.»
+
 ## Скиллы
 
 Все скиллы из таблицы в `CLAUDE.md` лежат в `.claude/skills/`: свои и ядро, скопированное из

@@ -7,7 +7,9 @@ import { FirMark } from "./fir-mark";
 import { MobileMenu } from "./mobile-menu";
 
 // Sticky bar across the full width (fluid side gutter, wider than the page column): fir mark and
-// wordmark, then every page of the site — as menus from md up, behind the menu button below.
+// wordmark, then every page of the site — as menus from lg up, behind the menu button below. Between
+// lg and xl the navigation needs the room, so the wordmark steps back to the fir alone (still read
+// out as the link's name).
 // Its height is the `header` spacing token, which scroll-margin in globals.css offsets against.
 export async function SiteHeader({ siteName }: { siteName: string }) {
   const sections = await getSiteNav();
@@ -23,10 +25,10 @@ export async function SiteHeader({ siteName }: { siteName: string }) {
           className="flex items-center gap-2.5 font-semibold tracking-tight 3xl:text-lg"
         >
           <FirMark className="size-6 text-primary-soft 3xl:size-7" />
-          <span className="truncate">{siteName}</span>
+          <span className="truncate lg:max-xl:sr-only">{siteName}</span>
         </Link>
         <DesktopNav sections={sections} />
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <MobileMenu sections={sections} />
         </div>
       </div>

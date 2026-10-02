@@ -1,0 +1,30 @@
+# The site as a systemd service: Next on localhost:3003 behind Caddy.
+#   sudo cp deploy/schwarzwald.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now schwarzwald
+[Unit]
+Description=Schwarzwald Systems (Next.js)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=schwarzwald
+WorkingDirectory=/srv/schwarzwald
+EnvironmentFile=/srv/schwarzwald/.env
+Environment=NODE_ENV=production
+Environment=PORT=3003
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/usr/bin/env pnpm start
+Restart=always
+RestartSec=5
+
+# Hardening: the app writes only to its uploads and its build output.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/schwarzwald/.next /srv/schwarzwald/media
+
+[Install]
+WantedBy=multi-user.target

@@ -21,8 +21,13 @@ export const HOME_DEFAULTS: HomeSections = {
     lead: "Individuelle Software aus dem Schwarzwald.",
   },
   servicesTitle: "Was wir entwickeln",
+  techTitle: "Womit wir bauen",
+  eRechnungTitle: "Die E-Rechnung kommt für jedes Unternehmen",
+  eRechnungLead: null,
+  milestones: [],
   stepsTitle: "So arbeiten wir",
   steps: [],
+  previewsTitle: "Mehr über uns",
   principlesTitle: "Unsere Grundsätze",
   principles: [],
 };

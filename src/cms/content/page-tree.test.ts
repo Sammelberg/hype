@@ -126,8 +126,8 @@ describe("page kinds", () => {
 
   it("gives a service's page the service sections, and only it", () => {
     const leistung = { ...LEISTUNG_DEFAULTS };
-    expect(sectionsProblem("mobile-apps", leistung, "leistungen")).toBeNull();
-    expect(sectionsProblem("mobile-apps", null, "leistungen")).toBeNull();
+    expect(sectionsProblem("geschaeftssysteme", leistung, "leistungen")).toBeNull();
+    expect(sectionsProblem("geschaeftssysteme", null, "leistungen")).toBeNull();
     expect(sectionsProblem("ueber-uns", leistung, null)).toMatch(/keine festen Abschnitte/);
   });
 

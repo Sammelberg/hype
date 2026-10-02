@@ -6,7 +6,13 @@ import { hideDevOverlays, signIn } from "./_admin";
 // fits, what it includes, how it goes and the questions asked, read by search engines as FAQPage
 // and Service. Content from scripts/seed-data.ts.
 
-const SERVICES = ["web-anwendungen", "mobile-apps", "schnittstellen", "modernisierung", "betrieb"];
+const SERVICES = [
+  "web-anwendungen",
+  "geschaeftssysteme",
+  "schnittstellen",
+  "modernisierung",
+  "betrieb",
+];
 
 test.beforeEach(async ({ page }) => {
   await hideDevOverlays(page);
@@ -41,7 +47,7 @@ test("the service sections are edited in cards, in the order the page shows them
 }) => {
   await signIn(page);
   await page.goto("/admin/seiten");
-  await page.getByRole("link", { name: "Mobile Apps", exact: true }).click();
+  await page.getByRole("link", { name: "Geschäftssysteme", exact: true }).click();
   for (const name of [
     "Wann das passt",
     "Was Sie bekommen",

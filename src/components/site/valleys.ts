@@ -2,7 +2,7 @@ import type { GlyphName } from "./service-glyphs";
 import type { ValleySpec } from "./valley";
 
 // Each valley hints at its service in its near skyline: web a wide open valley between two
-// heights, mobile two peaks side by side, integration two peaks with a saddle between them,
+// heights, system two peaks side by side, integration two peaks with a saddle between them,
 // modernisation one young steep peak beside an old worn one, operations a long steady ridge.
 // Behind it stand the generated middle range and the high mountains (valley.ts).
 export const VALLEYS: Record<GlyphName, ValleySpec> = {
@@ -24,7 +24,7 @@ export const VALLEYS: Record<GlyphName, ValleySpec> = {
       { design: "konkav", x: 880, h: 260 },
     ],
   },
-  mobile: {
+  system: {
     seed: 23,
     near: [
       [0, 700],

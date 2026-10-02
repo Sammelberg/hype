@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // carries data-draw so GSAP DrawSVG can draw it in the order it appears; shapes that hold light
 // carry data-fill (their fill-opacity rises after the draw). All five share one 400 × 400 box.
 
-export type GlyphName = "web" | "mobile" | "integration" | "modernisation" | "operations";
+export type GlyphName = "web" | "system" | "integration" | "modernisation" | "operations";
 
 const STROKE: SVGProps<SVGSVGElement> = {
   fill: "none",
@@ -32,16 +32,21 @@ const GLYPHS: Record<GlyphName, ReactNode> = {
       <path data-draw d="M140 290 190 240 230 262 280 190 330 214" />
     </>
   ),
-  // Two phones, one for each platform.
-  mobile: (
+  // One system of three parts: the figures of a dashboard, an invoice, a calendar.
+  system: (
     <>
-      <rect data-draw data-fill x="210" y="40" width="140" height="290" rx="22" />
-      <path data-draw d="M250 68h60" />
-      <path data-draw d="M240 120h80M240 150h56M240 180h80" />
-      <rect data-draw data-fill x="60" y="80" width="140" height="290" rx="22" />
-      <path data-draw d="M108 104h44" />
-      <path data-draw d="M90 160h80M90 190h56M90 220h80" />
-      <rect data-draw data-fill x="90" y="300" width="80" height="28" rx="14" />
+      <rect data-draw data-fill x="150" y="40" width="210" height="180" rx="12" />
+      <path data-draw d="M150 76H360" />
+      <path data-draw d="M190 190v-40M230 190v-70M270 190v-50M310 190v-84" />
+      <rect data-draw data-fill x="40" y="170" width="140" height="190" rx="10" />
+      <path data-draw d="M64 206h68M64 234h92M64 262h52" />
+      <path data-draw d="M108 322h48" />
+      <rect data-draw data-fill x="220" y="250" width="140" height="110" rx="10" />
+      <path data-draw d="M220 282H360M250 238v24M330 238v24" />
+      <circle data-draw cx="252" cy="310" r="5" />
+      <circle data-draw cx="290" cy="310" r="5" />
+      <circle data-draw data-fill cx="328" cy="310" r="5" />
+      <circle data-draw cx="252" cy="338" r="5" />
     </>
   ),
   // Four systems joined through one hub.

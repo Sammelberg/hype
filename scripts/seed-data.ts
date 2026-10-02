@@ -15,7 +15,7 @@ export const seedSettings = {
   ownerName: "Schwarzwald Systems",
   tagline: "Individuelle Software für den Mittelstand.",
   description:
-    "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps und Schnittstellen.",
+    "Software für den Mittelstand: Web-Anwendungen für jedes Gerät, Geschäftssysteme mit E-Rechnung und Schnittstellen – auf Ihrem eigenen Server.",
   // Shown in the footer, on /kontakt and in the legal pages once set (the owner's address follows).
   contactEmail: null as string | null,
   socialLinks: [] as { label: string; url: string }[],
@@ -28,7 +28,7 @@ export const seedSettings = {
 export const seedSections = {
   hero: {
     // What we build, from the services below.
-    words: ["Web-Anwendungen", "mobile Apps", "Schnittstellen", "Plattformen"].map((word) => ({
+    words: ["Web-Anwendungen", "Geschäftssysteme", "Schnittstellen", "Plattformen"].map((word) => ({
       word,
     })),
   },
@@ -38,7 +38,7 @@ export const seedSections = {
       short: "Web",
       slug: "web-anwendungen",
       glyph: "web" as const,
-      text: "Portale, Kundenbereiche und interne Werkzeuge, die im Browser laufen – ohne Installation, auf jedem Gerät.",
+      text: "Portale, Kundenbereiche und interne Werkzeuge, die im Browser laufen – auf Smartphone, Tablet, Notebook und PC, ohne App-Store.",
       examples: [
         { text: "Kundenportal mit Auftragsstatus" },
         { text: "Auftrags- und Ressourcenplanung" },
@@ -46,15 +46,15 @@ export const seedSections = {
       ],
     },
     {
-      title: "Mobile Apps",
-      short: "Mobile",
-      slug: "mobile-apps",
-      glyph: "mobile" as const,
-      text: "Apps für iOS und Android, wenn Ihre Mitarbeitenden oder Kunden unterwegs arbeiten.",
+      title: "Geschäftssysteme",
+      short: "Systeme",
+      slug: "geschaeftssysteme",
+      glyph: "system" as const,
+      text: "Website und interne Steuerzentrale in einem System: Kunden, Termine, Aufträge und Rechnungen mit E-Rechnung – auf Ihrem Server.",
       examples: [
-        { text: "Außendienst und Montage vor Ort" },
-        { text: "Lager, Inventur und Kommissionierung" },
-        { text: "Offline nutzbar, später abgeglichen" },
+        { text: "Angebot, Auftrag und Rechnung ohne Medienbruch" },
+        { text: "E-Rechnung, geprüft mit dem KoSIT-Validator" },
+        { text: "Kalender und Wiedervorlagen mit allen Fristen" },
       ],
     },
     {
@@ -94,6 +94,33 @@ export const seedSections = {
       ],
     },
   ],
+  // The home page's timeline: the dates of § 14 UStG as amended by the Wachstumschancengesetz.
+  eRechnung: {
+    title: "Die E-Rechnung kommt für jedes Unternehmen",
+    lead: "Empfangen müssen Unternehmen E-Rechnungen schon heute, ausstellen ab 2027. Unsere Geschäftssysteme schreiben sie nach EN 16931 – geprüft mit dem Validator der KoSIT und unveränderbar archiviert.",
+    milestones: [
+      {
+        date: "27.03.2024",
+        title: "Gesetz verkündet",
+        text: "Das Wachstumschancengesetz macht die E-Rechnung zwischen Unternehmen im Inland zur Pflicht.",
+      },
+      {
+        date: "01.01.2025",
+        title: "Empfangen: alle",
+        text: "Jedes Unternehmen muss E-Rechnungen annehmen können, ohne Übergangsfrist.",
+      },
+      {
+        date: "01.01.2027",
+        title: "Ausstellen: über 800\u00a0000\u00a0€",
+        text: "Pflicht für Unternehmen mit mehr als 800\u00a0000\u00a0€ Umsatz im Vorjahr.",
+      },
+      {
+        date: "01.01.2028",
+        title: "Ausstellen: alle",
+        text: "Papier und PDF gelten zwischen Unternehmen nicht mehr als Rechnung.",
+      },
+    ],
+  },
   steps: [
     {
       title: "Verstehen",
@@ -122,8 +149,8 @@ export const seedSections = {
       text: "Sie sprechen mit den Menschen, die Ihre Software entwickeln – vom ersten Gespräch bis zum Betrieb.",
     },
     {
-      title: "Daten in Europa",
-      text: "Auf Wunsch betreiben wir Ihre Anwendung auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+      title: "Daten auf Ihrem Server",
+      text: "Ihre Anwendung läuft auf Ihrem eigenen Server – bei einem deutschen Anbieter oder bei Ihnen im Haus, ohne Dienste von US-Anbietern.",
     },
   ],
   kontaktNext: {
@@ -142,7 +169,12 @@ export const seedSections = {
     {
       question: "Wo werden unsere Daten gespeichert?",
       answer:
-        "Auf Wunsch ausschließlich auf Servern in Deutschland, ohne Dienste von US-Anbietern. Sie behalten die Kontrolle über Ihre Daten.",
+        "Auf Ihrem eigenen Server – bei einem deutschen Anbieter wie IONOS oder bei Ihnen im Haus, ohne Dienste von US-Anbietern. Sie behalten die Kontrolle über Ihre Daten.",
+    },
+    {
+      question: "Entwickeln Sie auch Apps für iOS und Android?",
+      answer:
+        "Nein, mit Absicht. Wir entwickeln Web-Anwendungen, die auf Smartphone, Tablet, Notebook und PC laufen – aus einem Code, ohne App-Store. Sie lassen sich wie eine App auf dem Startbildschirm ablegen und arbeiten, wo nötig, auch ohne Netz.",
     },
     {
       question: "Was passiert nach der Übergabe?",
@@ -185,8 +217,9 @@ export type SeedPage = {
   leistung?: SeedLeistung;
 };
 
-// Every statement below rests on what the owner confirmed (.agents/product-marketing.md): no stack,
-// no prices, no durations, no store publishing, no taking over other people's software.
+// Every statement below rests on what the owner confirmed (.agents/product-marketing.md): no prices,
+// no durations, no native apps (web applications for every device, owner 2026-10-01), no taking
+// over other people's software. The stack is named on /ueber-uns/technologie (owner, 2026-10-01).
 const MEISTRUM = "meistrum-krone-parkett";
 
 export const seedPages: SeedPage[] = [
@@ -198,7 +231,7 @@ export const seedPages: SeedPage[] = [
     content: [
       {
         kind: "p",
-        text: "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen, mobile Apps, Schnittstellen zwischen bestehenden Systemen, die Modernisierung gewachsener Software und ihren Betrieb.",
+        text: "Schwarzwald Systems entwickelt individuelle Software für mittelständische Unternehmen: Web-Anwendungen für jedes Gerät, Geschäftssysteme mit E-Rechnung, Schnittstellen zwischen bestehenden Systemen, die Modernisierung gewachsener Software und ihren Betrieb.",
       },
     ],
   },
@@ -304,7 +337,7 @@ export const seedPages: SeedPage[] = [
     content: [
       {
         kind: "p",
-        text: "Schwarzwald Systems entwickelt Web-Anwendungen, mobile Apps und Schnittstellen zwischen bestehenden Systemen, modernisiert gewachsene Software und betreibt sie weiter. Wir arbeiten für mittelständische Unternehmen, deren Abläufe nicht in eine Standardsoftware passen.",
+        text: "Schwarzwald Systems entwickelt Web-Anwendungen für jedes Gerät und ganze Geschäftssysteme, verbindet bestehende Systeme, modernisiert gewachsene Software und betreibt sie weiter. Wir arbeiten für mittelständische Unternehmen, deren Abläufe nicht in eine Standardsoftware passen.",
       },
       { kind: "h2", text: "Wer hinter Schwarzwald Systems steht" },
       {
@@ -317,7 +350,17 @@ export const seedPages: SeedPage[] = [
         items: [
           "Quellcode und Dokumentation übergeben wir vollständig. Sie bleiben unabhängig von uns.",
           "Sie haben einen festen Ansprechpartner, der Ihr Projekt kennt.",
-          "Auf Wunsch läuft Ihre Anwendung auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+          "Ihre Anwendung läuft auf Ihrem eigenen Server – in Deutschland oder bei Ihnen im Haus, ohne Dienste von US-Anbietern.",
+        ],
+      },
+      { kind: "h2", text: "Was wir bewusst nicht tun" },
+      {
+        kind: "ul",
+        items: [
+          "Keine nativen Apps: Eine Web-Anwendung läuft auf jedem Gerät, aus einem Code.",
+          "Keine US-Cloud: Kundendaten und Rechnungen bleiben auf Ihrem Server.",
+          "Kein Tracking: keine Cookies für Besucher, keine Analysedienste von Dritten.",
+          "Keine Versprechen ohne Beleg: Was wir schätzen, nennen wir eine Schätzung.",
         ],
       },
       { kind: "h2", text: "Wie wir arbeiten" },
@@ -326,6 +369,17 @@ export const seedPages: SeedPage[] = [
         parts: [
           "Jedes Projekt beginnt mit einem Workshop, in dem wir Ziele, Nutzer und Randbedingungen klären. Danach erhalten Sie eine schriftliche Einschätzung zu Umfang und Vorgehen, dann einen klickbaren Prototyp, dann die Software in kurzen Iterationen mit lauffähigen Zwischenständen. Die einzelnen Schritte beschreibt ",
           { text: "unsere Arbeitsweise", href: "/ueber-uns/arbeitsweise" },
+          ".",
+        ],
+      },
+      { kind: "h2", text: "Daten und Technik" },
+      {
+        kind: "rich",
+        parts: [
+          "Warum Ihre Daten auf Ihrem eigenen Server bleiben, erklärt die Seite ",
+          { text: "Datensouveränität", href: "/ueber-uns/datensouveraenitaet" },
+          ". Womit wir bauen, zeigt ",
+          { text: "Technologie", href: "/ueber-uns/technologie" },
           ".",
         ],
       },
@@ -393,7 +447,7 @@ export const seedPages: SeedPage[] = [
     content: [
       {
         kind: "p",
-        text: "Web-Anwendungen, mobile Apps, Schnittstellen, Modernisierung sowie Betrieb und Weiterentwicklung: was wir für den Mittelstand entwickeln.",
+        text: "Web-Anwendungen, Geschäftssysteme, Schnittstellen, Modernisierung sowie Betrieb und Weiterentwicklung: was wir für den Mittelstand entwickeln.",
       },
     ],
   },
@@ -401,7 +455,7 @@ export const seedPages: SeedPage[] = [
     slug: "web-anwendungen",
     title: "Web-Anwendungen",
     parent: "leistungen",
-    lead: "Portale, interne Werkzeuge und Planungssysteme, die im Browser laufen – zugeschnitten auf die Abläufe Ihres Betriebs.",
+    lead: "Portale, interne Werkzeuge und Planungssysteme, die im Browser laufen – auf Smartphone, Tablet, Notebook und PC, zugeschnitten auf die Abläufe Ihres Betriebs.",
     leistung: {
       fit: [
         {
@@ -422,9 +476,11 @@ export const seedPages: SeedPage[] = [
         "Schriftliche Einschätzung zu Umfang und Vorgehen",
         "Klickbarer Prototyp, bevor programmiert wird",
         "Entwicklung in kurzen Iterationen mit lauffähigen Zwischenständen",
+        "Eine Anwendung für Smartphone, Tablet und PC, ohne App-Store",
+        "Installierbar und offline nutzbar, wo es nötig ist",
         "Anbindung an Ihre bestehenden Systeme, wo nötig",
         "Vollständiger Quellcode und Dokumentation",
-        "Betrieb auf Servern in Deutschland, auf Wunsch",
+        "Betrieb auf Ihrem eigenen Server in Deutschland",
       ],
       steps: [
         {
@@ -448,7 +504,7 @@ export const seedPages: SeedPage[] = [
         {
           question: "Läuft die Anwendung auch auf Tablet und Smartphone?",
           answer:
-            "Ja. Eine Web-Anwendung läuft im Browser, also auf jedem Gerät mit aktuellem Browser und ohne Installation. Muss sie auch ohne Netz funktionieren, ist eine mobile App die bessere Wahl.",
+            "Ja. Eine Web-Anwendung läuft im Browser, also auf jedem Gerät mit aktuellem Browser. Auf Wunsch lässt sie sich wie eine App auf dem Startbildschirm ablegen und arbeitet auch ohne Netz weiter; Eingaben werden abgeglichen, sobald wieder eine Verbindung besteht.",
         },
         {
           question: "Können wir die Anwendung später von jemand anderem weiterentwickeln lassen?",
@@ -463,7 +519,7 @@ export const seedPages: SeedPage[] = [
         {
           question: "Wo werden die Daten gespeichert?",
           answer:
-            "Auf Wunsch ausschließlich auf Servern in Deutschland, ohne Dienste von US-Anbietern.",
+            "Auf Ihrem eigenen Server – bei einem deutschen Anbieter oder bei Ihnen im Haus, ohne Dienste von US-Anbietern.",
         },
       ],
       projekt: MEISTRUM,
@@ -471,7 +527,7 @@ export const seedPages: SeedPage[] = [
     content: [
       {
         kind: "p",
-        text: "Wir entwickeln Web-Anwendungen, die im Browser laufen – ohne Installation, auf jedem Gerät erreichbar. Das reicht vom Kundenportal mit Auftragsstatus über interne Werkzeuge, die eine gewachsene Excel-Liste ablösen, bis zur vollständigen Auftrags- und Ressourcenplanung.",
+        text: "Wir entwickeln Web-Anwendungen, die im Browser laufen – auf Smartphone, Tablet, Notebook und PC, aus einem Code und ohne App-Store. Das reicht vom Kundenportal mit Auftragsstatus über interne Werkzeuge, die eine gewachsene Excel-Liste ablösen, bis zur vollständigen Auftrags- und Ressourcenplanung.",
       },
       {
         kind: "p",
@@ -484,81 +540,86 @@ export const seedPages: SeedPage[] = [
     ],
   },
   {
-    slug: "mobile-apps",
-    title: "Mobile Apps",
+    // Was "Mobile Apps" until 2026-10-01 (no native apps, the owner's call); scripts/seed.ts moves
+    // that page here, so its address redirects. What the system includes is the Büro (src/buero)
+    // and the CMS of this very codebase.
+    slug: "geschaeftssysteme",
+    title: "Geschäftssysteme",
     parent: "leistungen",
-    lead: "Apps für iOS und Android für Menschen, die unterwegs arbeiten – auch dort, wo das Netz nicht reicht.",
+    lead: "Ihre Website und Ihre interne Steuerzentrale in einem System: Kunden, Angebote, Aufträge, Verträge, Rechnungen und Termine – mit E-Rechnung, auf Ihrem eigenen Server.",
     leistung: {
       fit: [
         {
-          title: "Ihr Team arbeitet beim Kunden vor Ort",
-          text: "Montage, Wartung, Außendienst: Wer unterwegs ist, braucht Aufträge, Pläne und Formulare auf dem Gerät, nicht im Büro.",
+          title: "Ihre Abläufe stecken in fünf Programmen",
+          text: "Kunden in einer Liste, Angebote im Textprogramm, Rechnungen in einem dritten Werkzeug: Jede Übergabe kostet Zeit und erzeugt Fehler. Ein Geschäftssystem führt alles an einer Stelle zusammen.",
         },
         {
-          title: "Auf der Baustelle oder im Lager fehlt das Netz",
-          text: "Die App speichert Eingaben auf dem Gerät und gleicht sie automatisch ab, sobald wieder eine Verbindung besteht.",
+          title: "Die E-Rechnung wird Pflicht",
+          text: "Ab 2027 müssen Unternehmen mit mehr als 800\u00a0000\u00a0€ Vorjahresumsatz E-Rechnungen ausstellen, ab 2028 alle. Das System schreibt sie als XRechnung nach EN 16931.",
         },
         {
-          title: "Papierformulare kommen zu spät im Büro an",
-          text: "Was vor Ort erfasst wird, landet direkt im System, statt Tage später abgetippt zu werden.",
+          title: "Fristen gehen im Alltag unter",
+          text: "Fällige Rechnungen, Mahnfristen, Kündigungstermine, Wiedervorlagen: Der Kalender zeigt jedes Datum, das Ihr Unternehmen kennt.",
         },
       ],
       scope: [
-        "App für iOS und Android",
-        "Offline nutzbar mit automatischem Abgleich, wo nötig",
-        "Anbindung an Ihre Web-Anwendung oder Ihr Fachsystem",
-        "Klickbarer Prototyp vor der Entwicklung",
-        "Entwicklung in kurzen Iterationen mit lauffähigen Zwischenständen",
-        "Vollständiger Quellcode und Dokumentation",
+        "Website mit eigenem CMS: Entwürfe, Vorschau, Versionen, Zeitplan",
+        "Kunden, Angebote, Aufträge und Verträge mit fortlaufenden Nummern",
+        "Rechnungen, Abschläge, Schlussrechnung und Storno als XRechnung",
+        "Offene Posten, Teilzahlungen und Mahnungen mit Verzugszinsen",
+        "Kalender und Wiedervorlagen mit allen Fristen",
+        "Export für den Steuerberater, auch als DATEV-Buchungsstapel",
+        "Rollen, unveränderbares Protokoll, Betrieb auf Ihrem Server",
       ],
       steps: [
         {
-          title: "Einsatz klären",
-          text: "Wir klären, wo und wie die App genutzt wird: unterwegs, mit wenig Zeit, oft ohne verlässliches Netz.",
+          title: "Abläufe aufnehmen",
+          text: "Wir sehen uns an, wie heute ein Auftrag durch Ihr Unternehmen läuft: von der Anfrage über Angebot und Rechnung bis zum Steuerberater.",
         },
         {
-          title: "Prototyp ausprobieren",
-          text: "Ein klickbarer Prototyp zeigt die wichtigsten Abläufe. Ihr Team probiert ihn aus, bevor entwickelt wird.",
+          title: "Kern einrichten",
+          text: "Website, Kundenverwaltung, Dokumente und Rechnungen stehen als erprobter Kern bereit. Wir stellen ihn auf Ihre Begriffe, Nummernkreise und Firmendaten ein.",
         },
         {
-          title: "Entwickeln und anbinden",
-          text: "Wir entwickeln die App in kurzen Iterationen und verbinden sie mit den Systemen, in denen Ihre Daten heute liegen.",
+          title: "Ihre Abläufe automatisieren",
+          text: "Was nur Ihr Unternehmen so macht, bauen wir dazu: eigene Dokumente, Freigaben, Auswertungen und Schnittstellen.",
         },
         {
-          title: "Einführen und pflegen",
-          text: "Nach dem Start bleiben wir ansprechbar: für Updates und für neue Funktionen nach Bedarf.",
+          title: "Betreiben und weiterentwickeln",
+          text: "Das System läuft auf Ihrem Server. Wir halten es aktuell und erweitern es, wenn neue Anforderungen oder Vorschriften dazukommen.",
         },
       ],
       faq: [
         {
-          question: "Funktioniert die App ohne Internet?",
+          question: "Ist die E-Rechnung schon eingebaut?",
           answer:
-            "Wo es nötig ist, ja. Die App speichert Eingaben auf dem Gerät und gleicht sie automatisch ab, sobald wieder eine Verbindung besteht.",
+            "Ja. Das System erzeugt Rechnungen als XRechnung 3.0 (UBL) nach EN 16931; jede Rechnungsart ist mit dem Validator der KoSIT geprüft, gestellte Rechnungen werden unveränderbar archiviert. Ab wann die Pflicht für Ihr Unternehmen gilt, klären Sie am besten mit Ihrem Steuerberater.",
         },
         {
-          question: "Brauchen wir dafür auch eine Web-Anwendung?",
+          question: "Ersetzt das System unsere Buchhaltung?",
           answer:
-            "Nicht unbedingt. Oft gibt es schon ein System, in dem die Daten liegen; die App wird daran angebunden. Fehlt es, entwickeln wir beides aufeinander abgestimmt.",
+            "Nein. Es schreibt Angebote und Rechnungen und verfolgt Zahlungen. Die Buchhaltung bleibt bei Ihrem Steuerberater; er erhält Rechnungsjournal, Umsatzsteuer je Monat und einen DATEV-Buchungsstapel als Datei.",
         },
         {
-          question: "Gehört uns der Code der App?",
+          question: "Wo laufen das System und unsere Daten?",
           answer:
-            "Ja. Sie erhalten den vollständigen Quellcode und die Dokumentation und bleiben unabhängig von uns.",
+            "Auf Ihrem eigenen Server – bei einem deutschen Anbieter oder bei Ihnen im Haus. Kundendaten und Rechnungen gehen an keine Dienste von US-Anbietern.",
         },
       ],
+      projekt: MEISTRUM,
     },
     content: [
       {
         kind: "p",
-        text: "Für iOS und Android entwickeln wir Apps, wenn Ihre Mitarbeitenden oder Kunden unterwegs arbeiten: im Außendienst, bei Montage vor Ort, in Lager und Kommissionierung.",
+        text: "Eine Website bringt Anfragen. Was danach kommt – Angebot, Auftrag, Vertrag, Rechnung, Zahlung – läuft in vielen Unternehmen über mehrere getrennte Programme. Ein Geschäftssystem führt beides zusammen: das Schaufenster nach außen und die Steuerzentrale nach innen, mit einer Datenbank und einer Anmeldung.",
       },
       {
         kind: "p",
-        text: "Wo eine durchgehende Verbindung nicht garantiert ist, bauen wir die App offline nutzbar – Daten werden gespeichert und automatisch abgeglichen, sobald wieder eine Verbindung besteht.",
+        text: "Der Kern ist für jedes Unternehmen gleich und erprobt. Darüber bauen wir, was nur Ihr Betrieb so macht: Dokumente, Freigaben, Auswertungen und Automatisierungen für Ihre Abläufe.",
       },
       {
         kind: "p",
-        text: "Eine mobile App ist selten ein eigenständiges Projekt: meist verbindet sie sich mit einer bestehenden Web-Anwendung oder einem Fachsystem. Diese Anbindung planen wir von Anfang an mit.",
+        text: "Das System läuft auf Ihrem eigenen Server. Quellcode und Dokumentation gehören Ihnen.",
       },
     ],
   },
@@ -801,7 +862,7 @@ export const seedPages: SeedPage[] = [
       {
         kind: "rich",
         parts: [
-          "Wir entwickeln Software für unterschiedliche Branchen des Mittelstands. Ihre Branche ist hier nicht dabei? Unsere ",
+          "Der Kern unserer Geschäftssysteme ist für jedes Unternehmen gleich: Kunden, Dokumente, Rechnungen, Kalender. Darüber bauen wir, was Ihre Branche braucht – für Dienstleister Verträge mit laufenden Rechnungen, für den Handel Shop und E-Rechnung, für Produktion und Technik Wartungsverträge und Fristen. Ihre Branche ist hier nicht dabei? Unsere ",
           { text: "Leistungen", href: "/leistungen" },
           " sind an keine Branche gebunden – ",
           { text: "erzählen Sie uns von Ihrem Vorhaben", href: "/kontakt" },
@@ -824,21 +885,38 @@ export const seedPages: SeedPage[] = [
       { kind: "h2", text: "Meistrum: unser eigenes Produkt für diese Branche" },
       {
         kind: "p",
-        text: "Mit Meistrum entwickeln und betreiben wir selbst eine Anwendung für Handwerksbetriebe. Sie bündelt an einem Ort:",
+        text: "Mit Meistrum entwickeln und betreiben wir selbst eine Anwendung für Handwerksbetriebe – von der Anfrage über die Baustelle bis zur Rechnung. Vorlagen gibt es für Bodenleger, Maler, Fliesenleger und Estrichleger. Jeder Betrieb bekommt seine eigene Instanz auf eigener Infrastruktur, ohne geteilte Cloud.",
+      },
+      { kind: "h2", text: "Ein Arbeitsplatz für jede Rolle" },
+      {
+        kind: "p",
+        text: "Jede Rolle sieht nur, was sie für ihre Arbeit braucht:",
       },
       {
         kind: "ul",
         items: [
-          "Kundenverwaltung",
-          "Kalkulation",
-          "Rechnungsstellung",
-          "Werkzeug-Inventar",
-          "Team- und Objektplanung",
+          "Geschäftsführung",
+          "Büro und Teamleitung",
+          "Baustelle, auch offline",
+          "Kundenportal",
+          "Subunternehmer",
+          "Steuerberater",
         ],
       },
+      { kind: "h2", text: "Von der Baustelle bis zur Rechnung" },
       {
         kind: "p",
-        text: "Jeder Betrieb bekommt seine eigene Instanz auf eigener Infrastruktur – ohne geteilte Cloud.",
+        text: "Aufmaß, Bautagebuch mit Wetterdaten, CM-Messung, Rapport mit Unterschrift, Mängel und Nachträge entstehen vor Ort auf Smartphone oder Tablet, auch ohne Netz. Im Büro werden daraus Angebot, Abschläge und Schlussrechnung, als XRechnung oder ZUGFeRD. Werkzeug, Material und Zeiten führt Meistrum mit.",
+      },
+      { kind: "h2", text: "Anschluss an Ihre Partner" },
+      {
+        kind: "ul",
+        items: [
+          "DATEV für Buchhaltung und Lohn",
+          "GAEB für Leistungsverzeichnisse",
+          "Datanorm für die Preise der Händler",
+          "iCal und CalDAV für jeden Kalender",
+        ],
       },
       { kind: "h2", text: "Ein Beispiel aus der Praxis" },
       {
@@ -855,10 +933,214 @@ export const seedPages: SeedPage[] = [
         parts: [
           "Ob eine bestehende Anwendung wächst oder eine neue entsteht: Wir entwickeln ",
           { text: "Web-Anwendungen", href: "/leistungen/web-anwendungen" },
-          " und ",
-          { text: "mobile Apps", href: "/leistungen/mobile-apps" },
+          " für Büro und Baustelle und ganze ",
+          { text: "Geschäftssysteme", href: "/leistungen/geschaeftssysteme" },
           ", verbinden sie mit Ihren bestehenden Systemen und bleiben nach dem Start für Betrieb und Weiterentwicklung ansprechbar.",
         ],
+      },
+    ],
+  },
+  {
+    // The headline topic of the owner's offer (2026-10-01). Legal facts: § 14 UStG as amended by
+    // the Wachstumschancengesetz, BMF-Schreiben of 15.10.2024; what we deliver: src/buero
+    // (XRechnung 3.0, KoSIT- and Mustang-checked, GoBD triggers). Numbered h2s: one way of steps.
+    slug: "e-rechnung",
+    title: "E-Rechnung",
+    lead: "Empfangen müssen Unternehmen E-Rechnungen schon heute, ab 2027 auch ausstellen. Unsere Systeme schreiben sie nach EN 16931 – geprüft mit dem Validator der KoSIT und unveränderbar archiviert.",
+    content: [
+      {
+        kind: "p",
+        text: "Eine E-Rechnung ist ein strukturierter Datensatz, den Software ohne Abtippen verarbeitet. Ein PDF per E-Mail ist keine E-Rechnung. Hier steht, was das Gesetz verlangt, welche Standards wir einhalten und was die E-Rechnung Ihrem Unternehmen bringt.",
+      },
+      { kind: "h2", text: "1. Was das Gesetz verlangt" },
+      {
+        kind: "p",
+        text: "Mit dem Wachstumschancengesetz wird die E-Rechnung zwischen Unternehmen im Inland Pflicht (§ 14 UStG). Seit dem 1. Januar 2025 muss jedes Unternehmen E-Rechnungen empfangen können. Ab dem 1. Januar 2027 müssen Unternehmen mit mehr als 800\u00a0000\u00a0€ Vorjahresumsatz sie ausstellen, ab dem 1. Januar 2028 alle.",
+      },
+      {
+        kind: "p",
+        text: "Ausgenommen sind unter anderem Kleinbetragsrechnungen bis 250\u00a0€ und Rechnungen an Privatkunden. Wie die Regeln für Ihr Unternehmen gelten, klärt Ihr Steuerberater; die Verwaltung erläutert sie im BMF-Schreiben vom 15. Oktober 2024.",
+      },
+      { kind: "h2", text: "2. Welche Formate zählen" },
+      {
+        kind: "p",
+        text: "Eine E-Rechnung folgt der europäischen Norm EN 16931. In Deutschland sind das vor allem XRechnung, reines XML, und ZUGFeRD ab Version 2.0.1, ein PDF mit eingebettetem XML. Nach der Übergangszeit ist eine Papier- oder PDF-Rechnung zwischen Unternehmen keine ordnungsgemäße Rechnung mehr. Ihre Kunden werden E-Rechnungen verlangen, denn davon hängt ihr Vorsteuerabzug ab.",
+      },
+      { kind: "h2", text: "3. Was wir liefern" },
+      {
+        kind: "p",
+        text: "Unsere Systeme erzeugen Rechnungen als XRechnung 3.0 (UBL 2.1). Jede Rechnungsart – Rechnung, Abschlag, Schlussrechnung mit Abzug der Abschläge, Storno und laufende Rechnungen aus Verträgen – ist mit dem Validator der KoSIT geprüft und zusätzlich mit einem zweiten Prüfwerkzeug. Fehlt eine Pflichtangabe nach § 14 Abs. 4 UStG, lässt sich die Rechnung nicht stellen.",
+      },
+      { kind: "h2", text: "4. Unveränderbar archiviert" },
+      {
+        kind: "p",
+        text: "Eine gestellte Rechnung bekommt die nächste fortlaufende Nummer und ist danach eingefroren: Die Datenbank selbst verweigert jede Änderung und Löschung, Korrekturen laufen als Storno. Die erste exportierte XRechnung wird mit ihrer Prüfsumme archiviert und danach unverändert ausgegeben. So erfüllen Sie die GoBD und die Aufbewahrungsfrist von acht Jahren.",
+      },
+      { kind: "h2", text: "5. Was es Ihrem Unternehmen bringt" },
+      {
+        kind: "p",
+        text: "Die Rechnung geht am Tag der Leistung hinaus und landet beim Kunden direkt in der Buchhaltung. Betrag, Bankverbindung und Steuernummer kommen aus dem Auftrag, nicht aus einer Abschrift. Teilzahlungen, offene Posten und Mahnungen mit Verzugszinsen nach § 288 BGB verfolgt das System, und Ihr Steuerberater erhält Rechnungsjournal, Umsatzsteuer je Monat und einen DATEV-Buchungsstapel als Datei.",
+      },
+      { kind: "h2", text: "Ein Rechenbeispiel" },
+      {
+        kind: "p",
+        text: "150 Rechnungen im Monat, zehn Minuten weniger Arbeit je Rechnung, 60\u00a0€ Stundensatz im Büro: 1\u00a0500\u00a0€ im Monat. Werden Rechnungen zehn Tage früher bezahlt, liegen bei 200\u00a0000\u00a0€ Monatsumsatz dauerhaft rund 66\u00a0700\u00a0€ mehr auf Ihrem Konto. Das sind Beispielannahmen, keine Zusage – rechnen Sie mit Ihren eigenen Zahlen.",
+      },
+      { kind: "h2", text: "Wo die E-Rechnung bei uns steckt" },
+      {
+        kind: "rich",
+        parts: [
+          "Die E-Rechnung ist Teil jedes ",
+          { text: "Geschäftssystems", href: "/leistungen/geschaeftssysteme" },
+          ", das wir bauen, und unseres Handwerksprodukts Meistrum. ",
+          { text: "Sprechen Sie uns an", href: "/kontakt" },
+          ", wenn Sie wissen möchten, wie sie in Ihre Abläufe passt.",
+        ],
+      },
+    ],
+  },
+  {
+    // Same stack as the Geschäftssysteme plus a shop core (Medusa, the owner's shop project);
+    // payment providers are the one service that sees data, so the EU preference is stated.
+    slug: "online-shops",
+    title: "Online-Shops",
+    lead: "Ein Online-Shop auf Ihrem eigenen Server: derselbe Stack wie unsere Geschäftssysteme, mit Katalog, Kasse, Zahlung, Versand und Rechnungen nach GoBD.",
+    content: [
+      {
+        kind: "p",
+        text: "Ein Shop ist für uns ein Geschäftssystem mit Kasse. Er läuft auf Ihrem Server, die Kundendaten bleiben bei Ihnen, und Bestellungen, Rechnungen und der Export für den Steuerberater liegen an einer Stelle.",
+      },
+      { kind: "h2", text: "Was der Shop mitbringt" },
+      {
+        kind: "ul",
+        items: [
+          "Katalog, Suche und Produktseiten",
+          "Warenkorb und Kasse",
+          "Kundenkonto mit Bestellungen",
+          "Versandarten und Versandzonen",
+          "Rechnungen nach GoBD, 19\u00a0% und 7\u00a0%",
+          "E-Rechnung für Geschäftskunden",
+        ],
+      },
+      { kind: "h2", text: "Zahlung" },
+      {
+        kind: "p",
+        text: "Den Zahlungsanbieter wählen Sie. Wir empfehlen Anbieter mit Sitz in der EU und binden auf Wunsch auch PayPal oder Stripe an. Der Anbieter erhält nur, was er für die Zahlung braucht; Kundenkonto, Bestellungen und Rechnungen bleiben auf Ihrem Server.",
+      },
+      { kind: "h2", text: "Recht und Barrierefreiheit" },
+      {
+        kind: "p",
+        text: "Seit dem 28. Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz für die meisten Shops, die an Verbraucher verkaufen. Wir prüfen jede Seite automatisch nach WCAG 2 AA. Datenexport und Löschung im Kundenkonto, Widerrufsbelehrung und Rechtstexte gehören von Anfang an dazu; die Texte selbst prüft Ihre Kanzlei.",
+      },
+      { kind: "h2", text: "Technik" },
+      {
+        kind: "p",
+        text: "Der Shop baut auf Medusa, einem offenen Shop-Kern, und Next.js für die Oberfläche, mit PostgreSQL und einer selbst betriebenen Suche. Wie alles bei uns läuft er ohne Tracking-Dienste und ohne US-Cloud.",
+      },
+    ],
+  },
+  {
+    // Why everything runs on the customer's own server (owner, 2026-10-01). The legal points are
+    // general information, not advice; the technical ones describe this codebase (CSP, the
+    // data-sovereignty e2e test, the audit chain, restic with restore tests, retention).
+    slug: "datensouveraenitaet",
+    title: "Datensouveränität",
+    parent: "ueber-uns",
+    lead: "Ihre Daten verlassen Ihren Server nicht. Alles läuft bei einem deutschen Anbieter oder bei Ihnen im Haus – ohne US-Cloud, ohne Fremddienste, ohne Telemetrie.",
+    content: [
+      {
+        kind: "p",
+        text: "Datensouveränität heißt für uns: Sie besitzen Server, Daten und Code. Kein Kundendatensatz, keine Rechnung und keine Nachricht geht an Dienste, die Sie nicht selbst kontrollieren. Die rechtlichen Hinweise ersetzen keine Beratung.",
+      },
+      { kind: "h2", text: "Warum das zählt" },
+      {
+        kind: "ul",
+        items: [
+          "DSGVO Art. 28 und 32: Wer Daten verarbeiten lässt, haftet für die Wahl des Dienstleisters und für angemessene Sicherheit.",
+          "DSGVO Art. 44 ff.: Daten dürfen nur mit tragfähiger Grundlage in Drittländer. Der EuGH hat 2020 den Privacy Shield gekippt (Schrems II, C-311/18); sein Nachfolger beruht erneut auf Zusagen der USA.",
+          "US CLOUD Act (2018): US-Anbieter müssen US-Behörden Daten herausgeben, auch aus Rechenzentren in Europa.",
+          "GeschGehG § 2: Ein Geschäftsgeheimnis ist nur geschützt, wenn Sie angemessene Geheimhaltungsmaßnahmen nachweisen.",
+          "NIS-2: Seit Dezember 2025 haften Geschäftsleitungen betroffener Einrichtungen persönlich für die Cybersicherheit.",
+        ],
+      },
+      { kind: "h2", text: "Nur Ihr eigener Server" },
+      {
+        kind: "p",
+        text: "Die Sicherheitsrichtlinie des Browsers lässt nur Ihren Server zu; Schriften, Bilder, Suche und Formulare liegen dort. Ein automatischer Test lädt jede Seite und schlägt fehl, sobald eine Anfrage an einen fremden Server geht.",
+      },
+      { kind: "h2", text: "Nachvollziehbar und unveränderbar" },
+      {
+        kind: "p",
+        text: "Anmeldungen, Veröffentlichungen, Löschungen und gestellte Rechnungen stehen in einem Protokoll, dessen Einträge als Hash-Kette verbunden sind. Die Datenbank verweigert jede Änderung daran.",
+      },
+      { kind: "h2", text: "Gesichert und wiederhergestellt" },
+      {
+        kind: "p",
+        text: "Sicherungen werden verschlüsselt, bevor sie den Server verlassen, und jeden Monat probeweise zurückgespielt und verglichen. Löschfristen laufen automatisch.",
+      },
+      { kind: "h2", text: "Zwei Wege zum eigenen Server" },
+      {
+        kind: "p",
+        text: "Die meisten Unternehmen wählen einen eigenen Server bei einem deutschen Anbieter wie IONOS, mit einem Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO; wir richten ihn ein und betreiben ihn. Wer eine eigene IT hat, betreibt das System im Haus, und wir greifen nur auf Ihre Freigabe zu.",
+      },
+    ],
+  },
+  {
+    // The stack, named by the owner's wish (2026-10-01); logos only in the presentation, since
+    // rich text has no logo block. List-only parts: promises.
+    slug: "technologie",
+    title: "Technologie",
+    parent: "ueber-uns",
+    lead: "Offene, bewährte Technik, die auf Ihrem Server läuft – ohne Telemetrie und ohne Bindung an einen Anbieter.",
+    content: [
+      {
+        kind: "p",
+        text: "Wir bauen mit Werkzeugen, die offen, weit verbreitet und gut dokumentiert sind. So kann auch ein anderes Team an Ihrer Software weiterarbeiten, und keines davon sendet Ihre Daten an Dritte.",
+      },
+      { kind: "h2", text: "Oberfläche" },
+      {
+        kind: "ul",
+        items: [
+          "Next.js und React",
+          "TypeScript, streng geprüft",
+          "Tailwind CSS und shadcn/ui",
+          "GSAP und Three.js für Bewegung",
+        ],
+      },
+      { kind: "h2", text: "Daten" },
+      {
+        kind: "ul",
+        items: [
+          "PostgreSQL",
+          "Drizzle und Prisma",
+          "Zod an jeder Eingabe",
+          "Volltextsuche auf Deutsch",
+        ],
+      },
+      { kind: "h2", text: "Betrieb" },
+      {
+        kind: "ul",
+        items: [
+          "Linux-Server in Deutschland",
+          "Docker und Caddy mit TLS",
+          "WireGuard für den Wartungszugang",
+          "Verschlüsselte Sicherungen mit restic",
+        ],
+      },
+      { kind: "h2", text: "Qualität" },
+      {
+        kind: "ul",
+        items: [
+          "Vitest und Playwright",
+          "Barrierefreiheit nach WCAG 2 AA",
+          "Test gegen Anfragen an fremde Server",
+          "Prüfung bei jeder Änderung",
+        ],
+      },
+      { kind: "h2", text: "Was Sie davon haben" },
+      {
+        kind: "p",
+        text: "Sie erhalten den vollständigen Quellcode und die Dokumentation. Die Technik ist so verbreitet, dass Sie für die Weiterentwicklung nicht auf uns angewiesen sind.",
       },
     ],
   },
@@ -914,7 +1196,18 @@ export const seedProjects: SeedProject[] = [];
 
 // The sections of the navigation in their order (cms.pages.sort_order); Seiten → Reihenfolge
 // changes it later.
-export const SEED_NAV_ORDER = ["leistungen", "branchen", "projekte", "ueber-uns"];
+export const SEED_NAV_ORDER = [
+  "leistungen",
+  "e-rechnung",
+  "online-shops",
+  "branchen",
+  "projekte",
+  "ueber-uns",
+];
+
+// Pages whose slug the seed changed: scripts/seed.ts moves an existing page to its new slug and
+// publishes it, so its old address redirects (redirectMoves) instead of the page being doubled.
+export const SEED_RENAMED = [{ from: "mobile-apps", to: "geschaeftssysteme" }];
 
 export const SEED_PATHS = [
   "/kontakt",
@@ -923,10 +1216,14 @@ export const SEED_PATHS = [
   "/datenschutz",
   "/ueber-uns",
   "/ueber-uns/arbeitsweise",
+  "/ueber-uns/datensouveraenitaet",
+  "/ueber-uns/technologie",
+  "/e-rechnung",
+  "/online-shops",
   "/projekte",
   "/leistungen",
   "/leistungen/web-anwendungen",
-  "/leistungen/mobile-apps",
+  "/leistungen/geschaeftssysteme",
   "/leistungen/schnittstellen",
   "/leistungen/modernisierung",
   "/leistungen/betrieb",

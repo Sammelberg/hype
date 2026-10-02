@@ -1,35 +1,40 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
-import { Spotlight } from "@/components/site/spotlight";
-import { HORIZON_H, HORIZON_W, horizon } from "@/lib/horizon";
 import { cn } from "@/lib/utils";
+
+import { PenHorizon } from "./pen-horizon";
+import { Spotlight } from "./spotlight";
 
 type Door = { id: number; title: string; path: string; summary: string | null };
 
-// The pages below a page, each a door showing the horizon its own page opens with (lib/horizon,
-// seeded by its path), drawn as the door comes into view. One page fills the row; more share it.
-export function ChildDoors({
+// Pages as doors, each showing the pen-drawn horizon its own page opens with (seeded by its path),
+// drawn as the door comes into view: the pages below a page, or the home page's way into the
+// others. One page fills the row; more share it, four stand two by two.
+export function Doors({
   doors,
   label,
   large = false,
+  heading = "h2",
 }: {
   doors: Door[];
   /** Names the list (an overview's pages are its body: the page's title). */
   label?: string;
   large?: boolean;
+  /** The doors' titles sit under a heading of their own on the home page. */
+  heading?: "h2" | "h3";
 }) {
+  const Title = heading;
   return (
     <ul
       aria-label={label}
       className={cn(
         "grid sd-stagger gap-4",
         doors.length > 1 ? "md:grid-cols-2" : null,
-        doors.length > 2 ? "xl:grid-cols-3" : null,
+        doors.length > 2 && doors.length !== 4 ? "xl:grid-cols-3" : null,
       )}
     >
       {doors.map((door, i) => {
-        const h = horizon(door.path);
         return (
           <li key={door.id} style={{ "--i": i } as CSSProperties}>
             <Spotlight className="group h-full rounded-3xl border border-primary-soft/15 bg-card transition-colors hover:border-primary-soft/40">
@@ -45,7 +50,7 @@ export function ChildDoors({
                     large && doors.length === 1 ? "lg:p-14" : null,
                   )}
                 >
-                  <h2
+                  <Title
                     className={cn(
                       "font-semibold tracking-tight text-balance",
                       large ? "text-3xl sm:text-5xl 3xl:text-6xl" : "text-2xl sm:text-3xl",
@@ -58,7 +63,7 @@ export function ChildDoors({
                     >
                       {door.title}
                     </Link>
-                  </h2>
+                  </Title>
                   {door.summary ? (
                     <p className="max-w-prose text-lg text-pretty text-muted-foreground sm:text-xl">
                       {door.summary}
@@ -80,27 +85,15 @@ export function ChildDoors({
                     </svg>
                   </span>
                 </div>
-                <svg
-                  viewBox={`0 0 ${HORIZON_W} ${HORIZON_H}`}
-                  preserveAspectRatio="xMidYMax slice"
-                  aria-hidden="true"
+                <PenHorizon
+                  seed={door.path}
+                  ridges={2}
+                  draw="scroll"
                   className={cn(
-                    "mt-auto w-full transition-transform duration-500 ease-out group-hover:-translate-y-1",
-                    large ? "h-36 sm:h-48" : "h-28",
+                    "mt-auto transition-transform duration-500 ease-out [--pen-ground:var(--card)] group-hover:-translate-y-1",
+                    large ? "min-h-36 sm:min-h-48" : "min-h-28",
                   )}
-                >
-                  <path d={h.ground} className="fill-secondary" />
-                  <path
-                    d={h.ridge}
-                    pathLength={1}
-                    className="sd-stroke fill-none stroke-primary-soft [stroke-width:2.5]"
-                  />
-                  <path
-                    d={h.arc}
-                    pathLength={1}
-                    className="sd-stroke fill-none stroke-[oklch(0.7_0.12_58)] [stroke-width:2.5]"
-                  />
-                </svg>
+                />
               </div>
             </Spotlight>
           </li>

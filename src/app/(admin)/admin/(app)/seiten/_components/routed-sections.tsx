@@ -27,12 +27,17 @@ const untitled = (text: string | null | undefined, fallback: string) =>
 
 export const HOME_SECTIONS = [
   { id: "kopf", title: "Kopfbereich", zone: "kopf" },
+  { id: "technik", title: "Laufband Technik", zone: "technik" },
   { id: "leistungen", title: "Leistungen", zone: "leistungen" },
+  { id: "e-rechnung", title: "E-Rechnung", zone: "e-rechnung" },
   { id: "vorgehen", title: "Vorgehen", zone: "vorgehen" },
+  { id: "vorschau", title: "Weitere Seiten", zone: "vorschau" },
   { id: "grundsaetze", title: "Grundsätze", zone: "grundsaetze" },
   { id: "anfrage", title: "Abschluss „Anfrage“", zone: "anfrage" },
   { id: "suchmaschinen", title: "Suchmaschinen und Teilen" },
 ];
+
+const homeSection = (id: string) => HOME_SECTIONS.find((s) => s.id === id)!;
 
 export function HomeSections({ ctx }: { ctx: EditorContext }) {
   const control = kindControl<"home">(ctx.control);
@@ -41,7 +46,7 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
   return (
     <>
       <SectionCard
-        section={HOME_SECTIONS[0]!}
+        section={homeSection("kopf")}
         description="Die große Überschrift über dem Bergpanorama: Anfang, wechselndes Wort, Ende. Der erste Buchstabe erscheint in gebrochener Schrift."
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -75,7 +80,14 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
       </SectionCard>
 
       <SectionCard
-        section={HOME_SECTIONS[1]!}
+        section={homeSection("technik")}
+        description="Das Band unter dem Kopfbereich, in dem die Logos unseres Stacks durchlaufen. Die Logos sind fest, die Überschrift ist Ihre."
+      >
+        <TextField control={control} name="sections.techTitle" label="Überschrift" />
+      </SectionCard>
+
+      <SectionCard
+        section={homeSection("leistungen")}
         description="Die fünf Leistungskarten mit ihren Tälern. Karten und Einleitung gehören der Seite „Leistungen“, hier steht nur die Überschrift."
         action={
           leistungen ? (
@@ -91,7 +103,42 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
       </SectionCard>
 
       <SectionCard
-        section={HOME_SECTIONS[2]!}
+        section={homeSection("e-rechnung")}
+        description="Die Daten der E-Rechnung als Zeitleiste unter den Leistungen, darunter der Link zur Seite „E-Rechnung“."
+      >
+        <TextField control={control} name="sections.eRechnungTitle" label="Überschrift" />
+        <TextField
+          control={control}
+          name="sections.eRechnungLead"
+          label="Einleitung"
+          multiline
+          rows={2}
+        />
+        <ItemCards
+          control={control}
+          name="sections.milestones"
+          itemLabel={(i) => sections?.milestones?.[i]?.date || `Datum ${i + 1}`}
+          addLabel="Datum hinzufügen"
+          columns={2}
+          make={() => ({ id: newId(), date: "", title: "", text: "" })}
+          render={(i) => (
+            <div className="grid gap-3">
+              <TextField control={control} name={`sections.milestones.${i}.date`} label="Datum" />
+              <TextField control={control} name={`sections.milestones.${i}.title`} label="Titel" />
+              <TextField
+                control={control}
+                name={`sections.milestones.${i}.text`}
+                label="Text"
+                multiline
+                rows={3}
+              />
+            </div>
+          )}
+        />
+      </SectionCard>
+
+      <SectionCard
+        section={homeSection("vorgehen")}
         description="Die Schritte unter „So arbeiten wir“, nummeriert in dieser Reihenfolge."
       >
         <TextField control={control} name="sections.stepsTitle" label="Überschrift" />
@@ -118,7 +165,14 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
       </SectionCard>
 
       <SectionCard
-        section={HOME_SECTIONS[3]!}
+        section={homeSection("vorschau")}
+        description="Türen zu Datensouveränität, Handwerk, Online-Shops und Technologie. Titel und Text jeder Tür sind der Titel und die Einleitung ihrer Seite; hier steht nur die Überschrift."
+      >
+        <TextField control={control} name="sections.previewsTitle" label="Überschrift" />
+      </SectionCard>
+
+      <SectionCard
+        section={homeSection("grundsaetze")}
         description="Drei Grundsätze nebeneinander, darunter der Link zur Arbeitsweise."
       >
         <TextField control={control} name="sections.principlesTitle" label="Überschrift" />

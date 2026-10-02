@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 
 import { ClosingCta } from "@/components/site/closing-cta";
+import { Doors } from "@/components/site/doors";
 import { PageHeader } from "@/components/site/page-header";
 import { Part } from "@/components/site/part";
 import { PageBreadcrumbs } from "@/components/site/page-breadcrumbs";
 import { RichText } from "@/components/site/rich-text";
-import { ValleyView } from "@/components/site/valley-view";
-import { VALLEYS } from "@/components/site/valleys";
 import {
   getChildPages,
   getLeistungenContent,
@@ -23,7 +22,6 @@ import { shapeParts } from "@/cms/rich-text/shapes";
 import { firstParagraph } from "@/cms/rich-text/text";
 import { absoluteUrl, buildMetadata, JsonLd } from "@/lib/seo";
 
-import { ChildDoors } from "./_components/child-doors";
 import { ContentBlocks, Statement } from "@/components/site/content-blocks";
 import { LeistungSections } from "./_components/leistung-sections";
 
@@ -71,10 +69,7 @@ export default async function CmsPage({ params }: Props) {
   const projekt = service?.projektId
     ? (projekte.find((p) => p.id === service.projektId) ?? null)
     : null;
-  // A service's page ends with the other services; its own gives it its valley.
-  const own = service
-    ? (leistungen.sections.services.find((s) => `/leistungen/${s.slug}` === path) ?? null)
-    : null;
+  // A service's page ends with the other services.
   const otherServices = service
     ? leistungen.sections.services.filter((s) => `/leistungen/${s.slug}` !== path)
     : [];
@@ -116,14 +111,6 @@ export default async function CmsPage({ params }: Props) {
         // Top-level pages sit directly under the home page; a trail there would add nothing.
         breadcrumbs={trail.length > 2 ? <PageBreadcrumbs trail={trail} /> : undefined}
         horizonKey={path}
-        // A service's page looks into its own valley, the one its card shows on the home page.
-        scene={
-          own ? (
-            <div className="page-container mt-10 pb-12 sm:mt-14 sm:pb-16">
-              <ValleyView spec={VALLEYS[own.glyph] ?? VALLEYS.web} id="kopf-tal" frame="panorama" />
-            </div>
-          ) : undefined
-        }
       />
 
       {legal ? (
@@ -166,12 +153,12 @@ export default async function CmsPage({ params }: Props) {
         // An overview's pages are its body: a door for each.
         <section className="border-t">
           <div className="page-container py-20 sm:py-28">
-            <ChildDoors doors={doors} label={page.title} large />
+            <Doors doors={doors} label={page.title} large />
           </div>
         </section>
       ) : children.length > 0 ? (
         <Part id="unterseiten-titel" title="Weiterlesen">
-          <ChildDoors doors={doors} />
+          <Doors doors={doors} />
         </Part>
       ) : null}
 

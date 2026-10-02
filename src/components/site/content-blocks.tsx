@@ -4,11 +4,12 @@ import type { LexicalDocument } from "@/cms/rich-text/schema";
 import { type Block, plainParagraphs, type Step } from "@/cms/rich-text/shapes";
 import type { TextPart } from "@/cms/rich-text/parts";
 import { CONTOUR_SIZE, contours } from "@/lib/contours";
-import { HORIZON_H, HORIZON_W, horizon } from "@/lib/horizon";
+import { cn } from "@/lib/utils";
 
 import styles from "./content-blocks.module.css";
 import { FirMark } from "./fir-mark";
 import { Part } from "./part";
+import { PenHorizon } from "./pen-horizon";
 import { RichText } from "./rich-text";
 import { LitWords } from "./words";
 
@@ -48,7 +49,7 @@ export function Statement({ intro, mapKey }: { intro: LexicalDocument; mapKey?: 
         )}
       </div>
       {/* The page's own mountain, as a hiking map draws it: rings that draw themselves from the
-          summit outwards as the map comes into view, a copper mark on the top. */}
+          summit outwards as the map comes into view, a small mark on the top. */}
       {map ? (
         <svg
           viewBox={`0 0 ${CONTOUR_SIZE} ${CONTOUR_SIZE}`}
@@ -73,9 +74,22 @@ export function Statement({ intro, mapKey }: { intro: LexicalDocument; mapKey?: 
 
 /**
  * Numbered parts as one way up the mountain: from lg up a path winds from waypoint to waypoint
- * and draws itself as the page goes down; each waypoint lights when it reaches the middle.
+ * and draws itself as the page goes down; each waypoint lights when it reaches the middle. With a
+ * `title` (the home page's „So arbeiten wir“) the way gets a heading and its stops become h3.
  */
-function Way({ steps }: { steps: Step[] }) {
+export function Way({
+  steps,
+  title,
+  zone,
+  id,
+}: {
+  steps: Step[];
+  title?: string;
+  zone?: string;
+  /** An anchor for links into the page (the home page's #vorgehen). */
+  id?: string;
+}) {
+  const Stop = title ? "h3" : "h2";
   const n = steps.length;
   // Waypoints alternate at a quarter and three quarters of the width, one per row of equal height.
   const pts = steps.map((_, i) => [i % 2 === 0 ? 25 : 75, i * 100 + 50] as const);
@@ -88,8 +102,22 @@ function Way({ steps }: { steps: Step[] }) {
   d += ` L ${pts[n - 1]![0]} ${n * 100}`;
 
   return (
-    <section aria-label="Schritte" className="border-t">
+    <section
+      id={id}
+      aria-label={title ? undefined : "Schritte"}
+      aria-labelledby={title ? "weg-titel" : undefined}
+      className="border-t"
+      data-cms-zone={zone}
+    >
       <div className="page-container py-20 sm:py-28">
+        {title ? (
+          <h2
+            id="weg-titel"
+            className="mb-16 max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl"
+          >
+            {title}
+          </h2>
+        ) : null}
         <ol className={styles.way} style={{ "--rows": n } as CSSProperties}>
           <svg
             viewBox={`0 0 100 ${n * 100}`}
@@ -118,10 +146,10 @@ function Way({ steps }: { steps: Step[] }) {
                 {step.number}
               </span>
               <div className={styles.stopText}>
-                <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl">
+                <Stop className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl 3xl:text-5xl">
                   <span className="sr-only">Schritt {step.number}: </span>
                   {step.title}
-                </h2>
+                </Stop>
                 <RichText
                   data={step.body}
                   className="prose-lg mt-4 max-w-prose text-pretty 3xl:prose-xl"
@@ -139,28 +167,26 @@ function Way({ steps }: { steps: Step[] }) {
 function Cards({ parts }: { parts: TextPart[] }) {
   return (
     <section aria-label={parts.map((p) => p.title).join(", ")} className="border-t">
-      <ul className="page-container grid sd-stagger gap-4 py-20 sm:py-28 md:grid-cols-2 xl:grid-cols-3">
+      <ul
+        className={cn(
+          "page-container grid sd-stagger gap-4 py-20 sm:py-28 md:grid-cols-2",
+          // Four stand two by two; three or five and more fill rows of three.
+          parts.length === 4 ? null : "xl:grid-cols-3",
+        )}
+      >
         {parts.map((part, i) => {
-          const h = horizon(part.title);
           return (
             <li
               key={part.title}
               style={{ "--i": i } as CSSProperties}
               className="flex min-h-[22rem] flex-col overflow-clip rounded-3xl border border-primary-soft/15 bg-card"
             >
-              <svg
-                viewBox={`0 0 ${HORIZON_W} ${HORIZON_H}`}
-                preserveAspectRatio="xMidYMax slice"
-                aria-hidden="true"
-                className="h-28 w-full"
-              >
-                <path d={h.ground} className="fill-secondary" />
-                <path
-                  d={h.ridge}
-                  pathLength={1}
-                  className="sd-stroke fill-none stroke-primary-soft [stroke-width:3]"
-                />
-              </svg>
+              <PenHorizon
+                seed={part.title}
+                ridges={2}
+                draw="scroll"
+                className="min-h-28 [--pen-ground:var(--card)]"
+              />
               <div className="flex flex-1 flex-col justify-end p-8 pt-6">
                 <h2 className="text-2xl font-semibold tracking-tight text-balance 3xl:text-3xl">
                   {part.title}
