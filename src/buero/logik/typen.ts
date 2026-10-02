@@ -27,6 +27,15 @@ const plz = z
   ])
   .nullish()
   .transform((v) => (v ? v : null));
+/** A customer's postcode, checked against the country in KundeSchema (Basel, Wien, Zürich …). */
+const plzKunde = z
+  .string()
+  .trim()
+  .max(10, "Die Postleitzahl ist zu lang.")
+  .nullish()
+  .transform((v) => (v ? v : null));
+/** How many digits a postcode has where the office's customers usually live. */
+const PLZ_ZIFFERN: Record<string, number> = { DE: 5, AT: 4, CH: 4, LI: 4 };
 const betrag = z.coerce
   .number({ error: "Bitte einen Betrag." })
   .refine((n) => Number.isFinite(n), "Bitte einen Betrag.")
@@ -115,7 +124,7 @@ export const KundeSchema = z
     email,
     telefon: optional(40),
     strasse: optional(),
-    plz,
+    plz: plzKunde,
     ort: optional(),
     land: z
       .string()
@@ -136,6 +145,22 @@ export const KundeSchema = z
   .refine((k) => (k.art === "firma" ? Boolean(k.firma) : Boolean(k.name)), {
     message: "Bitte geben Sie den Namen an.",
     path: ["name"],
+  })
+  .superRefine((k, ctx) => {
+    if (!k.plz) return;
+    const ziffern = PLZ_ZIFFERN[k.land];
+    const passt = ziffern
+      ? new RegExp(`^\\d{${ziffern}}$`).test(k.plz)
+      : /^[A-Z0-9][A-Z0-9 -]*$/i.test(k.plz);
+    if (!passt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["plz"],
+        message: ziffern
+          ? `Eine Postleitzahl in ${k.land} hat ${ziffern === 5 ? "fünf" : "vier"} Ziffern.`
+          : "Nur Buchstaben, Ziffern, Leerzeichen und Bindestriche.",
+      });
+    }
   });
 export type KundeInput = z.infer<typeof KundeSchema>;
 
