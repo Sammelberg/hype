@@ -19,9 +19,16 @@ test("the header lists every section and opens a section's pages", async ({ page
   test.skip(isMobile, "phones get the menu button instead");
   await page.goto("/leistungen/web-anwendungen");
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  for (const name of ["Leistungen", "Branchen", "Projekte", "Über uns"]) {
+  for (const name of ["Leistungen", "Branchen", "Über uns"]) {
     await expect(nav.getByRole("button", { name })).toBeVisible();
   }
+  // Projekte opens a menu once there are projects; the seed has none (real ones are entered in
+  // the admin), so here it may be a plain link.
+  await expect(
+    nav
+      .getByRole("button", { name: "Projekte" })
+      .or(nav.getByRole("link", { name: "Projekte", exact: true })),
+  ).toBeVisible();
   // Kontakt is the one filled button at the end; the logo leads home.
   await expect(nav.getByRole("link", { name: "Projekt anfragen" })).toHaveAttribute(
     "href",

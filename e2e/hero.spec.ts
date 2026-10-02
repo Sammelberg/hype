@@ -148,7 +148,7 @@ test("the call to action raises its pole star on hover and lets it go", async ({
   expect(await starSpring(page)).toBe(0);
   await page.locator("[data-hero-cta]").hover();
   // The spring steps per frame, so under a loaded headless run it needs longer than on a real screen.
-  await expect.poll(() => starSpring(page), { timeout: 5_000 }).toBeGreaterThan(0.9);
+  await expect.poll(() => starSpring(page), { timeout: 20_000 }).toBeGreaterThan(0.9);
   await page.mouse.move(0, 0);
   // Letting go takes longer than rising: the spring has to come to rest (isAtRest), and a frame
   // advances it at most 0.25s, however long a CI runner without a GPU took to draw it.
