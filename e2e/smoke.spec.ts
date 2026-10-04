@@ -20,6 +20,22 @@ for (const path of ["/", ...SEED_PATHS]) {
     const response = await page.goto(path);
     expect(response?.ok(), `${path} fehlt — wurde "pnpm seed" ausgeführt?`).toBe(true);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // A <Reveal> still fading in reads as low contrast: wait for the time-based animations to end
+    // (not loops, not scroll scenes, which never end on their own).
+    await page.evaluate(async () => {
+      // Two frames, so the reveals on screen have been told to start.
+      for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+      await Promise.all(
+        document
+          .getAnimations()
+          .filter(
+            (a) =>
+              a.timeline === document.timeline &&
+              Number.isFinite(a.effect?.getComputedTiming().endTime),
+          )
+          .map((a) => a.finished.catch(() => undefined)),
+      );
+    });
 
     const { violations } = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])

@@ -60,7 +60,7 @@ function settings(): SiteSettings {
     description: seedSettings.description,
     contactEmail: seedSettings.contactEmail,
     socialLinks: withIds(seedSettings.socialLinks),
-    cta: { ...SITE_TEXT_DEFAULTS.cta },
+    cta: { ...SITE_TEXT_DEFAULTS.cta, ...seedSettings.cta },
   };
 }
 
@@ -79,6 +79,7 @@ function routed(slug: string): { lead: string | null; sections: PageSections | n
       lead: null,
       sections: {
         ...HOME_DEFAULTS,
+        ...s.titles,
         hero: { ...s.hero },
         steps: withIds(s.steps),
         principles: withIds(s.principles),

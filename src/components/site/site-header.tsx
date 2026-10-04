@@ -1,6 +1,7 @@
 import { getSiteNav } from "@/data/queries";
 
-import { DesktopNav, KontaktButton } from "./desktop-nav";
+import { BuchenButton, DesktopNav } from "./desktop-nav";
+import { hypeNav } from "./hype-nav";
 import { MobileMenu } from "./mobile-menu";
 import { Wortmarke } from "./wortmarke";
 
@@ -8,7 +9,7 @@ import { Wortmarke } from "./wortmarke";
 // behind the menu button below. Its height is the `header` spacing token, which scroll-margin in
 // globals.css offsets against.
 export async function SiteHeader({ siteName }: { siteName: string }) {
-  const sections = await getSiteNav();
+  const sections = hypeNav(await getSiteNav());
 
   return (
     <header
@@ -18,7 +19,7 @@ export async function SiteHeader({ siteName }: { siteName: string }) {
       <div className="flex h-header w-full items-center gap-6 px-gutter">
         <Wortmarke siteName={siteName} className="mr-auto lg:mr-0" />
         <DesktopNav sections={sections} />
-        <KontaktButton className="max-sm:hidden lg:hidden" />
+        <BuchenButton className="max-sm:hidden lg:hidden" />
         <div className="-mr-2 lg:hidden">
           <MobileMenu sections={sections} siteName={siteName} />
         </div>

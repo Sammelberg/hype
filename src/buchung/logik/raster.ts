@@ -1,6 +1,8 @@
 // Which starts a day offers, which Darsteller is free for a Fenster, and the nearest free starts
 // when the wished one is taken. Availability is per Darsteller: a Figur is free when at least one
 // Darsteller who plays it is free. Pure: the booking form and the locking transaction share it.
+import { tagePlus } from "../../buero/logik/ablauf";
+import { berlinTag } from "../../buero/logik/kalender";
 import { berlinStart } from "./zeit";
 import type { Fenster } from "./fenster";
 
@@ -27,6 +29,25 @@ export type Kandidat = { id: number; prioritaet: number; figuren: number[] };
 const ueberschneidet = (a: { von: Date; bis: Date }, b: { von: Date; bis: Date }) =>
   a.von.getTime() < b.bis.getTime() && b.von.getTime() < a.bis.getTime();
 
+/** The Darsteller among `ids` with nothing planned in the Fenster, whatever they play. */
+export function freieDarsteller(
+  ids: number[],
+  belegungen: Belegt[],
+  fenster: Pick<Fenster, "von" | "bis">,
+): number[] {
+  return ids.filter(
+    (id) => !belegungen.some((b) => b.darstellerId === id && ueberschneidet(b, fenster)),
+  );
+}
+
+/** The next `n` Saturdays as German days, today included when it is one. */
+export function samstageAb(jetzt: Date, n: number): string[] {
+  const heute = berlinTag(jetzt);
+  const wochentag = new Date(`${heute}T00:00:00Z`).getUTCDay();
+  const erster = tagePlus(heute, (6 - wochentag + 7) % 7);
+  return Array.from({ length: n }, (_, i) => tagePlus(erster, i * 7));
+}
+
 /**
  * The Darsteller to send, one per Figur in order, or null when the Fenster cannot be staffed.
  * Two Figuren always get two different people. Order: priority, then less work that week, then id.
@@ -39,10 +60,15 @@ export function waehleDarsteller(e: {
   minutenDieseWoche?: Map<number, number>;
 }): number[] | null {
   const last = (id: number) => e.minutenDieseWoche?.get(id) ?? 0;
+  const freiIds = new Set(
+    freieDarsteller(
+      e.darsteller.map((d) => d.id),
+      e.belegungen,
+      e.fenster,
+    ),
+  );
   const frei = e.darsteller
-    .filter(
-      (d) => !e.belegungen.some((b) => b.darstellerId === d.id && ueberschneidet(b, e.fenster)),
-    )
+    .filter((d) => freiIds.has(d.id))
     .sort((a, b) => a.prioritaet - b.prioritaet || last(a.id) - last(b.id) || a.id - b.id);
 
   const besetze = (rest: number[], vergeben: number[]): number[] | null => {

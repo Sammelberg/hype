@@ -8,7 +8,7 @@ import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/com
 import type { NavSection } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
-import { KontaktButton } from "./desktop-nav";
+import { BuchenButton } from "./desktop-nav";
 import { Wortmarke } from "./wortmarke";
 
 const inSection = (pathname: string, href: string) =>
@@ -16,11 +16,11 @@ const inSection = (pathname: string, href: string) =>
 
 // Every page of the site below lg, where the header has no room for them. A sheet over the whole
 // screen whose top row is the header again — the logo where it was, „Schließen“ where „Menü“ was
-// — then the sections, numbered, each with its pages beside one another, and the inquiry as the
+// — then the sections, numbered, each with its pages beside one another, and booking as the
 // one button at the end. Radix traps focus, closes on Escape and returns focus to the button.
 export function MobileMenu({ sections, siteName }: { sections: NavSection[]; siteName: string }) {
   const pathname = usePathname();
-  const list = sections.filter((section) => section.href !== "/kontakt");
+
   const link = (href: string, label: string, className: string) => (
     <SheetClose asChild>
       <Verweis
@@ -64,7 +64,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
 
         <nav aria-label="Seiten" className="px-gutter">
           <ol>
-            {list.map((section, i) => {
+            {sections.map((section, i) => {
               const current = inSection(pathname, section.href);
               return (
                 <li key={section.href} className="border-b py-4 sm:py-5">
@@ -108,7 +108,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
 
         <div className="flex flex-col gap-4 px-gutter pt-8 pb-10">
           <SheetClose asChild>
-            <KontaktButton className="h-12 w-full text-base" />
+            <BuchenButton className="h-12 w-full text-base" />
           </SheetClose>
           <SheetClose asChild>
             <Verweis

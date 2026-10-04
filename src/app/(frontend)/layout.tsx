@@ -6,11 +6,14 @@ import { draftMode } from "next/headers";
 import type { ReactNode } from "react";
 
 import { ReticleDev } from "@/components/dev/reticle-dev";
+import { BuchenLeiste } from "@/components/site/buchen-leiste";
 import { PreviewBridge } from "@/components/site/preview-bridge";
 import { SiteFooter } from "@/components/site/site-footer";
+import { hypeFussNav } from "@/components/site/hype-nav";
 import { SiteHeader } from "@/components/site/site-header";
 import { env } from "@/env";
 import { BRAND_HEX } from "@/lib/brand";
+import { getStaedte } from "@/data/katalog";
 import { getSiteNav, getSiteSettings } from "@/data/queries";
 
 import "./globals.css";
@@ -33,7 +36,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FrontendLayout({ children }: { children: ReactNode }) {
-  const [settings, draft, nav] = await Promise.all([getSiteSettings(), draftMode(), getSiteNav()]);
+  const [settings, draft, nav, orte] = await Promise.all([
+    getSiteSettings(),
+    draftMode(),
+    getSiteNav(),
+    getStaedte(),
+  ]);
   return (
     <html
       lang="de"
@@ -41,7 +49,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
       // Route changes jump instantly; globals.css smooth scrolling is for in-page anchors only.
       data-scroll-behavior="smooth"
     >
-      <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
+      <body className="flex min-h-dvh flex-col bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] text-foreground antialiased md:pb-0">
         <a
           href="#inhalt"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2"
@@ -53,13 +61,14 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           {children}
         </div>
         <SiteFooter
-          sections={nav}
+          sections={hypeFussNav(nav, orte)}
           siteName={settings.siteName || "Website"}
           tagline={settings.tagline}
           ownerName={settings.ownerName || settings.siteName || "Website"}
           contactEmail={settings.contactEmail}
           socialLinks={settings.socialLinks}
         />
+        <BuchenLeiste />
         {draft.isEnabled ? (
           <>
             <PreviewBridge />

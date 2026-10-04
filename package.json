@@ -37,7 +37,7 @@
     "migrate": "tsx --env-file-if-exists=.env src/cms/db/migrate.ts && tsx --env-file-if-exists=.env scripts/migrate-buchung.ts",
     "migrate:create": "drizzle-kit generate --name",
     "migrate:create:buchung": "drizzle-kit generate --config drizzle.buchung.config.ts --name",
-    "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "seed": "sh -c 'tsx --env-file-if-exists=.env scripts/seed.ts \"$@\" && tsx --env-file-if-exists=.env scripts/seed-buchung.ts \"$@\"' --",
     "cms:passwort": "tsx --env-file-if-exists=.env scripts/set-password.ts",
     "cms:geplant": "tsx --env-file-if-exists=.env scripts/geplant.ts",
     "cms:aufbewahrung": "tsx --env-file-if-exists=.env scripts/aufbewahrung.ts",

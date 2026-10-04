@@ -24,7 +24,7 @@ export function PageHeader({
       <div className="page-container pt-12 pb-12 sm:pt-16 sm:pb-16">
         {breadcrumbs ? <div className="mb-8">{breadcrumbs}</div> : null}
         {kicker ? <p className="mb-3 font-medium text-muted-foreground">{kicker}</p> : null}
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance hyphens-auto sm:text-5xl">
+        <h1 className="max-w-4xl font-hand text-4xl leading-tight font-semibold text-balance break-words sm:text-5xl">
           {title}
         </h1>
         {lead ? (

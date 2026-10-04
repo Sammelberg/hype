@@ -32,7 +32,6 @@ const CURRENT = "text-foreground after:scale-x-100 after:bg-primary";
 export function DesktopNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState("");
-  const kontakt = sections.find((section) => section.href === "/kontakt");
 
   return (
     <Nav.Root
@@ -45,39 +44,37 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
       {/* Equal room either side keeps the sections in the middle between the logo and the button. */}
       <div aria-hidden="true" className="flex-1" />
       <Nav.List className="flex items-center gap-0.5 3xl:gap-1.5">
-        {sections
-          .filter((section) => section !== kontakt)
-          .map((section) => {
-            const current = inSection(pathname, section.href);
-            return (
-              <Nav.Item key={section.href} value={section.href}>
-                {section.children.length > 0 ? (
-                  <>
-                    <Nav.Trigger className={cn(ITEM, "pr-2.5", current && CURRENT)}>
-                      {section.label}
-                      <ChevronDownIcon
-                        aria-hidden="true"
-                        className="size-3.5 opacity-60 transition-transform duration-300 group-data-[state=open]/item:rotate-180 motion-reduce:transition-none"
-                      />
-                    </Nav.Trigger>
-                    <Nav.Content className="absolute inset-x-0 top-0 data-[motion=from-end]:animate-in data-[motion=from-end]:fade-in data-[motion=from-end]:slide-in-from-right-6 data-[motion=from-start]:animate-in data-[motion=from-start]:fade-in data-[motion=from-start]:slide-in-from-left-6 data-[motion=to-end]:animate-out data-[motion=to-end]:fade-out data-[motion=to-end]:slide-out-to-right-6 data-[motion=to-start]:animate-out data-[motion=to-start]:fade-out data-[motion=to-start]:slide-out-to-left-6 motion-reduce:animate-none">
-                      <Panel section={section} pathname={pathname} />
-                    </Nav.Content>
-                  </>
-                ) : (
-                  <Nav.Link asChild active={current}>
-                    <Verweis
-                      href={section.href as never}
-                      aria-current={pathname === section.href ? "page" : undefined}
-                      className={cn(ITEM, current && CURRENT)}
-                    >
-                      {section.label}
-                    </Verweis>
-                  </Nav.Link>
-                )}
-              </Nav.Item>
-            );
-          })}
+        {sections.map((section) => {
+          const current = inSection(pathname, section.href);
+          return (
+            <Nav.Item key={section.href} value={section.href}>
+              {section.children.length > 0 ? (
+                <>
+                  <Nav.Trigger className={cn(ITEM, "pr-2.5", current && CURRENT)}>
+                    {section.label}
+                    <ChevronDownIcon
+                      aria-hidden="true"
+                      className="size-3.5 opacity-60 transition-transform duration-300 group-data-[state=open]/item:rotate-180 motion-reduce:transition-none"
+                    />
+                  </Nav.Trigger>
+                  <Nav.Content className="absolute inset-x-0 top-0 data-[motion=from-end]:animate-in data-[motion=from-end]:fade-in data-[motion=from-end]:slide-in-from-right-6 data-[motion=from-start]:animate-in data-[motion=from-start]:fade-in data-[motion=from-start]:slide-in-from-left-6 data-[motion=to-end]:animate-out data-[motion=to-end]:fade-out data-[motion=to-end]:slide-out-to-right-6 data-[motion=to-start]:animate-out data-[motion=to-start]:fade-out data-[motion=to-start]:slide-out-to-left-6 motion-reduce:animate-none">
+                    <Panel section={section} pathname={pathname} />
+                  </Nav.Content>
+                </>
+              ) : (
+                <Nav.Link asChild active={current}>
+                  <Verweis
+                    href={section.href as never}
+                    aria-current={pathname === section.href ? "page" : undefined}
+                    className={cn(ITEM, current && CURRENT)}
+                  >
+                    {section.label}
+                  </Verweis>
+                </Nav.Link>
+              )}
+            </Nav.Item>
+          );
+        })}
       </Nav.List>
 
       <div className="flex flex-1 shrink-0 items-center justify-end gap-1.5">
@@ -89,7 +86,7 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
         >
           <SearchIcon aria-hidden="true" className="size-4.5" />
         </Verweis>
-        <KontaktButton />
+        <BuchenButton />
       </div>
 
       {/* The page behind an open menu dims; it is no target, so a click there still closes it. */}
@@ -162,15 +159,15 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
   );
 }
 
-/** Kontakt as the header's one filled button: what the site is for. */
-export function KontaktButton({
+/** Booking as the header's one filled button: the one thing the site is for. */
+export function BuchenButton({
   className,
   ...props
 }: Omit<ComponentProps<typeof Verweis>, "href">) {
-  const current = usePathname() === "/kontakt";
+  const current = usePathname().startsWith("/buchen");
   return (
     <Verweis
-      href="/kontakt"
+      href={"/buchen" as never}
       aria-current={current ? "page" : undefined}
       className={cn(
         buttonVariants(),
@@ -179,7 +176,7 @@ export function KontaktButton({
       )}
       {...props}
     >
-      Kontakt
+      Jetzt buchen
       <ArrowRightIcon
         aria-hidden="true"
         className="size-4 transition-transform duration-300 group-hover/cta:translate-x-0.5 motion-reduce:transition-none"

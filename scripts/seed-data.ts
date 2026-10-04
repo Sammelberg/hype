@@ -20,6 +20,12 @@ export const seedSettings = {
   // Shown in the footer, on /kontakt and in the legal pages once set.
   contactEmail: "hallo@example.com" as string | null,
   socialLinks: [] as { label: string; url: string }[],
+  // The closing invitation under every page; without it, SITE_TEXT_DEFAULTS.
+  cta: {
+    title: "Der Samstag ist noch frei?",
+    text: "Figur, Paket und Ort wählen, den Endpreis sehen und den Termin gleich festhalten. Eine Anzahlung, und die Feier steht.",
+    label: "Termin buchen",
+  } as { title?: string; text?: string; label?: string },
 };
 
 // The sections of the pages with a route of their own (/admin → Seiten → Startseite, Kontakt);
@@ -29,20 +35,58 @@ export const seedSections = {
     headline: "Wer kommt zum Kinder­geburtstag?",
     lead: "Eisprinzessin, Superheld oder Zauberer. Sie sehen sofort, was es bei Ihnen kostet und welcher Samstag noch frei ist, ganz ohne Anruf.",
   },
+  // Headings of the home sections; without them, HOME_DEFAULTS.
+  titles: {
+    stepsTitle: "So buchen Sie",
+    principlesTitle: "Worauf Sie sich verlassen können",
+    faqTitle: "Fragen von Eltern",
+  } as { stepsTitle?: string; principlesTitle?: string; faqTitle?: string },
   steps: [
-    { title: "Kennenlernen", text: "Sie schildern Ihr Anliegen, wir hören zu und fragen nach." },
-    { title: "Angebot", text: "Sie bekommen ein schriftliches Angebot mit Umfang und Ablauf." },
-    { title: "Umsetzung", text: "Wir setzen um und halten Sie auf dem Laufenden." },
-    { title: "Abschluss", text: "Sie bekommen das Ergebnis und eine Rechnung, die passt." },
+    {
+      title: "Figur wählen",
+      text: "Nach Alter, Sprache oder Thema. Jede Figur bringt ihr eigenes Programm mit.",
+    },
+    {
+      title: "Ort und Termin",
+      text: "Sie sehen gleich, welche Samstage frei sind und was es bei Ihnen kostet.",
+    },
+    {
+      title: "Anzahlung",
+      text: "Mit der Anzahlung ist der Termin fest für Sie reserviert. Die Bestätigung kommt sofort per E-Mail.",
+    },
+    {
+      title: "Die Feier",
+      text: "Die Figur klingelt pünktlich, im Kostüm und mit allem, was das Programm braucht.",
+    },
   ],
   principles: [
-    { title: "Erreichbar", text: "Sie haben einen festen Ansprechpartner." },
-    { title: "Klar", text: "Was es kostet und wie lange es dauert, steht vorher fest." },
+    {
+      title: "Der Preis steht vorher fest",
+      text: "Paket, Anfahrt und Extras sehen Sie, bevor Sie Ihre Daten eingeben. Später kommt nichts dazu.",
+    },
+    {
+      title: "Pünktlich, mit Plan",
+      text: "Wir planen die Anfahrt in jeden Termin ein. Wer bei Ihnen klingelt, kommt nicht gehetzt von der letzten Feier.",
+    },
+    {
+      title: "In Ihrer Sprache",
+      text: "Viele Figuren spielen auch auf Ukrainisch, Russisch oder Englisch. Sie wählen es bei der Buchung.",
+    },
+    {
+      title: "Fair bei Absagen",
+      text: "Sagen Sie mehr als 14 Tage vorher ab, bekommen Sie die Anzahlung zurück. Die Bedingungen stehen vor der Buchung da.",
+    },
   ],
   faq: [
     {
-      question: "Wie schnell bekomme ich eine Antwort?",
-      answer: "In der Regel innerhalb von zwei Werktagen.",
+      question: "Wie viel Platz brauchen wir?",
+      answer:
+        "Ein Wohnzimmer, in dem man den Tisch beiseiteschieben kann, reicht. Dazu eine freie Ecke zum Umziehen.",
+    },
+    {
+      question: "Was passiert, wenn das Geburtstagskind krank wird?",
+      answer:
+        "Rufen Sie uns an oder schreiben Sie uns. Wir verschieben den Termin, solange etwas frei ist.",
     },
     {
       question: "Wo werden meine Daten gespeichert?",
@@ -289,4 +333,10 @@ export const SEED_PATHS = [
   "/ueber-uns",
   "/ueber-uns/arbeitsweise",
   "/projekte",
+  // The booking engine's pages (scripts/seed-buchung-data.ts)
+  "/figuren",
+  "/figuren?alter=3-5",
+  "/figuren/eisprinzessin",
+  "/preise",
+  "/kindergeburtstag/aschaffenburg",
 ];

@@ -1,4 +1,5 @@
 import { shareImage } from "@/components/site/share-image";
+import { getFigur, getStadtSeite } from "@/data/katalog";
 import { getPageByPath, getProjektBySlug, getSiteSettings } from "@/data/queries";
 import { pageTrail } from "@/lib/breadcrumbs";
 
@@ -10,6 +11,8 @@ import { pageTrail } from "@/lib/breadcrumbs";
 const FIXED: Record<string, string> = {
   "/projekte": "Projekte",
   "/kontakt": "Kontakt",
+  "/figuren": "Wer kommt zur Feier?",
+  "/preise": "Preise",
 };
 
 async function titleOf(path: string, segments: string[]) {
@@ -17,6 +20,14 @@ async function titleOf(path: string, segments: string[]) {
   if (segments[0] === "projekte" && segments.length === 2) {
     const projekt = await getProjektBySlug(segments[1]!);
     return projekt ? { title: projekt.title, kicker: projekt.kunde } : null;
+  }
+  if (segments[0] === "figuren" && segments.length === 2) {
+    const figur = await getFigur(segments[1]!);
+    return figur ? { title: figur.name, kicker: "Figuren" } : null;
+  }
+  if (segments[0] === "kindergeburtstag" && segments.length === 2) {
+    const stadt = await getStadtSeite(segments[1]!);
+    return stadt ? { title: `Kindergeburtstag in ${stadt.name}` } : null;
   }
   const page = await getPageByPath(segments);
   if (!page) return null;

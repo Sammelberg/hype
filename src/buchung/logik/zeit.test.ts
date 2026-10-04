@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { berlinStart } from "./zeit";
+import { berlinStart, terminText } from "./zeit";
 
 describe("berlinStart", () => {
   it("reads a start time on the days around both clock changes", () => {
@@ -21,5 +21,18 @@ describe("berlinStart", () => {
   it("refuses what is not a day and a time", () => {
     expect(berlinStart("2026-13-01", "14:00")).toBeNull();
     expect(berlinStart("2026-11-14", "25:00")).toBeNull();
+  });
+});
+
+describe("terminText", () => {
+  it("names the German day and time of an instant, in winter and in summer", () => {
+    expect(terminText(new Date("2026-11-21T09:00:00.000Z"))).toEqual({
+      tag: "21. November",
+      wochentag: "Samstag",
+      uhrzeit: "10:00",
+    });
+    expect(terminText(new Date("2026-06-20T08:30:00.000Z")).uhrzeit).toBe("10:30");
+    // 23:30 UTC on Friday is already Saturday in Germany
+    expect(terminText(new Date("2026-11-13T23:30:00.000Z")).tag).toBe("14. November");
   });
 });

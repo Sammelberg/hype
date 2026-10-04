@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { berechneFenster } from "./fenster";
-import { naechsteFreie, startZeiten, waehleDarsteller } from "./raster";
+import {
+  freieDarsteller,
+  naechsteFreie,
+  samstageAb,
+  startZeiten,
+  waehleDarsteller,
+} from "./raster";
 
 const zeiten = (tag: string, von: number, bis: number, schritt = 30) =>
   startZeiten(tag, { ersterStartMin: von, letzterStartMin: bis, rasterMin: schritt }).map((d) =>
@@ -111,5 +117,26 @@ describe("naechsteFreie", () => {
     expect(
       naechsteFreie(kandidaten, um("13:00"), frei, 3).map((d) => d.toISOString().slice(11, 16)),
     ).toEqual(["11:00", "15:00", "10:00"]);
+  });
+});
+
+describe("freieDarsteller", () => {
+  it("names who is free for a Fenster, whatever they play", () => {
+    const f = fenster("2026-11-14T16:00:00.000Z", 60, 45);
+    expect(freieDarsteller([1, 2], belegtWiesbaden, f)).toEqual([2]);
+    expect(freieDarsteller([1], [], f)).toEqual([1]);
+  });
+});
+
+describe("samstageAb", () => {
+  it("lists the coming Saturdays in German days, today included when it is one", () => {
+    // Thursday 12 November 2026, evening in Germany
+    expect(samstageAb(new Date("2026-11-12T20:00:00.000Z"), 3)).toEqual([
+      "2026-11-14",
+      "2026-11-21",
+      "2026-11-28",
+    ]);
+    // Saturday 14 November, 00:30 in Germany is still that Saturday
+    expect(samstageAb(new Date("2026-11-13T23:30:00.000Z"), 1)).toEqual(["2026-11-14"]);
   });
 });

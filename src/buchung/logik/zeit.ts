@@ -20,3 +20,15 @@ export function berlinStart(tag: string, uhrzeit: string): Date | null {
   const frueher = new Date(t.getTime() - STUNDE);
   return zeigt(frueher, tag, uhrzeit) ? frueher : t;
 }
+
+const TAG_TEXT = new Intl.DateTimeFormat("de-DE", {
+  timeZone: "Europe/Berlin",
+  day: "numeric",
+  month: "long",
+});
+const WOCHENTAG = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "long" });
+
+/** An instant as the site names it: „21. November“, „Samstag“, „10:00“, in German time. */
+export function terminText(t: Date) {
+  return { tag: TAG_TEXT.format(t), wochentag: WOCHENTAG.format(t), uhrzeit: berlinUhrzeit(t) };
+}

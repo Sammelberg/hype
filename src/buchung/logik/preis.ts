@@ -5,6 +5,16 @@ import { rundeCent } from "../../buero/logik/geld";
 import { KLEINUNTERNEHMER_HINWEIS } from "../../buero/logik/xrechnung";
 import type { PreisPosition } from "./typen";
 
+const ganz = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
+const genau = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
+
+/** A price as the site shows it: „149 €“, cents only where there are some („39,50 €“). */
+export const preisText = (cent: number) => (cent % 100 === 0 ? ganz : genau).format(cent / 100);
+
 export const ENDPREIS_HINWEIS = "Alle Preise sind Endpreise inkl. gesetzlicher MwSt.";
 
 export type PreisAngebot = {

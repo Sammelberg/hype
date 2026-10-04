@@ -20,14 +20,17 @@ test("the header lists every section and opens a section's pages", async ({ page
   await page.goto("/ueber-uns/arbeitsweise");
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
   await expect(nav.getByRole("button", { name: "Über uns" })).toBeVisible();
-  // Projekte opens a menu once there are projects; the seed has none (real ones are entered in
-  // the admin), so here it may be a plain link.
-  await expect(
-    nav
-      .getByRole("button", { name: "Projekte" })
-      .or(nav.getByRole("link", { name: "Projekte", exact: true })),
-  ).toBeVisible();
-  // Kontakt is the one filled button at the end; the logo leads home.
+  // The catalogue and the prices lead; „Jetzt buchen“ is the one filled button at the end, Kontakt
+  // a plain section; the logo leads home.
+  await expect(nav.getByRole("link", { name: "Figuren", exact: true })).toHaveAttribute(
+    "href",
+    "/figuren",
+  );
+  await expect(nav.getByRole("link", { name: "Preise", exact: true })).toHaveAttribute(
+    "href",
+    "/preise",
+  );
+  await expect(nav.getByRole("link", { name: "Jetzt buchen" })).toHaveAttribute("href", "/buchen");
   await expect(nav.getByRole("link", { name: "Kontakt" })).toHaveAttribute("href", "/kontakt");
   await expect(
     page.getByRole("banner").getByRole("link", { name: seedSettings.siteName }),
@@ -79,16 +82,21 @@ test("the phone menu opens, traps focus, closes on Escape and leads to a page", 
   await button.click();
   await expect(menu.getByRole("link", { name: "Arbeitsweise" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Kontakt" })).toHaveAttribute("href", "/kontakt");
-  await menu.getByRole("link", { name: "Projekte", exact: true }).click();
-  await expect(page).toHaveURL(/\/projekte$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Projekte");
+  await menu.getByRole("link", { name: "Figuren", exact: true }).click();
+  await expect(page).toHaveURL(/\/figuren$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Wer kommt zur Feier?");
   await expect(menu).toBeHidden();
 });
 
 test("the footer links every page of the site", async ({ page }) => {
   await page.goto("/");
   const footer = page.getByRole("contentinfo");
-  for (const path of SEED_PATHS) {
+  // Every page of the site's structure; a Figur, a filtered catalogue and kern's /projekte (no
+  // place on a party site) are reached from their lists, not from the footer.
+  const seiten = SEED_PATHS.filter(
+    (p) => !p.includes("?") && !p.startsWith("/figuren/") && p !== "/projekte",
+  );
+  for (const path of seiten) {
     await expect(footer.locator(`a[href="${path}"]`).first()).toBeVisible();
   }
 });

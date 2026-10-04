@@ -30,7 +30,7 @@ export function Faq({
         }}
       />
       <div className="page-container py-16 sm:py-24">
-        <h2 id={id} className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+        <h2 id={id} className="font-hand text-3xl font-semibold text-balance sm:text-5xl">
           {title}
         </h2>
         <div className="mt-8 max-w-3xl divide-y border-y">

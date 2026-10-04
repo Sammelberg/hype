@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { abPreisCent, preisAngebot } from "./preis";
+import { abPreisCent, preisAngebot, preisText } from "./preis";
 
 describe("preisAngebot", () => {
   it("lists package, travel and extras line by line, with the total and the deposit", () => {
@@ -71,5 +71,13 @@ describe("abPreisCent", () => {
       ]),
     ).toBe(14900);
     expect(abPreisCent([{ preisCent: null, nurAnfrage: true }])).toBeNull();
+  });
+});
+
+describe("preisText", () => {
+  it("shows whole euros without cents and keeps cents where there are some", () => {
+    expect(preisText(14900)).toBe("149\u00a0€");
+    expect(preisText(3950)).toBe("39,50\u00a0€");
+    expect(preisText(0)).toBe("0\u00a0€");
   });
 });
