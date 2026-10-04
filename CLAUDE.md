@@ -122,7 +122,7 @@ Load the skill before starting the work.
 
 `minimalist-ui` and `industrial-brutalist-ui` only on explicit request. `web-design-engineer` is for standalone HTML prototypes.
 
-**Where skills live.** Every skill in the table is in `.claude/skills/`: project skills plus core skills vendored from `~/.claude/skills` (list: `skill-router/vendored-skills.txt`; refresh with `skill-router/scripts/vendor-skills.sh`). The library behind the catalog and the router is local symlinks (`.claude/skills-library/`, gitignored): absent in CI, cloud sessions and fresh clones until `skill-router/scripts/link-library.sh` runs. Project rules win over any skill.
+**Where skills live.** Every skill in the table is in `.claude/skills/`: project skills plus core skills vendored from `~/.claude/skills` (list: `skill-router/vendored-skills.txt`; refresh with `skill-router/scripts/vendor-skills.sh`). The library behind the catalog and the router (~480 skills) lives in the repository `Sammelberg/skills`; `skill-router/scripts/link-library.sh` links it into `.claude/skills-library/` (gitignored) — from the local copy `~/Schreibtisch/claude/.claude` where it exists, otherwise from a clone of `Sammelberg/skills` in `.claude/.skills-quelle/` (gitignored; a cloud session needs that repository attached). Run it once in a fresh clone or cloud session before using the catalog. A skill improved here goes to `Sammelberg/skills` too. Project rules win over any skill.
 
 ## Data sovereignty (hard rule)
 

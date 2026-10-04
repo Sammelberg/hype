@@ -21,6 +21,7 @@ next-env.d.ts
 
 # Local skill library — symlinks into ~/Schreibtisch/claude, machine-specific (see skill-router).
 /.claude/skills-library/
+/.claude/.skills-quelle/
 
 # Python bytecode (skill-router scripts)
 __pycache__/
