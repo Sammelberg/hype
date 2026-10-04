@@ -8,6 +8,7 @@ import {
   PaketSchema,
   StadtSchema,
   slugAus,
+  SperreSchema,
   ZoneSchema,
 } from "./schemas";
 
@@ -176,5 +177,22 @@ describe("slugAus", () => {
     expect(slugAus("Superheld in Rot")).toBe("superheld-in-rot");
     expect(slugAus("Märchenfee & Zauberer")).toBe("maerchenfee-zauberer");
     expect(slugAus("  Weißer Bär!  ")).toBe("weisser-baer");
+  });
+});
+
+describe("SperreSchema", () => {
+  it("wants the end after the start, across days too", () => {
+    const sperre = {
+      darstellerId: 1,
+      vonTag: "2026-11-20",
+      vonZeit: "18:00",
+      bisTag: "2026-11-20",
+      bisZeit: "09:00",
+      grund: "",
+    };
+    expect(fehler(SperreSchema.safeParse(sperre))).toMatchObject({
+      bisZeit: "Das Ende muss nach dem Beginn liegen.",
+    });
+    expect(SperreSchema.safeParse({ ...sperre, bisTag: "2026-11-21" }).success).toBe(true);
   });
 });

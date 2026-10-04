@@ -46,6 +46,8 @@ export const AUDIT_ACTIONS = {
   "email.passwort-geloescht": "E-Mail-Passwort gelöscht",
   aufbewahrung: "Aufbewahrungsfristen angewendet",
   "buchung.angelegt": "Buchung angelegt",
+  "buchung.status": "Buchungsstatus geändert",
+  "buchung.storniert": "Buchung storniert",
   "darsteller.gesperrt": "Zeit eines Darstellers gesperrt",
 } as const;
 

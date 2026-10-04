@@ -10,7 +10,7 @@ import { tagePlus } from "../../buero/logik/ablauf";
 import { naechsteNummer } from "../../buero/daten/basis";
 import { getFirma } from "../../buero/daten/firma";
 import { betragAusCent, centAusBetrag } from "../../buero/logik/geld";
-import { berlinTag, wochenTage } from "../../buero/logik/kalender";
+import { berlinTag } from "../../buero/logik/kalender";
 import { writeAudit } from "../../cms/audit/log";
 import type { Actor } from "../../cms/audit/types";
 import { db, type Db, type Tx } from "../../cms/db/client";
@@ -44,6 +44,7 @@ import type {
   Sprache,
   ZahlungAdapterName,
 } from "../logik/typen";
+import { woche } from "../logik/woche";
 import { berlinStart } from "../logik/zeit";
 import { BuchungFehler } from "./basis";
 
@@ -176,17 +177,8 @@ async function verfallenLassen(tx: Tx, jetzt: Date, nurDarsteller?: number[]) {
   return ids;
 }
 
-/** The German week of a day, as instants: Monday 00:00 to the next Monday 00:00. */
-function woche(beginn: Date) {
-  const tage = wochenTage(berlinTag(beginn));
-  return {
-    von: berlinStart(tage[0]!, "00:00")!,
-    bis: berlinStart(tagePlus(tage[6]!, 1), "00:00")!,
-  };
-}
-
 async function minutenDieseWoche(ids: number[], beginn: Date, jetzt: Date, client: Db | Tx) {
-  const w = woche(beginn);
+  const w = woche(berlinTag(beginn));
   const minuten = new Map<number, number>();
   for (const b of await aktiveBelegungen(ids, w.von, w.bis, jetzt, client)) {
     if (b.art !== "einsatz") continue;

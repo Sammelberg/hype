@@ -212,3 +212,54 @@ export const EinstellungenSchema = z
   });
 export type EinstellungenInput = z.input<typeof EinstellungenSchema>;
 export type Einstellungen = z.output<typeof EinstellungenSchema>;
+
+const tag = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Bitte ein Datum wählen.");
+const id = (was: string) =>
+  z
+    .number({ error: `Bitte ${was} wählen.` })
+    .int()
+    .positive(`Bitte ${was} wählen.`);
+
+/** An order taken by phone or Instagram, entered by the owner: confirmed at once. */
+export const ManuelleBuchungSchema = z.object({
+  figurId: id("eine Figur"),
+  zweiteFigurId: z.number().int().positive().nullable(),
+  paketId: id("ein Paket"),
+  extraIds: z.array(z.number().int().positive()),
+  stadtId: id("einen Ort"),
+  tag,
+  uhrzeit,
+  quelle: z.enum(["telefon", "instagram", "admin"]),
+  zahlungsart: z.enum(["rechnung", "mollie"]),
+  kontaktName: text("den Namen"),
+  kontaktEmail: z.email("Bitte eine gültige E-Mail-Adresse."),
+  kontaktTelefon: optional(40),
+  strasse: optional(300),
+  plz: optional(10),
+  ort: optional(200),
+  kindName: optional(100),
+  kindAlter: ganzzahl(0, 18).nullable(),
+  kinderAnzahl: ganzzahl(1, 200).nullable(),
+  notizKunde: langtext,
+});
+export type ManuelleBuchungInput = z.input<typeof ManuelleBuchungSchema>;
+
+/** Time off for a Darsteller, in German days and times. */
+export const SperreSchema = z
+  .object({
+    darstellerId: id("einen Darsteller"),
+    vonTag: tag,
+    vonZeit: uhrzeit,
+    bisTag: tag,
+    bisZeit: uhrzeit,
+    grund: optional(300),
+  })
+  .superRefine((s, ctx) => {
+    if (`${s.bisTag}T${s.bisZeit}` <= `${s.vonTag}T${s.vonZeit}`)
+      ctx.addIssue({
+        code: "custom",
+        path: ["bisZeit"],
+        message: "Das Ende muss nach dem Beginn liegen.",
+      });
+  });
+export type SperreInput = z.input<typeof SperreSchema>;

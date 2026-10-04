@@ -17,7 +17,9 @@ import {
   ListChecksIcon,
   InboxIcon,
   LayoutDashboardIcon,
+  CalendarRangeIcon,
   MapIcon,
+  PartyPopperIcon,
   PackageIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
@@ -70,6 +72,18 @@ export const NAV_GROUPS: NavGroup[] = [
     // The booking engine's master data: who comes, for how long, where to, by which rules.
     label: "Buchung",
     items: [
+      {
+        href: "/admin/buchung/kalender",
+        label: "Wochenplan",
+        icon: CalendarRangeIcon,
+        keywords: "kalender woche einsaetze sperren",
+      },
+      {
+        href: "/admin/buchung/buchungen",
+        label: "Buchungen",
+        icon: PartyPopperIcon,
+        keywords: "feiern auftraege reservierungen telefon export",
+      },
       {
         href: "/admin/buchung/figuren",
         label: "Figuren",

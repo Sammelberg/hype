@@ -1,4 +1,4 @@
-import { PlusIcon, SparklesIcon } from "lucide-react";
+import { PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -70,13 +70,16 @@ export default async function FigurenPage() {
                   <CardFooter className="flex-wrap gap-2">
                     {f.aktiv ? null : <Badge variant="secondary">Deaktiviert</Badge>}
                     {f.darsteller === 0 ? (
-                      <Badge variant="destructive">Kein Darsteller</Badge>
+                      <Badge variant="outline">
+                        <TriangleAlertIcon aria-hidden="true" /> Kein Darsteller
+                      </Badge>
                     ) : (
                       <Badge variant="outline">{f.darsteller} Darsteller</Badge>
                     )}
                     {f.fotos < 3 ? (
-                      <Badge variant="destructive">
-                        {f.fotos} {f.fotos === 1 ? "Foto" : "Fotos"}
+                      <Badge variant="outline">
+                        <TriangleAlertIcon aria-hidden="true" /> {f.fotos}{" "}
+                        {f.fotos === 1 ? "Foto" : "Fotos"} (mind. 3)
                       </Badge>
                     ) : (
                       <Badge variant="outline">{f.fotos} Fotos</Badge>

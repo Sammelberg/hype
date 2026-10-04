@@ -36,12 +36,32 @@ export const BUCHUNG_STATUS = [
   "abgeschlossen",
 ] as const;
 export type BuchungStatus = (typeof BUCHUNG_STATUS)[number];
+export const STATUS_NAMEN: Record<BuchungStatus, string> = {
+  anfrage: "Anfrage",
+  reserviert: "Reserviert",
+  bestaetigt: "Bestätigt",
+  abgelehnt: "Abgelehnt",
+  verfallen: "Verfallen",
+  storniert: "Storniert",
+  abgeschlossen: "Abgeschlossen",
+};
 
 export const BUCHUNG_QUELLEN = ["web", "telefon", "instagram", "admin"] as const;
 export type BuchungQuelle = (typeof BUCHUNG_QUELLEN)[number];
+export const QUELLE_NAMEN: Record<BuchungQuelle, string> = {
+  web: "Website",
+  telefon: "Telefon",
+  instagram: "Instagram",
+  admin: "Verwaltung",
+};
 
 export const ZAHLUNG_ADAPTER = ["mollie", "rechnung", "test"] as const;
 export type ZahlungAdapterName = (typeof ZAHLUNG_ADAPTER)[number];
+export const ZAHLUNG_NAMEN: Record<ZahlungAdapterName, string> = {
+  mollie: "Mollie",
+  rechnung: "Rechnung",
+  test: "Test",
+};
 
 /** One line of the price a booking was offered at, frozen into the booking. */
 export type PreisPosition = {

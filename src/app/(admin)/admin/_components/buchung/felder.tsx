@@ -14,6 +14,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { MediaDoc } from "@/cms/content/types";
 import { MediaPicker } from "../media-picker";
@@ -210,6 +211,46 @@ export function FotoFeld<T extends FieldValues>({
           </div>
         );
       }}
+    />
+  );
+}
+
+/** A German wall-clock time („14:30“), in five-minute steps. */
+export function UhrzeitFeld<T extends FieldValues>({
+  control,
+  name,
+  label,
+  description,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- forms whose schema transforms have another output type
+  control: Control<T, any, any>;
+  name: Path<T>;
+  label: string;
+  description?: string;
+}) {
+  const id = feldId(name);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid || undefined}>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Input
+            id={id}
+            type="time"
+            step={300}
+            name={field.name}
+            ref={field.ref}
+            onBlur={field.onBlur}
+            value={(field.value as string | null) ?? ""}
+            onChange={(e) => field.onChange(e.target.value)}
+            aria-invalid={fieldState.invalid || undefined}
+          />
+          {description ? <FieldDescription>{description}</FieldDescription> : null}
+          {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}
+        </Field>
+      )}
     />
   );
 }
