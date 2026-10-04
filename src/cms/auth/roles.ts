@@ -18,6 +18,7 @@ export const isAdmin = (user: { role: Role }) => user.role === "admin";
 // Admin-only areas below /admin, by path prefix. The pages check on their own; this list only
 // decides what the navigation shows.
 export const ADMIN_ONLY = [
+  "/admin/buchung",
   "/admin/kunden",
   "/admin/angebote",
   "/admin/auftraege",

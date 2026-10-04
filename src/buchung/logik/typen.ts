@@ -9,9 +9,22 @@ export const FIGUR_KATEGORIEN = [
   "saisonal",
 ] as const;
 export type FigurKategorie = (typeof FIGUR_KATEGORIEN)[number];
+export const KATEGORIE_NAMEN: Record<FigurKategorie, string> = {
+  superhelden: "Superhelden",
+  prinzessinnen: "Prinzessinnen",
+  tiere: "Tiere",
+  clowns: "Clowns",
+  saisonal: "Saisonal",
+};
 
 export const SPRACHEN = ["de", "uk", "ru", "en"] as const;
 export type Sprache = (typeof SPRACHEN)[number];
+export const SPRACH_NAMEN: Record<Sprache, string> = {
+  de: "Deutsch",
+  uk: "Ukrainisch",
+  ru: "Russisch",
+  en: "Englisch",
+};
 
 export const BUCHUNG_STATUS = [
   "anfrage",
