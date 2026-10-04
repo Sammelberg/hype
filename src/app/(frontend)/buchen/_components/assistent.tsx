@@ -97,7 +97,7 @@ export function BuchenAssistent({
   const [extraIds, setExtraIds] = useState<number[]>([]);
   const [kurzfristig, setKurzfristig] = useState(false);
   const [seite, setSeite] = useState(0);
-  const [angaben, setAngaben] = useState<Angaben>(LEER);
+  const [angaben, setAngaben] = useState<Angaben>({ ...LEER, sprache: start.sprache ?? "" });
   const [zahlungsart, setZahlungsart] = useState<"mollie" | "rechnung">(
     daten.zahlungOnline ? "mollie" : "rechnung",
   );
@@ -240,7 +240,9 @@ export function BuchenAssistent({
       kindName: angaben.kindName,
       kindAlter: zahl(angaben.kindAlter),
       kinderAnzahl: zahl(angaben.kinderAnzahl),
-      sprache: angaben.sprache || null,
+      // A language from the link counts only if the chosen Figur plays in it.
+      sprache:
+        angaben.sprache && figur?.sprachen.includes(angaben.sprache) ? angaben.sprache : null,
       notizKunde: angaben.notizKunde,
       bedingungen,
     };

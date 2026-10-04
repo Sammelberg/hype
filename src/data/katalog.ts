@@ -10,6 +10,7 @@ import {
   preisListe,
   stadtSeite,
 } from "@/buchung/daten/katalog";
+import { getFirma } from "@/buero/daten/firma";
 
 // The site's reads from the booking engine, cached per request like src/data/queries.ts. Not
 // draft-aware: Figuren, prices and towns have no drafts; the admin's changes show on the next
@@ -24,3 +25,5 @@ export const getStadtSeite = cache((slug: string) => stadtSeite(slug));
 export const getFreieSamstage = cache((figurId?: number) =>
   naechsteFreieSamstage({ jetzt: new Date(), ...(figurId ? { figurIds: [figurId] } : {}) }),
 );
+// The owner's details from /admin/firma, for the structured data of the home page.
+export const getFirmenDaten = cache(async () => (await getFirma()).firma);

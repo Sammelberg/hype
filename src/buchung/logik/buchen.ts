@@ -3,7 +3,7 @@
 // Anfrage is explained. Pure, client-safe: the form and the server action use the same functions.
 import { preisAngebot, type PreisAngebot } from "./preis";
 import type { AnfrageGrund } from "./regeln";
-import type { Sprache } from "./typen";
+import { SPRACHEN, type Sprache } from "./typen";
 
 export type BuchungsFigur = {
   id: number;
@@ -62,7 +62,13 @@ export type BuchungsDaten = {
   zahlungOnline: boolean;
 };
 
-export type Vorauswahl = { figurId: number | null; paketId: number | null; stadtId: number | null };
+export type Vorauswahl = {
+  figurId: number | null;
+  paketId: number | null;
+  stadtId: number | null;
+  /** The language the Figur should play in (from the Ukrainian and Russian landing pages). */
+  sprache: Sprache | null;
+};
 
 const einer = (wert: string | string[] | undefined) =>
   typeof wert === "string" ? wert : undefined;
@@ -75,7 +81,15 @@ export function vorauswahl(
   const figur = d.figuren.find((f) => f.slug === einer(params.figur) && f.buchbar);
   const paket = d.pakete.find((p) => p.slug === einer(params.paket));
   const stadt = d.staedte.find((s) => s.slug === einer(params.ort));
-  return { figurId: figur?.id ?? null, paketId: paket?.id ?? null, stadtId: stadt?.id ?? null };
+  const sprache = (SPRACHEN as readonly string[]).includes(einer(params.sprache) ?? "")
+    ? (einer(params.sprache) as Sprache)
+    : null;
+  return {
+    figurId: figur?.id ?? null,
+    paketId: paket?.id ?? null,
+    stadtId: stadt?.id ?? null,
+    sprache,
+  };
 }
 
 /** A second Figur comes with a two-Figur Paket or the Extra „second Figur“. */

@@ -2,13 +2,21 @@ import type { Metadata } from "next";
 
 import { preisText } from "@/buchung/logik/preis";
 import { SPRACH_NAMEN, SPRACHEN } from "@/buchung/logik/typen";
+import { SPRACH_ALTERNATIVEN } from "@/lib/sprachen";
 import { terminText } from "@/buchung/logik/zeit";
 import { Reveal } from "@/components/motion/reveal";
 import { ClosingCta } from "@/components/site/closing-cta";
 import { Faq } from "@/components/site/faq";
 import { FigurenGalerie } from "@/components/site/figuren-galerie";
-import { getFreieSamstage, getKatalog, getPreise, getStaedte } from "@/data/katalog";
+import {
+  getFirmenDaten,
+  getFreieSamstage,
+  getKatalog,
+  getPreise,
+  getStaedte,
+} from "@/data/katalog";
 import { getHomeContent, getSiteSettings } from "@/data/queries";
+import { anbieterJsonLd } from "@/lib/anbieter";
 import { absoluteUrl, JsonLd, mediaUrl } from "@/lib/seo";
 
 import { Einladung, type EinladungsOrt } from "./_components/einladung";
@@ -24,7 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     ...(home?.meta?.title ? { title: { absolute: home.meta.title } } : {}),
     description: home?.meta?.description || settings.description || undefined,
-    alternates: { canonical: "/" },
+    // The same offer for Ukrainian and Russian speakers: one landing page each (/uk, /ru).
+    alternates: { canonical: "/", languages: SPRACH_ALTERNATIVEN },
     ...(image ? { openGraph: { images: [{ url: image }] } } : {}),
   };
 }
@@ -38,13 +47,14 @@ const satz = (woerter: string[]) =>
   woerter.length > 1 ? `${woerter.slice(0, -1).join(", ")} oder ${woerter.at(-1)}` : woerter[0];
 
 export default async function HomePage() {
-  const [settings, { sections }, staedte, preise, katalog, samstage] = await Promise.all([
+  const [settings, { sections }, staedte, preise, katalog, samstage, firma] = await Promise.all([
     getSiteSettings(),
     getHomeContent(),
     getStaedte(),
     getPreise(),
     getKatalog(),
     getFreieSamstage(),
+    getFirmenDaten(),
   ]);
   const { hero, steps, principles, faq } = sections;
 
@@ -66,6 +76,13 @@ export default async function HomePage() {
 
   // What every visit promises, from the catalogue itself rather than a text that can go stale.
   const dauern = preise.pakete.flatMap((p) => (p.dauerMin && !p.nurAnfrage ? [p.dauerMin] : []));
+  const paketPreise = preise.pakete.flatMap((p) =>
+    p.preisCent !== null && !p.nurAnfrage ? [p.preisCent] : [],
+  );
+  const preisSpanne =
+    paketPreise.length > 0
+      ? { vonCent: Math.min(...paketPreise), bisCent: Math.max(...paketPreise) }
+      : null;
   const sprachen = SPRACHEN.filter((sp) => katalog.some((f) => f.sprachen.includes(sp)));
   const fakten = [
     dauern.length > 0
@@ -80,13 +97,15 @@ export default async function HomePage() {
   return (
     <main>
       <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
+        data={anbieterJsonLd({
           name: settings.siteName,
           url: absoluteUrl("/"),
-          ...(settings.description ? { description: settings.description } : {}),
-        }}
+          description: settings.description ?? null,
+          firma,
+          staedte: staedte.filter((s) => !s.zone.nurAnfrage).map((s) => s.name),
+          preise: preisSpanne,
+          sprachen,
+        })}
       />
 
       <section aria-labelledby="start-titel" data-cms-zone="kopf">

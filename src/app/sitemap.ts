@@ -29,7 +29,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   // The booking engine's pages (src/buchung): the catalogue, the price list, every Figur and
   // every town with a landing page of its own.
+  // The three language versions of the home page name each other (hreflang).
+  const sprachen = {
+    languages: { "de-DE": absoluteUrl("/"), uk: absoluteUrl("/uk"), ru: absoluteUrl("/ru") },
+  };
   const buchung = [
+    { url: absoluteUrl("/uk"), priority: 0.7, alternates: sprachen },
+    { url: absoluteUrl("/ru"), priority: 0.7, alternates: sprachen },
     { url: absoluteUrl("/figuren"), priority: 0.8 },
     { url: absoluteUrl("/preise"), priority: 0.8 },
     ...figuren.map((f) => ({ url: absoluteUrl(`/figuren/${f.slug}`), priority: 0.7 })),

@@ -94,6 +94,17 @@ export function SiteFooter({
                 Suche
               </Verweis>
             </li>
+            {/* The landing pages for Ukrainian- and Russian-speaking parents, in their language. */}
+            <li>
+              <Verweis href={"/uk" as never} lang="uk" hrefLang="uk" className={KLEIN}>
+                Українською
+              </Verweis>
+            </li>
+            <li>
+              <Verweis href={"/ru" as never} lang="ru" hrefLang="ru" className={KLEIN}>
+                По-русски
+              </Verweis>
+            </li>
             {socialLinks?.map((s) => (
               <li key={s.id ?? s.url}>
                 <a href={s.url} rel="me noopener" className={KLEIN}>

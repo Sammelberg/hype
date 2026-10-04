@@ -58,18 +58,24 @@ describe("vorauswahl", () => {
   };
 
   it("starts the form with what the link names", () => {
-    expect(vorauswahl({ figur: "pirat", paket: "klassik", ort: "hanau" }, daten)).toEqual({
+    expect(
+      vorauswahl({ figur: "pirat", paket: "klassik", ort: "hanau", sprache: "uk" }, daten),
+    ).toEqual({
       figurId: 1,
       paketId: 1,
       stadtId: 7,
+      sprache: "uk",
     });
   });
 
   it("drops what it does not know or cannot book", () => {
-    expect(vorauswahl({ figur: "fee", paket: ["klassik"], ort: "mond" }, daten)).toEqual({
+    expect(
+      vorauswahl({ figur: "fee", paket: ["klassik"], ort: "mond", sprache: "fr" }, daten),
+    ).toEqual({
       figurId: null,
       paketId: null,
       stadtId: null,
+      sprache: null,
     });
   });
 });
