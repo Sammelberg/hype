@@ -20,5 +20,20 @@ services:
       timeout: 3s
       retries: 10
 
+  # The test mailbox: the site's e-mails land here instead of going out (SMTP on 1025, no
+  # encryption — the admin allows that only for local hosts), web view and API on
+  # http://localhost:8025. Nothing leaves the machine.
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+      # No release check against GitHub.
+      MP_DISABLE_VERSION_CHECK: "true"
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
 volumes:
   pgdata:

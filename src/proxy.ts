@@ -2,8 +2,11 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { SESSION_COOKIE } from "@/cms/auth/cookie";
 
-// Paths below /admin that need no session.
-const OPEN = new Set(["/admin/login"]);
+// Paths below /admin that need no session: the login and „Passwort vergessen“ with its links.
+const isOpen = (pathname: string) =>
+  pathname === "/admin/login" ||
+  pathname === "/admin/passwort-vergessen" ||
+  pathname.startsWith("/admin/passwort-vergessen/");
 
 // Every admin request: without a session cookie a page request goes straight to the login,
 // before any page code runs. This is only the first gate: the cookie may be stale or forged,
@@ -13,7 +16,7 @@ const OPEN = new Set(["/admin/login"]);
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPage = request.method === "GET" || request.method === "HEAD";
-  if (isPage && !OPEN.has(pathname) && !request.cookies.has(SESSION_COOKIE)) {
+  if (isPage && !isOpen(pathname) && !request.cookies.has(SESSION_COOKIE)) {
     const login = new URL("/admin/login", request.url);
     if (pathname !== "/admin") login.searchParams.set("weiter", pathname);
     return NextResponse.redirect(login);

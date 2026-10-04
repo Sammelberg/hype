@@ -22,9 +22,11 @@ import {
 import { upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
+import { getMailSettings, saveMailSettings, setMailPassword } from "../src/cms/mail/settings";
 import type { PageSections, SiteSettings } from "../src/cms/content/types";
 import {
   lexical,
+  SEED_MAILBOX,
   SEED_NAV_ORDER,
   SEED_REDIRECT,
   SEED_RENAMED,
@@ -202,6 +204,15 @@ async function main() {
       toProjektId: null,
       toUrl: null,
     });
+  }
+
+  // The local test mailbox, once: never over a mailbox set up in /admin.
+  const mailbox = await getMailSettings();
+  const mailboxSet = Boolean(mailbox.settings.provider) || mailbox.passwordSaved;
+  if (process.env.MAIL_SECRET && !mailboxSet) {
+    await saveMailSettings(SEED_MAILBOX.settings);
+    await setMailPassword(SEED_MAILBOX.password);
+    console.log("E-Mail-Versand auf das Test-Postfach (Mailpit, localhost:1025) gestellt.");
   }
 
   // Test account for the e2e run, never without the variable, never twice.

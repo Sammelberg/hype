@@ -24,6 +24,14 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U kern -d kern"
           --health-interval 5s --health-timeout 3s --health-retries 10
+      # The test mailbox the seed points the site at (e2e/mail.spec.ts reads it over its API).
+      mailpit:
+        image: axllent/mailpit:v1.31.3
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: "1"
+          MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+          MP_DISABLE_VERSION_CHECK: "true"
+        ports: ["1025:1025", "8025:8025"]
     env:
       DATABASE_URL: postgres://kern:kern@localhost:5432/kern
       # One port for the build, the e2e server (standalone server.js) and Playwright
@@ -33,6 +41,8 @@ jobs:
       NEXT_TELEMETRY_DISABLED: "1"
       E2E_ADMIN_PASSWORD: ci-only-e2e-admin-passwort
       FORM_SECRET: ci-only-form-secret-0123456789abcdef
+      MAIL_SECRET: ci-only-mail-secret-0123456789abcdef
+      MAILPIT_URL: http://localhost:8025
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

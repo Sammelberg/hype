@@ -10,6 +10,7 @@ secret() { openssl rand -base64 64 | tr -d '/+=\n' | cut -c1-"$1"; }
 if [ ! -f .env ]; then
   sed -e "s|^FORM_SECRET=$|FORM_SECRET=$(secret 48)|" \
     -e "s|^CRON_SECRET=$|CRON_SECRET=$(secret 48)|" \
+    -e "s|^MAIL_SECRET=$|MAIL_SECRET=$(secret 48)|" \
     -e "s|^POSTGRES_PASSWORD=$|POSTGRES_PASSWORD=$(secret 40)|" .env.example >.env
   chmod 600 .env
   echo "deploy/.env angelegt (Geheimnisse erzeugt). Domain prüfen: NEXT_PUBLIC_SERVER_URL."

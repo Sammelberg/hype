@@ -109,7 +109,7 @@ export const seedPages: SeedPage[] = [
   {
     // Written from what the template actually does (CLAUDE.md, data sovereignty): no cookies for
     // visitors, no third-party services, contact messages in our own database, deleted after six
-    // months, IONOS hosting, server logs kept 14 days. A project that changes any of it changes
+    // months, announced by mail through the owner's mailbox, IONOS hosting, server logs kept 14 days. A project that changes any of it changes
     // this text; the bracketed places are the owner's to fill before launch.
     slug: "datenschutz",
     title: "Datenschutzerklärung",
@@ -148,6 +148,11 @@ export const seedPages: SeedPage[] = [
       {
         kind: "p",
         text: "Wir löschen Ihre Nachricht, sobald Ihr Anliegen erledigt ist, spätestens sechs Monate nach ihrem Eingang; das geschieht automatisch. In unseren Datensicherungen bleibt sie danach noch höchstens zwei Wochen erhalten. Wird aus der Anfrage ein Auftrag, übernehmen wir die nötigen Angaben in unsere Kundenunterlagen und bewahren sie so lange auf, wie es handels- und steuerrechtliche Fristen verlangen.",
+      },
+      { kind: "h2", text: "E-Mail" },
+      {
+        kind: "p",
+        text: "Die Website versendet E-Mails über unser eigenes Postfach bei [E-Mail-Anbieter mit Anschrift]: eine Benachrichtigung an uns, wenn Sie das Kontaktformular nutzen (mit dem Inhalt Ihrer Nachricht), und Antworten oder Unterlagen, die wir Ihnen schicken. Der Anbieter verarbeitet die E-Mails in unserem Auftrag nach Art. 28 DSGVO. Welche E-Mails gesendet wurden (Empfänger, Betreff, Zeitpunkt), halten wir in einem Versandprotokoll fest; die E-Mails selbst liegen in unserem Postfach.",
       },
       { kind: "h2", text: "Verschlüsselung" },
       {
@@ -204,6 +209,22 @@ export const seedPages: SeedPage[] = [
   { slug: "kontakt", title: "Kontakt", content: [] },
 ];
 
+// The local test mailbox (Mailpit from docker-compose.yml, in CI a service): the seed points
+// „E-Mail-Versand“ at it once, only while no mailbox is set up and MAIL_SECRET is there, so a
+// mailbox entered in /admin is never replaced. Mails land on http://localhost:8025.
+export const SEED_MAILBOX = {
+  settings: {
+    provider: "andere",
+    fromAddress: "website@example.com",
+    fromName: seedSettings.siteName,
+    host: "localhost",
+    port: 1025,
+    security: "none",
+    notifyAddress: "anfragen@example.com",
+  },
+  password: "mailpit",
+} as const;
+
 // Rendered at /kontakt (looked up by title). Anrede: Sie.
 export const seedContactForm = {
   title: "Kontakt",
@@ -237,6 +258,9 @@ export const E2E_ADMIN = {
 
 // An editor next to it, for the role checks (e2e/admin-rollen.spec.ts); same password.
 export const E2E_REDAKTEUR = { email: "e2e-redaktion@example.com" };
+
+// An account only for „Passwort vergessen“ (e2e/mail.spec.ts): its password changes in the test.
+export const E2E_VERGESSEN = { email: "e2e-vergessen@example.com" };
 
 export type SeedProject = {
   slug: string;

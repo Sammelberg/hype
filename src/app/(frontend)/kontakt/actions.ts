@@ -1,9 +1,11 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 
 import { validateSubmission, type ContactField } from "./_lib/validation";
 import { createSubmission } from "@/cms/content/forms";
+import { announceAnfrage } from "@/cms/mail/anfrage";
 import { clientIp } from "@/cms/security/client-ip";
 import { hitRateLimit, LIMITS } from "@/cms/security/rate-limit";
 import { getContactForm } from "@/data/queries";
@@ -44,7 +46,13 @@ export async function submitContact(_: ContactState, formData: FormData): Promis
 
   try {
     // Straight into our own table; there is no public API for messages.
-    await createSubmission(form.id, result.data);
+    const id = await createSubmission(form.id, result.data);
+    // After the answer: a slow or refusing mail server never delays or fails the visitor's message.
+    after(() =>
+      announceAnfrage({ id, formTitle: form.title, fields: form.fields, data: result.data }).catch(
+        (error) => console.error("Benachrichtigung über die neue Anfrage nicht gesendet", error),
+      ),
+    );
     return { status: "success" };
   } catch (error) {
     console.error("Kontaktformular konnte nicht gespeichert werden", error);

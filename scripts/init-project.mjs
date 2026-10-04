@@ -184,14 +184,16 @@ if (existsSync(file(".env"))) {
   console.log(
     "\n.env existiert bereits und bleibt unverändert. Neue Werte:\n" +
       `  DATABASE_URL=${databaseUrl}\n  NEXT_PUBLIC_SERVER_URL=http://localhost:${appPort}\n` +
-      "  FORM_SECRET=<openssl rand -base64 32>, falls noch nicht gesetzt",
+      "  FORM_SECRET, MAIL_SECRET=<openssl rand -base64 32>, falls noch nicht gesetzt",
   );
 } else {
   // A fresh secret per copy; never one that sits in the repository.
   const secret = randomBytes(32).toString("base64");
   writeFileSync(
     file(".env"),
-    read(".env.example").replace(/^FORM_SECRET=.*$/m, `FORM_SECRET=${secret}`),
+    read(".env.example")
+      .replace(/^FORM_SECRET=.*$/m, `FORM_SECRET=${secret}`)
+      .replace(/^MAIL_SECRET=.*$/m, `MAIL_SECRET=${randomBytes(32).toString("base64")}`),
   );
   changed.push(".env (neu)");
 }

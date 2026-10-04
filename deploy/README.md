@@ -32,7 +32,9 @@ HTTPS для всех сайтов этого сервера даёт **общи
    `~/.ssh/config` для `github.com-start`).
 3. **Код:** `git clone git@github.com:Sammelberg/<projekt>.git ~/kern`.
 4. **Настройки:** `~/kern/deploy/einrichten.sh` создаёт `deploy/.env` с новыми
-   секретами (пароль базы, `FORM_SECRET`, `CRON_SECRET`) и ставит в crontab ночные задачи.
+   секретами (пароль базы, `FORM_SECRET`, `CRON_SECRET`, `MAIL_SECRET`) и ставит в crontab ночные
+   задачи. На уже настроенном сервере `MAIL_SECRET` добавить в `deploy/.env` вручную
+   (`openssl rand -base64 48 | tr -d '/+=' | cut -c1-48`), иначе пароль почтового ящика не сохранить.
 5. **Контент** (на своём компьютере, один раз): страницы, проект, настройки, редиректы и форма
    из локальной базы:
    `scripts/inhalt-exportieren.sh | ssh deploy@31.70.152.175 'kern/deploy/inhalt.sh'`.

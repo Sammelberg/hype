@@ -99,6 +99,13 @@
       "when": 1790904283880,
       "tag": "0013_home_band_previews",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791099130980,
+      "tag": "0014_email",
+      "breakpoints": true
     }
   ]
 }

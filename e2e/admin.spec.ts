@@ -161,6 +161,7 @@ test("the admin's screens have no accessibility violations", async ({ page }) =>
     "/admin/offene-posten",
     "/admin/steuerberater",
     "/admin/firma",
+    "/admin/email-versand",
   ]) {
     await check(path);
   }
@@ -178,4 +179,6 @@ test("the admin's screens have no accessibility violations", async ({ page }) =>
   await page.getByRole("button", { name: "Konto und Darstellung" }).click();
   await page.getByRole("menuitem", { name: "Abmelden" }).click();
   await check("/admin/login");
+  await check("/admin/passwort-vergessen");
+  await check("/admin/passwort-vergessen/kein-gueltiger-link");
 });

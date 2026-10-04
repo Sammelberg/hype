@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/cms/auth/guard";
 import { countUsers } from "@/cms/auth/users";
 import { getSiteSettings } from "@/cms/content/site-settings";
+import { mailStatus } from "@/cms/mail/send";
+import Link from "next/link";
 import { AuthCard } from "../../_components/auth-card";
 import { LoginForm } from "./login-form";
 
@@ -14,11 +16,12 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ weiter?: string }>;
 }) {
-  const [{ weiter }, user, users, settings] = await Promise.all([
+  const [{ weiter }, user, users, settings, mail] = await Promise.all([
     searchParams,
     getSessionUser(),
     countUsers(),
     getSiteSettings(),
+    mailStatus(),
   ]);
   if (user) redirect("/admin" as never);
   // No setup page: the first account is created on the server, so an empty database offers
@@ -38,7 +41,18 @@ export default async function LoginPage({
   }
   return (
     <AuthCard title="Anmelden" siteName={settings?.siteName ?? "Website"}>
-      <LoginForm next={weiter} />
+      <div className="flex flex-col gap-6">
+        <LoginForm next={weiter} />
+        {/* Only where a link can actually arrive; otherwise an admin hands out a password. */}
+        {mail.ready ? (
+          <Link
+            href={"/admin/passwort-vergessen" as never}
+            className="self-center text-sm underline underline-offset-4"
+          >
+            Passwort vergessen?
+          </Link>
+        ) : null}
+      </div>
     </AuthCard>
   );
 }

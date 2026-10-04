@@ -11,7 +11,7 @@ import { db } from "../src/cms/db/client";
 import { projekte, users } from "../src/cms/db/schema";
 import { removeFiles } from "../src/cms/media/store";
 import { getContactForm, purgeSubmissionsByValue, saveForm } from "../src/cms/content/forms";
-import { E2E_ADMIN, E2E_EMAIL, E2E_REDAKTEUR } from "./seed-data";
+import { E2E_ADMIN, E2E_EMAIL, E2E_REDAKTEUR, E2E_VERGESSEN } from "./seed-data";
 
 const url = new URL(process.env.DATABASE_URL ?? "");
 if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname) && process.env.CI !== "true") {
@@ -85,7 +85,7 @@ const colleagues = await db
   .returning({ id: users.id });
 if (colleagues.length) console.log(`Testkollegen gelöscht: ${colleagues.length}`);
 
-for (const email of [E2E_ADMIN.email, E2E_REDAKTEUR.email]) {
+for (const email of [E2E_ADMIN.email, E2E_REDAKTEUR.email, E2E_VERGESSEN.email]) {
   const account = await findUserByEmail(email);
   if (!account) continue;
   await deleteUser(account.id, { evenTheLast: true });

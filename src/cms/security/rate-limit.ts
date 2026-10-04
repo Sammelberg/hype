@@ -1,5 +1,5 @@
 // Rate limits on Postgres (cms.rate_limits), for the doors a stranger can knock on: sign-in,
-// the contact form, uploads. One atomic upsert per request: the row lock serialises parallel
+// the contact form, „Passwort vergessen“, uploads. One atomic upsert per request: the row lock serialises parallel
 // requests of one key, so no count is lost.
 import { lt, eq, sql } from "drizzle-orm";
 
@@ -14,6 +14,8 @@ export const LIMITS = {
   login: { limit: 20, windowSeconds: 600 },
   contact: { limit: 5, windowSeconds: 600 },
   upload: { limit: 60, windowSeconds: 600 },
+  // „Passwort vergessen“: each request may send a mail; a few an hour per address is plenty.
+  reset: { limit: 5, windowSeconds: 3600 },
 } satisfies Record<string, RateLimit>;
 
 export async function hitRateLimit(

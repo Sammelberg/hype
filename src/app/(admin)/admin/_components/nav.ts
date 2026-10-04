@@ -8,6 +8,7 @@ import {
   FileSignatureIcon,
   ReceiptIcon,
   ScrollTextIcon,
+  SendIcon,
   FileTextIcon,
   FileUserIcon,
   FolderKanbanIcon,
@@ -140,6 +141,12 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Firmendaten",
         icon: BuildingIcon,
         keywords: "steuernummer iban bank kleinunternehmer",
+      },
+      {
+        href: "/admin/email-versand",
+        label: "E-Mail-Versand",
+        icon: SendIcon,
+        keywords: "smtp postfach mail absender passwort benachrichtigung",
       },
       {
         href: "/admin/weiterleitungen",

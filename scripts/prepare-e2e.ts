@@ -4,7 +4,7 @@
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { db } from "../src/cms/db/client";
 import { rateLimits } from "../src/cms/db/schema";
-import { E2E_ADMIN, E2E_REDAKTEUR } from "./seed-data";
+import { E2E_ADMIN, E2E_REDAKTEUR, E2E_VERGESSEN } from "./seed-data";
 
 const url = new URL(process.env.DATABASE_URL ?? "");
 if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname) && process.env.CI !== "true") {
@@ -15,6 +15,7 @@ const password = process.env.E2E_ADMIN_PASSWORD ?? E2E_ADMIN.fallbackPassword;
 for (const account of [
   { email: E2E_ADMIN.email, name: "E2E Admin", role: "admin" as const },
   { email: E2E_REDAKTEUR.email, name: "E2E Redaktion", role: "redakteur" as const },
+  { email: E2E_VERGESSEN.email, name: "E2E Vergessen", role: "redakteur" as const },
 ]) {
   if (await findUserByEmail(account.email)) continue;
   await createUser({ ...account, password });

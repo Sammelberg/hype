@@ -15,6 +15,8 @@ export const AUDIT_ACTIONS = {
   "zugang.entsperrt": "Zugang entsperrt",
   "zugang.abgemeldet": "Überall abgemeldet",
   "zugang.geloescht": "Zugang gelöscht",
+  "zugang.passwort-link": "Link „Passwort vergessen“ gesendet",
+  "zugang.passwort-zurueckgesetzt": "Passwort über den Link neu gesetzt",
   "seite.veroeffentlicht": "Seite veröffentlicht",
   "seite.zurueckgezogen": "Seite zurückgezogen",
   "seite.geloescht": "Seite gelöscht",
@@ -38,6 +40,9 @@ export const AUDIT_ACTIONS = {
   "angebot.versendet": "Angebot versendet",
   "abo.vorbereitet": "Laufende Rechnungen vorbereitet",
   "export.steuerberater": "Export für den Steuerberater",
+  "email.eingerichtet": "E-Mail-Versand geändert",
+  "email.passwort-gesetzt": "E-Mail-Passwort gespeichert",
+  "email.passwort-geloescht": "E-Mail-Passwort gelöscht",
   aufbewahrung: "Aufbewahrungsfristen angewendet",
 } as const;
 

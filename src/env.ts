@@ -11,6 +11,10 @@ export const env = createEnv({
     // Lets the server's timer publish scheduled pages (/next/geplant, pnpm cms:geplant);
     // `openssl rand -base64 32`. Without it nothing is published on schedule.
     CRON_SECRET: z.string().min(32).optional(),
+    // Seals the mailbox password of „E-Mail-Versand“ (src/lib/email/secret.ts);
+    // `openssl rand -base64 32`. Without it no password is stored and nothing is sent; a new
+    // value means entering the mailbox password once more.
+    MAIL_SECRET: z.string().min(32).optional(),
   },
   client: {
     NEXT_PUBLIC_SERVER_URL: z.url(),

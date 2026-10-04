@@ -22,6 +22,7 @@ import {
 
 import type { LexicalDocument } from "../rich-text/schema";
 import type { FormField, MediaSizes, PageSections, SiteSettings } from "../content/types";
+import type { EmailKind, MailSettings } from "../mail/types";
 
 export const cms = pgSchema("cms");
 
@@ -112,6 +113,54 @@ export const rateLimits = cms.table(
     expiresAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
   },
   (t) => [index("rate_limits_expires_idx").on(t.expiresAt)],
+);
+
+// ---------------------------------------------------------------------------------------------
+// E-mail: the owner's mailbox the site sends through, what went out, password reset links.
+
+// One row (/admin/email-versand). The password is sealed with MAIL_SECRET (src/lib/email/secret.ts)
+// and kept apart from `data`, so reading the settings for the admin never carries it.
+export const mailSettings = cms.table(
+  "mail_settings",
+  {
+    id: integer().primaryKey(),
+    data: jsonb().$type<MailSettings>().notNull(),
+    passwordSealed: text(),
+    updatedAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [check("mail_settings_single", sql`${t.id} = 1`)],
+);
+
+// „Gesendete E-Mails“: one row per message the mail server accepted (src/cms/mail/send.ts).
+export const emailLog = cms.table(
+  "email_log",
+  {
+    id: serial().primaryKey(),
+    sentAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    to: varchar({ length: 500 }).notNull(),
+    subject: varchar({ length: 500 }).notNull(),
+    // EMAIL_KINDS (src/cms/mail/types.ts); text, so a project adds its kinds without a migration.
+    kind: text().$type<EmailKind>().notNull(),
+    sentById: integer().references(() => users.id, { onDelete: "set null" }),
+    messageId: varchar({ length: 500 }),
+  },
+  (t) => [index("email_log_sent_idx").on(t.sentAt)],
+);
+
+// „Passwort vergessen“: a one-time link by e-mail (src/cms/auth/reset.ts). Only the sha256 of the
+// token is stored; a used or expired row opens nothing and is purged with the retention job.
+export const passwordResets = cms.table(
+  "password_resets",
+  {
+    id: text().primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
+    usedAt: timestamp({ withTimezone: true, mode: "date" }),
+    createdAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [index("password_resets_user_idx").on(t.userId)],
 );
 
 // ---------------------------------------------------------------------------------------------
