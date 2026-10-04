@@ -214,7 +214,11 @@ edit("CLAUDE.md", [
   [/^This repo is a \*\*core template\*\*.*\n\n/m, ""],
   [/^- \*\*Site \/ owner:\*\* .*$/m, `- **Site / owner:** ${siteName} — ${owner}`],
 ]);
-edit("README.md", [[/^# .*$/m, `# ${siteName}`]]);
+edit("README.md", [
+  [/^# .*$/m, `# ${siteName}`],
+  // The backup groups and the production container carry the project's name (scripts/backup).
+  [new RegExp(`\\b${escape(oldName)}-(daten|anfragen|prod-postgres-1)\\b`, "g"), `${name}-$1`],
+]);
 
 // The production stack: compose project, container, image and database names, the checkout's folder
 // on the server, the edge's site file. The domain (example.de) is the owner's to set.
@@ -243,7 +247,8 @@ const reticleId = `${name}-${randomBytes(4).toString("hex")}`;
 edit(".reticle.json", [[/"projectId": ".*?"/, `"projectId": "${reticleId}"`]]);
 edit("src/components/dev/reticle-dev.tsx", [[/projectId: ".*?"/, `projectId: "${reticleId}"`]]);
 
-// The skill library is a set of local symlinks (gitignored); a GitHub clone arrives without it.
+// The skill library is linked, not committed (gitignored): from the local copy, else from a clone of
+// Sammelberg/skills (link-library.sh).
 const linkLibrary = file(".claude/skills/skill-router/scripts/link-library.sh");
 let libraryLinked = existsSync(file(".claude/skills-library/manifest.json"));
 if (!libraryLinked && existsSync(linkLibrary)) {
@@ -278,7 +283,7 @@ if (!graftBuilt) {
 if (!libraryLinked) {
   console.log(
     "\nSkill-Bibliothek nicht verknüpft: .claude/skills/skill-router/scripts/link-library.sh\n" +
-      "  (Quelle per SKILL_LIBRARY_SRC angeben).",
+      "  (Zugriff auf Sammelberg/skills nötig, oder Quelle per SKILL_LIBRARY_SRC angeben).",
   );
 }
 
