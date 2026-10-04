@@ -138,20 +138,22 @@ export class Scene {
   constructor(options: SceneOptions) {
     const { trigger, start = "top top", end = "bottom bottom", steps } = options;
     let current = -1;
-    // Only measures (and tells the steps); the browser plays the motion.
+    const tell = (self: ScrollTrigger) => {
+      if (!steps) return;
+      const step = stepAt(self.progress, steps.count);
+      if (step === current) return;
+      current = step;
+      steps.onStep(step);
+    };
+    // Only measures (and tells the steps: on every measure too, so the first step is known
+    // before the page moves); the browser plays the motion.
     this.trigger = ScrollTrigger.create({
       trigger,
       start,
       end,
       invalidateOnRefresh: true,
-      onUpdate: steps
-        ? (self) => {
-            const step = stepAt(self.progress, steps.count);
-            if (step === current) return;
-            current = step;
-            steps.onStep(step);
-          }
-        : undefined,
+      onUpdate: steps ? tell : undefined,
+      onRefresh: steps ? tell : undefined,
     });
     const destroy = () => this.destroy();
     // Recorded in the running gsap.context, so matchMedia and useGSAP revert it with the rest.

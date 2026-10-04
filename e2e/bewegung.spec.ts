@@ -30,8 +30,11 @@ test.describe("motion parts", () => {
     await page.waitForFunction(() =>
       document.getAnimations().some((a) => a.timeline instanceof ScrollTimeline),
     );
+    // The first step is known before the row moves.
+    await expect(page.locator("[data-reihe]")).toHaveAttribute("data-schritt", "0");
     await scrollTo(page, "[data-sticky-stage]", 0.05);
     await expect.poll(() => translateX(page, "[data-reihe]")).toBeGreaterThan(-50);
+    await expect(page.locator("[data-schritt-anzeige]")).toBeInViewport();
     const anfang = await translateX(page, "[data-reihe]");
     await scrollTo(page, "[data-sticky-stage]", 0.6);
     await expect.poll(() => translateX(page, "[data-reihe]")).toBeLessThan(anfang - 200);
