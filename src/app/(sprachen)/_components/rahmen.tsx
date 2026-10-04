@@ -96,6 +96,15 @@ export async function SprachRahmen({
                   Datenschutz ({t.rechtliches})
                 </Verweis>
               </li>
+              <li>
+                <Verweis
+                  href={"/agb" as never}
+                  lang="de"
+                  className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+                >
+                  AGB ({t.rechtliches})
+                </Verweis>
+              </li>
             </ul>
           </div>
         </footer>

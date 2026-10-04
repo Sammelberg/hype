@@ -725,8 +725,16 @@ export function BuchenAssistent({
                   className="mt-1 size-5 shrink-0 accent-foreground"
                 />
                 <span>
-                  Ich habe die Bedingungen für Absagen gelesen und bin einverstanden. Wie wir Ihre
-                  Daten verwenden, steht in der{" "}
+                  Ich habe die{" "}
+                  <Verweis
+                    href={"/agb" as never}
+                    className="underline underline-offset-4"
+                    target="_blank"
+                  >
+                    AGB
+                  </Verweis>{" "}
+                  mit den Bedingungen für Absagen gelesen und bin einverstanden. Wie wir Ihre Daten
+                  verwenden, steht in der{" "}
                   <Verweis
                     href={"/datenschutz" as never}
                     className="underline underline-offset-4"

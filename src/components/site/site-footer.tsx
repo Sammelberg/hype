@@ -90,6 +90,11 @@ export function SiteFooter({
               </Verweis>
             </li>
             <li>
+              <Verweis href={"/agb" as never} className={KLEIN}>
+                AGB
+              </Verweis>
+            </li>
+            <li>
               <Verweis href="/suche" className={KLEIN}>
                 Suche
               </Verweis>

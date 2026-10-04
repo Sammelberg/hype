@@ -160,7 +160,7 @@ export const seedPages: SeedPage[] = [
     content: [
       {
         kind: "p",
-        text: "Diese Website setzt beim Besuch keine Cookies, nutzt keine Analyse- oder Werbedienste und lädt Schriften und Bilder ausschließlich von unserem eigenen Server. Personenbezogene Daten verarbeiten wir nur in zwei Fällen: in den technisch notwendigen Protokollen des Servers und wenn Sie uns über das Kontaktformular schreiben.",
+        text: "Diese Website setzt beim Besuch keine Cookies, nutzt keine Analyse- oder Werbedienste und lädt Schriften und Bilder ausschließlich von unserem eigenen Server. Personenbezogene Daten verarbeiten wir nur in drei Fällen: in den technisch notwendigen Protokollen des Servers, wenn Sie uns über das Kontaktformular schreiben und wenn Sie eine Feier buchen oder anfragen.",
       },
       { kind: "h2", text: "Verantwortlicher" },
       {
@@ -193,10 +193,28 @@ export const seedPages: SeedPage[] = [
         kind: "p",
         text: "Wir löschen Ihre Nachricht, sobald Ihr Anliegen erledigt ist, spätestens sechs Monate nach ihrem Eingang; das geschieht automatisch. In unseren Datensicherungen bleibt sie danach noch höchstens zwei Wochen erhalten. Wird aus der Anfrage ein Auftrag, übernehmen wir die nötigen Angaben in unsere Kundenunterlagen und bewahren sie so lange auf, wie es handels- und steuerrechtliche Fristen verlangen.",
       },
+      { kind: "h2", text: "Buchungen" },
+      {
+        kind: "p",
+        text: "Wenn Sie eine Feier buchen oder anfragen, speichern wir in der Datenbank auf unserem Server Ihren Namen, Ihre E-Mail-Adresse und Telefonnummer, die Adresse der Feier, Figur, Paket, Extras und Termin sowie, wenn Sie sie angeben, Vorname und Alter des Geburtstagskinds, die Zahl der Kinder, die gewünschte Sprache und Ihre Hinweise. Wir brauchen diese Angaben, um den Besuch zu planen und durchzuführen; Adresse, Termin und Ihre Hinweise erhält die Darstellerin oder der Darsteller, die oder der zu Ihnen kommt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+      },
+      {
+        kind: "p",
+        text: "Über einen persönlichen Link sehen Sie Ihre Buchung und können sie absagen. Den Link kennen nur Sie; wir speichern ihn ausschließlich verschlüsselt, damit wir ihn in E-Mails an Sie einsetzen können.",
+      },
+      {
+        kind: "p",
+        text: "Kommt eine Buchung nicht zustande (eine Anfrage ohne Buchung, eine abgelehnte Anfrage oder ein Termin, dessen Anzahlung nicht eingeht), löschen wir die Angaben sechs Monate nach der letzten Änderung automatisch. Gebuchte und abgesagte Feiern bewahren wir mit den zugehörigen Rechnungen so lange auf, wie handels- und steuerrechtliche Fristen es verlangen, höchstens zehn Jahre. [In unseren verschlüsselten Datensicherungen, die nur der Wiederherstellung dienen, können Buchungsdaten bis zu zehn Jahre erhalten bleiben; bitte prüfen lassen.]",
+      },
+      { kind: "h2", text: "Online-Zahlung" },
+      {
+        kind: "p",
+        text: "Die Anzahlung können Sie online über die Mollie B.V., Keizersgracht 126, 1015 CW Amsterdam, Niederlande, bezahlen. Wir übermitteln Mollie dafür nur den Betrag, eine Beschreibung mit der Buchungsnummer und die Adresse, zu der Sie nach der Zahlung zurückkehren (sie enthält Ihren persönlichen Buchungslink). Ihre Zahlungsdaten geben Sie direkt auf der Seite von Mollie ein; wir erhalten sie nicht. Mollie verarbeitet sie als eigener Verantwortlicher, um die Zahlung auszuführen und gesetzliche Pflichten zu erfüllen, etwa zur Verhinderung von Geldwäsche; Näheres steht in der Datenschutzerklärung von Mollie. Wählen Sie eine Zahlungsart wie PayPal oder Klarna, verarbeitet auch deren Anbieter Ihre Daten nach seinen Bedingungen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+      },
       { kind: "h2", text: "E-Mail" },
       {
         kind: "p",
-        text: "Die Website versendet E-Mails über unser eigenes Postfach bei [E-Mail-Anbieter mit Anschrift]: eine Benachrichtigung an uns, wenn Sie das Kontaktformular nutzen (mit dem Inhalt Ihrer Nachricht), und Antworten oder Unterlagen, die wir Ihnen schicken. Der Anbieter verarbeitet die E-Mails in unserem Auftrag nach Art. 28 DSGVO. Welche E-Mails gesendet wurden (Empfänger, Betreff, Zeitpunkt), halten wir in einem Versandprotokoll fest; die E-Mails selbst liegen in unserem Postfach.",
+        text: "Die Website versendet E-Mails über unser eigenes Postfach bei [E-Mail-Anbieter mit Anschrift]: eine Benachrichtigung an uns, wenn Sie das Kontaktformular nutzen (mit dem Inhalt Ihrer Nachricht) oder eine Feier buchen, die E-Mails zu Ihrer Buchung an Sie (die Bestätigung mit Kalendereintrag, den Eingang Ihrer Anfrage, eine Absage, eine Erinnerung eine Woche vor der Feier und eine am Vortag) sowie Antworten oder Unterlagen, die wir Ihnen schicken. Der Anbieter verarbeitet die E-Mails in unserem Auftrag nach Art. 28 DSGVO. Welche E-Mails gesendet wurden (Empfänger, Betreff, Zeitpunkt), halten wir in einem Versandprotokoll fest; die E-Mails selbst liegen in unserem Postfach.",
       },
       { kind: "h2", text: "Verschlüsselung" },
       {
@@ -222,6 +240,97 @@ export const seedPages: SeedPage[] = [
         text: "Sie können sich bei einer Datenschutz-Aufsichtsbehörde beschweren. Für uns zuständig ist [die Datenschutz-Aufsichtsbehörde des Bundeslands, mit Anschrift].",
       },
       { kind: "p", text: "Stand: [Monat Jahr]" },
+    ],
+  },
+  {
+    // Hype Agency's terms for bookings, written from what the booking engine does (the cancellation
+    // grid of src/buchung/logik/storno.ts, the hold, Mollie, the invoice). Bracketed places are the
+    // owner's; the whole text needs a lawyer's eye before launch.
+    slug: "agb",
+    title: "Allgemeine Geschäftsbedingungen",
+    content: [
+      {
+        kind: "p",
+        text: "Stand: [Monat Jahr]. [Bitte vor dem Start von einer Anwältin oder einem Anwalt prüfen lassen.]",
+      },
+      { kind: "h2", text: "1. Geltungsbereich" },
+      {
+        kind: "p",
+        text: "Diese Bedingungen gelten für alle Buchungen von Besuchen unserer Figuren bei Kindergeburtstagen und anderen Feiern, die Sie bei [Name des Unternehmens, Anschrift] („wir“) über diese Website, telefonisch oder schriftlich vornehmen.",
+      },
+      { kind: "h2", text: "2. Vertragsschluss" },
+      {
+        kind: "p",
+        text: "Mit dem Klick auf „Zahlungspflichtig buchen“ geben Sie ein verbindliches Angebot ab. Der Vertrag kommt zustande, wenn die Anzahlung bei uns eingeht oder, bei Zahlung auf Rechnung, wenn wir Ihre Buchung per E-Mail bestätigen. Bis dahin halten wir den Termin für Sie: bei Online-Zahlung [30] Minuten, bei Zahlung auf Rechnung bis zu unserer Bestätigung. Eine Anfrage ist noch kein Vertrag; wir antworten darauf mit einem Angebot.",
+      },
+      { kind: "h2", text: "3. Preise" },
+      {
+        kind: "p",
+        text: "Der Preis setzt sich aus dem Paket, der Anfahrt nach der Zone Ihres Ortes und den gewählten Extras zusammen und wird vor der Buchung vollständig angezeigt. Alle Preise sind Endpreise. [Sie enthalten die gesetzliche Umsatzsteuer. / Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.]",
+      },
+      { kind: "h2", text: "4. Zahlung" },
+      {
+        kind: "p",
+        text: "Bei der Buchung zahlen Sie eine Anzahlung von [25] % des Preises, online über unseren Zahlungsdienstleister Mollie (unter anderem PayPal, Kreditkarte, Apple Pay, Google Pay, Klarna, SEPA-Lastschrift) oder, für Kitas, Schulen und Unternehmen, auf Rechnung. Den Restbetrag zahlen Sie [nach der Feier auf Rechnung innerhalb von 14 Tagen].",
+      },
+      { kind: "h2", text: "5. Unsere Leistung" },
+      {
+        kind: "p",
+        text: "Die Figur kommt zum vereinbarten Beginn an die angegebene Adresse und bleibt für die Dauer des gebuchten Pakets. Verspäten wir uns, verlängern wir die Zeit entsprechend oder erstatten den anteiligen Preis. Programm und Ablauf richten wir nach Alter und Zahl der Kinder. Unsere Figuren tragen eigene Namen und eigene Kostüme.",
+      },
+      { kind: "h2", text: "6. Ihre Mitwirkung" },
+      {
+        kind: "p",
+        text: "Bitte sorgen Sie für eine Ecke oder einen Raum zum Umziehen, für Platz zum Spielen und, wenn möglich, für einen Parkplatz in der Nähe. Die Aufsicht über die Kinder bleibt während des Besuchs bei Ihnen. Kann die Feier aus Gründen, die bei Ihnen liegen, nicht beginnen, wartet die Figur [30] Minuten; danach gilt der Termin als wahrgenommen.",
+      },
+      { kind: "h2", text: "7. Absage durch Sie" },
+      {
+        kind: "p",
+        text: "Sie können jederzeit absagen, über den Link in Ihrer Bestätigung oder mit einer Nachricht an uns. Es gilt:",
+      },
+      {
+        kind: "ul",
+        items: [
+          "mehr als 14 Tage vor der Feier: kostenlos, Sie bekommen die Anzahlung zurück;",
+          "14 bis 7 Tage vorher: wir behalten die Anzahlung;",
+          "weniger als 7 Tage bis 48 Stunden vorher: die Hälfte des Preises;",
+          "weniger als 48 Stunden vorher: der volle Preis.",
+        ],
+      },
+      {
+        kind: "p",
+        text: "Ihnen bleibt der Nachweis, dass uns kein oder ein geringerer Schaden entstanden ist. Statt abzusagen können Sie den Termin verschieben, solange ein anderer frei ist.",
+      },
+      { kind: "h2", text: "8. Absage durch uns" },
+      {
+        kind: "p",
+        text: "Können wir einen Termin nicht wahrnehmen, etwa weil eine Darstellerin oder ein Darsteller erkrankt, schicken wir nach Möglichkeit eine andere Person mit derselben Figur oder bieten Ihnen eine andere Figur an. Ist beides nicht möglich oder lehnen Sie es ab, bekommen Sie alles Gezahlte zurück.",
+      },
+      { kind: "h2", text: "9. Haftung" },
+      {
+        kind: "p",
+        text: "Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit. Bei leichter Fahrlässigkeit haften wir nur für die Verletzung wesentlicher Vertragspflichten und begrenzt auf den vorhersehbaren, vertragstypischen Schaden.",
+      },
+      { kind: "h2", text: "10. Kein Widerrufsrecht" },
+      {
+        kind: "p",
+        text: "Bei Verträgen über Dienstleistungen im Zusammenhang mit Freizeitbetätigungen, die zu einem bestimmten Termin erbracht werden, besteht kein Widerrufsrecht (§ 312g Abs. 2 Nr. 9 BGB). Für Absagen gelten die Bedingungen unter 7.",
+      },
+      { kind: "h2", text: "11. Fotos" },
+      {
+        kind: "p",
+        text: "Unsere Darstellerinnen und Darsteller fotografieren und filmen bei Ihrer Feier nicht. Wenn Sie selbst fotografieren, achten Sie bitte auf die Rechte der anderen Kinder und ihrer Eltern.",
+      },
+      { kind: "h2", text: "12. Streitbeilegung" },
+      {
+        kind: "p",
+        text: "Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+      },
+      { kind: "h2", text: "13. Schlussbestimmungen" },
+      {
+        kind: "p",
+        text: "Es gilt deutsches Recht. Wohnen Sie als Verbraucherin oder Verbraucher in einem anderen Staat, bleibt Ihnen der Schutz durch dessen zwingende Vorschriften erhalten.",
+      },
     ],
   },
   {
@@ -330,6 +439,7 @@ export const SEED_PATHS = [
   "/suche",
   "/impressum",
   "/datenschutz",
+  "/agb",
   "/ueber-uns",
   "/ueber-uns/arbeitsweise",
   "/projekte",

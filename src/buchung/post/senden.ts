@@ -22,6 +22,10 @@ export type PostArt =
   "bestaetigt" | "reserviert" | "anfrage" | "storniert" | "erinnerung" | "vortag" | "bewertung";
 
 const ZIEL = "buchung";
+// Asking for a review is advertising in German law (BGH VI ZR 225/17): without consent only under
+// § 7 Abs. 3 UWG (notice at booking, opt-out in every mail). Off until the owner and a lawyer
+// decide; the text (logik/mails.ts → bewertungMail) is ready.
+const BEWERTUNG_FRAGEN = false;
 const TAG = 86_400_000;
 
 async function bereit() {
@@ -111,7 +115,7 @@ export async function meldeInhaber(buchungId: number, was: string): Promise<{ ge
   return { gesendet: true };
 }
 
-/** The reminders due now (a week ahead, the day before, the day after); each once. */
+/** The reminders due now (a week ahead, the day before; the day after once allowed); each once. */
 export async function sendeFaelligeErinnerungen(jetzt: Date): Promise<number> {
   const kandidaten = await db
     .select({ id: buchungen.id, beginn: buchungen.beginn, gebucht: buchungen.createdAt })
@@ -125,7 +129,8 @@ export async function sendeFaelligeErinnerungen(jetzt: Date): Promise<number> {
     );
   let gesendet = 0;
   for (const k of kandidaten) {
-    for (const art of faelligeErinnerungen({ beginn: k.beginn, gebucht: k.gebucht, jetzt })) {
+    const faellig = faelligeErinnerungen({ beginn: k.beginn, gebucht: k.gebucht, jetzt });
+    for (const art of faellig.filter((a) => a !== "bewertung" || BEWERTUNG_FRAGEN)) {
       try {
         if ((await sendeBuchungsPost(k.id, art)).gesendet) gesendet += 1;
       } catch (error) {

@@ -17,9 +17,12 @@ const VORNE: NavSection[] = [
   },
 ];
 
+// The AGB are a legal page like Impressum and Datenschutz: linked in the foot, not the menu.
+const NICHT_IM_MENUE = new Set(["/projekte", "/agb"]);
+
 export const hypeNav = (sections: NavSection[]): NavSection[] => [
   ...VORNE,
-  ...sections.filter((s) => s.href !== "/projekte"),
+  ...sections.filter((s) => !NICHT_IM_MENUE.has(s.href)),
 ];
 
 // The footer adds the towns with a landing page of their own, so each is linked from every page.

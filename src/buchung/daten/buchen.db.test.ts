@@ -17,6 +17,7 @@ import {
 } from "../db/schema";
 import { testAdapter } from "../zahlung/test-adapter";
 import { halteSlot } from "./belegung";
+import { loescheNichtZustandegekommene } from "./aufbewahrung";
 import { freieStarts, kundenSicht, stelleAnfrage, storniereDurchKunde } from "./buchen";
 import {
   erstatteAnzahlung,
@@ -250,6 +251,45 @@ describe.skipIf(!process.env.DATABASE_URL)("Buchen auf der Website (Datenbank)",
 
       expect(await merkeEreignis("mollie", "tr_fake:bezahlt", tx)).toBe(true);
       expect(await merkeEreignis("mollie", "tr_fake:bezahlt", tx)).toBe(false);
+    });
+  });
+  it("deletes bookings that never came about after six months, and keeps contracts", async () => {
+    await imRollback(async (tx) => {
+      const a = await aufbau(tx);
+      const anfrage = await stelleAnfrage(
+        {
+          ...wunsch(a, new Date("2026-11-13T12:00:00.000Z")),
+          zahlungsart: "mollie",
+          rechnungAn: null,
+          adresse: { strasse: null, plz: null, ort: null },
+          kind: { name: null, alter: null, anzahl: null },
+          sprache: null,
+          notizKunde: null,
+        },
+        jetzt,
+        tx,
+      );
+      const gebucht = await halteSlot(
+        { ...wunsch(a, new Date("2026-12-05T09:00:00.000Z")), zahlungsart: "rechnung" },
+        { jetzt, quelle: "telefon" },
+        tx,
+      );
+      if (!gebucht.ok) throw new Error("nicht gebucht");
+      const alt = new Date("2026-01-01T00:00:00.000Z");
+      await tx.update(buchungen).set({ updatedAt: alt }).where(eq(buchungen.id, anfrage.id));
+      await tx
+        .update(buchungen)
+        .set({ updatedAt: alt })
+        .where(eq(buchungen.id, gebucht.buchung.id));
+
+      // Five months later nothing goes; seven months later the Anfrage, never the confirmed one.
+      expect(await loescheNichtZustandegekommene(new Date("2026-06-01T00:00:00.000Z"), tx)).toBe(0);
+      expect(await loescheNichtZustandegekommene(new Date("2026-08-01T00:00:00.000Z"), tx)).toBe(1);
+      const rest = await tx
+        .select({ id: buchungen.id })
+        .from(buchungen)
+        .where(eq(buchungen.id, gebucht.buchung.id));
+      expect(rest).toHaveLength(1);
     });
   });
 });
