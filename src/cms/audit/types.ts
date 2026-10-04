@@ -45,6 +45,8 @@ export const AUDIT_ACTIONS = {
   "email.passwort-gesetzt": "E-Mail-Passwort gespeichert",
   "email.passwort-geloescht": "E-Mail-Passwort gelöscht",
   aufbewahrung: "Aufbewahrungsfristen angewendet",
+  "buchung.angelegt": "Buchung angelegt",
+  "darsteller.gesperrt": "Zeit eines Darstellers gesperrt",
 } as const;
 
 export type AuditAction = keyof typeof AUDIT_ACTIONS;

@@ -41,6 +41,7 @@
     "cms:passwort": "tsx --env-file-if-exists=.env scripts/set-password.ts",
     "cms:geplant": "tsx --env-file-if-exists=.env scripts/geplant.ts",
     "cms:aufbewahrung": "tsx --env-file-if-exists=.env scripts/aufbewahrung.ts",
+    "cms:buchung-takt": "tsx --env-file-if-exists=.env scripts/buchung-takt.ts",
     "cms:metadaten-entfernen": "tsx --env-file-if-exists=.env scripts/strip-media-metadata.ts",
     "init:project": "node scripts/init-project.mjs"
   },

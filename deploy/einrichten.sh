@@ -27,5 +27,6 @@ mark="# hype-aufgaben"
   crontab -l 2>/dev/null | grep -v "$mark" || true
   echo "15 3 * * * $here/aufgabe.sh aufbewahrung >>$HOME/hype-aufgaben.log 2>&1 $mark"
   echo "*/5 * * * * $here/aufgabe.sh geplant >>$HOME/hype-aufgaben.log 2>&1 $mark"
+  echo "*/5 * * * * $here/aufgabe.sh buchung-takt >>$HOME/hype-aufgaben.log 2>&1 $mark"
 } | crontab -
-echo "Crontab: Aufbewahrung nachts, geplante Veröffentlichung alle 5 Minuten."
+echo "Crontab: Aufbewahrung nachts, geplante Veröffentlichung und Buchung-Takt alle 5 Minuten."
