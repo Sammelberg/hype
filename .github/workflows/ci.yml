@@ -43,6 +43,8 @@ jobs:
       FORM_SECRET: ci-only-form-secret-0123456789abcdef
       MAIL_SECRET: ci-only-mail-secret-0123456789abcdef
       MAILPIT_URL: http://localhost:8025
+      # The motion demo (/next/bewegung) in the production build, for e2e/bewegung.spec.ts.
+      MOTION_DEMO: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

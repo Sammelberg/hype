@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Form from "next/form";
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import { PageHeader } from "@/components/site/page-header";
 import { Button } from "@/components/ui/button";
@@ -89,12 +89,12 @@ export default async function SearchPage({ searchParams }: Props) {
             <ul className="mt-6 flex flex-wrap gap-3">
               {suggestions.map((s) => (
                 <li key={s.href}>
-                  <Link
+                  <Verweis
                     href={s.href as never}
                     className="inline-flex items-center gap-2.5 rounded-full border border-primary-soft/25 bg-card px-5 py-2.5 text-base transition-colors hover:border-primary-soft/60 hover:text-primary-soft"
                   >
                     {s.label}
-                  </Link>
+                  </Verweis>
                 </li>
               ))}
             </ul>
@@ -114,12 +114,12 @@ export default async function SearchPage({ searchParams }: Props) {
                         {result.url.startsWith("/projekte/") ? "Projekt" : "Seite"}
                         <span className="text-muted-foreground"> · {result.url}</span>
                       </p>
-                      <Link
+                      <Verweis
                         href={result.url as never}
                         className="mt-2 block text-2xl font-medium tracking-tight decoration-primary-soft decoration-2 underline-offset-8 outline-none group-hover:underline after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-ring"
                       >
                         <Marked text={result.title} query={query} />
-                      </Link>
+                      </Verweis>
                       {result.summary ? (
                         <p className="mt-3 max-w-prose text-lg text-pretty text-muted-foreground">
                           <Marked text={result.summary} query={query} />
@@ -132,12 +132,12 @@ export default async function SearchPage({ searchParams }: Props) {
             ) : (
               <p className="mt-6 text-lg text-pretty text-muted-foreground">
                 Versuchen Sie einen anderen Begriff oder sehen Sie sich unsere{" "}
-                <Link
-                  href="/leistungen"
+                <Verweis
+                  href="/projekte"
                   className="text-foreground underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
                 >
-                  Leistungen
-                </Link>{" "}
+                  Projekte
+                </Verweis>{" "}
                 an.
               </p>
             )}

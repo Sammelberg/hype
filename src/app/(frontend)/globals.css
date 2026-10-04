@@ -192,3 +192,33 @@
     @apply bg-primary text-primary-foreground;
   }
 }
+
+/*
+ * Motion on the compositor (docs/motion-architecture.md). <Reveal> arrives once: hidden only where
+ * scripts run and motion is allowed, so without either the page stands complete; the script sets
+ * data-revealed, the transition plays on transform and opacity. Words of <Worte> inside it rise
+ * in turn. <Schleife> pauses every CSS animation inside it off screen or in a background tab.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity 500ms cubic-bezier(0.22, 1, 0.36, 1),
+      translate 500ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--reveal-order, 0) * 80ms);
+  }
+  [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  [data-reveal] [data-wort] {
+    transition: translate 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--reveal-order, 0) * 80ms + var(--wort, 0) * 40ms);
+  }
+  [data-reveal]:not([data-revealed]) [data-wort] {
+    translate: 0 110%;
+  }
+}
+[data-pausiert],
+[data-pausiert] * {
+  animation-play-state: paused !important;
+}

@@ -3,9 +3,16 @@ import { describe, expect, it } from "vitest";
 import { assertComposited, nonComposited, stepAt } from "./composited";
 
 describe("nonComposited", () => {
-  it("passes transforms, opacity and timing", () => {
+  it("passes transforms, opacity and the transform origin", () => {
     expect(
-      nonComposited({ x: 10, yPercent: -5, scale: 1.2, rotate: 3, opacity: 0, ease: "none" }),
+      nonComposited({
+        x: 10,
+        yPercent: -5,
+        scale: 1.2,
+        rotation: 3,
+        opacity: 0,
+        transformOrigin: "left center",
+      }),
     ).toEqual([]);
   });
 

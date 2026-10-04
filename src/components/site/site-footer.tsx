@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import type { NavSection } from "@/lib/site-nav";
 
@@ -51,19 +51,19 @@ export function SiteFooter({
         <div className="columns-2 gap-x-8 sm:columns-3 lg:col-span-7">
           {sections.map((section) => (
             <nav key={section.href} aria-label={section.label} className="mb-8 break-inside-avoid">
-              <Link
+              <Verweis
                 href={section.href as never}
                 className="inline-block py-1 text-sm font-medium underline-offset-4 hover:underline"
               >
                 {section.label}
-              </Link>
+              </Verweis>
               {section.children.length > 0 ? (
                 <ul className="mt-1">
                   {section.children.map((link) => (
                     <li key={link.href}>
-                      <Link href={link.href as never} className={LISTE}>
+                      <Verweis href={link.href as never} className={LISTE}>
                         {link.label}
-                      </Link>
+                      </Verweis>
                     </li>
                   ))}
                 </ul>
@@ -80,19 +80,19 @@ export function SiteFooter({
           </p>
           <ul className="flex flex-wrap gap-x-6">
             <li>
-              <Link href={"/impressum" as never} className={KLEIN}>
+              <Verweis href={"/impressum" as never} className={KLEIN}>
                 Impressum
-              </Link>
+              </Verweis>
             </li>
             <li>
-              <Link href={"/datenschutz" as never} className={KLEIN}>
+              <Verweis href={"/datenschutz" as never} className={KLEIN}>
                 Datenschutz
-              </Link>
+              </Verweis>
             </li>
             <li>
-              <Link href="/suche" className={KLEIN}>
+              <Verweis href="/suche" className={KLEIN}>
                 Suche
-              </Link>
+              </Verweis>
             </li>
             {socialLinks?.map((s) => (
               <li key={s.id ?? s.url}>

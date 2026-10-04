@@ -2,13 +2,16 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { SEED_PATHS } from "../scripts/seed-data";
 
-// The scroll budget (docs/motion-architecture.md): while the wheel scrolls a page on a slowed
-// CPU, no task blocks the main thread long enough to drop frames, and no running animation
-// changes a property that is laid out or painted on every frame. A project's scroll scenes are
-// held to it on every seeded route.
+// The scroll budget (docs/motion-architecture.md): at rest a page leaves the main thread alone;
+// while the wheel scrolls it on a slowed CPU, no task blocks the main thread long enough to drop
+// frames, no running animation changes a property that is laid out or painted on every frame,
+// and no link loads another page. A project's motion is held to it on every seeded route and on
+// the motion demo.
 const SLOWDOWN = 4;
 const LONGEST_TASK_MS = 100;
 const BLOCKING_MS = 300;
+// Script time in the 3 s after load without scrolling, on the slowed CPU: nothing turns idly.
+const REST_SCRIPT_MS = 150;
 const COMPOSITED = new Set(["transform", "translate", "rotate", "scale", "opacity", "offset"]);
 
 async function paintedAnimations(page: Page) {
@@ -41,7 +44,7 @@ test.describe("scroll budget", () => {
     "CDP throttling",
   );
 
-  for (const path of ["/", ...SEED_PATHS]) {
+  for (const path of ["/", ...SEED_PATHS, "/next/bewegung"]) {
     test(`${path} scrolls within the budget`, async ({ page }) => {
       await page.addInitScript(() => {
         const w = window as unknown as { __longTasks: number[] };
@@ -60,6 +63,21 @@ test.describe("scroll budget", () => {
 
       const cdp = await page.context().newCDPSession(page);
       await cdp.send("Emulation.setCPUThrottlingRate", { rate: SLOWDOWN });
+      await cdp.send("Performance.enable");
+      const scriptSeconds = async () => {
+        const { metrics } = await cdp.send("Performance.getMetrics");
+        return metrics.find((m) => m.name === "ScriptDuration")?.value ?? 0;
+      };
+      const restStart = await scriptSeconds();
+      await page.waitForTimeout(3000);
+      const rest = ((await scriptSeconds()) - restStart) * 1000;
+
+      const prefetches: string[] = [];
+      page.on("request", (request) => {
+        const headers = request.headers();
+        if (headers["next-router-prefetch"] || /[?&]_rsc=/.test(request.url()))
+          prefetches.push(request.url());
+      });
       await page.mouse.move(400, 400);
       const height = await page.evaluate(
         () => document.documentElement.scrollHeight - window.innerHeight,
@@ -83,6 +101,8 @@ test.describe("scroll budget", () => {
         LONGEST_TASK_MS,
       );
       expect(blocking, "blocking time while scrolling").toBeLessThan(BLOCKING_MS);
+      expect(rest, "script time at rest (3 s)").toBeLessThan(REST_SCRIPT_MS);
+      expect(prefetches, "pages loaded by links scrolling into view").toEqual([]);
     });
   }
 });

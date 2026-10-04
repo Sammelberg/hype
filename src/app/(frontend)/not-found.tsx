@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import { PageHeader } from "@/components/site/page-header";
 
@@ -24,12 +24,12 @@ export default function NotFound() {
         <ul className="mt-6 flex flex-wrap gap-3">
           {WAYS.map((way) => (
             <li key={way.href}>
-              <Link
+              <Verweis
                 href={way.href}
                 className="inline-flex min-h-11 items-center rounded-full border px-5 transition-colors hover:bg-muted"
               >
                 {way.label}
-              </Link>
+              </Verweis>
             </li>
           ))}
         </ul>

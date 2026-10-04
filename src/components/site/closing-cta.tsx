@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import { buttonVariants } from "@/components/ui/button";
 import { getSiteSettings } from "@/data/queries";
@@ -22,9 +22,9 @@ export async function ClosingCta() {
           <p className="mt-4 max-w-2xl text-lg text-pretty text-muted-foreground">{cta.text}</p>
         ) : null}
         {cta.label ? (
-          <Link href="/kontakt" className={buttonVariants({ size: "lg", className: "mt-8" })}>
+          <Verweis href="/kontakt" className={buttonVariants({ size: "lg", className: "mt-8" })}>
             {cta.label}
-          </Link>
+          </Verweis>
         ) : null}
       </div>
     </section>

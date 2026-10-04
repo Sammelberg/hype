@@ -1,46 +1,39 @@
-import type { gsap } from "gsap";
+import type { Channel, Value } from "./keyframes";
 
 // What a scroll scene may animate: the properties the browser moves on the compositor, without
-// layout or paint. Everything a scene changes on every scrolled frame must be one of these; a
-// clip-path, filter, size, colour or font weight is laid out or painted again on each frame and
-// stutters under load (docs/motion-architecture.md, „Свойства“).
-export const COMPOSITED = [
+// layout or paint. A clip-path, filter, size, colour or font weight is laid out or painted again
+// on every scrolled frame and stutters under load (docs/motion-architecture.md, „Свойства“).
+export const CHANNELS = [
   "x",
   "y",
-  "z",
   "xPercent",
   "yPercent",
+  "rotate",
+  "rotateX",
+  "rotateY",
   "scale",
   "scaleX",
   "scaleY",
-  "rotate",
-  "rotation",
-  "rotationX",
-  "rotationY",
-  "rotateX",
-  "rotateY",
-  "skewX",
-  "skewY",
   "opacity",
-  "autoAlpha",
-] as const;
+] as const satisfies readonly Channel[];
 
-// Settings of a tween that are not drawn on every frame.
-export const TIMING = [
-  "duration",
-  "ease",
-  "stagger",
-  "delay",
-  "immediateRender",
-  "transformOrigin",
-  "force3D",
-] as const;
+// GSAP's names for the rotations work too.
+export const ALIASES = {
+  rotation: "rotate",
+  rotationX: "rotateX",
+  rotationY: "rotateY",
+} as const satisfies Record<string, Channel>;
 
-export type CompositedProp = (typeof COMPOSITED)[number];
-export type CompositedVars = Partial<Record<CompositedProp, gsap.TweenValue>> &
-  Partial<Pick<gsap.TweenVars, (typeof TIMING)[number]>>;
+// A value, or one per element (index in the targets).
+export type Resolver = Value | ((element: Element, index: number) => Value);
 
-const ALLOWED = new Set<string>([...COMPOSITED, ...TIMING]);
+export type CompositedVars = Partial<
+  Record<(typeof CHANNELS)[number] | keyof typeof ALIASES, Resolver>
+> & {
+  transformOrigin?: string;
+};
+
+const ALLOWED = new Set<string>([...CHANNELS, ...Object.keys(ALIASES), "transformOrigin"]);
 
 // The keys of `vars` a scroll scene may not animate. Types already refuse them; this catches
 // values that reach a scene untyped (spread objects, `as` casts).

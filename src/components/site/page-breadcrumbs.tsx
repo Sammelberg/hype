@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import { Fragment } from "react";
 
 import {
@@ -27,7 +27,7 @@ export function PageBreadcrumbs({ trail, className }: { trail: Crumb[]; classNam
             <Fragment key={crumb.path}>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild className="py-0.5">
-                  <Link href={crumb.path as never}>{crumb.name}</Link>
+                  <Verweis href={crumb.path as never}>{crumb.name}</Verweis>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

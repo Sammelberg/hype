@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,12 @@ export default function ErrorPage({
             <Button size="lg" onClick={() => retry()}>
               Erneut versuchen
             </Button>
-            <Link
+            <Verweis
               href="/"
               className="text-lg underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
             >
               Zur Startseite
-            </Link>
+            </Verweis>
           </div>
         </div>
       </div>

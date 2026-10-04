@@ -1,27 +1,40 @@
 ---
 name: scroll-motion
-description: Build, change or repair scroll-driven motion — scroll scenes, scrub, sticky or pinned sections, horizontal galleries, parallax, Lenis smooth scrolling — and scroll jank ("ruckelt", "тормозит", stutter while scrolling). Load before writing any animation tied to the scroll position.
+description: Build, review, repair or migrate site motion — scroll scenes, parallax, sticky or pinned sections, horizontal galleries, reveals, word-by-word text, loops, canvas, Lenis — and jank ("ruckelt", "тормозит", stutter, slow phone). Load before any animation on the site, a review of motion code, or a complaint that a page is slow.
 ---
 
-# Scroll motion
+# Site motion
 
-Every scroll effect goes through one door (`src/lib/motion/`, `src/components/motion/`) and moves only composited properties, so a page with GSAP and Lenis scrolls without dropped frames. The why, the replacement table and a worked example: [`docs/motion-architecture.md`](../../../docs/motion-architecture.md). The owner's effects are kept: a stutter is repaired by making the effect cheap, never by removing or stepping it.
+Motion on the site runs on the compositor, so a page with GSAP and Lenis scrolls without dropped frames on a phone. Every rule, the effect → tool table, the costly → cheap table and the budget are in [`docs/motion-architecture.md`](../../../docs/motion-architecture.md): read the parts the task touches before writing code. A stutter is repaired by making the effect cheap, never by removing or stepping it. `/next/bewegung` shows every part working.
 
-## Steps
+Pick the branch, then follow its steps.
 
-1. **Name the effect and its consequence.** Write down what the visitor sees per scroll position ("row travels left by its overflow while the section holds the screen"). Settle the term with `animation-vocabulary` if the request is vague. Done when each effect has a checkable end state.
-2. **Map it onto composited properties.** Only `x`/`y`/`xPercent`/`yPercent`, `scale*`, `rotate*`, `skew*`, `opacity`/`autoAlpha` change per frame. A clip, blur, darkening, growing bar, colour or weight change takes the cheap form from the table in the doc. Done when no per-frame value is laid out or painted.
-3. **Build it through the door.**
-   - Scroll-linked: `scrollScene({ trigger, start, end }, (scene) => scene.to(…))` from `@/lib/motion/scene`, inside `useGSAP(() => gsap.matchMedia().add(MOTION, …))`.
-   - Holds the screen: wrap in `<StickyStage length="…svh">`, trigger the `[data-sticky-stage]` holder with the default start and end.
-   - Discrete states (cards, chapters, labels): `steps: { count, onStep }`; set a `data-*` attribute or React state only there.
-   - Smooth scrolling: `<SmoothScroll />` once in `(frontend)/layout.tsx`, nothing else.
-   - Time-based UI motion: `motion/react`, or `gsap` from `@/lib/motion/gsap` without `scrollTrigger`.
+## Build an effect
+
+1. **Name the effect and its end state.** What the visitor sees at each scroll position or moment ("row travels left by its overflow while the section holds the screen"). Settle a vague term with `animation-vocabulary` via `skill-router`. Done when each effect has a checkable end state.
+2. **Find its row** in „Какой инструмент для какого эффекта" and use that tool:
+   - moves with the scroll: `scrollTween` / `scrollScene` from `@/lib/motion/scene`, inside `useGSAP(() => gsap.matchMedia().add(MOTION, …))`;
+   - holds the screen: `<StickyStage length="…svh">`, the scene's trigger is its `[data-sticky-stage]` holder;
+   - discrete states: `steps: { count, onStep }`, a `data-*` attribute or React state set only there;
+   - arrives once: `<Reveal>` (`order` for a row), text inside as `<Worte>`;
+   - loops: CSS keyframes on transform/opacity inside `<Schleife>`; canvas/rAF gated by `useSichtbar`;
+   - links: `<Verweis>`; time-based UI motion: `motion/react` or `gsap` from `@/lib/motion/gsap`.
      Done when `pnpm typecheck` and `pnpm lint` pass with no cast or disable comment around motion code.
-4. **Keep the page complete without motion.** Reduced motion and no JS show the final layout; `StickyStage` collapses to a plain section. Done when the page reads fully with `prefers-reduced-motion: reduce`.
-5. **Hold the budget.** Pause videos and loops off-screen; `prefetch={false}` on link-heavy long pages; images carry `sizes`. Run `pnpm exec playwright test e2e/scroll-budget.spec.ts --project=chromium` against a production build. Done when it passes on every route the change touches.
-6. **Verify on real input** with `verify-interaction` (wheel, trackpad, touch), and on the owner's device when they reported the jank. Done when the consequence from step 1 holds for each input profile.
+3. **Map it onto composited properties** — `x`/`y`/`xPercent`/`yPercent`, `scale*`, `rotate*`, `opacity`. A clip, blur, darkening, growing bar, colour or weight takes its cheap form from „Свойства". Done when nothing per frame is laid out or painted.
+4. **Keep the page whole without motion.** The h1 and the first screen stand from the first paint; reduced motion and no JS show the final layout. Done when the page reads fully with `prefers-reduced-motion: reduce` and with scripts off.
+5. **Hold the budget.** `pnpm exec playwright test e2e/scroll-budget.spec.ts --project=chromium` against a production build; a new kind of part also gets its case in `e2e/bewegung.spec.ts` and the demo. Done when both pass on every route the change touches.
+6. **Verify on real input** with `verify-interaction` (wheel, trackpad, touch), and on the owner's device when they reported jank. Done when step 1's end states hold for each input.
 
-## Repairing jank
+## Repair jank
 
-Record before changing anything: DevTools → Performance, scroll through the section, then name the cause — long task, per-frame Layout/Paint, a script pin, a per-frame state update, media or prefetch. Replace that one cause (step 2–5) and re-run the budget. The effect looks the same afterwards.
+1. **Measure before touching code:** DevTools → Performance on a 4× slowed CPU, scroll through the section and rest 3 s; the budget spec gives the same numbers. Done when the cause is named with a figure — a long task, per-frame layout or paint, a loop at rest, a per-frame callback, media, prefetch.
+2. **Replace that one cause** with the rule that covers it. The effect looks the same afterwards.
+3. **Re-run the budget and the previous profile.** Done when the figure from step 1 is under its threshold.
+
+## Review motion code
+
+Check every rule of the document's „Правила" against the diff or the project, and report each breach as `file:line`, the rule's number and the fix. Done when every rule was applied to every motion file the change touches, with no rule skipped as "probably fine".
+
+## Migrate an older project
+
+Follow „Перенос старого проекта" in the document, one step per change, with the budget measured before and after each. Start with the background (loops, canvas): the largest gain, and the site looks the same.

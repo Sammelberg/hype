@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import { ClosingCta } from "@/components/site/closing-cta";
 import { PageHeader } from "@/components/site/page-header";
@@ -38,12 +38,12 @@ export default async function ProjekteIndex() {
               <p className="text-sm font-medium text-muted-foreground">{projekt.kunde}</p>
               <h2 className="text-2xl font-semibold tracking-tight text-balance">
                 {/* Only the title names the link; the whole card is its target. */}
-                <Link
+                <Verweis
                   href={`/projekte/${projekt.slug}` as never}
                   className="outline-none after:absolute after:inset-0 after:rounded-xl after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-ring"
                 >
                   {projekt.title}
-                </Link>
+                </Verweis>
               </h2>
               <p className="text-pretty text-muted-foreground">{projekt.summary}</p>
             </li>

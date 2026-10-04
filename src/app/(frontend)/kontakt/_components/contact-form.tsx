@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 
 import { submitContact, type ContactState } from "../actions";
@@ -230,12 +230,12 @@ export function ContactForm({
         </Button>
         <p className="text-sm text-muted-foreground">
           Hinweise zur Verarbeitung Ihrer Angaben finden Sie in der{" "}
-          <Link
+          <Verweis
             href={"/datenschutz" as never}
             className="underline decoration-primary-soft underline-offset-4 transition-colors hover:text-primary-soft"
           >
             Datenschutzerklärung
-          </Link>
+          </Verweis>
           .
         </p>
       </div>

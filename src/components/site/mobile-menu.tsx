@@ -1,7 +1,7 @@
 "use client";
 
 import { SearchIcon, XIcon } from "lucide-react";
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import { usePathname } from "next/navigation";
 
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -23,7 +23,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
   const list = sections.filter((section) => section.href !== "/kontakt");
   const link = (href: string, label: string, className: string) => (
     <SheetClose asChild>
-      <Link
+      <Verweis
         href={href as never}
         aria-current={pathname === href ? "page" : undefined}
         className={cn(
@@ -32,7 +32,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
         )}
       >
         {label}
-      </Link>
+      </Verweis>
     </SheetClose>
   );
 
@@ -111,14 +111,14 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
             <KontaktButton className="h-12 w-full text-base" />
           </SheetClose>
           <SheetClose asChild>
-            <Link
+            <Verweis
               href="/suche"
               aria-current={pathname === "/suche" ? "page" : undefined}
               className="inline-flex min-h-11 items-center gap-2 self-center text-sm text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-primary-soft"
             >
               <SearchIcon aria-hidden="true" className="size-4" />
               Suche
-            </Link>
+            </Verweis>
           </SheetClose>
         </div>
       </SheetContent>

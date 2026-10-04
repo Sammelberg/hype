@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRightIcon, ChevronDownIcon, SearchIcon } from "lucide-react";
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import { usePathname } from "next/navigation";
 import { NavigationMenu as Nav } from "radix-ui";
 import { type ComponentProps, useState } from "react";
@@ -66,13 +66,13 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
                   </>
                 ) : (
                   <Nav.Link asChild active={current}>
-                    <Link
+                    <Verweis
                       href={section.href as never}
                       aria-current={pathname === section.href ? "page" : undefined}
                       className={cn(ITEM, current && CURRENT)}
                     >
                       {section.label}
-                    </Link>
+                    </Verweis>
                   </Nav.Link>
                 )}
               </Nav.Item>
@@ -81,14 +81,14 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
       </Nav.List>
 
       <div className="flex flex-1 shrink-0 items-center justify-end gap-1.5">
-        <Link
+        <Verweis
           href="/suche"
           aria-label="Suche"
           aria-current={pathname === "/suche" ? "page" : undefined}
           className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:text-primary-soft"
         >
           <SearchIcon aria-hidden="true" className="size-4.5" />
-        </Link>
+        </Verweis>
         <KontaktButton />
       </div>
 
@@ -116,7 +116,7 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
           </p>
         ) : null}
         <Nav.Link asChild active={pathname === section.href}>
-          <Link
+          <Verweis
             href={section.href as never}
             aria-current={pathname === section.href ? "page" : undefined}
             className="group/over mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary-soft outline-none focus-visible:underline"
@@ -126,7 +126,7 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
               aria-hidden="true"
               className="size-4 transition-transform duration-300 group-hover/over:translate-x-1 motion-reduce:transition-none"
             />
-          </Link>
+          </Verweis>
         </Nav.Link>
       </div>
       <ul className="col-span-8 grid content-start gap-x-4 gap-y-1 xl:grid-cols-2">
@@ -135,7 +135,7 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
           return (
             <li key={link.href}>
               <Nav.Link asChild active={current}>
-                <Link
+                <Verweis
                   href={link.href as never}
                   aria-current={current ? "page" : undefined}
                   className="group/link block rounded-2xl px-4 py-3.5 transition-colors outline-none hover:bg-card focus-visible:bg-card focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -152,7 +152,7 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
                       {link.description}
                     </span>
                   ) : null}
-                </Link>
+                </Verweis>
               </Nav.Link>
             </li>
           );
@@ -163,10 +163,13 @@ function Panel({ section, pathname }: { section: NavSection; pathname: string })
 }
 
 /** Kontakt as the header's one filled button: what the site is for. */
-export function KontaktButton({ className, ...props }: Omit<ComponentProps<typeof Link>, "href">) {
+export function KontaktButton({
+  className,
+  ...props
+}: Omit<ComponentProps<typeof Verweis>, "href">) {
   const current = usePathname() === "/kontakt";
   return (
-    <Link
+    <Verweis
       href="/kontakt"
       aria-current={current ? "page" : undefined}
       className={cn(
@@ -181,6 +184,6 @@ export function KontaktButton({ className, ...props }: Omit<ComponentProps<typeo
         aria-hidden="true"
         className="size-4 transition-transform duration-300 group-hover/cta:translate-x-0.5 motion-reduce:transition-none"
       />
-    </Link>
+    </Verweis>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 
 import { ClosingCta } from "@/components/site/closing-cta";
 import { Faq } from "@/components/site/faq";
@@ -55,9 +55,9 @@ export default async function HomePage() {
             </p>
           ) : null}
           {settings.cta?.label ? (
-            <Link href="/kontakt" className={buttonVariants({ size: "lg", className: "mt-10" })}>
+            <Verweis href="/kontakt" className={buttonVariants({ size: "lg", className: "mt-10" })}>
               {settings.cta.label}
-            </Link>
+            </Verweis>
           ) : null}
         </div>
       </section>

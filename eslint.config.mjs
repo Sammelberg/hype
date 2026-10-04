@@ -3,6 +3,18 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import betterTailwind from "eslint-plugin-better-tailwindcss";
 
+const MOTION_PATHS = [
+  { name: "gsap", message: "Import gsap from @/lib/motion/gsap." },
+  { name: "@gsap/react", message: "Import useGSAP from @/lib/motion/gsap." },
+  { name: "lenis", message: "Smooth scrolling is <SmoothScroll /> (@/components/motion)." },
+];
+const MOTION_PATTERNS = [
+  {
+    group: ["gsap/*", "lenis/*"],
+    message: "Scroll motion goes through @/lib/motion (docs/motion-architecture.md).",
+  },
+];
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -35,25 +47,7 @@ export default defineConfig([
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/lib/motion/**", "src/components/motion/**"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            { name: "gsap", message: "Import gsap from @/lib/motion/gsap." },
-            { name: "@gsap/react", message: "Import useGSAP from @/lib/motion/gsap." },
-            {
-              name: "lenis",
-              message: "Smooth scrolling is <SmoothScroll /> (@/components/motion).",
-            },
-          ],
-          patterns: [
-            {
-              group: ["gsap/*", "lenis/*"],
-              message: "Scroll motion goes through @/lib/motion (docs/motion-architecture.md).",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": ["error", { paths: MOTION_PATHS, patterns: MOTION_PATTERNS }],
       "no-restricted-syntax": [
         "error",
         {
@@ -64,6 +58,27 @@ export default defineConfig([
         {
           selector: "ImportSpecifier[imported.name='ScrollTrigger']",
           message: "ScrollTrigger stays inside src/lib/motion; use scrollScene or refreshScroll.",
+        },
+      ],
+    },
+  },
+  // The site's links do not load other pages while they scroll into view: Next prefetches every
+  // <Link> in the viewport, which on a long page is dozens of requests during the scroll.
+  {
+    files: ["src/app/(frontend)/**/*.{ts,tsx}", "src/components/site/**/*.{ts,tsx}"],
+    ignores: ["src/components/site/verweis.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            ...MOTION_PATHS,
+            {
+              name: "next/link",
+              message: "Site links are <Verweis> (@/components/site/verweis): no prefetch on view.",
+            },
+          ],
+          patterns: MOTION_PATTERNS,
         },
       ],
     },

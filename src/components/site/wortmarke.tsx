@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Verweis } from "@/components/site/verweis";
 import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
@@ -10,9 +10,9 @@ export function Wortmarke({
   siteName,
   className,
   ...props
-}: { siteName: string } & Omit<ComponentProps<typeof Link>, "href">) {
+}: { siteName: string } & Omit<ComponentProps<typeof Verweis>, "href">) {
   return (
-    <Link
+    <Verweis
       href="/"
       className={cn(
         "flex shrink-0 items-center gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -22,6 +22,6 @@ export function Wortmarke({
     >
       <SiteMark name={siteName} />
       <span className="font-semibold tracking-tight whitespace-nowrap">{siteName}</span>
-    </Link>
+    </Verweis>
   );
 }
