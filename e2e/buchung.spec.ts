@@ -7,6 +7,32 @@ import { expect, test, type Page } from "@playwright/test";
 
 test.describe.configure({ timeout: 90_000 });
 
+// The mails land in Mailpit (the seed points the site's mailbox there); only mails since `seit`.
+const MAILPIT = process.env.MAILPIT_URL ?? "http://localhost:8025";
+type Nachricht = { Text: string; Attachments: { FileName: string; ContentType: string }[] };
+
+async function mailAn(adresse: string, betreff: RegExp, seit: Date): Promise<Nachricht> {
+  let id: string | undefined;
+  await expect
+    .poll(
+      async () => {
+        const liste = (await (await fetch(`${MAILPIT}/api/v1/messages?limit=50`)).json()) as {
+          messages: { ID: string; Subject: string; Created: string; To: { Address: string }[] }[];
+        };
+        id = liste.messages.find(
+          (m) =>
+            m.To.some((to) => to.Address === adresse) &&
+            betreff.test(m.Subject) &&
+            new Date(m.Created) >= seit,
+        )?.ID;
+        return Boolean(id);
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+  return (await (await fetch(`${MAILPIT}/api/v1/message/${id}`)).json()) as Nachricht;
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     document.addEventListener("DOMContentLoaded", () => {
@@ -45,6 +71,8 @@ async function angaben(page: Page, email: string) {
 
 test("a party is booked, paid, shown behind its link and cancelled", async ({ page, isMobile }) => {
   const start = Date.now();
+  const seit = new Date(start - 2_000);
+  const email = `e2e-buchung-${isMobile ? "m" : "d"}@example.com`;
   await page.goto("/buchen?figur=eisprinzessin&ort=aschaffenburg&paket=mini");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Feier buchen");
 
@@ -71,7 +99,7 @@ test("a party is booked, paid, shown behind its link and cancelled", async ({ pa
   // Step 4: a missing field is named, then filled.
   await weiter(page).click();
   await expect(page.getByText("Bitte geben Sie Ihren Namen an.")).toBeVisible();
-  await angaben(page, `e2e-buchung-${isMobile ? "m" : "d"}@example.com`);
+  await angaben(page, email);
   await weiter(page).click();
 
   // Step 5: the price line by line, the terms, the button that says it costs money.
@@ -88,13 +116,24 @@ test("a party is booked, paid, shown behind its link and cancelled", async ({ pa
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Gebucht/);
   await expect(page.getByText("Kinderschminken")).toBeVisible();
 
+  // The confirmation: the link back to this page and the party for the calendar.
+  const bestaetigung = await mailAn(email, /^Gebucht: Eisprinzessin am /, seit);
+  expect(bestaetigung.Text).toContain(new URL(page.url()).pathname);
+  expect(bestaetigung.Attachments.map((a) => a.FileName)).toEqual([
+    expect.stringMatching(/^BU-\d{4}-\d{4}\.ics$/),
+  ]);
+
   await page.getByRole("button", { name: "Buchung stornieren" }).click();
   await page.getByRole("button", { name: "Ja, stornieren" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Die Buchung ist storniert");
+  // More than two weeks ahead: the Anzahlung goes back (the test adapter's refund).
+  const storno = await mailAn(email, /^Storniert: Buchung /, seit);
+  expect(storno.Text).toMatch(/Sie bekommen .* zurück/);
 });
 
 test("a town on request sends an Anfrage instead of a booking", async ({ page, isMobile }) => {
   const start = Date.now();
+  const email = `e2e-anfrage-${isMobile ? "m" : "d"}@example.com`;
   await page.goto("/buchen?figur=pirat&ort=nuernberg&paket=klassik");
   await weiter(page).click();
   await expect(page.getByText(/So weit fahren wir auf Anfrage/)).toBeVisible();
@@ -102,7 +141,7 @@ test("a town on request sends an Anfrage instead of a booking", async ({ page, i
   await page.getByLabel("Wunschbeginn").selectOption("14:00");
   await weiter(page).click();
   await weiter(page).click();
-  await angaben(page, `e2e-anfrage-${isMobile ? "m" : "d"}@example.com`);
+  await angaben(page, email);
   await weiter(page).click();
   await page.getByLabel(/Bedingungen für Absagen gelesen/).check();
   await page.waitForTimeout(Math.max(0, 16_000 - (Date.now() - start)));
@@ -110,4 +149,6 @@ test("a town on request sends an Anfrage instead of a booking", async ({ page, i
 
   await expect(page).toHaveURL(/\/buchung\/[\w-]+\?neu=anfrage/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ihre Anfrage ist bei uns");
+  const mail = await mailAn(email, /^Ihre Anfrage: Piratin/, new Date(start - 2_000));
+  expect(mail.Text).toContain("Wunschtermin: Samstag, 13. März");
 });

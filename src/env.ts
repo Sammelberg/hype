@@ -21,6 +21,12 @@ export const env = createEnv({
     // "1" lets bookings pay their Anzahlung through the test adapter (a pretend checkout under
     // /buchung/<link>/testzahlung) — for development and CI's e2e. Never set on a server.
     ZAHLUNG_TEST: z.literal("1").optional(),
+    // Mollie's API key (Dashboard → Developers): `test_…` while trying, `live_…` once the account
+    // is approved. Without it the Anzahlung cannot be paid online (only by invoice).
+    MOLLIE_API_KEY: z
+      .string()
+      .regex(/^(test|live)_\w{20,}$/, "Ein Mollie-Schlüssel beginnt mit test_ oder live_.")
+      .optional(),
   },
   client: {
     NEXT_PUBLIC_SERVER_URL: z.url(),

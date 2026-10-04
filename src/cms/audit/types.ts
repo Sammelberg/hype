@@ -48,6 +48,7 @@ export const AUDIT_ACTIONS = {
   "buchung.angelegt": "Buchung angelegt",
   "buchung.status": "Buchungsstatus geändert",
   "buchung.storniert": "Buchung storniert",
+  "buchung.erstattet": "Anzahlung erstattet",
   "darsteller.gesperrt": "Zeit eines Darstellers gesperrt",
 } as const;
 

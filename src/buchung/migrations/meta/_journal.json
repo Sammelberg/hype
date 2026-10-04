@@ -15,6 +15,13 @@
       "when": 1791134651525,
       "tag": "0001_rechnung_an",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791136787096,
+      "tag": "0002_zugriff_versiegelt",
+      "breakpoints": true
     }
   ]
 }

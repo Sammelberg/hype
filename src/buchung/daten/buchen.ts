@@ -402,5 +402,62 @@ export async function storniereDurchKunde(token: string, jetzt: Date, client: Db
     throw new BuchungFehler(
       "So kurz vor der Feier stornieren wir gemeinsam mit Ihnen. Bitte schreiben Sie uns oder rufen Sie an.",
     );
-  return setzeStatus(sicht.id, { nach: "storniert", durch: "kunde" }, KUNDE, jetzt, client);
+  const r = await setzeStatus(
+    sicht.id,
+    { nach: "storniert", durch: "kunde" },
+    KUNDE,
+    jetzt,
+    client,
+  );
+  return { ...r, buchungId: sicht.id };
+}
+
+/** Keeps the customer's link sealed beside its hash, for the mails that come later. */
+export async function merkeLink(buchungId: number, versiegelt: string, client: Db | Tx = db) {
+  await client
+    .update(buchungen)
+    .set({ zugriffVersiegelt: versiegelt })
+    .where(eq(buchungen.id, buchungId));
+}
+
+/** What a booking mail says about its Buchung, with the sealed link and the party's end. */
+export async function mailDaten(buchungId: number, client: Db | Tx = db) {
+  const [b] = await client.select().from(buchungen).where(eq(buchungen.id, buchungId));
+  if (!b) return null;
+  const figurIds = [b.figurId, b.zweiteFigurId].filter((x): x is number => x !== null);
+  const figurRows = figurIds.length
+    ? await client
+        .select({ id: figuren.id, name: figuren.name })
+        .from(figuren)
+        .where(inArray(figuren.id, figurIds))
+    : [];
+  const [paket] = b.paketId
+    ? await client
+        .select({ name: pakete.name, dauerMin: pakete.dauerMin })
+        .from(pakete)
+        .where(eq(pakete.id, b.paketId))
+    : [];
+  const deltas = await client
+    .select({ dauerDeltaMin: buchungExtras.dauerDeltaMin })
+    .from(buchungExtras)
+    .where(eq(buchungExtras.buchungId, b.id));
+  const dauerMin = (paket?.dauerMin ?? 60) + deltas.reduce((s, x) => s + x.dauerDeltaMin, 0);
+  return {
+    id: b.id,
+    nummer: b.nummer,
+    status: b.status,
+    figuren: figurIds.map((id) => figurRows.find((r) => r.id === id)?.name ?? ""),
+    paket: paket?.name ?? null,
+    beginn: b.beginn,
+    ende: new Date(b.beginn.getTime() + dauerMin * 60_000),
+    adresse: [b.strasse, [b.plz, b.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+    kontaktName: b.kontaktName,
+    kontaktEmail: b.kontaktEmail,
+    kindName: b.kindName,
+    rechnungAn: b.rechnungAn,
+    positionen: b.positionen,
+    summeCent: b.summe === null ? null : centAusBetrag(b.summe),
+    anzahlungCent: b.anzahlung === null ? null : centAusBetrag(b.anzahlung),
+    zugriffVersiegelt: b.zugriffVersiegelt,
+  };
 }

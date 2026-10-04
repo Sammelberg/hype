@@ -1,0 +1,1 @@
+ALTER TABLE "buchung"."buchungen" ADD COLUMN "zugriff_versiegelt" text;

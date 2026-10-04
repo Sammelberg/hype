@@ -14,6 +14,7 @@ import { CmsError } from "@/cms/errors";
 import { clientIp } from "@/cms/security/client-ip";
 import { hitRateLimit } from "@/cms/security/rate-limit";
 import { env } from "@/env";
+import { nachNeuerBuchung } from "@/lib/buchung-ereignisse";
 
 import { pruefeStart } from "./_lib/start-token";
 import { onlineZahlung } from "@/lib/zahlung";
@@ -83,6 +84,7 @@ export async function buche(eingabe: unknown): Promise<BuchenErgebnis> {
     const grund = b.art === "anfrage" ? "kurzfristig" : await anfrageGrund(wunsch, jetzt);
     if (grund) {
       const anfrage = await stelleAnfrage(wunsch, jetzt);
+      await nachNeuerBuchung(anfrage.id, anfrage.zugriffToken, "anfrage", "Neue Anfrage");
       ziel = `/buchung/${anfrage.zugriffToken}?neu=anfrage`;
     } else {
       if (b.zahlungsart === "mollie" && !adapter)
@@ -103,10 +105,19 @@ export async function buche(eingabe: unknown): Promise<BuchenErgebnis> {
       if (!r.ok) {
         // The rules changed between the form and now (it became short notice): an Anfrage.
         const anfrage = await stelleAnfrage(wunsch, jetzt);
+        await nachNeuerBuchung(anfrage.id, anfrage.zugriffToken, "anfrage", "Neue Anfrage");
         ziel = `/buchung/${anfrage.zugriffToken}?neu=anfrage`;
       } else if (!adapter) {
+        await nachNeuerBuchung(
+          r.buchung.id,
+          r.buchung.zugriffToken,
+          "reserviert",
+          "Neue Buchung auf Rechnung",
+        );
         ziel = `/buchung/${r.buchung.zugriffToken}?neu=rechnung`;
       } else {
+        // The confirmation follows the payment; until then only the link is kept.
+        await nachNeuerBuchung(r.buchung.id, r.buchung.zugriffToken, null, null);
         ziel = await starteAnzahlung(r.buchung.zugriffToken, adapter, jetzt);
       }
     }

@@ -292,6 +292,8 @@ export const buchungen = buchungSchema.table(
     haltenBis: zeitpunkt(),
     // sha256 of the link the customer gets to see and cancel the booking.
     zugriffHash: varchar({ length: 64 }).unique(),
+    // The same link, sealed (AES-256-GCM, src/lib/buchungslink.ts), so later mails can carry it.
+    zugriffVersiegelt: text(),
     storniertAm: zeitpunkt(),
     stornoGebuehr: geld(),
     stornoGrund: varchar({ length: 300 }),

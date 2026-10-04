@@ -5,6 +5,7 @@ import { z } from "zod";
 import { BuchungFehler } from "@/buchung/daten/basis";
 import { halteSlot, sperreDarsteller } from "@/buchung/daten/belegung";
 import { setzeStatus, speichereNotiz } from "@/buchung/daten/buchungen";
+import { nachBestaetigung, nachNeuerBuchung, nachStorno } from "@/lib/buchung-ereignisse";
 import {
   loescheDarsteller,
   loescheExtra,
@@ -129,7 +130,11 @@ export const neueBuchungAction = adminActionClient
       },
       { jetzt: new Date(), quelle: e.quelle, akteur: akteur(ctx.user) },
     );
-    if (r.ok) return { ok: true as const, id: r.buchung.id };
+    if (r.ok) {
+      // A phone or Instagram order is confirmed at once: the customer gets the confirmation.
+      await nachNeuerBuchung(r.buchung.id, r.buchung.zugriffToken, "bestaetigt", null);
+      return { ok: true as const, id: r.buchung.id };
+    }
     if (r.grund === "belegt")
       return {
         ok: false as const,
@@ -151,6 +156,8 @@ export const setzeStatusAction = adminActionClient
   .inputSchema(id.extend({ aenderung: StatusSchema }))
   .action(async ({ parsedInput, ctx }) => {
     const r = await setzeStatus(parsedInput.id, parsedInput.aenderung, akteur(ctx.user));
+    if (r.status === "bestaetigt") nachBestaetigung(parsedInput.id, null);
+    if (r.storno) await nachStorno(parsedInput.id, r.storno, null);
     return { status: r.status, gebuehrCent: r.storno?.gebuehrCent ?? null };
   });
 

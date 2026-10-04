@@ -8,6 +8,9 @@ import { requireRole } from "@/cms/auth/guard";
 import { euro } from "@/buero/logik/geld";
 import { berlinUhrzeit } from "@/buero/logik/kalender";
 import { getBuchung } from "@/buchung/daten/buchungen";
+import { zahlungenVon } from "@/buchung/daten/zahlungen";
+import { mailsZu } from "@/cms/mail/log";
+import { EMAIL_KINDS } from "@/cms/mail/types";
 import { QUELLE_NAMEN, SPRACH_NAMEN, STATUS_NAMEN, ZAHLUNG_NAMEN } from "@/buchung/logik/typen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +20,26 @@ import { NotizEditor } from "../_components/notiz-editor";
 import { StatusAktionen } from "../_components/status-aktionen";
 
 type Props = { params: Promise<{ id: string }> };
+
+const kurzDatum = new Intl.DateTimeFormat("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Europe/Berlin",
+});
+
+const ZAHLUNG_ART_NAMEN = {
+  anzahlung: "Anzahlung",
+  rest: "Restzahlung",
+  erstattung: "Erstattung",
+} as const;
+const ZAHLUNG_STATUS_NAMEN = {
+  offen: "offen",
+  bezahlt: "bezahlt",
+  fehlgeschlagen: "fehlgeschlagen",
+  abgebrochen: "abgebrochen",
+  erstattet: "erstattet",
+} as const;
 
 const datum = new Intl.DateTimeFormat("de-DE", {
   weekday: "long",
@@ -59,6 +82,10 @@ export default async function BuchungPage({ params }: Props) {
   if (!Number.isInteger(id)) notFound();
   const b = await getBuchung(id);
   if (!b) notFound();
+  const [zahlungen, mails] = await Promise.all([
+    zahlungenVon(b.id),
+    mailsZu({ type: "buchung", id: b.id }),
+  ]);
 
   return (
     <PageShell
@@ -180,6 +207,45 @@ export default async function BuchungPage({ params }: Props) {
                 ["Stornogrund", b.stornoGrund],
               ]}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Zahlungen und E-Mails</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 text-sm">
+            {zahlungen.length === 0 ? (
+              <p className="text-muted-foreground">Noch keine Zahlung.</p>
+            ) : (
+              <ul role="list" className="flex flex-col gap-1.5">
+                {zahlungen.map((z) => (
+                  <li key={z.id} className="flex flex-wrap justify-between gap-x-4">
+                    <span>
+                      {ZAHLUNG_ART_NAMEN[z.art]} über {ZAHLUNG_NAMEN[z.adapter]}:{" "}
+                      {ZAHLUNG_STATUS_NAMEN[z.status]}
+                    </span>
+                    <span className="tabular-nums">
+                      {z.art === "erstattung" ? "− " : ""}
+                      {euro(z.betragCent)}, {kurzDatum.format(z.createdAt)}{" "}
+                      {berlinUhrzeit(z.createdAt)} Uhr
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {mails.length === 0 ? (
+              <p className="text-muted-foreground">Noch keine E-Mail zu dieser Buchung.</p>
+            ) : (
+              <ul role="list" className="flex flex-col gap-1.5">
+                {mails.map((m) => (
+                  <li key={m.id} className="flex flex-wrap justify-between gap-x-4">
+                    <span>{EMAIL_KINDS[m.kind] ?? m.kind}</span>
+                    <span className="text-muted-foreground">an {m.to}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 

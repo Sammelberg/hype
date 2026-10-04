@@ -6,6 +6,7 @@ import { storniereDurchKunde } from "@/buchung/daten/buchen";
 import { meldeZahlung, starteAnzahlung, type ZahlungsAusgang } from "@/buchung/daten/zahlungen";
 import { CmsError } from "@/cms/errors";
 import { env } from "@/env";
+import { nachBestaetigung, nachStorno } from "@/lib/buchung-ereignisse";
 import { onlineZahlung } from "@/lib/zahlung";
 
 // What the customer can do behind their link: pay the Anzahlung of a held Buchung, cancel where
@@ -34,7 +35,8 @@ export async function zahleAnzahlung(token: string): Promise<LinkErgebnis> {
 
 export async function storniere(token: string): Promise<LinkErgebnis> {
   try {
-    await storniereDurchKunde(token, new Date());
+    const r = await storniereDurchKunde(token, new Date());
+    if (r.storno) await nachStorno(r.buchungId, r.storno, "Storniert durch den Kunden");
   } catch (error) {
     if (error instanceof CmsError) return { fehler: error.message };
     console.error("Buchung konnte nicht storniert werden", error);
@@ -49,6 +51,7 @@ export async function antworteTestzahlung(
   ausgang: ZahlungsAusgang,
 ) {
   if (env.ZAHLUNG_TEST !== "1") throw new Error("Testzahlungen sind ausgeschaltet.");
-  await meldeZahlung({ adapter: "test", externId, ausgang }, new Date());
+  const r = await meldeZahlung({ adapter: "test", externId, ausgang }, new Date());
+  if (r.neuBestaetigt) nachBestaetigung(r.buchungId);
   redirect(seite(token, ausgang === "bezahlt" ? "?bezahlt=1" : "?abgebrochen=1"));
 }

@@ -7,7 +7,9 @@ import { preisText } from "@/buchung/logik/preis";
 import { terminText } from "@/buchung/logik/zeit";
 import { Abriss, EinladungsKarte } from "@/components/site/einladungs-karte";
 import { Verweis } from "@/components/site/verweis";
-import { onlineZahlung } from "@/lib/zahlung";
+import { gleicheOffeneAb } from "@/buchung/daten/zahlungen";
+import { nachBestaetigung } from "@/lib/buchung-ereignisse";
+import { adapterFuer, onlineZahlung } from "@/lib/zahlung";
 
 import { storniere, zahleAnzahlung } from "./actions";
 import { StornoKnopf, ZahlenKnopf } from "./_components/knoepfe";
@@ -83,8 +85,20 @@ export default async function BuchungSeite({ params, searchParams }: Props) {
   await connection();
   const [{ token }, such] = await Promise.all([params, searchParams]);
   const jetzt = new Date();
-  const b = await kundenSicht(token, jetzt);
+  let b = await kundenSicht(token, jetzt);
   if (!b) notFound();
+  // Back from the checkout before the webhook (or on a machine Mollie cannot reach): ask Mollie.
+  const adapter = b.status === "reserviert" && b.zahlungsart ? adapterFuer(b.zahlungsart) : null;
+  if (adapter?.stand) {
+    const r = await gleicheOffeneAb(b.id, adapter, jetzt).catch((error) => {
+      console.error("Zahlungsstand nicht abgefragt", error);
+      return { neuBestaetigt: false };
+    });
+    if (r.neuBestaetigt) {
+      nachBestaetigung(b.id);
+      b = (await kundenSicht(token, jetzt)) ?? b;
+    }
+  }
 
   const hinweis = typeof such.abgebrochen === "string" ? "abgebrochen" : undefined;
   const lage = Lage({ b, hinweis });

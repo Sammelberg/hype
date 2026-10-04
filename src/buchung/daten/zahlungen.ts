@@ -3,14 +3,14 @@
 // confirmed one under the row's lock.
 import { createHash } from "node:crypto";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { betragAusCent, centAusBetrag } from "../../buero/logik/geld";
 import { writeAudit } from "../../cms/audit/log";
 import { db, type Db, type Tx } from "../../cms/db/client";
-import { buchungen, zahlungen } from "../db/schema";
+import { buchungen, webhookEreignisse, zahlungen } from "../db/schema";
 import type { ZahlungAdapterName } from "../logik/typen";
-import type { ZahlungsAdapter } from "../zahlung/adapter";
+import type { ZahlungsAdapter, ZahlungsStand } from "../zahlung/adapter";
 import { BuchungFehler } from "./basis";
 import { KUNDE } from "./buchen";
 
@@ -70,7 +70,7 @@ export async function meldeZahlung(
   e: { adapter: ZahlungAdapterName; externId: string; ausgang: ZahlungsAusgang },
   jetzt: Date,
   client: Db | Tx = db,
-): Promise<{ buchungId: number; buchungStatus: string }> {
+): Promise<{ buchungId: number; buchungStatus: string; neuBestaetigt: boolean }> {
   return client.transaction(async (tx) => {
     const [z] = await tx
       .select()
@@ -84,14 +84,14 @@ export async function meldeZahlung(
       .where(eq(buchungen.id, z.buchungId))
       .for("update");
     if (!b) throw new BuchungFehler("Diese Buchung gibt es nicht.");
-    if (z.status !== "offen") return { buchungId: b.id, buchungStatus: b.status };
+    const unveraendert = { buchungId: b.id, buchungStatus: b.status, neuBestaetigt: false };
+    if (z.status !== "offen") return unveraendert;
 
     await tx
       .update(zahlungen)
       .set({ status: e.ausgang, updatedAt: jetzt })
       .where(eq(zahlungen.id, z.id));
-    if (e.ausgang !== "bezahlt" || b.status !== "reserviert")
-      return { buchungId: b.id, buchungStatus: b.status };
+    if (e.ausgang !== "bezahlt" || b.status !== "reserviert") return unveraendert;
 
     await tx
       .update(buchungen)
@@ -103,6 +103,130 @@ export async function meldeZahlung(
       target: { type: "buchung", id: b.id },
       details: { nummer: b.nummer, von: b.status, nach: "bestaetigt", zahlung: z.id },
     });
-    return { buchungId: b.id, buchungStatus: "bestaetigt" };
+    return { buchungId: b.id, buchungStatus: "bestaetigt", neuBestaetigt: true };
   });
+}
+
+/**
+ * Asks the provider where a payment stands and records a final answer. For the webhook and for
+ * the customer's return from the checkout (a development machine never gets the webhook).
+ */
+export async function gleicheAb(
+  adapter: ZahlungsAdapter,
+  externId: string,
+  jetzt: Date,
+  client: Db | Tx = db,
+): Promise<{ stand: ZahlungsStand; buchungId: number | null; neuBestaetigt: boolean }> {
+  if (!adapter.stand) return { stand: "offen", buchungId: null, neuBestaetigt: false };
+  const stand = await adapter.stand(externId);
+  if (stand === "offen") return { stand, buchungId: null, neuBestaetigt: false };
+  const r = await meldeZahlung({ adapter: adapter.name, externId, ausgang: stand }, jetzt, client);
+  return { stand, buchungId: r.buchungId, neuBestaetigt: r.neuBestaetigt };
+}
+
+/** The open payments of a Buchung with this adapter, asked about one by one. */
+export async function gleicheOffeneAb(
+  buchungId: number,
+  adapter: ZahlungsAdapter,
+  jetzt: Date,
+  client: Db | Tx = db,
+) {
+  const offen = await client
+    .select({ externId: zahlungen.externId })
+    .from(zahlungen)
+    .where(
+      and(
+        eq(zahlungen.buchungId, buchungId),
+        eq(zahlungen.adapter, adapter.name),
+        eq(zahlungen.status, "offen"),
+      ),
+    );
+  let neuBestaetigt = false;
+  for (const z of offen) {
+    if (!z.externId) continue;
+    const r = await gleicheAb(adapter, z.externId, jetzt, client);
+    neuBestaetigt ||= r.neuBestaetigt;
+  }
+  return { neuBestaetigt };
+}
+
+/** Notes a webhook call once; false when this very call (id and status) was seen before. */
+export async function merkeEreignis(
+  adapter: ZahlungAdapterName,
+  ereignisId: string,
+  client: Db | Tx = db,
+): Promise<boolean> {
+  const neu = await client
+    .insert(webhookEreignisse)
+    .values({ adapter, ereignisId })
+    .onConflictDoNothing()
+    .returning({ id: webhookEreignisse.ereignisId });
+  return neu.length > 0;
+}
+
+/**
+ * Pays back part of a Buchung's paid Anzahlung after a cancellation, through the adapter it was
+ * paid with, and records it. Null when nothing was paid online.
+ */
+export async function erstatteAnzahlung(
+  buchungId: number,
+  betragCent: number,
+  adapterVon: (name: string) => ZahlungsAdapter | null,
+  jetzt: Date,
+  client: Db | Tx = db,
+): Promise<{ zahlungId: number } | null> {
+  if (betragCent <= 0) return null;
+  const [bezahlt] = await client
+    .select()
+    .from(zahlungen)
+    .where(
+      and(
+        eq(zahlungen.buchungId, buchungId),
+        eq(zahlungen.art, "anzahlung"),
+        eq(zahlungen.status, "bezahlt"),
+      ),
+    )
+    .orderBy(sql`${zahlungen.id} desc`)
+    .limit(1);
+  if (!bezahlt?.externId) return null;
+  const adapter = adapterVon(bezahlt.adapter);
+  if (!adapter) throw new BuchungFehler("Die Erstattung muss von Hand angewiesen werden.");
+  const [b] = await client
+    .select({ nummer: buchungen.nummer })
+    .from(buchungen)
+    .where(eq(buchungen.id, buchungId));
+  const betrag = Math.min(betragCent, centAusBetrag(bezahlt.betrag));
+  const refundId = await adapter.erstatte(
+    bezahlt.externId,
+    betrag,
+    `Erstattung ${b?.nummer ?? ""}`.trim(),
+  );
+  const [neu] = await client
+    .insert(zahlungen)
+    .values({
+      buchungId,
+      adapter: adapter.name,
+      art: "erstattung",
+      betrag: betragAusCent(betrag),
+      status: "bezahlt",
+      externId: refundId,
+    })
+    .returning({ id: zahlungen.id });
+  await writeAudit(client, {
+    actor: KUNDE,
+    action: "buchung.erstattet",
+    target: { type: "buchung", id: buchungId },
+    details: { nummer: b?.nummer, erstattungCent: betrag, zahlung: neu!.id },
+  });
+  return { zahlungId: neu!.id };
+}
+
+/** A Buchung's payments and refunds, oldest first, for the admin's booking card. */
+export async function zahlungenVon(buchungId: number, client: Db | Tx = db) {
+  const rows = await client
+    .select()
+    .from(zahlungen)
+    .where(eq(zahlungen.buchungId, buchungId))
+    .orderBy(zahlungen.id);
+  return rows.map((z) => ({ ...z, betragCent: centAusBetrag(z.betrag) }));
 }

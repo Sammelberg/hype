@@ -11,4 +11,7 @@ export const testAdapter: ZahlungsAdapter = {
     const externId = `test_${randomBytes(9).toString("base64url")}`;
     return { externId, weiter: `/buchung/${z.token}/testzahlung?zahlung=${externId}` };
   },
+  async erstatte() {
+    return `test_re_${randomBytes(9).toString("base64url")}`;
+  },
 };

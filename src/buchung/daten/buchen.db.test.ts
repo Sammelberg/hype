@@ -18,7 +18,14 @@ import {
 import { testAdapter } from "../zahlung/test-adapter";
 import { halteSlot } from "./belegung";
 import { freieStarts, kundenSicht, stelleAnfrage, storniereDurchKunde } from "./buchen";
-import { meldeZahlung, starteAnzahlung } from "./zahlungen";
+import {
+  erstatteAnzahlung,
+  gleicheAb,
+  meldeZahlung,
+  merkeEreignis,
+  starteAnzahlung,
+} from "./zahlungen";
+import type { ZahlungsAdapter } from "../zahlung/adapter";
 import { sperreTestdatei } from "./test-sperre";
 
 class Rueckgabe extends Error {}
@@ -206,6 +213,43 @@ describe.skipIf(!process.env.DATABASE_URL)("Buchen auf der Website (Datenbank)",
       await expect(storniereDurchKunde(nah.buchung.zugriffToken, jetzt, tx)).rejects.toThrow(
         /gemeinsam mit Ihnen/,
       );
+    });
+  });
+  it("asks the provider on return, refunds through it and notes each webhook call once", async () => {
+    await imRollback(async (tx) => {
+      const a = await aufbau(tx);
+      const erstattet: [string, number][] = [];
+      const fake: ZahlungsAdapter = {
+        name: "mollie",
+        starte: async (z) => ({ externId: `tr_fake${z.zahlungId}`, weiter: "https://checkout" }),
+        stand: async () => "bezahlt",
+        erstatte: async (id, cent) => {
+          erstattet.push([id, cent]);
+          return "re_fake";
+        },
+      };
+      const r = await halteSlot(
+        { ...wunsch(a, new Date("2026-12-19T10:00:00.000Z")), zahlungsart: "mollie" },
+        { jetzt, quelle: "web" },
+        tx,
+      );
+      if (!r.ok) throw new Error("nicht gehalten");
+      expect(await starteAnzahlung(r.buchung.zugriffToken, fake, jetzt, tx)).toBe(
+        "https://checkout",
+      );
+      const [z] = await tx.select().from(zahlungen).where(eq(zahlungen.buchungId, r.buchung.id));
+
+      const ab = await gleicheAb(fake, z!.externId!, jetzt, tx);
+      expect(ab).toEqual({ stand: "bezahlt", buchungId: r.buchung.id, neuBestaetigt: true });
+      expect((await gleicheAb(fake, z!.externId!, jetzt, tx)).neuBestaetigt).toBe(false);
+
+      // 25 % of 120 € (Paket 100 € + travel 20 €) went in; all of it goes back.
+      const zurueck = await erstatteAnzahlung(r.buchung.id, 99_999, () => fake, jetzt, tx);
+      expect(zurueck).not.toBeNull();
+      expect(erstattet).toEqual([[z!.externId!, 3000]]);
+
+      expect(await merkeEreignis("mollie", "tr_fake:bezahlt", tx)).toBe(true);
+      expect(await merkeEreignis("mollie", "tr_fake:bezahlt", tx)).toBe(false);
     });
   });
 });

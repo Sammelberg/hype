@@ -65,5 +65,14 @@ export const EMAIL_KINDS = {
   system: "Passwort-Link",
   anfrage: "Neue Anfrage",
   rechnung: "Rechnung",
+  // Hype Agency's bookings (src/buchung/post): one kind per mail, so each goes out once.
+  buchung_bestaetigt: "Buchung bestätigt",
+  buchung_reserviert: "Buchung reserviert (Rechnung)",
+  buchung_anfrage: "Anfrage zur Buchung",
+  buchung_storniert: "Buchung storniert",
+  buchung_erinnerung: "Erinnerung eine Woche vorher",
+  buchung_vortag: "Erinnerung am Vortag",
+  buchung_bewertung: "Frage nach der Feier",
+  buchung_hinweis: "Hinweis zu einer Buchung",
 } as const;
 export type EmailKind = keyof typeof EMAIL_KINDS;
