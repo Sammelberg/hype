@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/cms/auth/guard";
+import { mailsZu } from "@/cms/mail/log";
+import { mailStatus } from "@/cms/mail/send";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listAuftraegeAuswahl } from "@/buero/daten/auftraege";
 import { getFirma } from "@/buero/daten/firma";
@@ -19,12 +21,14 @@ import { datumDe, heute } from "@/buero/logik/ablauf";
 import { naechsteMahnstufe } from "@/buero/logik/forderung";
 import { centAusBetrag } from "@/buero/logik/geld";
 import { pruefeRechnung } from "@/buero/logik/pflichtangaben";
+import { rechnungMail } from "@/buero/logik/rechnung-mail";
 import { RechnungsDokument } from "../../../_components/buero/rechnungs-dokument";
 import { RechnungStatus } from "../../../_components/buero/status";
 import { EditorShell } from "../../../_components/editor-shell";
 import { Forderung } from "../_components/forderung";
 import { RechnungAktionen } from "../_components/rechnung-aktionen";
 import { RechnungEditor } from "../_components/rechnung-editor";
+import { RechnungVersand } from "../_components/rechnung-versand";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -84,7 +88,25 @@ export default async function RechnungPage({ params }: Props) {
     leistungBis: daten.leistungBis,
   });
   const tag = heute();
-  const forderung = await forderungVon(r.id);
+  const [forderung, mail, gesendet] = await Promise.all([
+    forderungVon(r.id),
+    mailStatus(),
+    mailsZu({ type: "rechnung", id: r.id }),
+  ]);
+  const vorschlag = rechnungMail({
+    typ: r.typ,
+    nummer: daten.nummer,
+    brutto: centAusBetrag(r.summeBrutto),
+    faelligAm: r.typ === "rechnung" ? daten.faelligAm : null,
+    korrigiertNummer: found.korrigiert?.nummer ?? null,
+    empfaenger: { name: daten.empfaenger.name, privat: daten.empfaenger.privat },
+    absender: daten.verkaeufer.name,
+  });
+  const zeit = new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Berlin",
+  });
   const offen = offenVon(r, forderung.zahlungen);
   const ueberfaellig =
     r.typ === "rechnung" && r.status === "gestellt" && Boolean(r.faelligAm && r.faelligAm < tag);
@@ -168,13 +190,23 @@ export default async function RechnungPage({ params }: Props) {
       backLabel="Rechnungen"
       title={`${r.typ === "storno" ? "Storno" : "Rechnung"} ${daten.nummer}`}
       actions={
-        <RechnungAktionen
-          id={r.id}
-          nummer={daten.nummer}
-          status={r.status as "gestellt" | "bezahlt" | "storniert"}
-          typ={r.typ}
-          xrechnungMoeglich={xrechnung.length === 0}
-        />
+        <>
+          {mail.ready ? (
+            <RechnungVersand
+              id={r.id}
+              nummer={daten.nummer}
+              vorschlag={{ to: daten.empfaenger.email ?? "", ...vorschlag }}
+              xrechnungMoeglich={xrechnung.length === 0}
+            />
+          ) : null}
+          <RechnungAktionen
+            id={r.id}
+            nummer={daten.nummer}
+            status={r.status as "gestellt" | "bezahlt" | "storniert"}
+            typ={r.typ}
+            xrechnungMoeglich={xrechnung.length === 0}
+          />
+        </>
       }
       asideAlways
       aside={
@@ -230,6 +262,41 @@ export default async function RechnungPage({ params }: Props) {
               faelligAm={r.faelligAm}
             />
           ) : null}
+          <Card role="region" aria-labelledby="versand-titel">
+            <CardHeader>
+              <CardTitle id="versand-titel">Versand</CardTitle>
+              <CardDescription>
+                {gesendet.length > 0
+                  ? "Über Ihr Postfach gesendet:"
+                  : mail.ready
+                    ? "Noch nicht per E-Mail gesendet. Sie können die Rechnung auch herunterladen und selbst senden."
+                    : "Laden Sie die Rechnung herunter und senden Sie sie selbst. Direkt aus der Verwaltung geht es, sobald der E-Mail-Versand eingerichtet ist."}
+              </CardDescription>
+            </CardHeader>
+            {gesendet.length > 0 || !mail.ready ? (
+              <CardContent className="text-sm">
+                {gesendet.length > 0 ? (
+                  <ul className="flex flex-col gap-1.5">
+                    {gesendet.map((m) => (
+                      <li key={m.id} className="min-w-0">
+                        <span className="text-muted-foreground tabular-nums">
+                          {zeit.format(m.sentAt)}
+                        </span>{" "}
+                        an <span className="break-all">{m.to}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Link
+                    href={"/admin/email-versand" as never}
+                    className="underline underline-offset-2"
+                  >
+                    E-Mail-Versand einrichten
+                  </Link>
+                )}
+              </CardContent>
+            ) : null}
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>E-Rechnung</CardTitle>

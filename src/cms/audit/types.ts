@@ -34,6 +34,7 @@ export const AUDIT_ACTIONS = {
   "weiterleitung.geloescht": "Weiterleitung gelöscht",
   "rechnung.gestellt": "Rechnung gestellt",
   "rechnung.storniert": "Rechnung storniert",
+  "rechnung.versendet": "Rechnung per E-Mail gesendet",
   "zahlung.erfasst": "Zahlung erfasst",
   "zahlung.entfernt": "Zahlung entfernt",
   "mahnung.geschrieben": "Mahnung geschrieben",

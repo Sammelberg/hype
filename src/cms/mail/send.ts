@@ -35,7 +35,12 @@ export async function mailStatus(): Promise<MailStatus> {
 /** Sends one message and logs it; throws a MailError the owner can act on. */
 export async function sendMail(
   mail: OutgoingMail,
-  log: { kind: EmailKind; sentById?: number | null },
+  log: {
+    kind: EmailKind;
+    sentById?: number | null;
+    /** The document the mail carries, for its own list of sent mails. */
+    target?: { type: string; id: string | number } | null;
+  },
 ) {
   const { settings, password, problem } = await mailbox();
   const result = smtpOptions({ ...settings, password });
@@ -72,6 +77,8 @@ export async function sendMail(
       kind: log.kind,
       sentById: log.sentById ?? null,
       messageId: info.messageId ?? null,
+      targetType: log.target?.type ?? null,
+      targetId: log.target ? String(log.target.id) : null,
     });
     return info;
   } catch (error) {

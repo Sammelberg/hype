@@ -1,5 +1,5 @@
 // „Gesendete E-Mails“ (cms.email_log): one row per message the mail server accepted.
-import { count, desc } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../db/client";
 import { emailLog } from "../db/schema";
@@ -26,4 +26,16 @@ export async function listMailLog(
     client.select({ total: count() }).from(emailLog),
   ]);
   return { items, total: total?.total ?? 0 };
+}
+
+/** The mails that carried one document, the latest first. */
+export async function mailsZu(
+  target: { type: string; id: string | number },
+  client: Db | Tx = db,
+): Promise<EmailLogRow[]> {
+  return client
+    .select()
+    .from(emailLog)
+    .where(and(eq(emailLog.targetType, target.type), eq(emailLog.targetId, String(target.id))))
+    .orderBy(desc(emailLog.sentAt), desc(emailLog.id));
 }

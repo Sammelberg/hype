@@ -143,8 +143,15 @@ export const emailLog = cms.table(
     kind: text().$type<EmailKind>().notNull(),
     sentById: integer().references(() => users.id, { onDelete: "set null" }),
     messageId: varchar({ length: 500 }),
+    // The document the mail carried (`rechnung`, `12`), without a foreign key: the log outlives it
+    // and stays apart from the office's schema.
+    targetType: text(),
+    targetId: text(),
   },
-  (t) => [index("email_log_sent_idx").on(t.sentAt)],
+  (t) => [
+    index("email_log_sent_idx").on(t.sentAt),
+    index("email_log_target_idx").on(t.targetType, t.targetId),
+  ],
 );
 
 // „Passwort vergessen“: a one-time link by e-mail (src/cms/auth/reset.ts). Only the sha256 of the

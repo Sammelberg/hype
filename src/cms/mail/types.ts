@@ -64,5 +64,6 @@ export const EMAIL_KINDS = {
   test: "Test-E-Mail",
   system: "Passwort-Link",
   anfrage: "Neue Anfrage",
+  rechnung: "Rechnung",
 } as const;
 export type EmailKind = keyof typeof EMAIL_KINDS;
