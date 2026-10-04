@@ -22,8 +22,12 @@ services:
     environment:
       DATABASE_URL: postgres://kern:${POSTGRES_PASSWORD}@postgres:5432/kern
       MEDIA_DIR: /app/media
+    # Uploads, and the sizes next/image encodes on first request: kept across deploys, or every
+    # page waits again until each image has been encoded once more. Only the images folder — the
+    # rest of .next/cache belongs to the build that runs.
     volumes:
       - media:/app/media
+      - image_cache:/app/.next/cache/images
     networks:
       default: {}
       edge:
@@ -73,5 +77,6 @@ networks:
     name: ${EDGE_NETWORK:-edge}
 
 volumes:
+  image_cache:
   media:
   pgdata:

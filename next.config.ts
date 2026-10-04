@@ -48,7 +48,12 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   poweredByHeader: false,
   images: {
-    formats: ["image/avif", "image/webp"],
+    // WebP only: the server encodes each image on its first request per width, and AVIF costs
+    // about seven times as long (measured in port: 20.5 s against 2.8 s for one page, cold).
+    formats: ["image/webp"],
+    // The encoded sizes live on the volume image_cache (deploy/compose.yml), which outlives
+    // deploys; without a cap Next would let it grow to half the free disk of a shared host.
+    maximumDiskCacheSize: 2_000_000_000,
     localPatterns: [{ pathname: "/media/**" }],
   },
   turbopack: { root: dirname },
