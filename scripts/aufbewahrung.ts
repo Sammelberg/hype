@@ -1,5 +1,5 @@
 // `pnpm cms:aufbewahrung` — applies the retention periods, from cron on the server once a night:
-//   0 3 * * *  cd /srv/kern && pnpm cms:aufbewahrung >> /var/log/kern-aufbewahrung.log 2>&1
+//   0 3 * * *  cd /srv/hype && pnpm cms:aufbewahrung >> /var/log/hype-aufbewahrung.log 2>&1
 // Deletes contact messages older than six months (read or not), expired sessions, used or expired
 // password links and spent rate limit windows, and records what it did in the audit log, in one transaction. The audit log
 // itself and invoices are kept: GoBD asks for years, not months.

@@ -1,6 +1,6 @@
-# The site (github.com/Sammelberg/kern) on the server's shared entrance: this file goes
-# to the edge's sites/ as kern.caddy, then `caddy reload`. Its app joins edge as
-# kern-app (deploy/compose.yml). Caddy sets X-Forwarded-For to the client's own address,
+# The site (github.com/Sammelberg/hype) on the server's shared entrance: this file goes
+# to the edge's sites/ as hype.caddy, then `caddy reload`. Its app joins edge as
+# hype-app (deploy/compose.yml). Caddy sets X-Forwarded-For to the client's own address,
 # which the rate limits read; uploads may be up to 60 MB.
 example.de {
 	encode zstd gzip
@@ -8,7 +8,7 @@ example.de {
 	request_body {
 		max_size 64MB
 	}
-	reverse_proxy kern-app:3000
+	reverse_proxy hype-app:3000
 }
 
 www.example.de {

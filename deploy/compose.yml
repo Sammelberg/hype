@@ -1,10 +1,10 @@
 # Production stack on the own server (IONOS): the site with its admin (Next.js with the own CMS
 # and the office) and Postgres — nothing else. HTTPS comes from the server's shared entrance (a
-# Caddy for every site on this host, `edge`): the app joins its network as `kern-app`, and
+# Caddy for every site on this host, `edge`): the app joins its network as `hype-app`, and
 # the entrance's site file (deploy/edge.caddy) sends the domain there. Data sits in named volumes.
-# Own project name: the development compose file in the repository root is project „kern“, and
+# Own project name: the development compose file in the repository root is project „hype“, and
 # a shared name would make both files manage the same containers and volumes.
-name: kern-prod
+name: hype-prod
 
 x-restart: &restart
   restart: unless-stopped
@@ -17,10 +17,10 @@ x-logging: &logging
 services:
   app:
     <<: [*restart, *logging]
-    image: kern-app:latest
+    image: hype-app:latest
     env_file: .env
     environment:
-      DATABASE_URL: postgres://kern:${POSTGRES_PASSWORD}@postgres:5432/kern
+      DATABASE_URL: postgres://hype:${POSTGRES_PASSWORD}@postgres:5432/hype
       MEDIA_DIR: /app/media
     # Uploads, and the sizes next/image encodes on first request: kept across deploys, or every
     # page waits again until each image has been encoded once more. Only the images folder — the
@@ -31,7 +31,7 @@ services:
     networks:
       default: {}
       edge:
-        aliases: [kern-app]
+        aliases: [hype-app]
     depends_on:
       postgres: { condition: service_healthy }
     mem_limit: 1536m
@@ -40,11 +40,11 @@ services:
   # (deploy/inhalt.sh), the first administrator (deploy/admin.sh), the nightly jobs
   # (deploy/aufgabe.sh).
   migrate:
-    image: kern-migrate:latest
+    image: hype-migrate:latest
     profiles: [tools]
     env_file: .env
     environment:
-      DATABASE_URL: postgres://kern:${POSTGRES_PASSWORD}@postgres:5432/kern
+      DATABASE_URL: postgres://hype:${POSTGRES_PASSWORD}@postgres:5432/hype
       MEDIA_DIR: /app/media
     volumes:
       - media:/app/media
@@ -55,16 +55,16 @@ services:
     <<: [*restart, *logging]
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: kern
+      POSTGRES_USER: hype
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: kern
+      POSTGRES_DB: hype
     command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=100"]
     # Loopback only: the image build (deploy/deploy.sh) prerenders the site from this database.
     ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-5437}:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kern -d kern"]
+      test: ["CMD-SHELL", "pg_isready -U hype -d hype"]
       interval: 5s
       timeout: 3s
       retries: 20

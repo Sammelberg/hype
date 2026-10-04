@@ -1,21 +1,21 @@
 # Local development database. `pnpm init:project` sets the project name and a free port, so
 # several projects from this template run side by side.
-name: kern
+name: hype
 
 services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: kern
-      POSTGRES_PASSWORD: kern
-      POSTGRES_DB: kern
+      POSTGRES_USER: hype
+      POSTGRES_PASSWORD: hype
+      POSTGRES_DB: hype
     ports:
-      - "127.0.0.1:5434:5432"
+      - "127.0.0.1:5436:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kern -d kern"]
+      test: ["CMD-SHELL", "pg_isready -U hype -d hype"]
       interval: 5s
       timeout: 3s
       retries: 10

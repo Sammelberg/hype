@@ -12,13 +12,13 @@ export { lexical };
 // What every page shares: /admin → Website. The closing invitation starts from
 // SITE_TEXT_DEFAULTS in src/cms/content/site-settings.ts.
 export const seedSettings = {
-  siteName: "Muster GmbH",
-  ownerName: "Muster GmbH",
+  siteName: "Hype Agency",
+  ownerName: "Hype Agency",
   tagline: "Ein kurzer Satz, der sagt, was Sie tun.",
   description:
     "Beschreibung der Website für Suchmaschinen: was Sie anbieten, für wen und wo – höchstens 160 Zeichen.",
   // Shown in the footer, on /kontakt and in the legal pages once set.
-  contactEmail: null as string | null,
+  contactEmail: "hallo@example.com" as string | null,
   socialLinks: [] as { label: string; url: string }[],
 };
 

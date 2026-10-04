@@ -1,6 +1,6 @@
 {
-  "name": "kern",
-  "version": "1.0.0",
+  "name": "hype",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.6.0+sha512.3ef68f951cb111ac204b4a5a16f0b2ddf0da56a96e0413e81d855d9f0b55ef926714709028e1cd00c405c2c5fb7b9e8ec4dc46777c805d0373c2f2ff00fd20ec",
@@ -15,9 +15,9 @@
     }
   },
   "scripts": {
-    "dev": "next dev -p ${PORT:-3002}",
+    "dev": "next dev -p ${PORT:-3004}",
     "build": "next build",
-    "start": "next start -p ${PORT:-3003}",
+    "start": "next start -p ${PORT:-3005}",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "typecheck": "next typegen && node node_modules/typescript-7/bin/tsc --noEmit",
@@ -34,8 +34,9 @@
     "analyze": "ANALYZE=true next build",
     "db:up": "docker compose up -d --wait postgres mailpit",
     "db:down": "docker compose down",
-    "migrate": "tsx --env-file-if-exists=.env src/cms/db/migrate.ts",
+    "migrate": "tsx --env-file-if-exists=.env src/cms/db/migrate.ts && tsx --env-file-if-exists=.env scripts/migrate-buchung.ts",
     "migrate:create": "drizzle-kit generate --name",
+    "migrate:create:buchung": "drizzle-kit generate --config drizzle.buchung.config.ts --name",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "cms:passwort": "tsx --env-file-if-exists=.env scripts/set-password.ts",
     "cms:geplant": "tsx --env-file-if-exists=.env scripts/geplant.ts",

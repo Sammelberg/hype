@@ -17,12 +17,12 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: kern
-          POSTGRES_PASSWORD: kern
-          POSTGRES_DB: kern
+          POSTGRES_USER: hype
+          POSTGRES_PASSWORD: hype
+          POSTGRES_DB: hype
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U kern -d kern"
+          --health-cmd "pg_isready -U hype -d hype"
           --health-interval 5s --health-timeout 3s --health-retries 10
       # The test mailbox the seed points the site at (e2e/mail.spec.ts reads it over its API).
       mailpit:
@@ -33,11 +33,11 @@ jobs:
           MP_DISABLE_VERSION_CHECK: "true"
         ports: ["1025:1025", "8025:8025"]
     env:
-      DATABASE_URL: postgres://kern:kern@localhost:5432/kern
+      DATABASE_URL: postgres://hype:hype@localhost:5432/hype
       # One port for the build, the e2e server (standalone server.js) and Playwright
       # (playwright.config.ts waits on PORT).
-      PORT: "3002"
-      NEXT_PUBLIC_SERVER_URL: http://localhost:3002
+      PORT: "3000"
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3004
       NEXT_TELEMETRY_DISABLED: "1"
       E2E_ADMIN_PASSWORD: ci-only-e2e-admin-passwort
       FORM_SECRET: ci-only-form-secret-0123456789abcdef

@@ -2,7 +2,7 @@
 # Proves the last backup can be restored: brings back the newest snapshots of both groups into a
 # scratch database and a scratch folder, compares them with the live data and drops them again.
 # Run it after the first backup and then once a month (cron), e.g.:
-#   30 4 1 * *  /srv/kern/scripts/backup/wiederherstellung-test.sh >> /var/log/kern-sicherung.log 2>&1
+#   30 4 1 * *  /srv/hype/scripts/backup/wiederherstellung-test.sh >> /var/log/hype-sicherung.log 2>&1
 # Exit 0: every check held. Settings as for sicherung.sh; the database user may create databases.
 #
 # The same steps restore for real (into the live database instead of the scratch one):
@@ -25,8 +25,8 @@ trap cleanup EXIT
 log "Wiederherstellungstest beginnt ($RESTIC_REPOSITORY)"
 mkdir -p "$TARGET"
 chmod 700 "$STAGING" "$TARGET"
-restic restore latest --host "$HOST_TAG" --tag kern-daten --target "$TARGET/daten" --quiet
-restic restore latest --host "$HOST_TAG" --tag kern-anfragen --target "$TARGET/anfragen" --quiet
+restic restore latest --host "$HOST_TAG" --tag hype-daten --target "$TARGET/daten" --quiet
+restic restore latest --host "$HOST_TAG" --tag hype-anfragen --target "$TARGET/anfragen" --quiet
 dump="$(find "$TARGET/daten" -name datenbank.dump -print -quit)"
 anfragen="$(find "$TARGET/anfragen" -name anfragen.dump -print -quit)"
 [ -n "$dump" ] || fail "Kein Datenbank-Dump in der Sicherung."

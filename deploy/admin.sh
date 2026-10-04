@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 [ -n "${1:-}" ] || { echo "Aufruf: deploy/admin.sh <e-mail>" >&2; exit 1; }
-docker image inspect kern-migrate:latest >/dev/null 2>&1 \
-  || docker build --target migrate -t kern-migrate:latest ..
+docker image inspect hype-migrate:latest >/dev/null 2>&1 \
+  || docker build --target migrate -t hype-migrate:latest ..
 docker compose --env-file .env -f compose.yml run --rm migrate \
   pnpm --silent cms:passwort "$1" --anlegen --force
