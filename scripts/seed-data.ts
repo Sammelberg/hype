@@ -26,8 +26,8 @@ export const seedSettings = {
 // headings start from src/cms/content/page-sections.ts.
 export const seedSections = {
   hero: {
-    headline: "Eine Überschrift, die in einem Satz sagt, was Sie anbieten.",
-    lead: "Eine Zeile darunter: für wen, und was man davon hat.",
+    headline: "Wer kommt zum Kinder­geburtstag?",
+    lead: "Eisprinzessin, Superheld oder Zauberer. Sie sehen sofort, was es bei Ihnen kostet und welcher Samstag noch frei ist, ganz ohne Anruf.",
   },
   steps: [
     { title: "Kennenlernen", text: "Sie schildern Ihr Anliegen, wir hören zu und fragen nach." },

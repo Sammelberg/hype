@@ -1,3 +1,4 @@
+import "@fontsource-variable/shantell-sans/infm.css";
 import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
