@@ -17,8 +17,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Deep Space background (admin.css .dark), the default whatever the device prefers.
-  themeColor: "#040915",
+  // admin.css backgrounds: light by default, dark when the device prefers it.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function AdminRootLayout({ children }: { children: ReactNode }) {

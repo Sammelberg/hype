@@ -16,7 +16,7 @@ echo "1/5 Datenbank"
 compose up -d --wait postgres
 
 echo "2/5 Migrationen"
-docker build --target migrate -t schwarzwald-migrate:latest ..
+docker build --target migrate -t kern-migrate:latest ..
 compose run --rm migrate
 
 echo "3/5 Build"
@@ -25,17 +25,17 @@ build_env=$(mktemp)
 trap 'rm -f "$build_env"' EXIT
 {
   grep -v '^DATABASE_URL=' .env
-  echo "DATABASE_URL=postgres://schwarzwald:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_HOST_PORT:-5437}/schwarzwald"
+  echo "DATABASE_URL=postgres://kern:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_HOST_PORT:-5437}/kern"
 } >"$build_env"
 # The build stage always runs: it prerenders from the database, which Docker's layer cache cannot
 # see — an unchanged checkout would otherwise ship the pages of an earlier deploy.
 DOCKER_BUILDKIT=1 docker build --network host --secret id=env,src="$build_env" \
-  --no-cache-filter build --target app -t schwarzwald-app:latest ..
+  --no-cache-filter build --target app -t kern-app:latest ..
 
 echo "4/5 Start"
 compose up -d --remove-orphans --wait app
 
 echo "5/5 Aufräumen"
 # The images of earlier deploys; other images on the host stay.
-docker image prune -f --filter label=schwarzwald.image=true >/dev/null
+docker image prune -f --filter label=kern.image=true >/dev/null
 compose ps --format "table {{.Service}}\t{{.Status}}"

@@ -1,11 +1,13 @@
 // `pnpm init:project` — turns a fresh copy of this template into a new project.
 // Asks for name, site name, owner, contact e-mail and app and database ports, then rewrites
-// package.json, docker-compose.yml, CI, Playwright, .env(.example), seed data, CLAUDE.md, README.md
-// and the Reticle project id; links the skill library, builds the graft
-// index and optionally starts a fresh git history.
+// package.json, docker-compose.yml, CI, Playwright, .env(.example), the production stack in deploy/,
+// seed data, CLAUDE.md, README.md and the Reticle project id; links the skill library, builds the
+// graft index. Keeping the history (the default) turns the clone's `origin` (the kern repository)
+// into `upstream` with push disabled, so core fixes arrive with `git pull upstream main`; a fresh
+// history cuts that tie.
 //
 // Non-interactive: pnpm init:project --yes --name kunde-x --site-name "Kunde X" --owner "Kunde X GmbH" \
-//   --email hallo@kunde-x.de --app-port 3001 --db-port 5434 --git fresh
+//   --email hallo@kunde-x.de --app-port 3001 --db-port 5434 --git keep
 // Plain Node, no dependencies: it runs right after `pnpm install`.
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -120,10 +122,13 @@ const dbPort = await ask("Lokaler Postgres-Port", String(await firstFreePort(543
   flag: "db-port",
   validate: (v) => (/^\d{4,5}$/.test(v) ? null : "Eine Portnummer, z. B. 5434."),
 });
+// Keeping kern's history keeps `git pull upstream main` working; a fresh one starts unrelated.
 const freshGit = existsSync(file(".git"))
-  ? (await ask("Git-Historie neu beginnen? (ja/nein)", "ja", { flag: "git" })).match(
-      /^(ja|j|y|yes|fresh)$/i,
-    )
+  ? (
+      await ask("Git-Historie neu beginnen? (nein = Kern-Updates per upstream)", "nein", {
+        flag: "git",
+      })
+    ).match(/^(ja|j|y|yes|fresh)$/i)
   : true;
 rl?.close();
 
@@ -204,10 +209,33 @@ edit("scripts/seed-data.ts", [
 edit("CLAUDE.md", [
   [/^# .*$/m, `# ${name} — ${siteName}`],
   // The "this repo is a template" note; the project is no longer one.
-  [/^This repo is a \*\*starter template\*\*.*\n\n/m, ""],
+  [/^This repo is a \*\*core template\*\*.*\n\n/m, ""],
   [/^- \*\*Site \/ owner:\*\* .*$/m, `- **Site / owner:** ${siteName} — ${owner}`],
 ]);
 edit("README.md", [[/^# .*$/m, `# ${siteName}`]]);
+
+// The production stack: compose project, container, image and database names, the checkout's folder
+// on the server, the edge's site file. The domain (example.de) is the owner's to set.
+const word = new RegExp(`\\b${escape(oldName)}\\b`, "g");
+for (const path of [
+  "deploy/compose.yml",
+  "deploy/edge.caddy",
+  "deploy/README.md",
+  "deploy/deploy.sh",
+  "deploy/admin.sh",
+  "deploy/aufgabe.sh",
+  "deploy/einrichten.sh",
+  "deploy/inhalt.sh",
+  "Dockerfile",
+  "scripts/inhalt-exportieren.sh",
+  "scripts/aufbewahrung.ts",
+  "scripts/backup/_gemeinsam.sh",
+  "scripts/backup/sicherung.sh",
+  "scripts/backup/wiederherstellung-test.sh",
+]) {
+  if (existsSync(file(path)) && new RegExp(word.source).test(read(path)))
+    edit(path, [[word, name]]);
+}
 
 const reticleId = `${name}-${randomBytes(4).toString("hex")}`;
 edit(".reticle.json", [[/"projectId": ".*?"/, `"projectId": "${reticleId}"`]]);
@@ -268,7 +296,7 @@ if (freshGit) {
   git("add", "-A");
   try {
     // --no-verify: lint-staged would run over the whole tree before dependencies are known to work.
-    git("commit", "-q", "--no-verify", "-m", `chore: start ${name} from the starter template`);
+    git("commit", "-q", "--no-verify", "-m", `chore: start ${name} from the kern template`);
     console.log("\nGit: neue Historie mit einem ersten Commit auf main.");
   } catch (error) {
     console.log(
@@ -280,6 +308,23 @@ if (freshGit) {
         .at(-1)}\n` +
         '  Identität setzen (git config user.name/user.email) und "git commit" ausführen.',
     );
+  }
+}
+
+if (!freshGit) {
+  const git = (...a) => execFileSync("git", a, { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+  try {
+    const origin = git("remote", "get-url", "origin").toString().trim();
+    if (/[/:]kern(\.git)?$/.test(origin)) {
+      git("remote", "rename", "origin", "upstream");
+      git("remote", "set-url", "--push", "upstream", "DISABLED");
+      console.log(
+        "\nGit: origin (kern) heißt jetzt upstream, Push gesperrt. Kern-Updates: git pull upstream main." +
+          "\n  Eigenes Repository: git remote add origin <url> && git push -u origin main",
+      );
+    }
+  } catch {
+    /* no origin: nothing to rename */
   }
 }
 

@@ -4,11 +4,11 @@ import { pruefeRechnung } from "./pflichtangaben";
 import type { Empfaenger, Firma } from "./typen";
 
 const firma: Firma = {
-  name: "Schwarzwald Systems",
-  inhaber: "Oleksandr Zamula",
-  strasse: "Merianhof 5",
-  plz: "79104",
-  ort: "Freiburg im Breisgau",
+  name: "Muster GmbH",
+  inhaber: "Erika Mustermann",
+  strasse: "Musterstraße 1",
+  plz: "12345",
+  ort: "Musterstadt",
   steuernummer: "06001/12345",
   ustId: null,
   kleinunternehmer: false,

@@ -8,16 +8,16 @@ import { ReticleDev } from "@/components/dev/reticle-dev";
 import { PreviewBridge } from "@/components/site/preview-bridge";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
-import { SmoothScroll } from "@/components/site/smooth-scroll";
 import { env } from "@/env";
+import { BRAND_HEX } from "@/lib/brand";
 import { getSiteNav, getSiteSettings } from "@/data/queries";
 
 import "./globals.css";
 
-// Browser UI colour matches --background (globals.css): the site is dark-only.
+// Browser UI colour matches --background (globals.css; hex in src/lib/brand.ts).
 export const viewport: Viewport = {
-  themeColor: "#020510",
-  colorScheme: "dark",
+  themeColor: BRAND_HEX.background,
+  colorScheme: "light",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,7 +47,6 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         >
           Zum Inhalt springen
         </a>
-        <SmoothScroll />
         <SiteHeader siteName={settings.siteName || "Website"} />
         <div id="inhalt" className="flex-1">
           {children}

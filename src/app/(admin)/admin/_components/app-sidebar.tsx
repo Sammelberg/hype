@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { mayOpen, type Role } from "@/cms/auth/roles";
-import { FirMark } from "@/components/site/fir-mark";
+import { initialOf } from "@/lib/brand";
 import {
   Sidebar,
   SidebarContent,
@@ -86,7 +86,9 @@ export function AppSidebar({
             <SidebarMenuButton size="lg" asChild tooltip={siteName}>
               <Link href={"/admin" as never}>
                 <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-[inset_0_1px_0_oklch(1_0_0/0.18)]">
-                  <FirMark className="size-5" />
+                  <span aria-hidden="true" className="font-semibold">
+                    {initialOf(siteName)}
+                  </span>
                 </span>
                 <span className="flex flex-col leading-tight">
                   <span className="truncate font-semibold tracking-tight">{siteName}</span>

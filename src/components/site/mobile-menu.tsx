@@ -3,15 +3,12 @@
 import { SearchIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { CSSProperties } from "react";
 
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { NavSection } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
 import { KontaktButton } from "./desktop-nav";
-import styles from "./mobile-menu.module.css";
-import { pauseSmoothScroll } from "./smooth-scroll";
 import { Wortmarke } from "./wortmarke";
 
 const inSection = (pathname: string, href: string) =>
@@ -20,9 +17,7 @@ const inSection = (pathname: string, href: string) =>
 // Every page of the site below lg, where the header has no room for them. A sheet over the whole
 // screen whose top row is the header again — the logo where it was, „Schließen“ where „Menü“ was
 // — then the sections, numbered, each with its pages beside one another, and the inquiry as the
-// one button at the end. Its rows come up one after another (CSS, not with reduced motion).
-// Radix traps focus, closes on Escape and returns focus to the button; Lenis pauses so the page
-// behind it holds still.
+// one button at the end. Radix traps focus, closes on Escape and returns focus to the button.
 export function MobileMenu({ sections, siteName }: { sections: NavSection[]; siteName: string }) {
   const pathname = usePathname();
   const list = sections.filter((section) => section.href !== "/kontakt");
@@ -42,7 +37,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
   );
 
   return (
-    <Sheet onOpenChange={pauseSmoothScroll}>
+    <Sheet>
       <SheetTrigger className="inline-flex min-h-11 items-center gap-3 rounded-full px-2 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
         Menü
         <span aria-hidden="true" className="flex w-5 flex-col items-end gap-[5px]">
@@ -72,11 +67,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
             {list.map((section, i) => {
               const current = inSection(pathname, section.href);
               return (
-                <li
-                  key={section.href}
-                  className={cn(styles.row, "border-b py-4 sm:py-5")}
-                  style={{ "--i": i } as CSSProperties}
-                >
+                <li key={section.href} className="border-b py-4 sm:py-5">
                   <div className="flex items-baseline gap-4">
                     <span
                       aria-hidden="true"
@@ -115,10 +106,7 @@ export function MobileMenu({ sections, siteName }: { sections: NavSection[]; sit
           </ol>
         </nav>
 
-        <div
-          className={cn(styles.row, "flex flex-col gap-4 px-gutter pt-8 pb-10")}
-          style={{ "--i": list.length } as CSSProperties}
-        >
+        <div className="flex flex-col gap-4 px-gutter pt-8 pb-10">
           <SheetClose asChild>
             <KontaktButton className="h-12 w-full text-base" />
           </SheetClose>

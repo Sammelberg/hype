@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
 import { PageHeader } from "@/components/site/page-header";
-import { type GlyphName, ServiceGlyph } from "@/components/site/service-glyphs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { highlight } from "./_lib/highlight";
-import { getLeistungenContent, searchSite } from "@/data/queries";
+import { searchSite } from "@/data/queries";
 
 // Result pages are thin and endless — keep them out of the index, but let crawlers follow links.
 export const metadata: Metadata = { title: "Suche", robots: { index: false, follow: true } };
@@ -28,23 +26,15 @@ export default async function SearchPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const query = (Array.isArray(q) ? q[0] : q)?.trim().slice(0, 100) ?? "";
   const searched = query.length >= MIN_LENGTH;
-  const [results, { sections }] = await Promise.all([
-    searched ? searchSite(query) : Promise.resolve([]),
-    getLeistungenContent(),
-  ]);
-  const suggestions: { href: string; label: string; glyph?: GlyphName }[] = [
-    ...sections.services.map((s) => ({
-      href: `/leistungen/${s.slug}`,
-      label: s.short,
-      glyph: s.glyph,
-    })),
+  const results = searched ? await searchSite(query) : [];
+  const suggestions: { href: string; label: string }[] = [
     { href: "/projekte", label: "Projekte" },
     { href: "/kontakt", label: "Kontakt" },
   ];
 
   return (
     <main>
-      <PageHeader title="Suche" horizonKey="/suche">
+      <PageHeader title="Suche">
         <Form action="/suche" role="search" className="mt-10 max-w-3xl">
           <Label htmlFor="suche-begriff" className="text-base">
             Suchbegriff
@@ -103,9 +93,6 @@ export default async function SearchPage({ searchParams }: Props) {
                     href={s.href as never}
                     className="inline-flex items-center gap-2.5 rounded-full border border-primary-soft/25 bg-card px-5 py-2.5 text-base transition-colors hover:border-primary-soft/60 hover:text-primary-soft"
                   >
-                    {s.glyph ? (
-                      <ServiceGlyph name={s.glyph} className="size-5 text-primary-soft" />
-                    ) : null}
                     {s.label}
                   </Link>
                 </li>
@@ -119,12 +106,8 @@ export default async function SearchPage({ searchParams }: Props) {
             </h2>
             {results.length ? (
               <ol className="mt-6 border-b">
-                {results.map((result, i) => (
-                  <li
-                    key={result.id}
-                    className="rise-later border-t"
-                    style={{ "--delay": `${0.1 + Math.min(i, 8) * 0.05}s` } as CSSProperties}
-                  >
+                {results.map((result) => (
+                  <li key={result.id} className="border-t">
                     {/* Only the title names the link; the whole row is its target. */}
                     <div className="group relative -mx-4 rounded-2xl px-4 py-7 transition-colors hover:bg-card">
                       <p className="text-sm font-medium text-primary-soft">

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { safePreviewPath } from "./safe-path";
 
-const origin = "https://schwarzwald.example";
+const origin = "https://kern.example";
 
 describe("safePreviewPath", () => {
   it.each([

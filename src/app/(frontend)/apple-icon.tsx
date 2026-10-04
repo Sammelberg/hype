@@ -1,12 +1,15 @@
 import { ImageResponse } from "next/og";
 
-import { BRAND_HEX, FirMark } from "@/components/site/fir-mark";
+import { BRAND_HEX, initialOf } from "@/lib/brand";
+import { getSiteSettings } from "@/data/queries";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
-// iOS adds its own rounded mask, so the square stays unrounded.
-export default function AppleIcon() {
+// Placeholder: the site name's first letter, rendered locally. A project replaces it with its
+// designed `apple-icon.png`.
+export default async function AppleIcon() {
+  const { siteName } = await getSiteSettings();
   return new ImageResponse(
     <div
       style={{
@@ -15,12 +18,14 @@ export default function AppleIcon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: BRAND_HEX.background,
+        borderRadius: 0,
+        background: BRAND_HEX.accent,
+        color: BRAND_HEX.accentForeground,
+        fontSize: 110,
+        fontWeight: 600,
       }}
     >
-      <div style={{ width: 112, height: 112, display: "flex" }}>
-        <FirMark color={BRAND_HEX.accent} />
-      </div>
+      {initialOf(siteName || "Website")}
     </div>,
     size,
   );

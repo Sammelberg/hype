@@ -8,7 +8,7 @@ import { clampDescription } from "./description";
 type Meta = { title?: string | null; description?: string | null; image?: MediaDoc | null };
 
 // Alt text of the drawn share images (components/site/share-image.tsx).
-export const SHARE_ALT = "Seitentitel von Schwarzwald Systems über einem gezeichneten Horizont";
+export const SHARE_ALT = "Vorschaubild mit dem Titel der Seite";
 
 export const absoluteUrl = (path = "/") => new URL(path, env.NEXT_PUBLIC_SERVER_URL).toString();
 

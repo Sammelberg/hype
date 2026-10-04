@@ -6,7 +6,7 @@
 
 FROM node:26-bookworm-slim AS base
 # deploy/deploy.sh prunes only the images of this stack (other sites share the Docker host).
-LABEL schwarzwald.image=true
+LABEL kern.image=true
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
 # Node 26 ships without Corepack: pnpm in the version package.json names.
 RUN npm install -g pnpm@12.6.0 \
@@ -30,7 +30,7 @@ COPY . .
 RUN --mount=type=secret,id=env,target=/app/.env pnpm build
 
 FROM node:26-bookworm-slim AS app
-LABEL schwarzwald.image=true
+LABEL kern.image=true
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 # sharp writes the image sizes on upload; glibc gives each of its threads a malloc arena of its
 # own and keeps what it freed. Two arenas keep the peak down without slowing it.

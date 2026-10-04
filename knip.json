@@ -5,11 +5,9 @@
     "scripts/clean-e2e.ts",
     "scripts/prepare-e2e.ts",
     "scripts/e-rechnung-proben.ts",
-    "scripts/import-payload.ts",
     "src/cms/db/migrate.ts",
     "drizzle.config.ts",
-    "scripts/set-password.ts",
-    "scripts/drop-payload-tables.ts"
+    "scripts/set-password.ts"
   ],
   "ignore": [".claude/**", "graft/**", "src/components/ui/**"],
   "ignoreDependencies": ["tw-animate-css", "shadcn", "@tailwindcss/typography"]

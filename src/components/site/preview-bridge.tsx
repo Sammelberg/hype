@@ -11,8 +11,6 @@ import {
 } from "./preview-messages";
 import { cn } from "@/lib/utils";
 
-import { scrollPageTo } from "./smooth-scroll";
-
 // Inside the admin's preview iframe (draft mode only). The editor posts `cms:refresh` after every
 // save, and the page re-renders with the new draft; it posts `cms:focus` when a section of the
 // form is being edited, and the page scrolls to that part (`data-cms-zone`) and outlines it, so
@@ -32,7 +30,10 @@ function scrollToZone(zone: string) {
   const offset = zone === "kopfleiste" ? 0 : (header?.offsetHeight ?? 0) + 48;
   const top = Math.max(0, element.getBoundingClientRect().top + window.scrollY - offset);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  scrollPageTo(zone === "kopfleiste" || zone === "kopf" ? 0 : top, { immediate: reduced });
+  window.scrollTo({
+    top: zone === "kopfleiste" || zone === "kopf" ? 0 : top,
+    behavior: reduced ? "instant" : "smooth",
+  });
 }
 
 export function PreviewBridge() {

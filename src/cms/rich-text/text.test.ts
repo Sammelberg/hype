@@ -27,9 +27,9 @@ describe("firstParagraph", () => {
   it("keeps the words of lines apart (an address)", () => {
     const content = doc({
       type: "paragraph",
-      children: [text("Merianhof 5"), { type: "linebreak" }, text("79104 Freiburg")],
+      children: [text("Musterstraße 1"), { type: "linebreak" }, text("12345 Musterstadt")],
     });
-    expect(firstParagraph(content)).toBe("Merianhof 5 79104 Freiburg");
+    expect(firstParagraph(content)).toBe("Musterstraße 1 12345 Musterstadt");
   });
 
   it("returns null without content", () => {

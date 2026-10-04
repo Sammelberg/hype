@@ -9,7 +9,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { defaultSections } from "@/cms/content/page-sections";
 import { kindOf, pathOf, PROTECTED_SLUGS } from "@/cms/content/page-tree";
 import {
   type FormDoc,
@@ -50,14 +49,11 @@ import {
   TextSection,
 } from "./common-sections";
 import type { EditorContext } from "./editor-context";
-import { LEISTUNG_SECTIONS, LeistungSections, leistungSectionOf } from "./leistung-sections";
 import {
   HOME_SECTIONS,
   HomeSections,
   KONTAKT_SECTIONS,
   KontaktSections,
-  LEISTUNGEN_SECTIONS,
-  LeistungenSections,
   PROJEKTE_SECTIONS,
   ProjekteSections,
 } from "./routed-sections";
@@ -92,10 +88,7 @@ function contentSections(page: Page | null): SectionInfo[] {
 
 // Which card holds a field, for the marks in the index.
 function sectionOf(path: string): string {
-  const leistung = leistungSectionOf(path);
-  if (leistung) return leistung;
   if (path.startsWith("sections.hero")) return "kopf";
-  if (/^sections\.(servicesTitle|services)/.test(path)) return "leistungen";
   if (/^sections\.steps/.test(path)) return "vorgehen";
   if (/^sections\.principles/.test(path)) return "grundsaetze";
   if (path.startsWith("sections.faq")) return "fragen";
@@ -148,8 +141,8 @@ export function PageEditor({
   const values = useWatch({ control });
   const protectedSlug = page ? PROTECTED_SLUGS.has(page.slug) : false;
 
-  // A page's kind follows from its slug, and for a service's page from its parent (the parent
-  // as it is in the form, so moving a page under „Leistungen“ shows the service cards at once).
+  // A page's kind follows from its slug, and where a project adds kinds by parent, from its parent
+  // as it is in the form (page-tree.ts, BY_PARENT).
   const parentSlug = values.parentId
     ? (pages.find((p) => p.id === values.parentId)?.slug ?? null)
     : null;
@@ -257,16 +250,6 @@ export function PageEditor({
     router.refresh();
   };
 
-  // A page that has become a service's page starts with the service sections; one moved away
-  // drops them.
-  const sectionsKind = values.sections?.kind;
-  useEffect(() => {
-    if (kind === "leistung" && !sectionsKind)
-      setValue("sections", defaultSections("leistung"), { shouldDirty: Boolean(page) });
-    if (kind === "content" && sectionsKind === "leistung")
-      setValue("sections", null, { shouldDirty: true });
-  }, [kind, sectionsKind, setValue, page]);
-
   // A refreshed server render (publish, restore, discard) brings new values: adopt them.
   const lastEditing = useRef(editing);
   useEffect(() => {
@@ -280,15 +263,11 @@ export function PageEditor({
   const sectionList: SectionInfo[] =
     kind === "home"
       ? HOME_SECTIONS
-      : kind === "leistungen"
-        ? LEISTUNGEN_SECTIONS
-        : kind === "leistung"
-          ? LEISTUNG_SECTIONS
-          : kind === "projekte"
-            ? PROJEKTE_SECTIONS
-            : kind === "kontakt"
-              ? KONTAKT_SECTIONS
-              : contentSections(page);
+      : kind === "projekte"
+        ? PROJEKTE_SECTIONS
+        : kind === "kontakt"
+          ? KONTAKT_SECTIONS
+          : contentSections(page);
   const invalid = [...new Set(errorPaths(formState.errors).map(sectionOf))];
   const ctx: EditorContext = {
     control,
@@ -388,19 +367,8 @@ export function PageEditor({
           }
         >
           {kind === "home" ? <HomeSections ctx={ctx} /> : null}
-          {kind === "leistungen" ? <LeistungenSections ctx={ctx} /> : null}
           {kind === "projekte" ? <ProjekteSections ctx={ctx} /> : null}
           {kind === "kontakt" ? <KontaktSections ctx={ctx} /> : null}
-          {kind === "leistung" ? (
-            <>
-              <HeadSection ctx={ctx} />
-              <TextSection ctx={ctx} />
-              {values.sections?.kind === "leistung" ? <LeistungSections ctx={ctx} /> : null}
-              <ClosingSection ctx={ctx} />
-              <SeoSection ctx={ctx} />
-              <AddressSection ctx={ctx} />
-            </>
-          ) : null}
           {kind === "content" ? (
             <>
               <HeadSection ctx={ctx} />

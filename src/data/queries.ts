@@ -40,7 +40,6 @@ async function routed<K extends PageSections["kind"]>(path: string, kind: K) {
 }
 
 export const getHomeContent = cache(() => routed("/", "home"));
-export const getLeistungenContent = cache(() => routed("/leistungen", "leistungen"));
 export const getProjekteContent = cache(() => routed("/projekte", "projekte"));
 export const getKontaktContent = cache(() => routed("/kontakt", "kontakt"));
 

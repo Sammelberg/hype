@@ -3,10 +3,7 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { PEN_H, PEN_W, penHorizon } from "@/lib/pen-horizon";
-
-import { BRAND_HEX, FirMark } from "./fir-mark";
-import { FIR_DESIGNS } from "./fir-shapes";
+import { BRAND_HEX, initialOf } from "@/lib/brand";
 
 export const SHARE_SIZE = { width: 1200, height: 630 };
 
@@ -29,22 +26,18 @@ const loadFonts = () =>
   ]));
 
 /**
- * Share image of a page, rendered on our own server with next/og's bundled font: the site's name
- * with the fir, the page title large, and the page's own pen-drawn horizon along the bottom (the
- * same ridges of fir tops its PageHeader draws).
+ * Share image of a page, rendered on our own server with Geist from its local package: the site's
+ * mark and name, the page's section above its title, the title large.
  */
 export async function shareImage({
   siteName,
   title,
   kicker,
-  horizonKey,
 }: {
   siteName: string;
   title: string;
   kicker?: string | null;
-  horizonKey: string;
 }) {
-  const ridges = penHorizon(horizonKey);
   const fontList = await loadFonts();
   const long = title.length > 28;
   return new ImageResponse(
@@ -60,7 +53,22 @@ export async function shareImage({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", padding: "64px 80px 0" }}>
-        <FirMark color={BRAND_HEX.accent} size={48} />
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: BRAND_HEX.accent,
+            color: BRAND_HEX.accentForeground,
+            fontSize: 28,
+            fontWeight: 600,
+          }}
+        >
+          {initialOf(siteName)}
+        </div>
         <div style={{ marginLeft: 16, fontSize: 34, fontWeight: 600, letterSpacing: -0.6 }}>
           {siteName}
         </div>
@@ -71,11 +79,11 @@ export async function shareImage({
           flexDirection: "column",
           flexGrow: 1,
           justifyContent: "center",
-          padding: "0 80px",
+          padding: "0 80px 64px",
         }}
       >
         {kicker ? (
-          <div style={{ fontSize: 32, color: BRAND_HEX.accent, marginBottom: 12 }}>{kicker}</div>
+          <div style={{ fontSize: 32, color: BRAND_HEX.muted, marginBottom: 12 }}>{kicker}</div>
         ) : null}
         <div
           style={{
@@ -89,49 +97,6 @@ export async function shareImage({
           {title}
         </div>
       </div>
-      <svg
-        width={SHARE_SIZE.width}
-        height={150}
-        // The middle of the horizon at its own scale, as a wide screen sees it.
-        viewBox={`${(PEN_W - SHARE_SIZE.width) / 2} ${PEN_H - 150} ${SHARE_SIZE.width} 150`}
-        style={{ display: "flex" }}
-      >
-        {ridges.map((ridge) => {
-          const ink = 0.38 + (0.57 * ridge.depth) / (ridges.length - 1);
-          return (
-            <g key={ridge.depth}>
-              <path d={ridge.fill} fill={BRAND_HEX.background} />
-              <path
-                d={ridge.line}
-                fill="none"
-                stroke={BRAND_HEX.accent}
-                strokeOpacity={ink}
-                strokeWidth={1.6}
-                strokeLinejoin="round"
-              />
-              {ridge.firs.map((fir) => {
-                const shape = FIR_DESIGNS[fir.design];
-                const [vx, vy, vw, vh] = shape.viewBox.split(" ").map(Number) as [
-                  number,
-                  number,
-                  number,
-                  number,
-                ];
-                const k = fir.h / vh;
-                return (
-                  <path
-                    key={`${fir.x}-${fir.h}`}
-                    d={shape.d}
-                    fill={BRAND_HEX.accent}
-                    fillOpacity={ink}
-                    transform={`translate(${fir.x - (vw * k) / 2 - vx * k} ${fir.y - fir.h - vy * k}) scale(${k})`}
-                  />
-                );
-              })}
-            </g>
-          );
-        })}
-      </svg>
     </div>,
     { ...SHARE_SIZE, fonts: fontList },
   );

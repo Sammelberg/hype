@@ -164,9 +164,9 @@ test("the admin's screens have no accessibility violations", async ({ page }) =>
   ]) {
     await check(path);
   }
-  // One editor per kind of page: home, Leistungen, Projekte, Kontakt, a content page.
+  // One editor per kind of page: home, Projekte, Kontakt, a content page.
   await page.goto("/admin/seiten");
-  for (const title of ["Startseite", "Leistungen", "Projekte", "Kontakt", "Über uns"]) {
+  for (const title of ["Startseite", "Projekte", "Kontakt", "Über uns"]) {
     const href = await page
       .getByRole("main")
       .getByRole("link", { name: title, exact: true })

@@ -6,17 +6,15 @@ import { Controller } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { ServiceGlyph } from "@/components/site/service-glyphs";
+import { Field, FieldLabel } from "@/components/ui/field";
 import type { SectionsOf } from "@/cms/content/page-sections";
-import type { Glyph } from "@/cms/content/types";
 import { CardLink, tileLinkSurface } from "../../../_components/card-link";
 import { ItemCards } from "../../../_components/item-cards";
 import { LexicalEditor } from "../../../_components/lexical-editor/editor";
 import { SectionCard } from "../../../_components/sections";
 import { StatusBadge } from "../../../_components/status-badge";
 import { TextField } from "../../../_components/text-field";
-import { ChildrenSection, ClosingSection, HeadSection, SeoSection } from "./common-sections";
+import { ClosingSection, HeadSection, SeoSection } from "./common-sections";
 import { type EditorContext, kindControl, newId } from "./editor-context";
 
 const untitled = (text: string | null | undefined, fallback: string) =>
@@ -27,12 +25,9 @@ const untitled = (text: string | null | undefined, fallback: string) =>
 
 export const HOME_SECTIONS = [
   { id: "kopf", title: "Kopfbereich", zone: "kopf" },
-  { id: "technik", title: "Laufband Technik", zone: "technik" },
-  { id: "leistungen", title: "Leistungen", zone: "leistungen" },
-  { id: "e-rechnung", title: "E-Rechnung", zone: "e-rechnung" },
   { id: "vorgehen", title: "Vorgehen", zone: "vorgehen" },
-  { id: "vorschau", title: "Weitere Seiten", zone: "vorschau" },
   { id: "grundsaetze", title: "Grundsätze", zone: "grundsaetze" },
+  { id: "fragen", title: "Häufige Fragen", zone: "fragen" },
   { id: "anfrage", title: "Abschluss „Anfrage“", zone: "anfrage" },
   { id: "suchmaschinen", title: "Suchmaschinen und Teilen" },
 ];
@@ -42,99 +37,17 @@ const homeSection = (id: string) => HOME_SECTIONS.find((s) => s.id === id)!;
 export function HomeSections({ ctx }: { ctx: EditorContext }) {
   const control = kindControl<"home">(ctx.control);
   const sections = ctx.values.sections as Partial<SectionsOf<"home">> | undefined;
-  const leistungen = ctx.pages.find((p) => p.slug === "leistungen");
   return (
     <>
       <SectionCard
         section={homeSection("kopf")}
-        description="Die große Überschrift über dem Bergpanorama: Anfang, wechselndes Wort, Ende. Der erste Buchstabe erscheint in gebrochener Schrift."
+        description="Die große Überschrift oben auf der Startseite und die Zeile darunter."
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={control} name="sections.hero.headline" label="Anfang" />
-          <TextField control={control} name="sections.hero.headlineEnd" label="Ende" />
-        </div>
-        <FieldSet>
-          <FieldLegend variant="label">Wechselnde Wörter</FieldLegend>
-          <ItemCards
-            control={control}
-            name="sections.hero.words"
-            itemLabel={(i) => `Wort ${i + 1}`}
-            addLabel="Wort hinzufügen"
-            min={1}
-            columns={3}
-            make={() => ({ id: newId(), word: "" })}
-            render={(i) => (
-              <TextField
-                control={control}
-                name={`sections.hero.words.${i}.word`}
-                label={`Wort ${i + 1}`}
-                hideLabel
-              />
-            )}
-          />
-        </FieldSet>
+        <TextField control={control} name="sections.hero.headline" label="Überschrift" />
         <TextField control={control} name="sections.hero.lead" label="Zeile darunter" />
         <p className="text-sm text-muted-foreground">
           Die Schaltfläche darunter trägt die Beschriftung des Abschlusses „Anfrage“ (Website).
         </p>
-      </SectionCard>
-
-      <SectionCard
-        section={homeSection("technik")}
-        description="Das Band unter dem Kopfbereich, in dem die Logos unseres Stacks durchlaufen. Die Logos sind fest, die Überschrift ist Ihre."
-      >
-        <TextField control={control} name="sections.techTitle" label="Überschrift" />
-      </SectionCard>
-
-      <SectionCard
-        section={homeSection("leistungen")}
-        description="Die fünf Leistungskarten mit ihren Tälern. Karten und Einleitung gehören der Seite „Leistungen“, hier steht nur die Überschrift."
-        action={
-          leistungen ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/seiten/${leistungen.id}#abschnitt-leistungen` as never}>
-                Leistungen bearbeiten <ArrowUpRightIcon data-icon="inline-end" />
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      >
-        <TextField control={control} name="sections.servicesTitle" label="Überschrift" />
-      </SectionCard>
-
-      <SectionCard
-        section={homeSection("e-rechnung")}
-        description="Die Daten der E-Rechnung als Zeitleiste unter den Leistungen, darunter der Link zur Seite „E-Rechnung“."
-      >
-        <TextField control={control} name="sections.eRechnungTitle" label="Überschrift" />
-        <TextField
-          control={control}
-          name="sections.eRechnungLead"
-          label="Einleitung"
-          multiline
-          rows={2}
-        />
-        <ItemCards
-          control={control}
-          name="sections.milestones"
-          itemLabel={(i) => sections?.milestones?.[i]?.date || `Datum ${i + 1}`}
-          addLabel="Datum hinzufügen"
-          columns={2}
-          make={() => ({ id: newId(), date: "", title: "", text: "" })}
-          render={(i) => (
-            <div className="grid gap-3">
-              <TextField control={control} name={`sections.milestones.${i}.date`} label="Datum" />
-              <TextField control={control} name={`sections.milestones.${i}.title`} label="Titel" />
-              <TextField
-                control={control}
-                name={`sections.milestones.${i}.text`}
-                label="Text"
-                multiline
-                rows={3}
-              />
-            </div>
-          )}
-        />
       </SectionCard>
 
       <SectionCard
@@ -165,15 +78,8 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
       </SectionCard>
 
       <SectionCard
-        section={homeSection("vorschau")}
-        description="Türen zu Datensouveränität, Handwerk, Online-Shops und Technologie. Titel und Text jeder Tür sind der Titel und die Einleitung ihrer Seite; hier steht nur die Überschrift."
-      >
-        <TextField control={control} name="sections.previewsTitle" label="Überschrift" />
-      </SectionCard>
-
-      <SectionCard
         section={homeSection("grundsaetze")}
-        description="Drei Grundsätze nebeneinander, darunter der Link zur Arbeitsweise."
+        description="Die Grundsätze, jeweils mit Titel und kurzem Text."
       >
         <TextField control={control} name="sections.principlesTitle" label="Überschrift" />
         <ItemCards
@@ -196,131 +102,13 @@ export function HomeSections({ ctx }: { ctx: EditorContext }) {
             </div>
           )}
         />
-        {sections?.principles && sections.principles.length % 3 !== 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Die Seite zeigt drei nebeneinander; {sections.principles.length} lassen eine Lücke.
-          </p>
-        ) : null}
-      </SectionCard>
-
-      <ClosingSection ctx={ctx} />
-      <SeoSection ctx={ctx} />
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// Leistungen
-
-export const LEISTUNGEN_SECTIONS = [
-  { id: "kopf", title: "Kopfbereich", zone: "kopf" },
-  { id: "leistungen", title: "Die fünf Leistungen", zone: "leistungen" },
-  { id: "fragen", title: "Häufige Fragen", zone: "fragen" },
-  { id: "unterseiten", title: "Leistungsseiten" },
-  { id: "anfrage", title: "Abschluss „Anfrage“", zone: "anfrage" },
-  { id: "suchmaschinen", title: "Suchmaschinen und Teilen" },
-];
-
-export function LeistungenSections({ ctx }: { ctx: EditorContext }) {
-  const control = kindControl<"leistungen">(ctx.control);
-  const sections = ctx.values.sections as Partial<SectionsOf<"leistungen">> | undefined;
-  const childPaths = new Set(
-    ctx.pages.filter((p) => ctx.page && p.parent === ctx.page.id).map((p) => p.path),
-  );
-  return (
-    <>
-      <HeadSection
-        ctx={ctx}
-        description="Überschrift und Einleitung auf /leistungen. Die Einleitung steht auch auf der Startseite unter „Was wir entwickeln“."
-      />
-
-      <SectionCard
-        section={LEISTUNGEN_SECTIONS[1]!}
-        description="Auf /leistungen untereinander, auf der Startseite als Karten mit Tal. Jede hat ihr fest gezeichnetes Symbol; Text und Beispiele sind Ihre."
-      >
-        <ItemCards
-          control={control}
-          name="sections.services"
-          itemLabel={(i) => sections?.services?.[i]?.title || `Leistung ${i + 1}`}
-          fixed
-          summary={(i) => {
-            const service = sections?.services?.[i];
-            return (
-              <span className="flex items-center gap-2">
-                <ServiceGlyph
-                  name={(service?.glyph ?? "web") as Glyph}
-                  className="size-5 shrink-0 text-primary-soft"
-                />
-                <span className="truncate font-medium">
-                  {untitled(service?.title, "Ohne Titel")}
-                </span>
-              </span>
-            );
-          }}
-          render={(i) => {
-            const slug = sections?.services?.[i]?.slug;
-            const missing = slug && !childPaths.has(`/leistungen/${slug}`);
-            return (
-              <div className="grid gap-3">
-                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,10rem)]">
-                  <TextField
-                    control={control}
-                    name={`sections.services.${i}.title`}
-                    label="Titel"
-                  />
-                  <TextField
-                    control={control}
-                    name={`sections.services.${i}.short`}
-                    label="Kurzform"
-                    description="Im Wechsel der Karten."
-                  />
-                </div>
-                <TextField
-                  control={control}
-                  name={`sections.services.${i}.text`}
-                  label="Text"
-                  multiline
-                  rows={3}
-                />
-                <TextField
-                  control={control}
-                  name={`sections.services.${i}.slug`}
-                  label="Seite unter /leistungen/"
-                  inputClassName="font-mono"
-                  description={
-                    missing
-                      ? `Unter /leistungen/${slug} gibt es noch keine Seite: der Link führt ins Leere.`
-                      : "Die Leistungsseite mit dem ausführlichen Text."
-                  }
-                />
-                <FieldSet>
-                  <FieldLegend variant="label">Beispiele</FieldLegend>
-                  <ItemCards
-                    control={control}
-                    name={`sections.services.${i}.examples`}
-                    itemLabel={(j) => `Beispiel ${j + 1}`}
-                    addLabel="Beispiel hinzufügen"
-                    make={() => ({ id: newId(), text: "" })}
-                    render={(j) => (
-                      <TextField
-                        control={control}
-                        name={`sections.services.${i}.examples.${j}.text`}
-                        label={`Beispiel ${j + 1}`}
-                        hideLabel
-                      />
-                    )}
-                  />
-                </FieldSet>
-              </div>
-            );
-          }}
-        />
       </SectionCard>
 
       <SectionCard
-        section={LEISTUNGEN_SECTIONS[2]!}
-        description="Unter den Leistungen auf /leistungen. Eine Frage pro Karte; ein Klick klappt die Antwort auf."
+        section={homeSection("fragen")}
+        description="Eine Frage pro Karte; auf der Seite klappt ein Klick die Antwort auf. Suchmaschinen lesen sie als FAQ."
       >
+        <TextField control={control} name="sections.faqTitle" label="Überschrift" />
         <ItemCards
           control={control}
           name="sections.faq"
@@ -343,11 +131,6 @@ export function LeistungenSections({ ctx }: { ctx: EditorContext }) {
         />
       </SectionCard>
 
-      <ChildrenSection
-        ctx={ctx}
-        title="Leistungsseiten"
-        description="Die ausführlichen Seiten der fünf Leistungen, im Menü unter „Leistungen“."
-      />
       <ClosingSection ctx={ctx} />
       <SeoSection ctx={ctx} />
     </>

@@ -103,7 +103,7 @@ export const SITE_TEXT_DEFAULTS = {
   cta: {
     title: "Erzählen Sie uns von Ihrem Vorhaben.",
     text: "Wir melden uns mit einer ersten Einschätzung und einem Vorschlag für das weitere Vorgehen.",
-    label: "Projekt anfragen",
+    label: "Kontakt aufnehmen",
   },
 } as const;
 

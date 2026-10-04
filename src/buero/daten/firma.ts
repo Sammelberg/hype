@@ -1,6 +1,6 @@
-// The issuer of the invoices: one document. Until it is saved, the site's confirmed owner details
-// fill it (CLAUDE.md → Project); tax number, bank and phone stay empty until the owner enters them
-// — issuing an invoice checks them (logik/pflichtangaben.ts).
+// The issuer of the invoices: one document. Until it is saved, the site's name and contact e-mail
+// fill it; owner, address, tax number, bank and phone stay empty until the owner enters them —
+// issuing an invoice checks them (logik/pflichtangaben.ts).
 import { eq } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../../cms/db/client";
@@ -13,11 +13,11 @@ const ID = 1;
 async function vorgabe(): Promise<Firma> {
   const settings = await getSiteSettings();
   return {
-    name: settings?.siteName || "Schwarzwald Systems",
-    inhaber: "Oleksandr Zamula",
-    strasse: "Merianhof 5",
-    plz: "79104",
-    ort: "Freiburg im Breisgau",
+    name: settings?.siteName || "",
+    inhaber: null,
+    strasse: null,
+    plz: "",
+    ort: null,
     steuernummer: null,
     ustId: null,
     kleinunternehmer: false,

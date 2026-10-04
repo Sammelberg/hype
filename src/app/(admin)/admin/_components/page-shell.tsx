@@ -1,25 +1,21 @@
 import type { ReactNode } from "react";
 
 import { CompactTitle } from "./screen/compact-title";
-import { ScreenHorizon } from "./screen/horizon";
 
-// The top of every admin screen: title, one line of context, the actions on the right, and the
-// section's drawn horizon underneath. Scrolled away, it condenses into a slim bar (CompactTitle).
+// The top of every admin screen: title, one line of context, the actions on the right. Scrolled
+// away, it condenses into a slim bar (CompactTitle).
 export function PageShell({
   title,
   lead,
   actions,
   children,
   wide = false,
-  tall = false,
 }: {
   title: ReactNode;
   lead?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   wide?: boolean;
-  /** A taller horizon, for the overview. */
-  tall?: boolean;
 }) {
   return (
     <div className={wide ? "flex flex-col gap-8" : "mx-auto flex w-full max-w-5xl flex-col gap-8"}>
@@ -36,7 +32,6 @@ export function PageShell({
             </div>
             {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
           </div>
-          <ScreenHorizon tall={tall} />
         </header>
       </CompactTitle>
       {children}

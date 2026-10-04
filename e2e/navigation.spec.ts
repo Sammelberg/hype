@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { SEED_PATHS } from "../scripts/seed-data";
+import { SEED_PATHS, seedSettings } from "../scripts/seed-data";
 
 // Header, phone menu and footer: every section of the site can be reached from any page.
 
@@ -17,11 +17,9 @@ test.beforeEach(async ({ page }) => {
 
 test("the header lists every section and opens a section's pages", async ({ page, isMobile }) => {
   test.skip(isMobile, "phones get the menu button instead");
-  await page.goto("/leistungen/web-anwendungen");
+  await page.goto("/ueber-uns/arbeitsweise");
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  for (const name of ["Leistungen", "Branchen", "Über uns"]) {
-    await expect(nav.getByRole("button", { name })).toBeVisible();
-  }
+  await expect(nav.getByRole("button", { name: "Über uns" })).toBeVisible();
   // Projekte opens a menu once there are projects; the seed has none (real ones are entered in
   // the admin), so here it may be a plain link.
   await expect(
@@ -30,31 +28,29 @@ test("the header lists every section and opens a section's pages", async ({ page
       .or(nav.getByRole("link", { name: "Projekte", exact: true })),
   ).toBeVisible();
   // Kontakt is the one filled button at the end; the logo leads home.
-  await expect(nav.getByRole("link", { name: "Projekt anfragen" })).toHaveAttribute(
-    "href",
-    "/kontakt",
-  );
+  await expect(nav.getByRole("link", { name: "Kontakt" })).toHaveAttribute("href", "/kontakt");
   await expect(
-    page.getByRole("banner").getByRole("link", { name: "Schwarzwald Systems" }),
+    page.getByRole("banner").getByRole("link", { name: seedSettings.siteName }),
   ).toHaveAttribute("href", "/");
   await expect(nav.getByRole("link", { name: "Suche" })).toBeVisible();
 
   // By keyboard: Enter opens the section's menu, Escape closes it again.
-  await nav.getByRole("button", { name: "Leistungen" }).focus();
+  await nav.getByRole("button", { name: "Über uns" }).focus();
   await page.keyboard.press("Enter");
-  await expect(nav.getByRole("link", { name: "Übersicht Leistungen" })).toHaveAttribute(
+  await expect(nav.getByRole("link", { name: "Übersicht Über uns" })).toHaveAttribute(
     "href",
-    "/leistungen",
+    "/ueber-uns",
   );
-  await expect(nav.getByRole("link", { name: "Web-Anwendungen" })).toHaveAttribute(
+  await expect(nav.getByRole("link", { name: "Arbeitsweise" })).toHaveAttribute(
     "aria-current",
     "page",
   );
   await page.keyboard.press("Escape");
-  await expect(nav.getByRole("link", { name: "Web-Anwendungen" })).toBeHidden();
+  await expect(nav.getByRole("link", { name: "Arbeitsweise" })).toBeHidden();
 
+  await page.goto("/");
   await nav.getByRole("button", { name: "Über uns" }).click();
-  await nav.getByRole("link", { name: "Unsere Arbeitsweise" }).click();
+  await nav.getByRole("link", { name: "Arbeitsweise" }).click();
   await expect(page).toHaveURL(/\/ueber-uns\/arbeitsweise$/);
 });
 
@@ -71,23 +67,18 @@ test("the phone menu opens, traps focus, closes on Escape and leads to a page", 
   const menu = page.getByRole("dialog", { name: "Menü" });
   await expect(menu).toBeVisible();
   // While it is open the page behind is hidden from assistive technology, so the button is found
-  // by its slot, not its role; focus sits inside the menu and Lenis holds the page still.
+  // by its slot, not its role; focus sits inside the menu.
   const trigger = page.locator('[data-slot="sheet-trigger"]');
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
   expect(await menu.evaluate((el) => el.contains(document.activeElement))).toBe(true);
-  await expect(page.locator("html")).toHaveClass(/lenis-stopped/);
 
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(button).toBeFocused();
-  await expect(page.locator("html")).not.toHaveClass(/lenis-stopped/);
 
   await button.click();
-  await expect(menu.getByRole("link", { name: "Handwerk" })).toBeVisible();
-  await expect(menu.getByRole("link", { name: "Projekt anfragen" })).toHaveAttribute(
-    "href",
-    "/kontakt",
-  );
+  await expect(menu.getByRole("link", { name: "Arbeitsweise" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Kontakt" })).toHaveAttribute("href", "/kontakt");
   await menu.getByRole("link", { name: "Projekte", exact: true }).click();
   await expect(page).toHaveURL(/\/projekte$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Projekte");

@@ -3,18 +3,11 @@
 @import "shadcn/tailwind.css";
 
 /*
- * The admin of Schwarzwald Systems in the brand's „Deep Space“ (see (frontend)/globals.css): space
- * navy and sapphire, one hue family (blue 250–262), dark by default. „Frost“ is the light variant
- * in the same blues, for daylight and print. Accent in two roles, as on the site — `primary`
- * (sapphire fill, white text) and `primary-soft` (ice blue in the dark, deep sapphire in the light:
- * accent text, icons, the drawn ridge). Status colours borrow the brand's gem tones: malachite for
- * done, copper gold for waiting, red only for faults. Measured WCAG contrast (oklch → sRGB):
- *   dark   fg/bg 18.0 · fg/card 16.9 · muted/bg 9.3 · muted/card 8.7 · primary-fg/primary 5.5
- *          primary-soft/card 10.0 · destructive/card 6.5 · success/card 9.7 · warning/card 10.6
- *          input/card 3.1 · primary fill/bg 3.6
- *   light  fg/bg 16.2 · muted/bg 6.6 · muted/secondary 6.1 · primary-fg/primary 6.8
- *          primary-soft/card 6.0 · destructive/card 5.5 · success/card 6.1 · warning/card 5.3
- *          input/card 3.1
+ * The admin: a working tool, not the site. Design-neutral like the template — shadcn's neutral
+ * tokens, light by default, a dark room on request or by the device (_theme/theme.tsx). Accent in
+ * two roles, as on the site: `primary` (solid fill) and `primary-soft` (accent text and icons).
+ * Status colours: green for done, amber for waiting, red only for faults; status text on the card
+ * keeps at least 4.5:1 (axe, e2e/admin.spec.ts). A project may give its admin its own palette here.
  * The site's tokens live in (frontend)/globals.css; the two never load together.
  */
 
@@ -57,9 +50,6 @@
   --color-background: var(--background);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --color-ridge: var(--ridge);
-  --color-ridge-ground: var(--ridge-ground);
-  --color-arc: var(--arc);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -79,87 +69,79 @@
 :root {
   color-scheme: light;
   --radius: 0.625rem;
-  /* Frost: blue-white paper, navy ink. */
-  --background: oklch(0.975 0.006 255);
-  --foreground: oklch(0.22 0.045 262);
-  --card: oklch(0.995 0.002 255);
-  --card-foreground: oklch(0.22 0.045 262);
-  --popover: oklch(0.995 0.002 255);
-  --popover-foreground: oklch(0.22 0.045 262);
-  --primary: oklch(0.47 0.15 260);
-  --primary-foreground: oklch(0.99 0.004 250);
-  --primary-soft: oklch(0.5 0.15 259);
-  --secondary: oklch(0.945 0.012 258);
-  --secondary-foreground: oklch(0.27 0.05 262);
-  --muted: oklch(0.945 0.012 258);
-  --muted-foreground: oklch(0.46 0.04 260);
-  --accent: oklch(0.93 0.03 255);
-  --accent-foreground: oklch(0.33 0.11 260);
-  --destructive: oklch(0.54 0.19 27);
-  --success: oklch(0.48 0.09 168);
-  --warning: oklch(0.53 0.11 70);
-  --border: oklch(0.9 0.012 258);
-  --input: oklch(0.66 0.035 258);
-  --ring: oklch(0.5 0.15 259);
-  /* The drawn horizon in the screen headers: ridge line and the copper arc on its crest. */
-  --ridge: oklch(0.5 0.15 259);
-  --ridge-ground: oklch(0.95 0.014 258);
-  --arc: oklch(0.6 0.11 62);
-  --chart-1: oklch(0.47 0.15 260);
-  --chart-2: oklch(0.62 0.13 255);
-  --chart-3: oklch(0.78 0.08 252);
-  --chart-4: oklch(0.53 0.11 70);
-  --chart-5: oklch(0.48 0.09 168);
-  --sidebar: oklch(0.945 0.012 258);
-  --sidebar-foreground: oklch(0.27 0.05 262);
-  --sidebar-primary: oklch(0.47 0.15 260);
-  --sidebar-primary-foreground: oklch(0.99 0.004 250);
-  --sidebar-accent: oklch(0.91 0.025 258);
-  --sidebar-accent-foreground: oklch(0.22 0.045 262);
-  --sidebar-border: oklch(0.89 0.014 258);
-  --sidebar-ring: oklch(0.5 0.15 259);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --primary-soft: oklch(0.205 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  /* Darker than shadcn's 0.556, which falls just under 4.5:1 on `muted`. */
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.5 0.13 150);
+  --warning: oklch(0.55 0.13 65);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
   color-scheme: dark;
-  /* Deep Space: near-black navy, a shade lighter than the site's for long working hours. */
-  --background: oklch(0.14 0.03 262);
-  --foreground: oklch(0.965 0.008 250);
-  --card: oklch(0.185 0.034 262);
-  --card-foreground: oklch(0.965 0.008 250);
-  --popover: oklch(0.185 0.034 262);
-  --popover-foreground: oklch(0.965 0.008 250);
-  --primary: oklch(0.52 0.15 260);
-  --primary-foreground: oklch(0.99 0.004 250);
-  --primary-soft: oklch(0.8 0.085 252);
-  --secondary: oklch(0.235 0.04 262);
-  --secondary-foreground: oklch(0.965 0.008 250);
-  --muted: oklch(0.235 0.04 262);
-  --muted-foreground: oklch(0.76 0.03 255);
-  --accent: oklch(0.25 0.055 260);
-  --accent-foreground: oklch(0.9 0.05 252);
-  --destructive: oklch(0.7 0.18 25);
-  --success: oklch(0.78 0.1 168);
-  --warning: oklch(0.82 0.11 78);
-  --border: oklch(0.29 0.04 262);
-  --input: oklch(0.5 0.05 258);
-  --ring: oklch(0.8 0.085 252);
-  --ridge: oklch(0.8 0.085 252);
-  --ridge-ground: oklch(0.165 0.034 262);
-  --arc: oklch(0.74 0.11 62);
-  --chart-1: oklch(0.8 0.085 252);
-  --chart-2: oklch(0.52 0.15 260);
-  --chart-3: oklch(0.64 0.15 258);
-  --chart-4: oklch(0.82 0.11 78);
-  --chart-5: oklch(0.78 0.1 168);
-  --sidebar: oklch(0.115 0.03 262);
-  --sidebar-foreground: oklch(0.93 0.012 252);
-  --sidebar-primary: oklch(0.52 0.15 260);
-  --sidebar-primary-foreground: oklch(0.99 0.004 250);
-  --sidebar-accent: oklch(0.21 0.045 261);
-  --sidebar-accent-foreground: oklch(0.965 0.008 250);
-  --sidebar-border: oklch(0.24 0.038 262);
-  --sidebar-ring: oklch(0.8 0.085 252);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --primary-soft: oklch(0.922 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.76 0.14 150);
+  --warning: oklch(0.8 0.13 75);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {

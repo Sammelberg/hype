@@ -14,11 +14,11 @@ const inSection = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 // A hairline under the label that opens from the middle on hover and when its menu is open, and
-// stays in ice blue under the section the page belongs to.
+// stays under the section the page belongs to.
 const ITEM =
   "group/item relative inline-flex h-11 items-center gap-1 rounded-full px-3 text-sm whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:text-foreground aria-[current=page]:text-foreground 3xl:text-base " +
   "after:absolute after:inset-x-3 after:bottom-1.5 after:h-px after:origin-center after:scale-x-0 after:bg-foreground/40 after:transition-transform after:duration-300 hover:after:scale-x-100 data-[state=open]:after:scale-x-100 motion-reduce:after:transition-none";
-const CURRENT = "text-foreground after:scale-x-100 after:bg-primary-soft";
+const CURRENT = "text-foreground after:scale-x-100 after:bg-primary";
 
 /**
  * The header navigation from lg up: every section (Kontakt is the button at the end), the ones
@@ -99,7 +99,7 @@ export function DesktopNav({ sections }: { sections: NavSection[] }) {
         className="pointer-events-none absolute inset-x-0 top-full h-dvh bg-background/70 opacity-0 transition-opacity duration-300 motion-reduce:transition-none data-open:opacity-100"
       />
       <div className="absolute inset-x-0 top-full">
-        <Nav.Viewport className="relative h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden border-b bg-background shadow-2xl shadow-black/40 transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:animate-none motion-reduce:transition-none" />
+        <Nav.Viewport className="relative h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden border-b bg-background shadow-lg transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:animate-none motion-reduce:transition-none" />
       </div>
     </Nav.Root>
   );
@@ -176,7 +176,7 @@ export function KontaktButton({ className, ...props }: Omit<ComponentProps<typeo
       )}
       {...props}
     >
-      Projekt anfragen
+      Kontakt
       <ArrowRightIcon
         aria-hidden="true"
         className="size-4 transition-transform duration-300 group-hover/cta:translate-x-0.5 motion-reduce:transition-none"

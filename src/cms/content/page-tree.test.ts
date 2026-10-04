@@ -1,4 +1,4 @@
-import { LEISTUNG_DEFAULTS } from "./page-sections";
+import { PROJEKTE_DEFAULTS } from "./page-sections";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -108,31 +108,28 @@ describe("slugify", () => {
 describe("page kinds", () => {
   it("gives the pages with a route of their own their kind, every other page none", () => {
     expect(kindOf("startseite")).toBe("home");
-    expect(kindOf("leistungen")).toBe("leistungen");
     expect(kindOf("projekte")).toBe("projekte");
     expect(kindOf("kontakt")).toBe("kontakt");
     expect(kindOf("ueber-uns")).toBe("content");
-    expect([...ROUTED_PATHS].sort()).toEqual(["/", "/kontakt", "/leistungen", "/projekte"]);
+    expect([...ROUTED_PATHS].sort()).toEqual(["/", "/kontakt", "/projekte"]);
   });
 
-  it("makes every page right under /leistungen a service's page, by its parent", () => {
-    expect(kindOf("web-anwendungen", "leistungen")).toBe("leistung");
-    expect(kindOf("neue-leistung", "leistungen")).toBe("leistung");
-    expect(kindOf("web-anwendungen", "ueber-uns")).toBe("content");
+  it("gives no page a kind by its parent in the template", () => {
+    expect(kindOf("web-anwendungen", "leistungen")).toBe("content");
     expect(kindOf("web-anwendungen")).toBe("content");
     // A routed page keeps its kind wherever it stands.
-    expect(kindOf("kontakt", "leistungen")).toBe("kontakt");
+    expect(kindOf("kontakt", "ueber-uns")).toBe("kontakt");
   });
 
-  it("gives a service's page the service sections, and only it", () => {
-    const leistung = { ...LEISTUNG_DEFAULTS };
-    expect(sectionsProblem("geschaeftssysteme", leistung, "leistungen")).toBeNull();
-    expect(sectionsProblem("geschaeftssysteme", null, "leistungen")).toBeNull();
-    expect(sectionsProblem("ueber-uns", leistung, null)).toMatch(/keine festen Abschnitte/);
+  it("gives a content page no sections", () => {
+    expect(sectionsProblem("ueber-uns", null, null)).toBeNull();
+    expect(sectionsProblem("ueber-uns", { ...PROJEKTE_DEFAULTS }, null)).toMatch(
+      /keine festen Abschnitte/,
+    );
   });
 
   it("keeps the routed and the legal pages", () => {
-    for (const slug of ["startseite", "leistungen", "projekte", "kontakt", "impressum"])
+    for (const slug of ["startseite", "projekte", "kontakt", "impressum"])
       expect(PROTECTED_SLUGS.has(slug)).toBe(true);
     expect(PROTECTED_SLUGS.has("ueber-uns")).toBe(false);
   });

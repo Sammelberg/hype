@@ -63,7 +63,7 @@ test.describe("contact form", () => {
 });
 
 test("pages without a CMS image share their own drawn preview", async ({ page, request }) => {
-  for (const path of ["/leistungen", "/leistungen/web-anwendungen", "/projekte"]) {
+  for (const path of ["/ueber-uns", "/ueber-uns/arbeitsweise", "/projekte"]) {
     await page.goto(path);
     const url = await page.locator('meta[property="og:image"]').getAttribute("content");
     expect(url).toMatch(new RegExp(`/vorschaubild${path}$`));
@@ -75,9 +75,9 @@ test("pages without a CMS image share their own drawn preview", async ({ page, r
 });
 
 test("search finds a word from deep inside a page, not only its title", async ({ page }) => {
-  await page.goto("/suche?q=kurzlebige");
+  await page.goto("/suche?q=Elternseite");
   const results = page.getByRole("region", { name: /Ergebnis/ });
-  await expect(results.getByRole("link", { name: "Web-Anwendungen" })).toBeVisible();
+  await expect(results.getByRole("link", { name: "Arbeitsweise" })).toBeVisible();
 });
 
 test("a project in the overview opens its own page", async ({ page }) => {

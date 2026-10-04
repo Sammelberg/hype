@@ -8,12 +8,7 @@ import { randomBytes } from "node:crypto";
 
 import { createUser, findUserByEmail } from "../src/cms/auth/users";
 import { upsertForm } from "../src/cms/content/forms";
-import {
-  defaultSections,
-  HOME_DEFAULTS,
-  LEISTUNG_DEFAULTS,
-  ROUTED_LEADS,
-} from "../src/cms/content/page-sections";
+import { defaultSections, HOME_DEFAULTS, ROUTED_LEADS } from "../src/cms/content/page-sections";
 import { kindOf } from "../src/cms/content/page-tree";
 import {
   getPage,
@@ -24,7 +19,7 @@ import {
   saveDraft,
   upsertPublishedPage,
 } from "../src/cms/content/pages";
-import { getProjektBySlug, upsertPublishedProjekt } from "../src/cms/content/projekte";
+import { upsertPublishedProjekt } from "../src/cms/content/projekte";
 import { upsertRedirect } from "../src/cms/content/redirects";
 import { SITE_TEXT_DEFAULTS, upsertSiteSettings } from "../src/cms/content/site-settings";
 import type { PageSections, SiteSettings } from "../src/cms/content/types";
@@ -67,29 +62,11 @@ function settings(): SiteSettings {
   };
 }
 
-// The sections and the lead of the pages with a route of their own; content pages have neither.
-// A page's lead and sections: a routed page's from the seed's sections, a service's page from its
-// `leistung` block (its project linked by slug when it exists, published), any other page none.
-async function fieldsOf(
-  page: SeedPage,
-): Promise<{ lead: string | null; sections: PageSections | null }> {
-  if (!page.leistung) {
-    const own = routed(page.slug);
-    return { lead: own.lead ?? page.lead ?? null, sections: own.sections };
-  }
-  const l = page.leistung;
-  const projekt = l.projekt ? await getProjektBySlug(l.projekt) : null;
-  return {
-    lead: page.lead ?? null,
-    sections: {
-      ...LEISTUNG_DEFAULTS,
-      fit: withIds(l.fit),
-      scope: withIds(l.scope.map((text) => ({ text }))),
-      steps: withIds(l.steps),
-      faq: withIds(l.faq),
-      projektId: projekt?.id ?? null,
-    },
-  };
+// A page's lead and sections: a routed page's from the seed's sections, any other page its own
+// lead and no sections.
+function fieldsOf(page: SeedPage): { lead: string | null; sections: PageSections | null } {
+  const own = routed(page.slug);
+  return { lead: own.lead ?? page.lead ?? null, sections: own.sections };
 }
 
 function routed(slug: string): { lead: string | null; sections: PageSections | null } {
@@ -100,20 +77,9 @@ function routed(slug: string): { lead: string | null; sections: PageSections | n
       lead: null,
       sections: {
         ...HOME_DEFAULTS,
-        hero: { ...HOME_DEFAULTS.hero, words: withIds(s.hero.words) },
-        eRechnungTitle: s.eRechnung.title,
-        eRechnungLead: s.eRechnung.lead,
-        milestones: withIds(s.eRechnung.milestones),
+        hero: { ...s.hero },
         steps: withIds(s.steps),
         principles: withIds(s.principles),
-      },
-    };
-  if (kind === "leistungen")
-    return {
-      lead: ROUTED_LEADS.leistungen,
-      sections: {
-        kind,
-        services: s.services.map((x) => ({ id: id(), ...x, examples: withIds(x.examples) })),
         faq: withIds(s.faq),
       },
     };
@@ -157,7 +123,7 @@ async function onlyPage(slug: string) {
     parentId,
     content: page.content.length > 0 ? lexical(page.content) : null,
     meta: {},
-    ...(await fieldsOf(page)),
+    ...fieldsOf(page),
   });
   console.log(`Seite „${slug}“ aus dem Seed übernommen und veröffentlicht.`);
 }
@@ -198,7 +164,7 @@ async function main() {
       parentId,
       content: page.content.length > 0 ? lexical(page.content) : null,
       meta: {},
-      ...(await fieldsOf(page)),
+      ...fieldsOf(page),
     });
     ids.set(page.slug, pageId);
   }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { FirMark } from "@/components/site/fir-mark";
+import { initialOf } from "@/lib/brand";
 
 // The frame around the login, the note on an empty database and the password change: the mark, a title
 // and one column of form, centred on the paper.
@@ -20,7 +20,9 @@ export function AuthCard({
       <div className="rise-in w-full max-w-sm">
         <div className="mb-8 flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <FirMark className="size-6" />
+            <span aria-hidden="true" className="font-semibold">
+              {initialOf(siteName)}
+            </span>
           </span>
           <div className="leading-tight">
             <p className="font-medium">{siteName}</p>

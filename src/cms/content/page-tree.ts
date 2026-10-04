@@ -5,20 +5,17 @@ import type { Breadcrumb, PageKind, PageSections } from "./types";
 
 export { HOME_SLUG };
 
-// Pages with a route of their own (`/`, /leistungen, /projekte, /kontakt): the route shows the
-// page's sections, so the page's kind follows from its fixed slug.
+// Pages with a route of their own (`/`, /projekte, /kontakt): the route shows the page's
+// sections, so the page's kind follows from its fixed slug.
 const KINDS: Readonly<Record<string, Exclude<PageKind, "content">>> = {
   [HOME_SLUG]: "home",
-  leistungen: "leistungen",
   projekte: "projekte",
   kontakt: "kontakt",
 };
 
-// The services' own pages are the pages right under /leistungen: their kind follows from the
-// parent, so a page moved there gains the service sections, and one moved away loses them.
-const BY_PARENT: Readonly<Record<string, Exclude<PageKind, "content">>> = {
-  leistungen: "leistung",
-};
+// Kinds that follow from the parent (a project's service pages right under /leistungen, say): a
+// page moved there gains those sections, one moved away loses them. None in the template.
+const BY_PARENT: Readonly<Record<string, Exclude<PageKind, "content">>> = {};
 
 export const kindOf = (slug: string, parentSlug?: string | null): PageKind =>
   KINDS[slug] ?? (parentSlug ? BY_PARENT[parentSlug] : undefined) ?? "content";

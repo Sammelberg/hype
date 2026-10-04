@@ -171,7 +171,7 @@ export function SettingsEditor({
         >
           <SectionCard
             section={SECTIONS[0]!}
-            description="Oben links neben der Tanne, im Fußbereich und am Ende jedes Seitentitels im Browser."
+            description="Oben links neben dem Zeichen, im Fußbereich und am Ende jedes Seitentitels im Browser."
           >
             <TextField control={control} name="siteName" label="Name der Website" />
           </SectionCard>

@@ -21,10 +21,10 @@ if [ "${1:-}" = "--ohne-cron" ]; then exit 0; fi
 
 # Retention every night (the Datenschutzerklärung promises it), scheduled publishing every
 # five minutes. Marked lines, so a second run replaces them instead of adding more.
-mark="# schwarzwald-aufgaben"
+mark="# kern-aufgaben"
 {
   crontab -l 2>/dev/null | grep -v "$mark" || true
-  echo "15 3 * * * $here/aufgabe.sh aufbewahrung >>$HOME/schwarzwald-aufgaben.log 2>&1 $mark"
-  echo "*/5 * * * * $here/aufgabe.sh geplant >>$HOME/schwarzwald-aufgaben.log 2>&1 $mark"
+  echo "15 3 * * * $here/aufgabe.sh aufbewahrung >>$HOME/kern-aufgaben.log 2>&1 $mark"
+  echo "*/5 * * * * $here/aufgabe.sh geplant >>$HOME/kern-aufgaben.log 2>&1 $mark"
 } | crontab -
 echo "Crontab: Aufbewahrung nachts, geplante Veröffentlichung alle 5 Minuten."

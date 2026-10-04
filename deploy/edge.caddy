@@ -1,16 +1,16 @@
-# Schwarzwald Systems (github.com/Sammelberg/start) on the server's shared entrance: this file goes
-# to the edge's sites/ as schwarzwald.caddy, then `caddy reload`. Its app joins edge as
-# schwarzwald-app (deploy/compose.yml). Caddy sets X-Forwarded-For to the client's own address,
+# The site (github.com/Sammelberg/kern) on the server's shared entrance: this file goes
+# to the edge's sites/ as kern.caddy, then `caddy reload`. Its app joins edge as
+# kern-app (deploy/compose.yml). Caddy sets X-Forwarded-For to the client's own address,
 # which the rate limits read; uploads may be up to 60 MB.
-schwarzwaldsystems.de {
+example.de {
 	encode zstd gzip
 	header -Server
 	request_body {
 		max_size 64MB
 	}
-	reverse_proxy schwarzwald-app:3000
+	reverse_proxy kern-app:3000
 }
 
-www.schwarzwaldsystems.de {
-	redir https://schwarzwaldsystems.de{uri} permanent
+www.example.de {
+	redir https://example.de{uri} permanent
 }

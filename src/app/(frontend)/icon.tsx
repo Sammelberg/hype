@@ -1,12 +1,15 @@
 import { ImageResponse } from "next/og";
 
-import { BRAND_HEX, FirMark } from "@/components/site/fir-mark";
+import { BRAND_HEX, initialOf } from "@/lib/brand";
+import { getSiteSettings } from "@/data/queries";
 
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
-// The fir mark in resin amber on the night background, rendered locally.
-export default function Icon() {
+// Placeholder: the site name's first letter, rendered locally. A project replaces it with its
+// designed `icon.png`.
+export default async function Icon() {
+  const { siteName } = await getSiteSettings();
   return new ImageResponse(
     <div
       style={{
@@ -16,10 +19,13 @@ export default function Icon() {
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 6,
-        background: BRAND_HEX.background,
+        background: BRAND_HEX.accent,
+        color: BRAND_HEX.accentForeground,
+        fontSize: 22,
+        fontWeight: 600,
       }}
     >
-      <FirMark color={BRAND_HEX.accent} />
+      {initialOf(siteName || "Website")}
     </div>,
     size,
   );

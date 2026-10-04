@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Backs up the database and the uploads with restic, encrypted before it leaves the server.
 # From cron on the server, e.g. every night at 2:
-#   0 2 * * *  /srv/starter/scripts/backup/sicherung.sh >> /var/log/starter-sicherung.log 2>&1
+#   0 2 * * *  /srv/kern/scripts/backup/sicherung.sh >> /var/log/kern-sicherung.log 2>&1
 #
 # Two snapshot groups, because they are kept for different times:
-#   starter-daten     the database without the contact messages, and MEDIA_DIR. Kept 14 days,
+#   kern-daten     the database without the contact messages, and MEDIA_DIR. Kept 14 days,
 #                     8 weeks, 24 months and 10 years: invoices are kept 8 years (GoBD).
-#   starter-anfragen  only the contact messages, kept 14 days: they are deleted after six months
+#   kern-anfragen  only the contact messages, kept 14 days: they are deleted after six months
 #                     (pnpm cms:aufbewahrung), and the Datenschutzerklärung promises that a backup
 #                     does not keep them longer than two weeks after that.
 #
@@ -30,12 +30,12 @@ pg pg_dump "$DB_NAME" -Fc --no-owner --data-only --table=cms.form_submissions >"
 [ -s "$STAGING/datenbank.dump" ] || fail "Der Datenbank-Dump ist leer."
 log "Dumps: $(du -h "$STAGING/datenbank.dump" | cut -f1) Datenbank, $(du -h "$STAGING/anfragen.dump" | cut -f1) Anfragen"
 
-restic backup --quiet --host "$HOST_TAG" --tag starter-daten "$STAGING/datenbank.dump" "$MEDIA"
-restic backup --quiet --host "$HOST_TAG" --tag starter-anfragen "$STAGING/anfragen.dump"
+restic backup --quiet --host "$HOST_TAG" --tag kern-daten "$STAGING/datenbank.dump" "$MEDIA"
+restic backup --quiet --host "$HOST_TAG" --tag kern-anfragen "$STAGING/anfragen.dump"
 
-restic forget --quiet --host "$HOST_TAG" --tag starter-daten --group-by host,tags \
+restic forget --quiet --host "$HOST_TAG" --tag kern-daten --group-by host,tags \
   --keep-daily 14 --keep-weekly 8 --keep-monthly 24 --keep-yearly 10 --prune
-restic forget --quiet --host "$HOST_TAG" --tag starter-anfragen --group-by host,tags \
+restic forget --quiet --host "$HOST_TAG" --tag kern-anfragen --group-by host,tags \
   --keep-within 14d --prune
 restic check --quiet
 

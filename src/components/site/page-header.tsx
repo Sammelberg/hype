@@ -1,28 +1,14 @@
-import type { CSSProperties, ReactNode } from "react";
-
-import { sky, SKY_H, SKY_W } from "@/lib/horizon";
-import { cn } from "@/lib/utils";
-
-import { InView } from "./in-view";
-import styles from "./page-header.module.css";
-import { Landschaft } from "./landscape";
-import { RisingWords } from "./words";
+import type { ReactNode } from "react";
 
 /**
- * Head of every page besides the home page: a sparse night sky, breadcrumbs, the heading at the
- * scale of the home sections, a lead beside it from lg up, and the page's own landscape (pen,
- * paper ridges or the forest's edge, landscape.tsx)
- * underneath (seeded by `horizonKey`, usually the path) — or a `scene` of the page's own in its
- * place. When the page opens the heading's words rise one by one and the horizon draws; scrolling
- * away, the text drifts up and dims while the horizon sinks a little slower (motion.css).
+ * Head of every page besides the home page: breadcrumbs, a short line above the heading (what the
+ * page belongs to), the heading and its lead. Plain on purpose: a project gives it its own form.
  */
 export function PageHeader({
   title,
   lead,
   kicker,
   breadcrumbs,
-  horizonKey,
-  scene,
   children,
 }: {
   title: ReactNode;
@@ -30,74 +16,22 @@ export function PageHeader({
   /** A short line above the heading that says what the page belongs to (a project's client). */
   kicker?: ReactNode;
   breadcrumbs?: ReactNode;
-  horizonKey: string;
-  /** The page's own picture in place of the horizon (a service's valley, a map). */
-  scene?: ReactNode;
   /** Extra content under the lead, such as a search form. */
   children?: ReactNode;
 }) {
-  const stars = sky(horizonKey);
-
   return (
-    <InView className={cn(styles.head, "border-b")} data-cms-zone="kopf">
-      <svg
-        viewBox={`0 0 ${SKY_W} ${SKY_H}`}
-        preserveAspectRatio="xMidYMin slice"
-        aria-hidden="true"
-        className={styles.sky}
-      >
-        {stars.map((s, i) => (
-          <circle
-            key={`${s.x}-${s.y}`}
-            cx={s.x}
-            cy={s.y}
-            r={s.r}
-            opacity={s.o}
-            className={s.twinkle ? cn(styles.twinkle, "loop") : undefined}
-            style={s.twinkle ? ({ "--d": `${(i % 7) * 0.9}s` } as CSSProperties) : undefined}
-          />
-        ))}
-      </svg>
-      <div className="relative page-container sd-away pt-12 sm:pt-20 3xl:pt-28">
-        {breadcrumbs ? (
-          <div className="rise-later" style={{ "--delay": "0.05s" } as CSSProperties}>
-            {breadcrumbs}
-          </div>
+    <div className="border-b" data-cms-zone="kopf">
+      <div className="page-container pt-12 pb-12 sm:pt-16 sm:pb-16">
+        {breadcrumbs ? <div className="mb-8">{breadcrumbs}</div> : null}
+        {kicker ? <p className="mb-3 font-medium text-muted-foreground">{kicker}</p> : null}
+        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance hyphens-auto sm:text-5xl">
+          {title}
+        </h1>
+        {lead ? (
+          <div className="mt-5 max-w-3xl text-lg text-pretty text-muted-foreground">{lead}</div>
         ) : null}
-        <div
-          className={cn(
-            "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-end lg:gap-x-16 3xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]",
-            breadcrumbs ? "mt-8" : null,
-          )}
-        >
-          <div>
-            {kicker ? (
-              <p
-                className="mb-3 rise-later text-base font-medium text-primary-soft 3xl:text-lg"
-                style={{ "--delay": "0.1s" } as CSSProperties}
-              >
-                {kicker}
-              </p>
-            ) : null}
-            <h1 className="text-[clamp(2.5rem,1.4rem+4vw,5rem)] leading-[0.98] font-semibold tracking-[-0.035em] text-balance hyphens-auto">
-              {typeof title === "string" ? <RisingWords text={title} /> : title}
-            </h1>
-          </div>
-          {lead ? (
-            <div className="rise-later text-lg text-pretty text-muted-foreground 3xl:text-xl">
-              {lead}
-            </div>
-          ) : null}
-        </div>
-        {children ? (
-          <div className="rise-later" style={{ "--delay": "0.6s" } as CSSProperties}>
-            {children}
-          </div>
-        ) : null}
+        {children}
       </div>
-      <div className="relative sd-sink">
-        {scene ?? <Landschaft seed={horizonKey} className={cn(styles.horizon, "mt-10 sm:mt-14")} />}
-      </div>
-    </InView>
+    </div>
   );
 }

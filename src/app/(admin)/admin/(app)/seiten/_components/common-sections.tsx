@@ -266,7 +266,7 @@ export function AddressSection({ ctx }: { ctx: EditorContext }) {
               </SelectContent>
             </Select>
             <FieldDescription>
-              Eine Seite unter „Leistungen“ erscheint in dessen Menü und bekommt dessen Adresse
+              Eine Seite unter einer anderen erscheint in deren Menü und bekommt deren Adresse
               vorangestellt.
             </FieldDescription>
             {fieldState.error ? <FieldError>{fieldState.error.message}</FieldError> : null}

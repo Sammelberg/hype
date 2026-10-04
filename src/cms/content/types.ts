@@ -78,49 +78,18 @@ const slugField = z
   .regex(SLUG_REGEX, SLUG_MESSAGE);
 
 // Pages with a route of their own carry the sections that route shows, typed by the kind of
-// page (src/cms/content/page-tree.ts: kindOf); so do the services' own pages under /leistungen.
-// Other content pages have none: title, lead and text.
-export const GLYPHS = ["web", "system", "integration", "modernisation", "operations"] as const;
-export type Glyph = (typeof GLYPHS)[number];
-
+// page (src/cms/content/page-tree.ts: kindOf). Other content pages have none: title, lead and text.
 export const HomeSectionsSchema = z.object({
   kind: z.literal("home"),
   hero: z.object({
-    headline: required("den Anfang der Überschrift"),
-    words: z.array(item({ word: required("das Wort") })).min(1, "Mindestens ein Wort."),
-    headlineEnd: required("das Ende der Überschrift"),
+    headline: required("die Überschrift"),
     lead: optionalText,
   }),
-  servicesTitle: required("die Überschrift"),
-  // The running band of the stack under the hero; the logos themselves are fixed (tech-logos.ts).
-  techTitle: required("die Überschrift"),
-  // The E-Rechnung's dates as a timeline under the services (owner, 2026-10-01: the headline topic).
-  eRechnungTitle: required("die Überschrift"),
-  eRechnungLead: optionalText,
-  milestones: z.array(
-    item({ date: required("das Datum"), title: required("den Titel"), text: required("den Text") }),
-  ),
   stepsTitle: required("die Überschrift"),
   steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-  // The other pages shown as doors on the home page; their titles and texts are their own.
-  previewsTitle: required("die Überschrift"),
   principlesTitle: required("die Überschrift"),
   principles: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-});
-
-export const ServiceSchema = item({
-  title: required("den Titel"),
-  short: required("die Kurzform"),
-  slug: slugField,
-  glyph: z.enum(GLYPHS),
-  text: required("den Text"),
-  examples: z.array(item({ text: required("das Beispiel") })),
-});
-export type Service = z.infer<typeof ServiceSchema>;
-
-export const LeistungenSectionsSchema = z.object({
-  kind: z.literal("leistungen"),
-  services: z.array(ServiceSchema).length(5, "Es gibt genau fünf Leistungen."),
+  faqTitle: required("die Überschrift"),
   faq: z.array(item({ question: required("die Frage"), answer: required("die Antwort") })),
 });
 
@@ -135,32 +104,13 @@ export const KontaktSectionsSchema = z.object({
   nextText: LexicalDocumentSchema.nullish(),
 });
 
-// A service's own page (every page right under /leistungen): beside its lead and text, when it
-// fits, what it includes, how it goes, the questions asked about it, and a project that shows it.
-export const LeistungSectionsSchema = z.object({
-  kind: z.literal("leistung"),
-  fitTitle: required("die Überschrift"),
-  fit: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-  scopeTitle: required("die Überschrift"),
-  scope: z.array(item({ text: required("den Punkt") })),
-  stepsTitle: required("die Überschrift"),
-  steps: z.array(item({ title: required("den Titel"), text: required("den Text") })),
-  faqTitle: required("die Überschrift"),
-  faq: z.array(item({ question: required("die Frage"), answer: required("die Antwort") })),
-  projektId: z.number().int().positive().nullable(),
-});
-
 export const PageSectionsSchema = z.discriminatedUnion("kind", [
   HomeSectionsSchema,
-  LeistungenSectionsSchema,
-  LeistungSectionsSchema,
   ProjekteSectionsSchema,
   KontaktSectionsSchema,
 ]);
 export type PageSections = z.infer<typeof PageSectionsSchema>;
 export type HomeSections = z.infer<typeof HomeSectionsSchema>;
-export type LeistungenSections = z.infer<typeof LeistungenSectionsSchema>;
-export type LeistungSections = z.infer<typeof LeistungSectionsSchema>;
 export type ProjekteSections = z.infer<typeof ProjekteSectionsSchema>;
 export type KontaktSections = z.infer<typeof KontaktSectionsSchema>;
 export type PageKind = PageSections["kind"] | "content";

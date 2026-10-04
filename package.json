@@ -1,5 +1,5 @@
 {
-  "name": "starter",
+  "name": "kern",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -37,7 +37,6 @@
     "migrate": "tsx --env-file-if-exists=.env src/cms/db/migrate.ts",
     "migrate:create": "drizzle-kit generate --name",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
-    "cms:import": "tsx --env-file-if-exists=.env scripts/import-payload.ts",
     "cms:passwort": "tsx --env-file-if-exists=.env scripts/set-password.ts",
     "cms:geplant": "tsx --env-file-if-exists=.env scripts/geplant.ts",
     "cms:aufbewahrung": "tsx --env-file-if-exists=.env scripts/aufbewahrung.ts",

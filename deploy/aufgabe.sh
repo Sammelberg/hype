@@ -9,6 +9,6 @@ case "${1:-}" in
   *) echo "Aufruf: deploy/aufgabe.sh aufbewahrung|geplant" >&2; exit 1 ;;
 esac
 # Not before the first deploy: the migrate image comes from deploy/deploy.sh.
-docker image inspect schwarzwald-migrate:latest >/dev/null 2>&1 || exit 0
+docker image inspect kern-migrate:latest >/dev/null 2>&1 || exit 0
 echo "$(date -Is) $1"
 docker compose --env-file .env -f compose.yml run --rm -T migrate pnpm --silent "cms:$1"

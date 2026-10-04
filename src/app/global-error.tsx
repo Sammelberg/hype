@@ -25,9 +25,9 @@ export default function GlobalError({
           placeItems: "center",
           padding: "1.3125rem",
           fontFamily: "system-ui, sans-serif",
-          colorScheme: "dark",
-          background: "#020510",
-          color: "#f0f4f9",
+          colorScheme: "light",
+          background: "#ffffff",
+          color: "#0a0a0a",
         }}
       >
         <title>Fehler</title>

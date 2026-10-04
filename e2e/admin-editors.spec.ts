@@ -91,7 +91,7 @@ test("the home page is edited section by section, with the part shown in the pre
   const lead = hero.getByLabel("Zeile darunter");
   // Without the stamp an aborted earlier run may have left behind, or it would stay for good.
   const original = unstamped(await lead.inputValue());
-  await lead.fill(`Individuelle Software aus dem Schwarzwald. (${STAMP})`);
+  await lead.fill(`Eine Zeile für den Test. (${STAMP})`);
   // The preview outlines the part being edited, named like its card.
   const preview = page.frameLocator('iframe[title^="Vorschau"]');
   // The preview compiles the home page on first use in dev: give it time once.
