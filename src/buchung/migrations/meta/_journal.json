@@ -8,6 +8,13 @@
       "when": 1791123908073,
       "tag": "0000_buchung",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791134651525,
+      "tag": "0001_rechnung_an",
+      "breakpoints": true
     }
   ]
 }

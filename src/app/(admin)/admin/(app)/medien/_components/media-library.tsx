@@ -427,12 +427,8 @@ export function MediaLibrary({
                       </span>
                       <span className="flex items-center justify-between gap-2 px-2 py-1.5 text-xs text-muted-foreground">
                         <span className="truncate">{item.alt || item.filename}</span>
-                        <span
-                          className={cn(
-                            "shrink-0",
-                            benutzt > 0 ? "text-primary-soft" : "opacity-60",
-                          )}
-                        >
+                        {/* „frei“ keeps the muted text colour: faded further it failed contrast (axe). */}
+                        <span className={cn("shrink-0", benutzt > 0 && "text-primary-soft")}>
                           {benutzt > 0 ? `${benutzt}× genutzt` : "frei"}
                         </span>
                       </span>

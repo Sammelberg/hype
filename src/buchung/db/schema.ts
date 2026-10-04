@@ -280,6 +280,8 @@ export const buchungen = buchungSchema.table(
     // For the performer: "dog in the yard", "door code 1234".
     notizIntern: text(),
     kundeId: integer().references(() => kunden.id, { onDelete: "restrict" }),
+    // Who the invoice goes to when a Kita or a company pays by invoice (its name as given).
+    rechnungAn: varchar({ length: 200 }),
     positionen: jsonb()
       .$type<PreisPosition[]>()
       .notNull()

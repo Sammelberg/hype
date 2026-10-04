@@ -11,7 +11,7 @@ import { Verweis } from "./verweis";
 // itself. A page that shows its own invitation card (`data-buchen-ziel`) keeps the bar away
 // while the card is on screen, so there are never two buttons in view. On a Figur's or a town's
 // page the bar books that Figur or that town. One IntersectionObserver, nothing per frame.
-const OHNE = ["/buchen", "/kontakt"];
+const OHNE = ["/buchen", "/buchung", "/kontakt"];
 
 function zielVon(pfad: string) {
   const [, art, slug] = pfad.split("/");

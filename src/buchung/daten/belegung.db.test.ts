@@ -24,6 +24,7 @@ import {
 } from "../db/schema";
 import { BuchungFehler } from "./basis";
 import { gebeAbgelaufeneFrei, halteSlot, sperreDarsteller, type SlotWunsch } from "./belegung";
+import { sperreTestdatei } from "./test-sperre";
 
 const s = Date.now().toString(36);
 const MIN = 60_000;
@@ -56,6 +57,14 @@ const ids = {
 let vorher: typeof einstellungen.$inferSelect | undefined;
 
 describe.skipIf(!process.env.DATABASE_URL)("Belegung (Datenbank)", () => {
+  let freigeben: (() => Promise<void>) | undefined;
+  beforeAll(async () => {
+    freigeben = await sperreTestdatei();
+  }, 120_000);
+  afterAll(async () => {
+    await freigeben?.();
+  });
+
   beforeAll(async () => {
     [vorher] = await db.select().from(einstellungen).where(eq(einstellungen.id, 1));
     await db

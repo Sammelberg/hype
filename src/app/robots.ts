@@ -10,7 +10,11 @@ const TRAINING_CRAWLERS = ["GPTBot", "ClaudeBot", "Google-Extended", "Applebot-E
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: "*", allow: "/", disallow: ["/admin", "/api", "/next"] },
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin", "/api", "/next", "/buchung/", "/buchen/frei"],
+      },
       { userAgent: TRAINING_CRAWLERS, disallow: "/" },
     ],
     sitemap: absoluteUrl("/sitemap.xml"),

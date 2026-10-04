@@ -263,3 +263,54 @@ export const SperreSchema = z
       });
   });
 export type SperreInput = z.input<typeof SperreSchema>;
+
+/**
+ * A booking or an Anfrage as the website's form sends it. Contact and address are required: the
+ * Darsteller has to find the party and reach someone on the day.
+ */
+export const BuchenSchema = z
+  .object({
+    art: z.enum(["buchung", "anfrage"]),
+    figurId: id("eine Figur"),
+    zweiteFigurId: z.number().int().positive().nullable(),
+    paketId: id("ein Paket"),
+    extraIds: z.array(z.number().int().positive()).max(20),
+    stadtId: id("einen Ort"),
+    tag,
+    uhrzeit,
+    zahlungsart: z.enum(["mollie", "rechnung"]),
+    rechnungAn: optional(200),
+    kontaktName: text("Ihren Namen"),
+    kontaktEmail: z.email("Bitte eine gültige E-Mail-Adresse."),
+    kontaktTelefon: z
+      .string()
+      .trim()
+      .regex(
+        /^\+?[\d\s/()-]{6,30}$/,
+        "Bitte eine Telefonnummer, unter der Sie am Tag erreichbar sind.",
+      ),
+    strasse: text("Straße und Hausnummer", 300),
+    plz: z
+      .string()
+      .trim()
+      .regex(/^\d{5}$/, "Bitte eine fünfstellige Postleitzahl."),
+    ort: text("den Ort", 200),
+    kindName: optional(100),
+    kindAlter: ganzzahl(1, 18).nullable(),
+    kinderAnzahl: ganzzahl(1, 200).nullable(),
+    sprache: z.enum(SPRACHEN).nullable(),
+    notizKunde: optional(2000),
+    bedingungen: z.literal(true, {
+      error: "Bitte bestätigen Sie, dass Sie die Bedingungen gelesen haben.",
+    }),
+  })
+  .superRefine((b, ctx) => {
+    if (b.zahlungsart === "rechnung" && !b.rechnungAn)
+      ctx.addIssue({
+        code: "custom",
+        path: ["rechnungAn"],
+        message: "Bitte nennen Sie die Kita, Schule oder Firma, an die die Rechnung geht.",
+      });
+  });
+export type BuchenInput = z.input<typeof BuchenSchema>;
+export type Buchen = z.output<typeof BuchenSchema>;

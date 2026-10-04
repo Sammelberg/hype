@@ -339,4 +339,6 @@ export const SEED_PATHS = [
   "/figuren/eisprinzessin",
   "/preise",
   "/kindergeburtstag/aschaffenburg",
+  "/buchen",
+  "/buchen?figur=eisprinzessin&ort=hanau&paket=klassik",
 ];

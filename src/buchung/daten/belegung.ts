@@ -132,7 +132,7 @@ export async function aktiveBelegungen(
     );
 }
 
-async function kandidatenFuer(figurIds: number[], client: Db | Tx): Promise<Kandidat[]> {
+export async function kandidatenFuer(figurIds: number[], client: Db | Tx): Promise<Kandidat[]> {
   const rows = await client
     .select({
       id: darsteller.id,

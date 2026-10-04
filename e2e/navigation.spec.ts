@@ -94,7 +94,7 @@ test("the footer links every page of the site", async ({ page }) => {
   // Every page of the site's structure; a Figur, a filtered catalogue and kern's /projekte (no
   // place on a party site) are reached from their lists, not from the footer.
   const seiten = SEED_PATHS.filter(
-    (p) => !p.includes("?") && !p.startsWith("/figuren/") && p !== "/projekte",
+    (p) => !p.includes("?") && !p.startsWith("/figuren/") && p !== "/projekte" && p !== "/buchen",
   );
   for (const path of seiten) {
     await expect(footer.locator(`a[href="${path}"]`).first()).toBeVisible();

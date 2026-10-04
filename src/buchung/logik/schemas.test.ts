@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BuchenSchema,
   DarstellerSchema,
   EinstellungenSchema,
   ExtraSchema,
@@ -194,5 +195,58 @@ describe("SperreSchema", () => {
       bisZeit: "Das Ende muss nach dem Beginn liegen.",
     });
     expect(SperreSchema.safeParse({ ...sperre, bisTag: "2026-11-21" }).success).toBe(true);
+  });
+});
+
+describe("BuchenSchema", () => {
+  const gueltig = {
+    art: "buchung",
+    figurId: 1,
+    zweiteFigurId: null,
+    paketId: 2,
+    extraIds: [],
+    stadtId: 3,
+    tag: "2026-11-21",
+    uhrzeit: "14:00",
+    zahlungsart: "mollie",
+    rechnungAn: "",
+    kontaktName: "Anna Muster",
+    kontaktEmail: "anna@example.com",
+    kontaktTelefon: "+49 6021 12345",
+    strasse: "Hauptstraße 1",
+    plz: "63739",
+    ort: "Aschaffenburg",
+    kindName: "",
+    kindAlter: 6,
+    kinderAnzahl: null,
+    sprache: null,
+    notizKunde: "",
+    bedingungen: true,
+  } as const;
+
+  it("takes a complete booking and empties the optional texts", () => {
+    const r = BuchenSchema.safeParse(gueltig);
+    expect(r.success).toBe(true);
+    expect(r.data?.kindName).toBeNull();
+  });
+
+  it("names every field a person still has to fill, in German", () => {
+    const r = BuchenSchema.safeParse({
+      ...gueltig,
+      plz: "6373",
+      kontaktTelefon: "abc",
+      bedingungen: false,
+    });
+    const felder = r.error?.issues.map((i) => i.path[0]);
+    expect(felder).toEqual(expect.arrayContaining(["plz", "kontaktTelefon", "bedingungen"]));
+  });
+
+  it("wants to know who receives the invoice when a Kita or company pays by invoice", () => {
+    const r = BuchenSchema.safeParse({ ...gueltig, zahlungsart: "rechnung" });
+    expect(r.error?.issues.map((i) => i.path[0])).toEqual(["rechnungAn"]);
+    expect(
+      BuchenSchema.safeParse({ ...gueltig, zahlungsart: "rechnung", rechnungAn: "Kita Sonne" })
+        .success,
+    ).toBe(true);
   });
 });

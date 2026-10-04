@@ -1,0 +1,1763 @@
+{
+  "id": "b707945b-aedd-4fed-8a44-66e39dc7ea55",
+  "prevId": "f2156d9e-146d-454d-b50a-7ef19d17a4b4",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "buchung.belegungen": {
+      "name": "belegungen",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "darsteller_id": {
+          "name": "darsteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "belegung_art",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "buchung_id": {
+          "name": "buchung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "figur_id": {
+          "name": "figur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "von": {
+          "name": "von",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bis": {
+          "name": "bis",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "grund": {
+          "name": "grund",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "belegungen_darsteller_idx": {
+          "name": "belegungen_darsteller_idx",
+          "columns": [
+            {
+              "expression": "darsteller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "von",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"buchung\".\"belegungen\".\"aktiv\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "belegungen_buchung_idx": {
+          "name": "belegungen_buchung_idx",
+          "columns": [
+            {
+              "expression": "buchung_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "belegungen_darsteller_id_darsteller_id_fk": {
+          "name": "belegungen_darsteller_id_darsteller_id_fk",
+          "tableFrom": "belegungen",
+          "tableTo": "darsteller",
+          "schemaTo": "buchung",
+          "columnsFrom": ["darsteller_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "belegungen_buchung_id_buchungen_id_fk": {
+          "name": "belegungen_buchung_id_buchungen_id_fk",
+          "tableFrom": "belegungen",
+          "tableTo": "buchungen",
+          "schemaTo": "buchung",
+          "columnsFrom": ["buchung_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "belegungen_figur_id_figuren_id_fk": {
+          "name": "belegungen_figur_id_figuren_id_fk",
+          "tableFrom": "belegungen",
+          "tableTo": "figuren",
+          "schemaTo": "buchung",
+          "columnsFrom": ["figur_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "belegungen_zeit": {
+          "name": "belegungen_zeit",
+          "value": "\"buchung\".\"belegungen\".\"bis\" > \"buchung\".\"belegungen\".\"von\""
+        },
+        "belegungen_art": {
+          "name": "belegungen_art",
+          "value": "(\"buchung\".\"belegungen\".\"art\" = 'einsatz') = (\"buchung\".\"belegungen\".\"buchung_id\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.bewertungen": {
+      "name": "bewertungen",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stadt_id": {
+          "name": "stadt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sterne": {
+          "name": "sterne",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "veroeffentlicht": {
+          "name": "veroeffentlicht",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bewertungen_stadt_id_staedte_id_fk": {
+          "name": "bewertungen_stadt_id_staedte_id_fk",
+          "tableFrom": "bewertungen",
+          "tableTo": "staedte",
+          "schemaTo": "buchung",
+          "columnsFrom": ["stadt_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "bewertungen_sterne": {
+          "name": "bewertungen_sterne",
+          "value": "\"buchung\".\"bewertungen\".\"sterne\" BETWEEN 1 AND 5"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.buchung_extras": {
+      "name": "buchung_extras",
+      "schema": "buchung",
+      "columns": {
+        "buchung_id": {
+          "name": "buchung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "extra_id": {
+          "name": "extra_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preis": {
+          "name": "preis",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dauer_delta_min": {
+          "name": "dauer_delta_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "buchung_extras_buchung_id_buchungen_id_fk": {
+          "name": "buchung_extras_buchung_id_buchungen_id_fk",
+          "tableFrom": "buchung_extras",
+          "tableTo": "buchungen",
+          "schemaTo": "buchung",
+          "columnsFrom": ["buchung_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "buchung_extras_extra_id_extras_id_fk": {
+          "name": "buchung_extras_extra_id_extras_id_fk",
+          "tableFrom": "buchung_extras",
+          "tableTo": "extras",
+          "schemaTo": "buchung",
+          "columnsFrom": ["extra_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "buchung_extras_buchung_id_extra_id_pk": {
+          "name": "buchung_extras_buchung_id_extra_id_pk",
+          "columns": ["buchung_id", "extra_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.buchungen": {
+      "name": "buchungen",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nummer": {
+          "name": "nummer",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "buchung_status",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'anfrage'"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "buchung_quelle",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'web'"
+        },
+        "paket_id": {
+          "name": "paket_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "figur_id": {
+          "name": "figur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zweite_figur_id": {
+          "name": "zweite_figur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "beginn": {
+          "name": "beginn",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fenster_von": {
+          "name": "fenster_von",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fenster_bis": {
+          "name": "fenster_bis",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stadt_id": {
+          "name": "stadt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zone_code": {
+          "name": "zone_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ort_freitext": {
+          "name": "ort_freitext",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "strasse": {
+          "name": "strasse",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plz": {
+          "name": "plz",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ort": {
+          "name": "ort",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kontakt_name": {
+          "name": "kontakt_name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kontakt_email": {
+          "name": "kontakt_email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kontakt_telefon": {
+          "name": "kontakt_telefon",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind_name": {
+          "name": "kind_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind_alter": {
+          "name": "kind_alter",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kinder_anzahl": {
+          "name": "kinder_anzahl",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sprache": {
+          "name": "sprache",
+          "type": "sprache",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notiz_kunde": {
+          "name": "notiz_kunde",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notiz_intern": {
+          "name": "notiz_intern",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kunde_id": {
+          "name": "kunde_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rechnung_an": {
+          "name": "rechnung_an",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "positionen": {
+          "name": "positionen",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "summe": {
+          "name": "summe",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anzahlung": {
+          "name": "anzahlung",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zahlungsart": {
+          "name": "zahlungsart",
+          "type": "zahlung_adapter",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "halten_bis": {
+          "name": "halten_bis",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zugriff_hash": {
+          "name": "zugriff_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_am": {
+          "name": "storniert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_gebuehr": {
+          "name": "storno_gebuehr",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_grund": {
+          "name": "storno_grund",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "buchungen_beginn_idx": {
+          "name": "buchungen_beginn_idx",
+          "columns": [
+            {
+              "expression": "beginn",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "buchungen_halten_idx": {
+          "name": "buchungen_halten_idx",
+          "columns": [
+            {
+              "expression": "halten_bis",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"buchung\".\"buchungen\".\"status\" = 'reserviert'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "buchungen_paket_id_pakete_id_fk": {
+          "name": "buchungen_paket_id_pakete_id_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "pakete",
+          "schemaTo": "buchung",
+          "columnsFrom": ["paket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "buchungen_figur_id_figuren_id_fk": {
+          "name": "buchungen_figur_id_figuren_id_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "figuren",
+          "schemaTo": "buchung",
+          "columnsFrom": ["figur_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "buchungen_zweite_figur_id_figuren_id_fk": {
+          "name": "buchungen_zweite_figur_id_figuren_id_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "figuren",
+          "schemaTo": "buchung",
+          "columnsFrom": ["zweite_figur_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "buchungen_stadt_id_staedte_id_fk": {
+          "name": "buchungen_stadt_id_staedte_id_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "staedte",
+          "schemaTo": "buchung",
+          "columnsFrom": ["stadt_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "buchungen_zone_code_zonen_code_fk": {
+          "name": "buchungen_zone_code_zonen_code_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "zonen",
+          "schemaTo": "buchung",
+          "columnsFrom": ["zone_code"],
+          "columnsTo": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "buchungen_kunde_id_kunden_id_fk": {
+          "name": "buchungen_kunde_id_kunden_id_fk",
+          "tableFrom": "buchungen",
+          "tableTo": "kunden",
+          "schemaTo": "buero",
+          "columnsFrom": ["kunde_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "buchungen_nummer_unique": {
+          "name": "buchungen_nummer_unique",
+          "nullsNotDistinct": false,
+          "columns": ["nummer"]
+        },
+        "buchungen_zugriffHash_unique": {
+          "name": "buchungen_zugriffHash_unique",
+          "nullsNotDistinct": false,
+          "columns": ["zugriff_hash"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "buchungen_fenster": {
+          "name": "buchungen_fenster",
+          "value": "(\"buchung\".\"buchungen\".\"fenster_von\" IS NULL AND \"buchung\".\"buchungen\".\"fenster_bis\" IS NULL) OR \"buchung\".\"buchungen\".\"fenster_bis\" > \"buchung\".\"buchungen\".\"fenster_von\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.darsteller": {
+      "name": "darsteller",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefon": {
+          "name": "telefon",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "prioritaet": {
+          "name": "prioritaet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 100
+        },
+        "notiz": {
+          "name": "notiz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.darsteller_figuren": {
+      "name": "darsteller_figuren",
+      "schema": "buchung",
+      "columns": {
+        "darsteller_id": {
+          "name": "darsteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "figur_id": {
+          "name": "figur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "darsteller_figuren_figur_idx": {
+          "name": "darsteller_figuren_figur_idx",
+          "columns": [
+            {
+              "expression": "figur_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "darsteller_figuren_darsteller_id_darsteller_id_fk": {
+          "name": "darsteller_figuren_darsteller_id_darsteller_id_fk",
+          "tableFrom": "darsteller_figuren",
+          "tableTo": "darsteller",
+          "schemaTo": "buchung",
+          "columnsFrom": ["darsteller_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "darsteller_figuren_figur_id_figuren_id_fk": {
+          "name": "darsteller_figuren_figur_id_figuren_id_fk",
+          "tableFrom": "darsteller_figuren",
+          "tableTo": "figuren",
+          "schemaTo": "buchung",
+          "columnsFrom": ["figur_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "darsteller_figuren_darsteller_id_figur_id_pk": {
+          "name": "darsteller_figuren_darsteller_id_figur_id_pk",
+          "columns": ["darsteller_id", "figur_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.einstellungen": {
+      "name": "einstellungen",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "vorbereitung_min": {
+          "name": "vorbereitung_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 20
+        },
+        "abbau_min": {
+          "name": "abbau_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 15
+        },
+        "raster_min": {
+          "name": "raster_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 30
+        },
+        "erster_start_min": {
+          "name": "erster_start_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 600
+        },
+        "letzter_start_min": {
+          "name": "letzter_start_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1080
+        },
+        "anzahlung_prozent": {
+          "name": "anzahlung_prozent",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 25
+        },
+        "halten_min": {
+          "name": "halten_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 30
+        },
+        "halten_lastschrift_min": {
+          "name": "halten_lastschrift_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 4320
+        },
+        "mindest_vorlauf_std": {
+          "name": "mindest_vorlauf_std",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 48
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "einstellungen_einzeln": {
+          "name": "einstellungen_einzeln",
+          "value": "\"buchung\".\"einstellungen\".\"id\" = 1"
+        },
+        "einstellungen_anzahlung": {
+          "name": "einstellungen_anzahlung",
+          "value": "\"buchung\".\"einstellungen\".\"anzahlung_prozent\" BETWEEN 0 AND 100"
+        },
+        "einstellungen_starts": {
+          "name": "einstellungen_starts",
+          "value": "\"buchung\".\"einstellungen\".\"erster_start_min\" >= 0 AND \"buchung\".\"einstellungen\".\"letzter_start_min\" >= \"buchung\".\"einstellungen\".\"erster_start_min\" AND \"buchung\".\"einstellungen\".\"letzter_start_min\" < 1440"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.extras": {
+      "name": "extras",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preis": {
+          "name": "preis",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dauer_delta_min": {
+          "name": "dauer_delta_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "vorlauf_tage": {
+          "name": "vorlauf_tage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "zusatz_figur": {
+          "name": "zusatz_figur",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "nur_anfrage": {
+          "name": "nur_anfrage",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "extras_slug_unique": {
+          "name": "extras_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "extras_dauer": {
+          "name": "extras_dauer",
+          "value": "\"buchung\".\"extras\".\"dauer_delta_min\" >= 0"
+        },
+        "extras_vorlauf": {
+          "name": "extras_vorlauf",
+          "value": "\"buchung\".\"extras\".\"vorlauf_tage\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.figur_fotos": {
+      "name": "figur_fotos",
+      "schema": "buchung",
+      "columns": {
+        "figur_id": {
+          "name": "figur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "media_id": {
+          "name": "media_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "figur_fotos_figur_id_figuren_id_fk": {
+          "name": "figur_fotos_figur_id_figuren_id_fk",
+          "tableFrom": "figur_fotos",
+          "tableTo": "figuren",
+          "schemaTo": "buchung",
+          "columnsFrom": ["figur_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "figur_fotos_media_id_media_id_fk": {
+          "name": "figur_fotos_media_id_media_id_fk",
+          "tableFrom": "figur_fotos",
+          "tableTo": "media",
+          "schemaTo": "cms",
+          "columnsFrom": ["media_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "figur_fotos_figur_id_media_id_pk": {
+          "name": "figur_fotos_figur_id_media_id_pk",
+          "columns": ["figur_id", "media_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.figuren": {
+      "name": "figuren",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kategorie": {
+          "name": "kategorie",
+          "type": "figur_kategorie",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alter_von": {
+          "name": "alter_von",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3
+        },
+        "alter_bis": {
+          "name": "alter_bis",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
+        },
+        "sprachen": {
+          "name": "sprachen",
+          "type": "sprache[]",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{de}'"
+        },
+        "kurz": {
+          "name": "kurz",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "programm": {
+          "name": "programm",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "meta_title": {
+          "name": "meta_title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meta_description": {
+          "name": "meta_description",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "figuren_slug_unique": {
+          "name": "figuren_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "figuren_slug_format": {
+          "name": "figuren_slug_format",
+          "value": "\"buchung\".\"figuren\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
+        },
+        "figuren_alter": {
+          "name": "figuren_alter",
+          "value": "\"buchung\".\"figuren\".\"alter_von\" >= 0 AND \"buchung\".\"figuren\".\"alter_bis\" >= \"buchung\".\"figuren\".\"alter_von\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.pakete": {
+      "name": "pakete",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leistungen": {
+          "name": "leistungen",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "dauer_min": {
+          "name": "dauer_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preis": {
+          "name": "preis",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "figuren_anzahl": {
+          "name": "figuren_anzahl",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "nur_anfrage": {
+          "name": "nur_anfrage",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "pakete_slug_unique": {
+          "name": "pakete_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "pakete_figuren_anzahl": {
+          "name": "pakete_figuren_anzahl",
+          "value": "\"buchung\".\"pakete\".\"figuren_anzahl\" BETWEEN 1 AND 2"
+        },
+        "pakete_buchbar": {
+          "name": "pakete_buchbar",
+          "value": "\"buchung\".\"pakete\".\"nur_anfrage\" OR (\"buchung\".\"pakete\".\"dauer_min\" > 0 AND \"buchung\".\"pakete\".\"preis\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.staedte": {
+      "name": "staedte",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zone_code": {
+          "name": "zone_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seite": {
+          "name": "seite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "intro": {
+          "name": "intro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bezirke": {
+          "name": "bezirke",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orte": {
+          "name": "orte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bedingungen": {
+          "name": "bedingungen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meta_title": {
+          "name": "meta_title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meta_description": {
+          "name": "meta_description",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "staedte_zone_idx": {
+          "name": "staedte_zone_idx",
+          "columns": [
+            {
+              "expression": "zone_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "staedte_zone_code_zonen_code_fk": {
+          "name": "staedte_zone_code_zonen_code_fk",
+          "tableFrom": "staedte",
+          "tableTo": "zonen",
+          "schemaTo": "buchung",
+          "columnsFrom": ["zone_code"],
+          "columnsTo": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "staedte_slug_unique": {
+          "name": "staedte_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "staedte_slug_format": {
+          "name": "staedte_slug_format",
+          "value": "\"buchung\".\"staedte\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "buchung.webhook_ereignisse": {
+      "name": "webhook_ereignisse",
+      "schema": "buchung",
+      "columns": {
+        "adapter": {
+          "name": "adapter",
+          "type": "zahlung_adapter",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ereignis_id": {
+          "name": "ereignis_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empfangen_am": {
+          "name": "empfangen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "webhook_ereignisse_adapter_ereignis_id_pk": {
+          "name": "webhook_ereignisse_adapter_ereignis_id_pk",
+          "columns": ["adapter", "ereignis_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.zahlungen": {
+      "name": "zahlungen",
+      "schema": "buchung",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "buchung_id": {
+          "name": "buchung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adapter": {
+          "name": "adapter",
+          "type": "zahlung_adapter",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "zahlung_art",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag": {
+          "name": "betrag",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "zahlung_status",
+          "typeSchema": "buchung",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offen'"
+        },
+        "extern_id": {
+          "name": "extern_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "zahlungen_extern_idx": {
+          "name": "zahlungen_extern_idx",
+          "columns": [
+            {
+              "expression": "adapter",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "extern_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "zahlungen_buchung_idx": {
+          "name": "zahlungen_buchung_idx",
+          "columns": [
+            {
+              "expression": "buchung_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "zahlungen_buchung_id_buchungen_id_fk": {
+          "name": "zahlungen_buchung_id_buchungen_id_fk",
+          "tableFrom": "zahlungen",
+          "tableTo": "buchungen",
+          "schemaTo": "buchung",
+          "columnsFrom": ["buchung_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "buchung.zonen": {
+      "name": "zonen",
+      "schema": "buchung",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "varchar(2)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aufschlag": {
+          "name": "aufschlag",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "fahrt_minuten": {
+          "name": "fahrt_minuten",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nur_anfrage": {
+          "name": "nur_anfrage",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sort": {
+          "name": "sort",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "buchung.belegung_art": {
+      "name": "belegung_art",
+      "schema": "buchung",
+      "values": ["einsatz", "sperre"]
+    },
+    "buchung.buchung_quelle": {
+      "name": "buchung_quelle",
+      "schema": "buchung",
+      "values": ["web", "telefon", "instagram", "admin"]
+    },
+    "buchung.buchung_status": {
+      "name": "buchung_status",
+      "schema": "buchung",
+      "values": [
+        "anfrage",
+        "reserviert",
+        "bestaetigt",
+        "abgelehnt",
+        "verfallen",
+        "storniert",
+        "abgeschlossen"
+      ]
+    },
+    "buchung.figur_kategorie": {
+      "name": "figur_kategorie",
+      "schema": "buchung",
+      "values": ["superhelden", "prinzessinnen", "tiere", "clowns", "saisonal"]
+    },
+    "buchung.sprache": {
+      "name": "sprache",
+      "schema": "buchung",
+      "values": ["de", "uk", "ru", "en"]
+    },
+    "buchung.zahlung_adapter": {
+      "name": "zahlung_adapter",
+      "schema": "buchung",
+      "values": ["mollie", "rechnung", "test"]
+    },
+    "buchung.zahlung_art": {
+      "name": "zahlung_art",
+      "schema": "buchung",
+      "values": ["anzahlung", "rest", "erstattung"]
+    },
+    "buchung.zahlung_status": {
+      "name": "zahlung_status",
+      "schema": "buchung",
+      "values": ["offen", "bezahlt", "fehlgeschlagen", "abgebrochen", "erstattet"]
+    }
+  },
+  "schemas": {
+    "buchung": "buchung"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

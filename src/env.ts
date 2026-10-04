@@ -18,6 +18,9 @@ export const env = createEnv({
     // "1" serves /next/bewegung, the demo of every motion part (docs/motion-architecture.md),
     // in a production build too (CI's e2e); `next dev` always serves it. Never set on a server.
     MOTION_DEMO: z.literal("1").optional(),
+    // "1" lets bookings pay their Anzahlung through the test adapter (a pretend checkout under
+    // /buchung/<link>/testzahlung) — for development and CI's e2e. Never set on a server.
+    ZAHLUNG_TEST: z.literal("1").optional(),
   },
   client: {
     NEXT_PUBLIC_SERVER_URL: z.url(),

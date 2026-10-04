@@ -45,6 +45,8 @@ jobs:
       MAILPIT_URL: http://localhost:8025
       # The motion demo (/next/bewegung) in the production build, for e2e/bewegung.spec.ts.
       MOTION_DEMO: "1"
+      # The pretend checkout for bookings (e2e/buchung.spec.ts); Mollie is never called in CI.
+      ZAHLUNG_TEST: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

@@ -55,6 +55,12 @@ await db.execute(sql`
 await db.execute(
   sql`delete from buero.angebote where kunde_id in (select id from buero.kunden where firma like 'E2E %' or name like 'E2E %')`,
 );
+// Bookings the e2e specs made (src/buchung): their payments first, then the bookings with their
+// Einsätze and Extras (cascade), so no test booking keeps a Darsteller busy.
+await db.execute(sql`
+  delete from buchung.zahlungen where buchung_id in
+    (select id from buchung.buchungen where kontakt_email like 'e2e-%@example.com')`);
+await db.execute(sql`delete from buchung.buchungen where kontakt_email like 'e2e-%@example.com'`);
 await db.execute(sql`delete from buero.wiedervorlagen where titel like 'E2E %'`);
 await db.execute(sql`delete from buero.termine where titel like 'E2E %'`);
 await db.execute(

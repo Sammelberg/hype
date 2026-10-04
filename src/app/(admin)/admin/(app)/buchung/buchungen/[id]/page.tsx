@@ -118,6 +118,7 @@ export default async function BuchungPage({ params }: Props) {
                 ["Kinder", b.kinderAnzahl],
                 ["Sprache", b.sprache ? SPRACH_NAMEN[b.sprache] : null],
                 ["Wunsch der Kundin", b.notizKunde],
+                ["Rechnung an", b.rechnungAn],
               ]}
             />
           </CardContent>

@@ -4,7 +4,7 @@
 import { tagePlus } from "../../buero/logik/ablauf";
 import { berlinTag } from "../../buero/logik/kalender";
 import { berlinStart } from "./zeit";
-import type { Fenster } from "./fenster";
+import { berechneFenster, type Fenster, type FensterEingabe } from "./fenster";
 
 const uhrzeit = (minuten: number) =>
   `${String(Math.floor(minuten / 60)).padStart(2, "0")}:${String(minuten % 60).padStart(2, "0")}`;
@@ -99,4 +99,34 @@ export function naechsteFreie(
         Math.abs(a.getTime() - ziel) - Math.abs(b.getTime() - ziel) || a.getTime() - b.getTime(),
     )
     .slice(0, n);
+}
+
+/**
+ * The starts the website can sell, per German day: within the day's hours, not before
+ * `fruehestens`, and with someone free for every Figur for the whole Fenster. The booking form
+ * offers exactly these; the locking transaction checks the chosen one again.
+ */
+export function freieStartsJeTag(e: {
+  tage: string[];
+  regeln: { ersterStartMin: number; letzterStartMin: number; rasterMin: number };
+  fensterBasis: Omit<FensterEingabe, "beginn">;
+  figuren: number[];
+  darsteller: Kandidat[];
+  belegungen: Belegt[];
+  fruehestens: Date;
+}): Record<string, Date[]> {
+  const ergebnis: Record<string, Date[]> = {};
+  for (const tag of e.tage) {
+    ergebnis[tag] = startZeiten(tag, e.regeln).filter(
+      (beginn) =>
+        beginn.getTime() >= e.fruehestens.getTime() &&
+        waehleDarsteller({
+          figuren: e.figuren,
+          darsteller: e.darsteller,
+          belegungen: e.belegungen,
+          fenster: berechneFenster({ ...e.fensterBasis, beginn }),
+        }) !== null,
+    );
+  }
+  return ergebnis;
 }

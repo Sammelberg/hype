@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Runs against DATABASE_URL inside one transaction that is rolled back at the end.
 import { eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db, type Tx } from "../../cms/db/client";
 import {
@@ -15,6 +15,7 @@ import {
 } from "../db/schema";
 import { halteSlot } from "./belegung";
 import { katalogFiguren, naechsteFreieSamstage } from "./katalog";
+import { sperreTestdatei } from "./test-sperre";
 
 class Rueckgabe extends Error {}
 async function imRollback(fn: (tx: Tx) => Promise<void>) {
@@ -72,6 +73,14 @@ async function aufbau(tx: Tx) {
 }
 
 describe.skipIf(!process.env.DATABASE_URL)("Katalog (Datenbank)", () => {
+  let freigeben: (() => Promise<void>) | undefined;
+  beforeAll(async () => {
+    freigeben = await sperreTestdatei();
+  }, 120_000);
+  afterAll(async () => {
+    await freigeben?.();
+  });
+
   it("names the first free Saturday per town, and skips towns that only take requests", async () => {
     await imRollback(async (tx) => {
       const { nah, weit, figur } = await aufbau(tx);

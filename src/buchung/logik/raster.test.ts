@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { berechneFenster } from "./fenster";
 import {
   freieDarsteller,
+  freieStartsJeTag,
   naechsteFreie,
   samstageAb,
   startZeiten,
@@ -138,5 +139,54 @@ describe("samstageAb", () => {
     ]);
     // Saturday 14 November, 00:30 in Germany is still that Saturday
     expect(samstageAb(new Date("2026-11-13T23:30:00.000Z"), 1)).toEqual(["2026-11-14"]);
+  });
+});
+
+describe("freieStartsJeTag", () => {
+  const regeln = { ersterStartMin: 600, letzterStartMin: 720, rasterMin: 60 };
+  const basis = {
+    fahrtMinuten: 60,
+    vorbereitungMin: 20,
+    dauerMin: 90,
+    extrasDeltaMin: 0,
+    abbauMin: 15,
+  };
+  const anna = { id: 1, prioritaet: 10, figuren: [1] };
+  const um = (iso: string) => new Date(iso);
+
+  it("offers per day the starts someone who plays the Figur is free for, the whole Fenster long", () => {
+    // Anna is busy 12:30–15:00 on Saturday 14 November (German time).
+    const belegt = [
+      { darstellerId: 1, von: um("2026-11-14T11:30:00Z"), bis: um("2026-11-14T14:00:00Z") },
+    ];
+    const frei = freieStartsJeTag({
+      tage: ["2026-11-14", "2026-11-15"],
+      regeln,
+      fensterBasis: basis,
+      figuren: [1],
+      darsteller: [anna],
+      belegungen: belegt,
+      fruehestens: um("2026-11-01T00:00:00Z"),
+    });
+    const uhr = (tag: string) => frei[tag]!.map((d) => d.toISOString().slice(11, 16));
+    // 10:00 → Fenster 08:40–13:25 hits the 12:30 Belegung; 11:00 and 12:00 too.
+    expect(uhr("2026-11-14")).toEqual([]);
+    expect(uhr("2026-11-15")).toEqual(["09:00", "10:00", "11:00"]);
+  });
+
+  it("leaves out starts before the earliest moment the website may sell", () => {
+    const frei = freieStartsJeTag({
+      tage: ["2026-11-15"],
+      regeln,
+      fensterBasis: basis,
+      figuren: [1],
+      darsteller: [anna],
+      belegungen: [],
+      fruehestens: um("2026-11-15T09:30:00Z"),
+    });
+    expect(frei["2026-11-15"]!.map((d) => d.toISOString().slice(11, 16))).toEqual([
+      "10:00",
+      "11:00",
+    ]);
   });
 });

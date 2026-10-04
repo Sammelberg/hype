@@ -1,0 +1,1 @@
+ALTER TABLE "buchung"."buchungen" ADD COLUMN "rechnung_an" varchar(200);
