@@ -62,6 +62,8 @@ test("the test mail goes out through the mailbox and is logged", async ({ page }
 test("„Passwort vergessen“ sends a one-time link that sets a new password", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByRole("link", { name: "Passwort vergessen?" }).click();
+  // The login page has an „E-Mail-Adresse“ too: fill only once the new page stands.
+  await expect(page.getByRole("heading", { name: "Passwort vergessen" })).toBeVisible();
   const since = now();
   await page.getByLabel("E-Mail-Adresse").fill(E2E_VERGESSEN.email.toUpperCase());
   await page.getByRole("button", { name: "Link senden" }).click();

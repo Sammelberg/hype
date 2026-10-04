@@ -79,7 +79,7 @@ async function rechnung(tx: Tx, stellen = true) {
 const pdf = new TextEncoder().encode("%PDF-1.7\n% Testdatei\n");
 
 describe.skipIf(!process.env.DATABASE_URL)("sending an invoice", () => {
-  it("attaches the archived XRechnung and the PDF and writes the customer's history", async () => {
+  it("attaches the owner's PDF and the archived XRechnung and writes the customer's history", async () => {
     await imRollback(async (tx) => {
       const { id, kundeId, nummer } = await rechnung(tx);
       const gesendet: Gesendet[] = [];
@@ -95,16 +95,17 @@ describe.skipIf(!process.env.DATABASE_URL)("sending an invoice", () => {
           subject: `Rechnung ${nummer}`,
           text: "Anbei.",
           xrechnung: true,
-          pdf: { name: "Druck: Rechnung!.pdf", bytes: pdf },
+          pdf: true,
+          eigenesPdf: { name: "Druck: Rechnung!.pdf", bytes: pdf },
         },
         { userId: null, autor: "Test" },
         { senden, client: tx },
       );
-      expect(result.anhaenge).toEqual([`${nummer}.xml`, "Druck Rechnung.pdf"]);
+      expect(result.anhaenge).toEqual(["Druck Rechnung.pdf", `${nummer}.xml`]);
       const [mail, log] = gesendet[0]!;
       expect(mail.to).toBe("buchhaltung@example.com");
-      expect(mail.attachments?.[0]?.contentType).toBe("application/xml");
-      expect(String(mail.attachments?.[0]?.content)).toContain(`<cbc:ID>${nummer}</cbc:ID>`);
+      expect(mail.attachments?.[1]?.contentType).toBe("application/xml");
+      expect(String(mail.attachments?.[1]?.content)).toContain(`<cbc:ID>${nummer}</cbc:ID>`);
       expect(log).toEqual({ kind: "rechnung", sentById: null, target: { type: "rechnung", id } });
 
       const historie = await tx
@@ -131,7 +132,7 @@ describe.skipIf(!process.env.DATABASE_URL)("sending an invoice", () => {
       const entwurf = await rechnung(tx, false);
       await expect(
         versendeRechnung(
-          { ...base, id: entwurf.id, xrechnung: true, pdf: null },
+          { ...base, id: entwurf.id, xrechnung: true, pdf: false, eigenesPdf: null },
           { userId: null, autor: null },
           { senden, client: tx },
         ),
@@ -140,21 +141,27 @@ describe.skipIf(!process.env.DATABASE_URL)("sending an invoice", () => {
       const { id } = await rechnung(tx);
       await expect(
         versendeRechnung(
-          { ...base, id, xrechnung: false, pdf: { name: "x.pdf", bytes: new Uint8Array([1, 2]) } },
+          {
+            ...base,
+            id,
+            xrechnung: false,
+            pdf: true,
+            eigenesPdf: { name: "x.pdf", bytes: new Uint8Array([1, 2]) },
+          },
           { userId: null, autor: null },
           { senden, client: tx },
         ),
       ).rejects.toThrow(/kein PDF/);
       await expect(
         versendeRechnung(
-          { ...base, id, xrechnung: false, pdf: null },
+          { ...base, id, xrechnung: false, pdf: false, eigenesPdf: null },
           { userId: null, autor: null },
           { senden, client: tx },
         ),
-      ).rejects.toThrow(/XRechnung oder das PDF/);
+      ).rejects.toThrow(/PDF oder die XRechnung/);
       await expect(
         versendeRechnung(
-          { ...base, id, to: "kein-at", xrechnung: true, pdf: null },
+          { ...base, id, to: "kein-at", xrechnung: true, pdf: false, eigenesPdf: null },
           { userId: null, autor: null },
           { senden, client: tx },
         ),
@@ -162,4 +169,35 @@ describe.skipIf(!process.env.DATABASE_URL)("sending an invoice", () => {
       expect(calls).toBe(0);
     });
   });
+
+  it("attaches the archived PDF, the same file on every send", async () => {
+    await imRollback(async (tx) => {
+      const { id, nummer } = await rechnung(tx);
+      const gesendet: Gesendet[] = [];
+      const senden = (async (...args: Gesendet) => {
+        gesendet.push(args);
+        return { messageId: "<test>" };
+      }) as unknown as typeof sendMail;
+      const eingabe = {
+        id,
+        to: "a@example.com",
+        subject: "Rechnung",
+        text: "Anbei.",
+        xrechnung: false,
+        pdf: true,
+        eigenesPdf: null,
+      };
+      const wer = { userId: null, autor: null };
+      const result = await versendeRechnung(eingabe, wer, { senden, client: tx });
+      expect(result.anhaenge).toEqual([`${nummer}.pdf`]);
+      await versendeRechnung(eingabe, wer, { senden, client: tx });
+      const [erste, zweite] = gesendet.map(([mail]) => mail.attachments![0]!);
+      expect(erste!.contentType).toBe("application/pdf");
+      expect(
+        Buffer.from(erste!.content as Uint8Array).equals(
+          Buffer.from(zweite!.content as Uint8Array),
+        ),
+      ).toBe(true);
+    });
+  }, 30_000);
 });

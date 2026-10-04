@@ -12,7 +12,7 @@ import { forderungVon, offenVon } from "@/buero/daten/forderungen";
 import { listKundenAuswahl } from "@/buero/daten/kunden";
 import {
   abschlaegeJeAuftrag,
-  abzuegeVon,
+  blattDaten,
   ausgabeDaten,
   getRechnung,
 } from "@/buero/daten/rechnungen";
@@ -197,6 +197,7 @@ export default async function RechnungPage({ params }: Props) {
               nummer={daten.nummer}
               vorschlag={{ to: daten.empfaenger.email ?? "", ...vorschlag }}
               xrechnungMoeglich={xrechnung.length === 0}
+              xrechnungVorgeschlagen={xrechnung.length === 0 && found.kunde.art !== "privat"}
             />
           ) : null}
           <RechnungAktionen
@@ -322,18 +323,7 @@ export default async function RechnungPage({ params }: Props) {
       }
     >
       <div className="rounded-xl border bg-muted/50 p-3">
-        <RechnungsDokument
-          daten={{
-            ...daten,
-            storno: r.typ === "storno",
-            art: r.art,
-            abzuege: abzuegeVon(r),
-            korrigiert: found.korrigiert?.nummer ?? null,
-            kundennummer: found.kunde.nummer,
-            einleitung: r.einleitung,
-            schlusstext: r.schlusstext,
-          }}
-        />
+        <RechnungsDokument daten={blattDaten(found)} />
       </div>
     </EditorShell>
   );

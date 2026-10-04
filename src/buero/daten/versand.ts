@@ -1,14 +1,15 @@
 // Sending an issued invoice by e-mail through the owner's mailbox — one way among others: the
 // print view and the XRechnung download stay as they are, for whoever sends from their own mail
-// program. Attachments: the archived XRechnung (xrechnungFuer, so the file sent is the file kept)
-// and, if the owner adds it, the PDF saved from the print view. The mail lands in the mail log
+// program. Attachments: the archived PDF (ZUGFeRD when its data allow) and the archived XRechnung
+// — pdfFuer and xrechnungFuer, so the file sent is the file kept — or, instead of the archived PDF,
+// one the owner chose. The mail lands in the mail log
 // beside the invoice and in the customer's history.
 import { db, type Db, type Tx } from "../../cms/db/client";
 import { sendMail } from "../../cms/mail/send";
 import { isEmail } from "../../lib/email/providers";
 import { kundenHistorie } from "../db/schema";
 import { BueroError } from "./basis";
-import { getRechnung, xrechnungFuer } from "./rechnungen";
+import { getRechnung, pdfFuer, xrechnungFuer } from "./rechnungen";
 
 // The PDF travels in a server action (2 MB at most, next.config.ts).
 export const PDF_MAX_BYTES = 1_800_000;
@@ -19,7 +20,10 @@ export interface RechnungVersand {
   subject: string;
   text: string;
   xrechnung: boolean;
-  pdf: { name: string; bytes: Uint8Array } | null;
+  /** The archived PDF of the invoice. */
+  pdf: boolean;
+  /** A PDF the owner chose, sent instead of the archived one. */
+  eigenesPdf: { name: string; bytes: Uint8Array } | null;
 }
 
 type Senden = typeof sendMail;
@@ -57,21 +61,24 @@ export async function versendeRechnung(
     const { nummer, xml } = await xrechnungFuer(input.id, client);
     anhaenge.push({ filename: `${nummer}.xml`, content: xml, contentType: "application/xml" });
   }
-  if (input.pdf) {
-    const { bytes } = input.pdf;
+  if (input.eigenesPdf) {
+    const { bytes } = input.eigenesPdf;
     if (bytes.byteLength > PDF_MAX_BYTES)
-      throw new BueroError("Das PDF ist zu groß (höchstens 1,8 MB).", "pdf");
+      throw new BueroError("Das PDF ist zu groß (höchstens 1,8 MB).", "eigenesPdf");
     // The file's first bytes decide, not its name.
     if (Buffer.from(bytes.subarray(0, 5)).toString("latin1") !== "%PDF-")
-      throw new BueroError("Die Datei ist kein PDF.", "pdf");
-    anhaenge.push({
-      filename: pdfName(input.pdf.name, rechnung.nummer),
+      throw new BueroError("Die Datei ist kein PDF.", "eigenesPdf");
+    anhaenge.unshift({
+      filename: pdfName(input.eigenesPdf.name, rechnung.nummer),
       content: bytes,
       contentType: "application/pdf",
     });
+  } else if (input.pdf) {
+    const { nummer, pdf } = await pdfFuer(input.id, client);
+    anhaenge.unshift({ filename: `${nummer}.pdf`, content: pdf, contentType: "application/pdf" });
   }
   if (anhaenge.length === 0)
-    throw new BueroError("Bitte hängen Sie die XRechnung oder das PDF an.", "xrechnung");
+    throw new BueroError("Bitte hängen Sie das PDF oder die XRechnung an.", "pdf");
 
   await senden(
     { to, subject, text, attachments: anhaenge },

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileCodeIcon, PrinterIcon, Undo2Icon } from "lucide-react";
+import { FileCodeIcon, FileDownIcon, PrinterIcon, Undo2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -18,8 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { stornoAction } from "../../../_actions/buero";
 
-// What happens to an issued invoice: printed, sent as E-Rechnung, or cancelled by a Storno. Payments
-// and reminders sit beside it (forderung.tsx).
+// What happens to an issued invoice: downloaded as PDF (the archived one), printed, sent as
+// E-Rechnung, or cancelled by a Storno. Payments and reminders sit beside it (forderung.tsx).
 export function RechnungAktionen({
   id,
   nummer,
@@ -44,9 +44,14 @@ export function RechnungAktionen({
 
   return (
     <>
+      <Button asChild variant="outline" size="sm">
+        <a href={`/admin/rechnungen/${id}/pdf`} download>
+          <FileDownIcon data-icon="inline-start" /> PDF laden
+        </a>
+      </Button>
       <Button asChild variant="ghost" size="sm">
         <a href={`/admin/druck/rechnungen/${id}`} target="_blank" rel="noopener noreferrer">
-          <PrinterIcon data-icon="inline-start" /> Drucken oder PDF
+          <PrinterIcon data-icon="inline-start" /> Drucken
         </a>
       </Button>
       {xrechnungMoeglich ? (

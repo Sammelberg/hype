@@ -12,7 +12,7 @@ export const XRECHNUNG_CUSTOMIZATION =
 const PROFILE = "urn:fdc:peppol.eu:2017:poacc:billing:01:1.0";
 
 export const KLEINUNTERNEHMER_HINWEIS = "Gemäß §19 Abs. 1 UStG wird keine Umsatzsteuer berechnet.";
-const KLEINUNTERNEHMER_BEFREIUNG = "Umsatzsteuerbefreiung gemäß §19 Abs. 1 UStG";
+export const KLEINUNTERNEHMER_BEFREIUNG = "Umsatzsteuerbefreiung gemäß §19 Abs. 1 UStG";
 
 export type XRechnungDaten = {
   nummer: string;

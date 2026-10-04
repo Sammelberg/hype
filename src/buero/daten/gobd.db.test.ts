@@ -1,16 +1,16 @@
 // @vitest-environment node
-// Tamper tests for the GoBD triggers (migrations 0002, 0006): every forbidden write is tried
+// Tamper tests for the GoBD triggers (migrations 0002, 0006, 0016): every forbidden write is tried
 // straight in SQL, past the application, inside a transaction that is rolled back at the end.
 // After boden's tests/db-triggers/gobd-*.tamper.test.ts.
 import { eq, sql, type SQL } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { db, type Tx } from "../../cms/db/client";
-import { rechnungen } from "../db/schema";
+import { rechnungPdfs, rechnungen } from "../db/schema";
 import { firma as firmaBeispiel } from "../logik/xrechnung.beispiel";
 import { saveFirma } from "./firma";
 import { createKunde } from "./kunden";
-import { createRechnung, stelleRechnung, xrechnungFuer } from "./rechnungen";
+import { createRechnung, pdfFuer, stelleRechnung, xrechnungFuer } from "./rechnungen";
 
 class Rueckgabe extends Error {}
 async function imRollback(fn: (tx: Tx) => Promise<void>) {
@@ -94,10 +94,10 @@ const kunde = {
   notizen: null,
 };
 
-async function gestellteRechnung(tx: Tx) {
+async function entwurf(tx: Tx) {
   await saveFirma(firmaBeispiel, tx);
   const kundeId = await createKunde(kunde, tx);
-  const id = await createRechnung(
+  return createRechnung(
     {
       art: "normal",
       kundeId,
@@ -121,6 +121,10 @@ async function gestellteRechnung(tx: Tx) {
     },
     tx,
   );
+}
+
+async function gestellteRechnung(tx: Tx) {
+  const id = await entwurf(tx);
   await stelleRechnung(id, tx);
   return id;
 }
@@ -186,4 +190,66 @@ describe.skipIf(!process.env.DATABASE_URL)("GoBD: issued invoices", () => {
       await expect(xrechnungFuer(id, tx)).rejects.toThrow(/Prüfsumme/);
     });
   });
+});
+
+describe.skipIf(!process.env.DATABASE_URL)("GoBD: the archived PDF", () => {
+  it("is the first one handed out, byte for byte, with the ZUGFeRD XML inside", async () => {
+    await imRollback(async (tx) => {
+      const id = await gestellteRechnung(tx);
+      const first = await pdfFuer(id, tx);
+      expect(first.zugferd).toBe(true);
+      expect(Buffer.from(first.pdf).subarray(0, 5).toString()).toBe("%PDF-");
+      expect(Buffer.from(first.pdf).includes("factur-x.xml")).toBe(true);
+      const again = await pdfFuer(id, tx);
+      expect(Buffer.from(again.pdf).equals(Buffer.from(first.pdf))).toBe(true);
+      const [row] = await tx.select().from(rechnungPdfs).where(eq(rechnungPdfs.rechnungId, id));
+      expect(row!.sha256).toMatch(/^[0-9a-f]{64}$/);
+    });
+  }, 30_000);
+
+  it("is neither changed, deleted nor emptied", async () => {
+    await imRollback(async (tx) => {
+      const id = await gestellteRechnung(tx);
+      await pdfFuer(id, tx);
+      await refused(
+        tx,
+        sql`update buero.rechnung_pdfs set pdf = '\\x00' where rechnung_id = ${id}`,
+      );
+      await refused(
+        tx,
+        sql`update buero.rechnung_pdfs set sha256 = ${"0".repeat(64)} where rechnung_id = ${id}`,
+      );
+      await refused(tx, sql`delete from buero.rechnung_pdfs where rechnung_id = ${id}`);
+      await refused(tx, sql`truncate buero.rechnung_pdfs`);
+    });
+  }, 30_000);
+
+  it("exists only for an issued invoice", async () => {
+    await imRollback(async (tx) => {
+      const id = await entwurf(tx);
+      await refused(
+        tx,
+        sql`insert into buero.rechnung_pdfs (rechnung_id, pdf, sha256, zugferd) values (${id}, '\\x00', ${"0".repeat(64)}, false)`,
+        /gestellte Rechnung/,
+      );
+      await expect(pdfFuer(id, tx)).rejects.toThrow(/Entwurf/);
+    });
+  });
+
+  it("is not handed out once it no longer matches its hash", async () => {
+    await imRollback(async (tx) => {
+      const id = await gestellteRechnung(tx);
+      await pdfFuer(id, tx);
+      await tx.execute(
+        sql`alter table buero.rechnung_pdfs disable trigger rechnung_pdfs_unveraendert`,
+      );
+      await tx.execute(
+        sql`update buero.rechnung_pdfs set pdf = pdf || '\\x20'::bytea where rechnung_id = ${id}`,
+      );
+      await tx.execute(
+        sql`alter table buero.rechnung_pdfs enable trigger rechnung_pdfs_unveraendert`,
+      );
+      await expect(pdfFuer(id, tx)).rejects.toThrow(/Prüfsumme/);
+    });
+  }, 30_000);
 });

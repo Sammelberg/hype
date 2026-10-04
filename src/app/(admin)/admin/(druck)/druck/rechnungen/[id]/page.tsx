@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/cms/auth/guard";
-import { abzuegeVon, ausgabeDaten, getRechnung } from "@/buero/daten/rechnungen";
+import { blattDaten, getRechnung } from "@/buero/daten/rechnungen";
 import { RechnungsDokument } from "../../../../_components/buero/rechnungs-dokument";
 import { DruckenKnopf } from "./drucken";
 
@@ -14,36 +14,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: { absolute: found?.rechnung.nummer ?? "Rechnung" } };
 }
 
-// An issued invoice, ready to print or to save as PDF from the browser's print dialog.
+// An issued invoice on paper. The PDF to send is „PDF laden“ on the invoice's page (the archived
+// file); this view is for printing.
 export default async function DruckRechnungPage({ params }: Props) {
   await requireRole("admin");
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await getRechnung(id);
   if (!found || found.rechnung.status === "entwurf") notFound();
-  const r = found.rechnung;
-  const daten = ausgabeDaten(r, found.korrigiert?.nummer ?? null);
   return (
     <main className="mx-auto flex max-w-[230mm] flex-col gap-4 px-4 py-6 print:max-w-none print:p-0">
       <div data-druck-leiste="" className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Im Druckdialog „Als PDF speichern“ wählen, um die Rechnung als PDF zu senden.
+          Zum Versenden nehmen Sie besser „PDF laden“ auf der Seite der Rechnung: das archivierte
+          PDF mit der E-Rechnung darin.
         </p>
         <DruckenKnopf />
       </div>
-      <RechnungsDokument
-        className="min-h-[297mm] print:shadow-none"
-        daten={{
-          ...daten,
-          storno: r.typ === "storno",
-          art: r.art,
-          abzuege: abzuegeVon(r),
-          korrigiert: found.korrigiert?.nummer ?? null,
-          kundennummer: found.kunde.nummer,
-          einleitung: r.einleitung,
-          schlusstext: r.schlusstext,
-        }}
-      />
+      <RechnungsDokument className="min-h-[297mm] print:shadow-none" daten={blattDaten(found)} />
     </main>
   );
 }

@@ -6,13 +6,15 @@ import { createHash } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import { db, type Db, type Tx } from "../../cms/db/client";
-import { auftraege, kunden, rechnungen, vertraege } from "../db/schema";
+import { auftraege, kunden, rechnungPdfs, rechnungen, vertraege } from "../db/schema";
 import { datumDe, heute, jahr, kannWechseln, tagePlus } from "../logik/ablauf";
 import { typCode } from "../logik/abrechnung";
 import { betragAusCent, centAusBetrag, rechnungsSummen } from "../logik/geld";
 import { type Mangel, pruefeRechnung } from "../logik/pflichtangaben";
 import { type Abschlag, type Position, type RechnungInput, RechnungSchema } from "../logik/typen";
+import { type DokumentDaten } from "../logik/blatt";
 import { type XRechnungDaten, xrechnungXml } from "../logik/xrechnung";
+import { zugferdXml } from "../logik/zugferd";
 import { BueroError, naechsteNummer } from "./basis";
 import { getFirma } from "./firma";
 import { erfasseZahlung, forderungVon, offenVon } from "./forderungen";
@@ -389,4 +391,78 @@ function erzeugeXrechnung(found: NonNullable<Awaited<ReturnType<typeof getRechnu
       `Für die E-Rechnung fehlt: ${xrechnung.map((m) => m.text).join(", ")}. Die gestellte Rechnung bleibt, wie sie ist; tragen Sie die Angaben ein und stornieren und stellen Sie sie neu, oder senden Sie die Druckfassung.`,
     );
   return { nummer: daten.nummer, xml: xrechnungXml(daten) };
+}
+
+type Gefunden = NonNullable<Awaited<ReturnType<typeof getRechnung>>>;
+
+/** The sheet of an issued invoice: the print view, the invoice's page and the PDF read it. */
+export function blattDaten(found: Gefunden): DokumentDaten {
+  const r = found.rechnung;
+  return {
+    ...ausgabeDaten(r, found.korrigiert?.nummer ?? null),
+    storno: r.typ === "storno",
+    art: r.art,
+    abzuege: abzuegeVon(r),
+    korrigiert: found.korrigiert?.nummer ?? null,
+    kundennummer: found.kunde.nummer,
+    einleitung: r.einleitung,
+    schlusstext: r.schlusstext,
+  };
+}
+
+const sha256Bytes = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+
+// The PDF of an issued invoice. The first one is archived with its sha256 in `rechnung_pdfs`
+// (write-once, migration 0016), so the file sent, downloaded or printed later is always this one.
+// ZUGFeRD — the CII XML inside — when the XRechnung data are complete, else plain PDF/A-3b.
+export async function pdfFuer(
+  id: number,
+  client: Db | Tx = db,
+): Promise<{ nummer: string; pdf: Uint8Array; zugferd: boolean }> {
+  const found = await getRechnung(id, client);
+  if (!found) throw new BueroError("Die Rechnung gibt es nicht mehr.");
+  const { rechnung } = found;
+  if (rechnung.status === "entwurf" || !rechnung.nummer)
+    throw new BueroError("Ein Entwurf hat noch kein PDF. Stellen Sie die Rechnung zuerst.");
+  const archiv = await archiviertesPdf(id, rechnung.nummer, client);
+  if (archiv) return archiv;
+
+  const daten = ausgabeDaten(rechnung, found.korrigiert?.nummer ?? null);
+  const { xrechnung } = pruefeRechnung({
+    firma: daten.verkaeufer,
+    empfaenger: daten.empfaenger,
+    positionen: daten.positionen,
+    leistungVon: daten.leistungVon,
+    leistungBis: daten.leistungBis,
+  });
+  const xml = xrechnung.length === 0 ? zugferdXml(daten) : null;
+  // Loaded on demand: react-pdf and its fonts are needed only here.
+  const { rechnungsPdf } = await import("../pdf");
+  const pdf = await rechnungsPdf(blattDaten(found), xml, new Date());
+  // Only the first writer archives; a second render at the same moment gets the stored file.
+  const [gespeichert] = await client
+    .insert(rechnungPdfs)
+    .values({
+      rechnungId: id,
+      pdf: Buffer.from(pdf),
+      sha256: sha256Bytes(pdf),
+      zugferd: xml !== null,
+    })
+    .onConflictDoNothing()
+    .returning({ id: rechnungPdfs.rechnungId });
+  if (gespeichert) return { nummer: rechnung.nummer, pdf, zugferd: xml !== null };
+  const zuerst = await archiviertesPdf(id, rechnung.nummer, client);
+  if (!zuerst) throw new BueroError("Das PDF konnte nicht archiviert werden.");
+  return zuerst;
+}
+
+async function archiviertesPdf(id: number, nummer: string, client: Db | Tx) {
+  const [row] = await client.select().from(rechnungPdfs).where(eq(rechnungPdfs.rechnungId, id));
+  if (!row) return null;
+  const pdf = new Uint8Array(row.pdf);
+  if (sha256Bytes(pdf) !== row.sha256)
+    throw new BueroError(
+      `Das archivierte PDF zu ${nummer} passt nicht mehr zu seiner Prüfsumme. Es wird nicht ausgegeben; bitte prüfen Sie, wer Zugriff auf die Datenbank hat.`,
+    );
+  return { nummer, pdf, zugferd: row.zugferd };
 }

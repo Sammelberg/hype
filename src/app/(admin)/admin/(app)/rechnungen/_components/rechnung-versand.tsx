@@ -24,18 +24,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { rechnungVersendenAction } from "../../../_actions/versand";
 
 // „Per E-Mail senden“: an offer, never the only way. The dialog is prefilled (customer's address,
-// subject, a short letter) and everything in it can be changed; the XRechnung is attached from
-// the archive, the PDF is the one the owner saved from „Drucken oder PDF“.
+// subject, a short letter) and everything in it can be changed; the PDF and the XRechnung are the
+// archived files. A PDF of the owner's own can go instead of the archived one.
 export function RechnungVersand({
   id,
   nummer,
   vorschlag,
   xrechnungMoeglich,
+  xrechnungVorgeschlagen,
 }: {
   id: number;
   nummer: string;
   vorschlag: { to: string; subject: string; text: string };
   xrechnungMoeglich: boolean;
+  /** Ticked from the start for businesses and authorities; a private customer gets the PDF. */
+  xrechnungVorgeschlagen: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -118,26 +121,39 @@ export function RechnungVersand({
           </Field>
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-1 text-sm font-medium">Anhänge</legend>
-            <Field orientation="horizontal" data-invalid={feld("xrechnung") ? true : undefined}>
+            <Field orientation="horizontal" data-invalid={feld("pdf") ? true : undefined}>
+              <Checkbox id="versand-pdf" name="pdf" defaultChecked />
+              <FieldLabel htmlFor="versand-pdf" className="font-normal">
+                PDF der Rechnung ({nummer}.pdf)
+                {xrechnungMoeglich ? " mit der E-Rechnung darin (ZUGFeRD)" : ""}
+              </FieldLabel>
+            </Field>
+            {feld("pdf") ? <FieldError>{feld("pdf")}</FieldError> : null}
+            <Field orientation="horizontal">
               <Checkbox
                 id="versand-xrechnung"
                 name="xrechnung"
-                defaultChecked={xrechnungMoeglich}
+                defaultChecked={xrechnungVorgeschlagen}
                 disabled={!xrechnungMoeglich}
               />
               <FieldLabel htmlFor="versand-xrechnung" className="font-normal">
                 XRechnung ({nummer}.xml)
               </FieldLabel>
             </Field>
-            {feld("xrechnung") ? <FieldError>{feld("xrechnung")}</FieldError> : null}
-            <Field data-invalid={feld("pdf") ? true : undefined}>
-              <FieldLabel htmlFor="versand-pdf">PDF der Rechnung (freiwillig)</FieldLabel>
-              <Input id="versand-pdf" name="pdf" type="file" accept="application/pdf,.pdf" />
+            <Field data-invalid={feld("eigenesPdf") ? true : undefined}>
+              <FieldLabel htmlFor="versand-eigenes-pdf">
+                Eigenes PDF stattdessen (freiwillig)
+              </FieldLabel>
+              <Input
+                id="versand-eigenes-pdf"
+                name="eigenesPdf"
+                type="file"
+                accept="application/pdf,.pdf"
+              />
               <FieldDescription>
-                „Drucken oder PDF“ → „Als PDF speichern“, dann die Datei hier wählen. Höchstens 1,8
-                MB.
+                Geht anstelle des PDFs der Rechnung mit. Höchstens 1,8 MB.
               </FieldDescription>
-              {feld("pdf") ? <FieldError>{feld("pdf")}</FieldError> : null}
+              {feld("eigenesPdf") ? <FieldError>{feld("eigenesPdf")}</FieldError> : null}
             </Field>
           </fieldset>
           <DialogFooter>

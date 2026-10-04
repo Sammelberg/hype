@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  customType,
   date,
   index,
   integer,
@@ -23,6 +24,8 @@ import {
 import type { Abschlag, Empfaenger, Firma, KundeInput, Position } from "../logik/typen";
 
 export const buero = pgSchema("buero");
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => "bytea" });
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
@@ -267,6 +270,20 @@ export const wiedervorlagen = buero.table(
     index("wiedervorlagen_kunde_idx").on(t.kundeId),
   ],
 );
+
+// The PDF of an issued invoice as first handed out — ZUGFeRD, or PDF/A-3b when the XRechnung
+// data were incomplete — kept apart from `rechnungen`, so lists never load the bytes. Written
+// once, never changed (migration 0016 refuses UPDATE, DELETE, TRUNCATE and a draft's PDF).
+
+export const rechnungPdfs = buero.table("rechnung_pdfs", {
+  rechnungId: integer()
+    .primaryKey()
+    .references(() => rechnungen.id, { onDelete: "restrict" }),
+  pdf: bytea().notNull(),
+  sha256: varchar({ length: 64 }).notNull(),
+  zugferd: boolean().notNull(),
+  createdAt: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+});
 
 // ---------------------------------------------------------------------------------------------
 // What came in against an issued invoice, and the reminders sent for it. An invoice counts as

@@ -22,8 +22,8 @@ export async function rechnungVersendenAction(formData: FormData): Promise<Versa
   }
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { ok: false, error: "Die Rechnung gibt es nicht mehr." };
-  const datei = formData.get("pdf");
-  const pdf =
+  const datei = formData.get("eigenesPdf");
+  const eigenesPdf =
     datei instanceof File && datei.size > 0
       ? { name: datei.name, bytes: new Uint8Array(await datei.arrayBuffer()) }
       : null;
@@ -35,7 +35,8 @@ export async function rechnungVersendenAction(formData: FormData): Promise<Versa
         subject: String(formData.get("subject") ?? ""),
         text: String(formData.get("text") ?? ""),
         xrechnung: formData.get("xrechnung") === "on",
-        pdf,
+        pdf: formData.get("pdf") === "on",
+        eigenesPdf,
       },
       { userId: user.id, autor: user.name || user.email },
     );
