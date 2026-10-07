@@ -48,7 +48,7 @@ jobs:
       # The pretend checkout for bookings (e2e/buchung.spec.ts); Mollie is never called in CI.
       ZAHLUNG_TEST: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
