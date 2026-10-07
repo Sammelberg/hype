@@ -88,7 +88,9 @@
       "Bash(graft-dev:*)",
       "Bash(node dist/cli.js:*)"
     ],
-    "deny": ["mcp__claude_ai_Higsfield__*"]
+    "deny": [
+      "mcp__claude_ai_Higsfield__*"
+    ]
   },
   "enabledPlugins": {
     "stripe@claude-plugins-official": false
@@ -99,5 +101,13 @@
     "ai-seo": "off",
     "product-marketing": "off",
     "fixing-accessibility": "off"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
   }
 }

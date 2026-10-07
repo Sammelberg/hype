@@ -138,7 +138,7 @@ const db = name.replace(/-/g, "_");
 const databaseUrl = `postgres://${db}:${db}@localhost:${dbPort}/${db}`;
 
 pkg.name = name;
-// dev on the app port, the production preview one above it (the lane: 3002 dev, 3003 preview).
+// dev on the app port, the production preview one above it (the lane: 3000 dev, 3001 preview).
 for (const [script, port] of [
   ["dev", appPort],
   ["start", Number(appPort) + 1],
