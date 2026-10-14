@@ -230,8 +230,8 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       drizzle-orm:
-        specifier: 0.45.3
-        version: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(@upstash/redis@1.39.0)(pg@8.23.0)
+        specifier: 0.45.4
+        version: 0.45.4(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(@upstash/redis@1.39.0)(pg@8.23.1)
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.3.0)
@@ -278,8 +278,8 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       pg:
-        specifier: ^8.23.0
-        version: 8.23.0
+        specifier: ^8.23.1
+        version: 8.23.1
       radix-ui:
         specifier: ^1.6.7
         version: 1.6.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -424,7 +424,7 @@ importers:
         version: 2.15.0(@types/node@26.6.2)(typescript@6.0.3)
       node:
         specifier: runtime:^26.10.0
-        version: runtime:26.10.0
+        version: runtime:26.12.0
       oxlint:
         specifier: ^1.85.0
         version: 1.85.0
@@ -4647,8 +4647,8 @@ packages:
     resolution: {integrity: sha512-YCYqxTLIB2OCqf6w9/Vef13baBVbwQIPcbT4Y56AfO6B9ajZhDhD8Jkveg/hJvT/iuMloKD/IYYkyMMNhr7Kqg==}
     hasBin: true
 
-  drizzle-orm@0.45.3:
-    resolution: {integrity: sha512-CAloER21cDdcgZ1OmjrZX82EeRNsdP+y0onX/eyoYDaYzki/adrAa91lzM5jWh7zZPK4qUbw/6LGv9J+A+uizA==}
+  drizzle-orm@0.45.4:
+    resolution: {integrity: sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -6247,7 +6247,7 @@ packages:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
     engines: {node: '>=18'}
 
-  node@runtime:26.10.0:
+  node@runtime:26.12.0:
     resolution:
       type: variations
       variants:
@@ -6255,9 +6255,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-9ak/5zz1WDQU1Ni+WYxOx+cr4ygbWCDUlcKhXOaqE8g=
+            integrity: sha256-NNMG0T4yGUL2pIxcC4xOeB6GTL4FLPBDhqzpT1RIAz0=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-aix-ppc64.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-aix-ppc64.tar.gz
           targets:
             - cpu: ppc64
               os: aix
@@ -6265,9 +6265,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-dR/fdDnxFdh+4qjz8YwGW2FRhSBo4+ZmrGCsKZb3Wsk=
+            integrity: sha256-KhVNSlRYkw4KLWoez2Tt31orPhwTY2tgnC7LBC6MRVM=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-darwin-arm64.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-darwin-arm64.tar.gz
           targets:
             - cpu: arm64
               os: darwin
@@ -6275,9 +6275,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-676aubWK1rtUOQ1uLIYsGvp9RHX7foroFGrN4hG/cN8=
+            integrity: sha256-h47O3hkcerwb/wHT+4H37YGqEWEEDboYd2uP+Fk2FLE=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-darwin-x64.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-darwin-x64.tar.gz
           targets:
             - cpu: x64
               os: darwin
@@ -6285,9 +6285,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-QjpBv/jiovoV5wL+/ikZ75WCOyN4dE2sy4Q5MCU0tE8=
+            integrity: sha256-7FPJFcP92HhsVoWr0lrj/p+6BpIwf5gR18qq3qG8rwM=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-arm64.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-arm64.tar.gz
           targets:
             - cpu: arm64
               os: linux
@@ -6295,9 +6295,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-DMa5qZBiFvjefXAUYDj+a6tffo86itKdjb6r3xOBtS0=
+            integrity: sha256-+TUIR9BzL4vMFXdBfOU28NYX+T8JPGZNiPCx5w8sxOQ=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-ppc64le.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-ppc64le.tar.gz
           targets:
             - cpu: ppc64le
               os: linux
@@ -6305,9 +6305,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-eHQCtH8Pj9RioZpEw9cHBSyryV7LlG/oBBobXIEOPWM=
+            integrity: sha256-dWPgJqwD+VEgIB431gdJYNBmEFNvRarB+l7YfPdKwNQ=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-s390x.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-s390x.tar.gz
           targets:
             - cpu: s390x
               os: linux
@@ -6315,9 +6315,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-G99gyBQeUVJgS6+LOPMeGRs3lPYPzitxNR54xAIfAWY=
+            integrity: sha256-/aos9uRMpEOjdLBdsSGCcAGqFnviVnY2i6ub82wOSNE=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64-musl.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-x64-musl.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -6326,9 +6326,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-y1yc6cgNe4gh46JYVDxxuTkTjPF8dNXMRLvoXW28Wtg=
+            integrity: sha256-2fiK9yrTT33fjmcomCnxaY9UtiVPfU9Ut0UxF/8aPSw=
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64.tar.gz
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-x64.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -6336,10 +6336,10 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-t3hkDXJxVmvKqWeZEs3waEwT6CTBFOQai2lvsUr3p6o=
-            prefix: node-v26.10.0-win-arm64
+            integrity: sha256-zHc7mCliPj1P0TrvOU8FAQ4EWSc/J/syVRUPOKJXer8=
+            prefix: node-v26.12.0-win-arm64
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-win-arm64.zip
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-win-arm64.zip
           targets:
             - cpu: arm64
               os: win32
@@ -6347,36 +6347,14 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-n+9+ymdDprkQmJzY54cSN2s5T8ubbh6cRKB5mih/kMU=
-            prefix: node-v26.10.0-win-x64
+            integrity: sha256-UO+vAaCMUgtLvkmcCajFpcNwACxBnA2dosaBXTBmpFM=
+            prefix: node-v26.12.0-win-x64
             type: binary
-            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-win-x64.zip
+            url: https://nodejs.org/download/release/v26.12.0/node-v26.12.0-win-x64.zip
           targets:
             - cpu: x64
               os: win32
-        - resolution:
-            archive: tarball
-            bin:
-              node: bin/node
-            integrity: sha256-0mAnv/MZcFDSorC/oVGxjoN47YGv+iv1CTgE2xWJebY=
-            type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-arm64-musl.tar.gz
-          targets:
-            - cpu: arm64
-              os: linux
-              libc: musl
-        - resolution:
-            archive: tarball
-            bin:
-              node: bin/node
-            integrity: sha256-5C2pSCG5Qi63a/Wq9N4Jd+BLoyC4r/YUjYlalLCO4iM=
-            type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64-musl.tar.gz
-          targets:
-            - cpu: x64
-              os: linux
-              libc: musl
-    version: 26.10.0
+    version: 26.12.0
     hasBin: true
 
   nodemailer@10.0.12:
@@ -6623,11 +6601,11 @@ packages:
   pdfkit@0.20.1:
     resolution: {integrity: sha512-1rRXK6x5o8I/3dBrBzXfxibpHpkfCnIA7EBAES7pEpGFc/65inMLlA8SalGWpJfal7BGekxeLf6A30IOpQpc5Q==}
 
-  pg-cloudflare@1.4.0:
-    resolution: {integrity: sha512-Vo7z/6rrQYxpNRylp4Tlob2elzbh+N/MOQbxFVWCxS7oEx6jF53GTJFxK2WWpKuBRkmiin4Mt+xofFDjx09R0A==}
+  pg-cloudflare@1.4.1:
+    resolution: {integrity: sha512-6PQbsFWZcp9EmJEwy5cGQ2La+AMWpP46lgbb8X+U/XsHIUweYDNCpeuKck5RxL2MdVFi7krbbEi5nX4Zh7JhrQ==}
 
-  pg-connection-string@2.14.0:
-    resolution: {integrity: sha512-XwWDGcLRGCXAR8F/AM5bG7Q+A3Wm2s6QeEjlOKZLlH3UYcguiqCWKyWXVag5TLTIjR7oOJUY8kcADaZgWPyLeg==}
+  pg-connection-string@2.14.1:
+    resolution: {integrity: sha512-qR3kGNPBLpCNtz0evbKA0Y/MRFXwSSdT+pTJvYp/bXTcReZbvX1kzF0IyTc1QnxqF7AZbOeBhNL8R5mYQZV/MA==}
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -6641,12 +6619,15 @@ packages:
   pg-protocol@1.16.0:
     resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
 
+  pg-protocol@1.16.1:
+    resolution: {integrity: sha512-p9VOFMiHB/ZbJATetbg+99PxssTVSQRnyuPSQ67mN1+1KBOjZaZ83ZQzltnxPhJwSsC3nwVjJ10DVJlerbFzLg==}
+
   pg-types@2.2.0:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
     engines: {node: '>=4'}
 
-  pg@8.23.0:
-    resolution: {integrity: sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==}
+  pg@8.23.1:
+    resolution: {integrity: sha512-aL96AHANtWjPLDOLqnhx+ngp9+UK7ETEU8VJrDCGvsSSi/mGLcWYsS6Herg7lmaBJe4uwrfqsa7gTEFaSizDoQ==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -11782,12 +11763,12 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(@upstash/redis@1.39.0)(pg@8.23.0):
+  drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(@upstash/redis@1.39.0)(pg@8.23.1):
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@types/pg': 8.23.1
       '@upstash/redis': 1.39.0
-      pg: 8.23.0
+      pg: 8.23.1
 
   dunder-proto@1.0.1:
     dependencies:
@@ -13480,7 +13461,7 @@ snapshots:
 
   node-releases@2.0.57: {}
 
-  node@runtime:26.10.0: {}
+  node@runtime:26.12.0: {}
 
   nodemailer@10.0.12: {}
 
@@ -13780,18 +13761,20 @@ snapshots:
       linebreak: 1.1.0
       png-js: 2.0.0
 
-  pg-cloudflare@1.4.0:
+  pg-cloudflare@1.4.1:
     optional: true
 
-  pg-connection-string@2.14.0: {}
+  pg-connection-string@2.14.1: {}
 
   pg-int8@1.0.1: {}
 
-  pg-pool@3.14.0(pg@8.23.0):
+  pg-pool@3.14.0(pg@8.23.1):
     dependencies:
-      pg: 8.23.0
+      pg: 8.23.1
 
   pg-protocol@1.16.0: {}
+
+  pg-protocol@1.16.1: {}
 
   pg-types@2.2.0:
     dependencies:
@@ -13801,15 +13784,15 @@ snapshots:
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
 
-  pg@8.23.0:
+  pg@8.23.1:
     dependencies:
-      pg-connection-string: 2.14.0
-      pg-pool: 3.14.0(pg@8.23.0)
-      pg-protocol: 1.16.0
+      pg-connection-string: 2.14.1
+      pg-pool: 3.14.0(pg@8.23.1)
+      pg-protocol: 1.16.1
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
-      pg-cloudflare: 1.4.0
+      pg-cloudflare: 1.4.1
 
   pgpass@1.0.5:
     dependencies:
